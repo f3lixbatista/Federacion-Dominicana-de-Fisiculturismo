@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Required meta tags -->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.0/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.0/js/bootstrap.min.js"></script>
+
+    <!-- Datatables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/v/bs4-4.1.1/dt-1.10.18/datatables.min.css">
+    <script src="https://cdn.datatables.net/v/bs4-4.1.1/dt-1.10.18/datatables.min.js"></script>
+
+    <!-- Buttons -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.6.2/css/buttons.dataTables.min.css">
+    <script src="https://cdn.datatables.net/buttons/1.6.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.rawgit.com/bpampuch/pdfmake/0.1.53/build/pdfmake.min.js"></script>
+    <script src="https://cdn.rawgit.com/bpampuch/pdfmake/0.1.53/build/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.flash.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.print.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+
+    <style>
+        #mydatatable tfoot input {
+            width: 80% !important;
+            height: 10%;  
+            margin-left: 10%;
+            margin-right: 10%;
+            color-scheme: none;
+            background-color: rgb(163, 185, 240);
+            color: black;
+        }
+
+        th.sorting_desc {
+        color: rgb(0, 0, 0);
+        }
+
+        th.sorting {
+        color: rgb(0, 0, 0);
+        }
+
+        .table-striped tbody tr:nth-of-type(2n+1) {
+        background-color: rgba(0, 0, 255, 0.2);
+        }
+
+        .table-striped tbody tr:nth-of-type(2n+2) {
+        background-color: rgba(175, 136, 136, 0.51);
+        }
+
+        thead {
+            background-color: rgb(0, 0, 130);
+        }
+
+        #mydatatable tfoot {
+            display: table-header-group !important;
+            background-color: rgb(0, 0, 0);
+
+        }
+    </style>
+
+
+    <title>EJS - <%= tituloWeb %></title>
+
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+
+
+</head>  
+
+<body>
+
+    <%- include("navbar") %>

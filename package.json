@@ -1,0 +1,26 @@
+{
+  "name": "fundamentosnode",
+  "version": "1.0.0",
+  "main": "Frutas.js",
+  "scripts": {
+    "start": "node app",
+    "ini": "nodemon app"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.0",
+    "cowsay": "^1.5.0",
+    "dotenv": "^16.0.1",
+    "ejs": "^3.1.8",
+    "express": "^4.18.1",
+    "mongoose": "^6.5.0",
+    "nodemon": "^2.0.19"
+  },
+  "description": "Url Mongodb: https://www.mongodb.com/",
+  "repository": {
+    "type": "git",
+    "url": "https://git.heroku.com/gorjea.git"
+  }
+}

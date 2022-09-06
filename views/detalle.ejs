@@ -1,0 +1,17 @@
+<%- include("template/cabecera", {tituloWeb: "Detalle de Atleta"}) %>
+
+    <div class="contenedor">
+        <h1>Detalle Atleta</h1>
+        
+        <% if (error) { %>
+            <p>
+                Atleta no encontrado
+            </p>
+            <a href="/atletas" class="btn btn.light btn-block">Volver a Atletas</a>
+        <% } %>
+    
+        </div>
+
+    </div>  
+
+    <%- include("template/footer") %>
