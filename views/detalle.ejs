@@ -12,26 +12,26 @@
 
         <% if (!error) { %>
 
-            <form id="formularioEditar" data-id="<%= atletas.id %>">
+            <form id="formularioEditar" data-id="<%= atleta.id %>">
                 <input 
                     type="text"
                     class="form-control my-2"
                     name="Nombre"
-                    value="<%= atletas.Nombre %>"
+                    value="<%= atleta.Nombre %>"
                     id="nombreInput"
                 >
                 <input 
                     type="text"
                     class="form-control my-2"
                     name="Categoria"
-                    value="<%= atletas.Categoria %>"
+                    value="<%= atleta.Categoria %>"
                     id="categoriaInput"
                 >
                 <input 
                     type="text"
                     class="form-control my-2"
                     name="IDFDFF"
-                    value="<%= atletas.IDFDFF %>"
+                    value="<%= atleta.IDFDFF %>"
                     id="IDFDFFInput"
                 >
 
@@ -53,7 +53,7 @@
             <button 
                 class="btn btn-danger btn-sm mt-5" 
                 id="btnEliminar" 
-                data-id="<%= atletas.id %>"
+                data-id="<%= atleta.id %>"
             >
                 Eliminar 
              </button>
