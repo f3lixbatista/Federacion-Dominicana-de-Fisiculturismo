@@ -8,7 +8,7 @@ const atletaSchema = new Schema({
 })
 
 // crear modelo
-const Atleta = mongoose.model('atletas', atletaSchema);
+const Atleta = mongoose.model('Atleta', atletaSchema);
 
 module.exports = Atleta;
 

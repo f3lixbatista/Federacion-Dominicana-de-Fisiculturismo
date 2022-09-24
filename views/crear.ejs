@@ -1,15 +1,37 @@
 <%- include("template/cabecera", {tituloWeb: "Nueva Membresía"}) %>
 
-    <div class="contenedor">
-        <h1>Neuvo Miembro</h1>
+    <div class="container">
+        <h1>Nuevo Miembro</h1>
         <form action="/atletas" method="post">
-            <input type="text placeholder="Nombre y Apellido" class="form-control my-2" name="Nombre">
-            <input type="text placeholder="Categoria" class="form-control my-2" name="Categoria">
+
+            <input 
+                type="text" 
+                placeholder="Nombre y Apellido" 
+                class="form-control my-2" 
+                name="Nombre"
+            >
+
+            <input 
+                type="text" 
+                placeholder="Categoria" 
+                class="form-control my-2" 
+                name="Categoria"
+            >
+
+            <input 
+                type="text" 
+                placeholder="ID-FDFF" 
+                class="form-control my-2" 
+                name="IDFDFF"
+            >
             <!-- <input type="text placeholder="Nombre" class="form-control my-2"> -->
         
-            <button class="btn btn-light btn-block" type="submit">
+            <button 
+                class="btn btn-light btn-block" 
+                type="submit"
+            >
                 Agregar
-            </button>
+            </button> 
         
         </form>
     </div>

@@ -2,16 +2,152 @@
 
     <div class="contenedor">
         <h1>Detalle Atleta</h1>
-        
-        <% if (error) { %>
-            <p>
-                Atleta no encontrado
-            </p>
-            <a href="/atletas" class="btn btn.light btn-block">Volver a Atletas</a>
-        <% } %>
-    
-        </div>
 
+        <% if (error) { %>
+            <p>   
+                <%= mensaje %> 
+            </p>
+            <a href="/atletas" class="btn btn-warning btn-block">Volver a Atletas</a>
+        <% } %>
+
+        <% if (!error) { %>
+
+            <form id="formularioEditar" data-id="<%= atletas.id %>">
+                <input 
+                    type="text"
+                    class="form-control my-2"
+                    name="Nombre"
+                    value="<%= atletas.Nombre %>"
+                    id="nombreInput"
+                >
+                <input 
+                    type="text"
+                    class="form-control my-2"
+                    name="Categoria"
+                    value="<%= atletas.Categoria %>"
+                    id="categoriaInput"
+                >
+                <input 
+                    type="text"
+                    class="form-control my-2"
+                    name="IDFDFF"
+                    value="<%= atletas.IDFDFF %>"
+                    id="IDFDFFInput"
+                >
+
+                <button
+                    class="btn btn-warning btn-block mt-2"
+                    type="submit"
+                >
+                    Editar
+                </button>
+            </form>
+
+            <hr>
+
+            <a href="/atletas" class="btn btn-success btn-block mt-1.5">Volver a Atletas</a>
+   
+
+            <hr>
+
+            <button 
+                class="btn btn-danger btn-sm mt-5" 
+                id="btnEliminar" 
+                data-id="<%= atletas.id %>"
+            >
+                Eliminar 
+             </button>
+
+
+
+
+
+
+            <!-- <table class="records_list table table-striped table-bordered table-hover" id="mydatatable">
+
+                <thead>
+                    <tr>
+                      <th scope="col">ID FDFF</th>
+                      <th scope="col">Nombre</th>
+                      <th scope="col">Categoria</th>
+                      <th scope="col">Accion</th>
+                    </tr>
+                </thead>
+                  
+                <tbody>
+                    <tr>
+                        
+                            <button class="btn btn-danger btn-sm" id="btnEliminar" data-nombre="">
+                               Eliminar 
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table> -->
+        
+        <% } %>
+        
     </div>  
 
     <%- include("template/footer") %>
+
+    <script>
+
+        const btnEliminar = document.querySelector('#btnEliminar')
+
+        btnEliminar.addEventListener('click', async() => {
+            console.log('hciste click')
+            const id = btnEliminar.dataset.id
+            console.log('Nombre', id)
+            try {
+                
+                const data = await fetch(`/atletas/${id}`, {
+                    method: "delete"
+                })
+                const res = await data.json()
+
+                if(res.estado){
+                    window.location.href = '/atletas'
+                }else {
+                    console.log(res)
+                }
+
+            } catch (error) {
+                console.log(error)
+            }
+        })
+
+        const formularioEditar = document.querySelector('#formularioEditar')
+
+        formularioEditar.addEventListener('submit', async(e) => {
+            e.preventDefault()
+        
+            const Nombre = formularioEditar.elements['Nombre'].value
+            const Categoria = document.querySelector('#categoriaInput').value
+            const IDFDFF = document.querySelector('#IDFDFFInput').value
+            const id = formularioEditar.dataset.id
+        
+        try {
+            const data = await fetch(`/atletas/${id}`, {
+                method: 'put',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({Nombre, Categoria, IDFDFF})
+            })
+            const res = await data.json()
+            console.log(res)
+            
+            if(res.estado){
+                window.location.href = '/atletas'
+            }else{
+                console.log(res)
+            }
+        } catch (error) {
+            console.log(error)
+        }
+
+    })
+
+</script>

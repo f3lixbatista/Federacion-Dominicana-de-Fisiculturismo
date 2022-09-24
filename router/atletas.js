@@ -7,11 +7,11 @@ router.get('/', async (req, res) => {
 
     try {
 
-        const arrayAtleta = await Atleta.find();
-        console.log(arrayAtleta)
+        const arrayAtletaDB = await Atleta.find();
+        console.log(arrayAtletaDB)
         
         res.render("atletas", {
-            arrayAtletas: arrayAtleta
+            arrayAtletas: arrayAtletaDB
         })
     
     } catch (error) {
@@ -29,40 +29,90 @@ router.post('/', async (req, res) => {
     const body = req.body
 
     try {
-        const atletaDB = new Atleta(body)
-        await atletaDB.save()
+        // const atletaDB = new Atleta(body)
+        // await atletaDB.save()
+
+        await Atleta.create(body)
 
         res.redirect('/atletas')    
 
     } catch (error) {
         console.log(error)
     }
-
-   
 })    
 
-router.get('/:Nombre', async (req, res) => {
+router.get('/:id', async (req, res) => {
         
-    const Nombre = req.params.Nombre
+    const id = req.params.id
+     
+    try {     
 
-    try {
-        
-        const atletaDB = await Atleta.findOne({ Nombre: Nombre });
+        const atletaDB = await Atleta.findOne({ _id: id })
         console.log(atletaDB)
         
         res.render('detalle', {
             atleta: atletaDB,
-            error: false
+            error: false           
+        })       
+        
+    } catch (error) {       
+        res.render('detalle', { 
+            error: true,
+            mensaje:"no encontrado"
+        })
+    }
+})
+
+router.delete('/:id', async (req, res) => {
+    const id = req.params.id
+
+    try {
+        const atletaDB = await Atleta.findByIdAndDelete({ _id: id })
+        
+        if (atletaDB) {
+            res.json({
+                estado : true,
+                mensaje : "Eliminado!"
+            });
+        } else {
+            res.json({
+                estado : false,
+                mensaje : "Fallo eliminar"
+            });
+        }
+
+    } catch (error) {
+        console.log(error)
+    }
+
+})
+
+
+router.put('/:id', async (req, res) => {
+    const id = req.params.id
+    
+    const body = req.body
+    
+    try {
+
+        const atletaDB = await Atleta.findByIdAndUpdate(id, body, { useFindAndModify: false })
+        console.log(atletaDB)
+
+        res.json({
+            estado: true,
+            mensaje: 'Editado'
         })
         
     } catch (error) {
         console.log(error)
-        res.render('detalle', {
-            error: true,
-            mensaje: 'no encontrado'
+        
+        res.json({
+            estado: false,
+            mensaje: 'Fallamos!!'
         })
     }
 })
+
 
 module.exports = router;
 

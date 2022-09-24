@@ -6,7 +6,10 @@
     
     <h1>Atletas</h1>
 
-    <a class="btn btn-light btn-block my-4" href="/atletas/crear">
+    <a 
+        class="btn btn-dark btn-block my-4" 
+        href="/atletas/crear"
+    >
         Nueva Membresía
     </a>
   
@@ -37,12 +40,13 @@
         <tbody>
 
             <% if (arrayAtletas.length > 0) { %>
-                <% arrayAtletas.forEach(atletas => { %>
+                <% arrayAtletas.forEach(atleta => { %>
+
                     <tr>
-                        <th scope="row"><%= atletas.IDFDFF %></th>
-                        <td><%= atletas.Nombre %></td>
-                        <td><%= atletas.Categoria %></td>
-                        <td>@mdo</td>
+                        <th scope="row"><%= atleta.IDFDFF %></th>
+                        <td><%= atleta.Nombre %></td>
+                        <td><%= atleta.Categoria %></td>
+                        <td><a href="atletas/<%= atleta.id %>" class="btn btn-warning btn-sm">Editar</a></td>
                     </tr>
                 <% }) %>
             <% } %>

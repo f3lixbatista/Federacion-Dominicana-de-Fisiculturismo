@@ -119,14 +119,14 @@ mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
     
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
-
 app.use(express.static(__dirname + "/public"));
 
+app.use('/atletas', require('./router/Atletas'));
 // rutas web
 app.use('/', require('./router/rutasBat'));
 
 // ruta atletas
-app.use('/atletas', require('./router/atletas'));
+
 
 app.use((req, res, next) => {
     res.status(404).render("404", {
