@@ -134,7 +134,7 @@ app.use('/atletas', require('./router/Atletas'));
 // rutas web
 app.use('/', require('./router/rutasBat'));
 
-app.use(express.urlencoded({extended: true}))
+app.use(express.urlencoded({extended: true}));
 // ruta atletas
 
 
