@@ -1,7 +1,11 @@
 {
   "name": "fundamentosnode",
   "version": "1.0.0",
-  "main": "Frutas.js",
+  "main": "app.js",
+  "engines": {
+    "node": "16.13.1",
+    "npm": "8.13.1"
+  },
   "scripts": {
     "start": "node app",
     "ini": "nodemon app"
@@ -24,10 +28,5 @@
   "repository": {
     "type": "git",
     "url": "https://git.heroku.com/gorjea.git"
-  },
-
-  "engines": {
-    "node": "16.13.1",
-    "npm": "8.13.1"
   }
 }
