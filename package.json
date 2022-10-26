@@ -26,6 +26,6 @@
   "description": "Url Mongodb: https://www.mongodb.com/",
   "repository": {
     "type": "git",
-    "url": "https://git.heroku.com/gorjea.git"
+    "url": "https://git.heroku.com/gorjea"
   }
 }
