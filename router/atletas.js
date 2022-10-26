@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-
+const mongoose = require('mongoose');
+// const { db, collection } = require('../models/categoriamodel');
+const Schema = mongoose.Schema;
 const Atleta = require('../models/atletamodel')
 
 router.get('/', async (req, res) => {
@@ -25,20 +27,37 @@ router.get('/crear', (req, res) => {
 
 })
 
-router.post('/', async (req, res) => {
+router.post('/crear', async (req, res) => {
     const body = req.body
+    // const {Pais} = req.body
+    // console.log(Pais)
+    console.log(body)
+    // const circular = db.circular
+    
+    // const arrayAtletaDB = await Atleta.find();
+    //     console.log(arrayAtletaDB)
 
-    try {
-        // const atletaDB = new Atleta(body)
-        // await atletaDB.save()
 
-        await Atleta.create(body)
+    // const prueba = db.collections
+    // console.log(prueba)
 
-        res.redirect('/atletas')    
+    // for (let cuerpo in prueba){  
+    //     console.log(cuerpo + " " + prueba[cuerpo]);
+        
 
-    } catch (error) {
-        console.log(error)
-    }
+    //  }
+
+    // try {
+    //     // const atletaDB = new Atleta(body)
+    //     // await atletaDB.save()
+
+    //     await Atleta.create(body)
+
+    //     res.redirect('/atletas')    
+
+    // } catch (error) {
+    //     console.log(error)
+    // }
 })    
 
 router.get('/:id', async (req, res) => {

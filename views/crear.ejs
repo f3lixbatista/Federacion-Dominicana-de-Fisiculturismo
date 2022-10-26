@@ -1,39 +1,281 @@
 <%- include("template/cabecera", {tituloWeb: "Nueva Membresía"}) %>
 
-    <div class="container">
-        <h1>Nuevo Miembro</h1>
-        <form action="/atletas" method="post">
+    <div class="container ml-auto mr-auto caja">
+        <h1 id="titulo" class="mx-4">Nuevo Miembro</h1>
+            
+            <div class="container width-50 row ml-auto mr-auto">
+                <img src="/img/fdff.svg" class="col-2">
+                <h1 class="text-primary fw-bold text-center mt-5 col-8"><DE class="spanFed">FEDERACION DOMINICANA DE FISICULTURISMO</span></h1>
+                <img src="/img/ifbb.svg" class="imgIfbb col-2">
+            </div><br>
+            <div class="container border border-primary border-3">
+                
+                <form id="fomMembresia" method="post" class="row g-3 needs-validation was-validated" novalidate="">
+                  
 
-            <input 
-                type="text" 
-                placeholder="Nombre y Apellido" 
-                class="form-control my-2" 
-                name="Nombre"
-            >
+                    <h6 class="position-relative mt-5 opacity-25">Del Atleta</h6>
+                    <div class="col-md-3 py-0 pt-0 m-0">
+                        <label for="validationTooltip05" class="form-label">ID-FDFF</label>
+                        <input type="number" class="form-control" id="validationTooltip05" name="IDFDFF" required="true">
+                        <div class="invalid-tooltip">
+                          ID de la Federacion (FDFF)
+                        </div>
+                    </div>
 
-            <input 
-                type="text" 
-                placeholder="Categoria" 
-                class="form-control my-2" 
-                name="Categoria"
-            >
+                    <div class="col-md-3 py-0 pt-0 m-0 invisible">
+                      <label for="validationTooltip05" class="form-label">Fecha de Inscripcion</label>
+                      <input type="date" class="form-control" name="invi" id="validationTooltip05" required="true">
+                      <div class="invalid-tooltip">
+                        Fecha de Hoy
+                      </div>
+                    </div>
 
-            <input 
-                type="text" 
-                placeholder="ID-FDFF" 
-                class="form-control my-2" 
-                name="IDFDFF"
-            >
-            <!-- <input type="text placeholder="Nombre" class="form-control my-2"> -->
+                    <div class="col-md-3 py-0 pt-0 m-0 invisible">
+                        <label for="validationTooltip05" class="form-label">Pasaporte</label>
+                        <input type="text" class="form-control" name="inv" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Pasaporte
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0 m-0">
+                        <label for="validationTooltip05" class="form-label">Fecha de Inscripcion</label>
+                        <input type="date" class="form-control" name="FechaInscripcion" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                          Fecha de Hoy
+                        </div>
+                      </div>
+
+                    <div class="col-md-6 pt-0 mt-4">
+                        <label for="validationTooltip03" class="form-label">Nombre(s) y Apellido(s)</label>
+                        <input type="text" class="form-control" name="Nombre" id="validationTooltip03" required="">
+                        <div class="invalid-tooltip">
+                          Segun Documento de Identidad
+                        </div>
+                      </div>
+
+                    <div class="col-md-3 py-0 pt-0 mt-4">
+                        <label for="validationTooltip05" class="form-label">Cedula</label>
+                        <input type="number" class="form-control" name="Cedula" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                          Numero de Cedula 
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0 mt-4">
+                        <label for="validationTooltip05" class="form-label">Pasaporte</label>
+                        <input type="text" class="form-control" name="Pasaporte" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Pasaporte
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Nacionalidad</label>
+                        <input type="text" value="Dominicana" class="form-control" name="Nacionalidad" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                          Nacionalidad
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Fecha de Nacimiento</label>
+                        <input type="date" class="form-control" name="Nacimiento" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Fecha de Nacimiento
+                        </div>
+                    </div>
+
+                    <div class="col-md-1 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Sexo</label>
+                        <select class="form-control" name="Sexo" required="true">
+                            <option selected></option>
+                            <option value="F">F</option>
+                            <option value="M">M</option>
+                        </select>
+                        <div class="invalid-tooltip">
+                            Sexo
+                        </div> 
+                    </div>
+
+                    <div class="col-md-4 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Ocupacion</label>
+                        <input type="text" class="form-control" name="Ocupacion" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Ocupacion
+                        </div>
+                    </div>
+
+
+
+                    <h6 class="position-relative mt-5 opacity-25">De la Residencia</h6>
+                    <div class="col-md-6 py-0 pt-0 m-0">
+                        <label for="validationTooltip05" class="form-label">Calle y Numero de Residencia</label>
+                        <input type="text" class="form-control" name="Calle" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Nombre de la Calle y Numero de la Casa o Apartamento
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0 m-0">
+                        <label for="validationTooltip05" class="form-label">Sector/Barrio</label>
+                        <input type="text" class="form-control" name="Sector" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Sector o Barrio de Residencia
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0 m-0">
+                        <label for="validationTooltip05" class="form-label">Municipio/Distrito</label>
+                        <input type="text" class="form-control" name="Municipio" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Municipio o Distrito de Residencia
+                        </div>
+                    </div>
+
+                    <div class="col-md-5 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Provincia/Estado</label>
+                        <input type="text" class="form-control" name="Provincia" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Provincia o Estado de Residencia
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Pais</label>
+                        <input type="text" class="form-control" name="Pais" id="validationTooltip05" required="true" value="Republica Dominicana">
+                        <div class="invalid-tooltip">
+                            Pais de Residencia
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Codigo Postal</label>
+                        <input type="text" class="form-control" name="Postal" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Codigo Postal
+                        </div>
+                    </div>
+
+                    <h6 class="position-relative mt-5 opacity-25">Contactos</h6>
+                    <div class="col-md-3 py-0 pt-0 mb-4">
+                        <label for="validationTooltip05" class="form-label">Celular</label>
+                        <input type="tel" class="form-control" name="Celular" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Celular
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Telefono Residencial</label>
+                        <input type="tel" class="form-control" name="TelFijo" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Telefono Alterno
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Email</label>
+                        <input type="email" class="form-control" name="Email" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Correo Electronico
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Instagram</label>
+                        <input type="text" class="form-control" name="Instagram" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Usuario de Instagram
+                        </div>
+                    </div>
+
+                    <h6 class="position-relative mt-5 opacity-25">Del Deporte</h6>
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Categoria</label>
+                        <input type="text" class="form-control" name="Categoria" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Categoria
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Estatura en Centimetros</label>
+                        <input type="number" step="0.01" min="0" class="form-control" name="Estatura" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Estatura en Centimetros
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Peso en Kilos</label>
+                        <input type="number" step="0.01" min="0" class="form-control" name="Peso" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Peso en Kilos
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Gimnasio</label>
+                        <input type="text" class="form-control" name="Gimnasio" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Gimnasio en que Practica
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Preparador</label>
+                        <input type="text" class="form-control" name="Preparador" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Entrendor o Coach
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Celular del Preparador</label>
+                        <input type="tel" class="form-control" name="CelPreparador" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Cel/Whatsapp
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Email del Preparador</label>
+                        <input type="email" class="form-control" name="EmailPreparador" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Correo Electronico de su Preparador
+                        </div>
+                    </div>
+                    </div>
+              
+                
+
         
             <button 
-                class="btn btn-light btn-block" 
                 type="submit"
+                class="btn btn-danger btn-lg my-5 col-4" 
+                id="print"
             >
                 Agregar
             </button> 
         
         </form>
-    </div>
 
-    <%- include("template/footer") %>
+        <H4>
+            Firma de Atleta_______________________________________<span class="fs-6">Con esta firma certifico que no tengo antecedentes penales ni asuntos pendientes con la justici</span>
+        </H4>
+
+    </div> 
+
+    
+    <script>
+       
+        const printBtn = document.getElementById('print');
+    
+        printBtn.addEventListener('click', function() {
+            print();
+            
+        })
+    </script>
+
+<%- include("template/footer") %>

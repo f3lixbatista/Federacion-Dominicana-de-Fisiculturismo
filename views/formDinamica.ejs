@@ -1,0 +1,12 @@
+<%- include("template/cabecera", {tituloWeb: "Agregar Categoria"}) %>
+
+    <div class="container col-sm-8">
+      <h1 class="my-5">Nombre del Evento a Consultar</h1>
+        <form id="formularioDinamico" method="post" name="formDinamica" action="formDinamica">
+            <input type="text" placeholder="Nombre del Evento" class="form-control my-2 col-sm-8" name="eventoDinamico" id="inputEvento">
+            <button class="btn btn-primary btn-block my-3 col-sm-8" type="submit" id="botonAgregar">
+                Agregar
+            </button> 
+            <!-- action="dinamica" -->
+    </div>
+<%- include("template/footer") %>

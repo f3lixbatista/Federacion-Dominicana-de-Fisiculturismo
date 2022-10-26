@@ -1,8 +1,8 @@
 <%- include("template/cabecera", {tituloWeb: "Pagina de Atletas"}) %>
 
 
-
-<div class="container container-fluid p-5">
+<!-- // class="container container-fluid" -->
+<div>
     
     <h1>Atletas</h1>
 
@@ -14,115 +14,143 @@
     </a>
   
     <div class="table-responsive" id="mydatatable-container">
-    <table class="records_list table table-striped table-bordered table-hover" id="mydatatable">
-        <thead>
-          <tr>
-            <th scope="col">ID FDFF</th>
-            <th scope="col">Nombre</th>
-            <th scope="col">Categoria</th>
-            <th scope="col">Accion</th>
-          </tr>
-        </thead>
-        <tfoot>
-          <tr>
-              <th>Filter..</th>
-              <th>Filter..</th>
-              <th>Filter..</th>
-              <th>Filter..</th>
-              <!-- <th>Filter..</th>
-              <th>Filter..</th>
-              <th>Filter..</th>
-              <th>Filter..</th>
-              <th>Filter..</th>
-              <th>Filter..</th> -->
-          </tr>
-      </tfoot>
-        <tbody>
+        <table class="records_list table table-striped table-bordered table-hover" id="mydatatable">
+            <thead>
+                <tr  class="table-blue">
+                    <th scope="col">Accion</th>
+                    <th scope="col">IDFDFF</th>
+                    <th scope="col" class="nombreAtleta col col-md-8">Nombre</th>
+                    <th scope="col">Categoria</th>
+                    <th scope="col">FechaInscripcion</th>
+                    <th scope="col">Cedula</th>
+                    <th scope="col">Pasaporte</th>
+                    <th scope="col">Nacionalidad</th>
+                    <th scope="col">Nacimiento</th>
+                    <th scope="col">Sexo</th>
+                    <th scope="col">Ocupacion</th>
+                    <th scope="col">Calle</th>
+                    <th scope="col">Sector</th>
+                    <th scope="col">Municipio</th>
+                    <th scope="col">Provincia</th>
+                    <th scope="col">Pais</th>
+                    <th scope="col">Postal</th>
+                    <th scope="col">Celular</th>
+                    <th scope="col">TelFijo</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Instagram</th>
+                    <th scope="col">Estatura</th>
+                    <th scope="col">Peso</th>
+                    <th scope="col">Gimnasio</th>
+                    <th scope="col">Preparador</th>
+                    <th scope="col">CelPreparador</th>
+                    <th scope="col">EmailPreparador</th>
+                    
+                </tr>
+            </thead>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th class= "col col-md-8">Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                </tr>
+            </tfoot>
+            <tbody>
+                <% if (arrayAtletas.length > 0) { %>
+                    <% arrayAtletas.forEach(atleta => { %>
+                        <tr>
+                            <td><a href="atletas/<%= atleta.id %>" class="btn btn-warning btn-sm">Editar</a></td>
+                            <th scope="row"><%= atleta.IDFDFF %></th>
+                            <td class="col-sm-8"><%= atleta.Nombre %></td>
+                            <td><%= atleta.Categoria %></td>
+                            <td><%= atleta.FechaInscripcion %></td>
+                            <td><%= atleta.Cedula %></td>
+                            <td><%= atleta.Pasaporte %></td>
+                            <td><%= atleta.Nacionalidad %></td>
+                            <td><%= atleta.Nacimiento %></td>
+                            <td><%= atleta.Sexo %></td>
+                            <td><%= atleta.Ocupacion %></td>
+                            <td><%= atleta.Calle %></td>
+                            <td><%= atleta.Sector %></td>
+                            <td><%= atleta.Municipio %></td>
+                            <td><%= atleta.Provincia %></td>
+                            <td><%= atleta.Pais %></td>
+                            <td><%= atleta.Postal %></td>
+                            <td><%= atleta.Celular %></td>
+                            <td><%= atleta.TelFijo %></td>
+                            <td><%= atleta.Email %></td>
+                            <td><%= atleta.Instagram %></td>
+                            <td><%= atleta.Estatura %></td>
+                            <td><%= atleta.Peso %></td>
+                            <td><%= atleta.Gimnasio %></td>
+                            <td><%= atleta.Preparador %></td>
+                            <td><%= atleta.CelPreparador %></td>
+                            <td><%= atleta.EmailPreparador %></td>
+                            
+                        </tr>
+                    <% }) %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
 
-            <% if (arrayAtletas.length > 0) { %>
-                <% arrayAtletas.forEach(atleta => { %>
 
-                    <tr>
-                        <th scope="row"><%= atleta.IDFDFF %></th>
-                        <td><%= atleta.Nombre %></td>
-                        <td><%= atleta.Categoria %></td>
-                        <td><a href="atletas/<%= atleta.id %>" class="btn btn-warning btn-sm">Editar</a></td>
-                    </tr>
-                <% }) %>
-            <% } %>
-
-
-      </tbody>
-    </table>
-  </div>
-
-
-  <script type="text/javascript">
-    $(document).ready(function () {
-        $('#mydatatable tfoot th').each(function () {
-            var title = $(this).text();
-            $(this).html('<input type="text" placeholder="Filtrar.." />');
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#mydatatable tfoot th').each(function () {
+                var title = $(this).text();
+                $(this).html('<input type="text" placeholder="Filtrar.." />');
+            });
+    
+            var table = $('#mydatatable').DataTable({
+                "dom": 'B<"float-left"i><"float-right"f>t<"float-left"l><"float-right"p><"clearfix">',
+                "responsive": false,
+                "language": {
+                    "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json"
+                },
+                "order": [
+                    [0, "desc"]
+                ],
+                "initComplete": function () {
+                    this.api().columns().every(function () {
+                        var that = this;
+    
+                        $('input', this.footer()).on('keyup change', function () {
+                            if (that.search() !== this.value) {
+                                that
+                                    .search(this.value)
+                                    .draw();
+                            }
+                        });
+                    })
+                },
+                "buttons": ['csv', 'excel', 'pdf', 'print']
+            });
         });
-
-        var table = $('#mydatatable').DataTable({
-            "dom": 'B<"float-left"i><"float-right"f>t<"float-left"l><"float-right"p><"clearfix">',
-            "responsive": false,
-            "language": {
-                "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json"
-            },
-            "order": [
-                [0, "desc"]
-            ],
-            "initComplete": function () {
-                this.api().columns().every(function () {
-                    var that = this;
-
-                    $('input', this.footer()).on('keyup change', function () {
-                        if (that.search() !== this.value) {
-                            that
-                                .search(this.value)
-                                .draw();
-                        }
-                    });
-                })
-            },
-            "buttons": ['csv', 'excel', 'pdf', 'print']
-        });
-    });
-  </script>
-
-        <!-- On tables
-<table class="table-primary">...</table>
-<table class="table-secondary">...</table>
-<table class="table-success">...</table>
-<table class="table-danger">...</table>
-<table class="table-warning">...</table>
-<table class="table-info">...</table>
-<table class="table-light">...</table>
-<table class="table-dark">...</table>
-
-On rows -->
-<!-- <tr class="table-primary">...</tr>
-<tr class="table-secondary">...</tr>
-<tr class="table-success">...</tr>
-<tr class="table-danger">...</tr>
-<tr class="table-warning">...</tr>
-<tr class="table-info">...</tr>
-<tr class="table-light">...</tr>
-<tr class="table-dark">...</tr> -->
-
-<!-- On cells (`td` or `th`) -->
-<!-- <tr>
-  <td class="table-primary">...</td>
-  <td class="table-secondary">...</td>
-  <td class="table-success">...</td>
-  <td class="table-danger">...</td>
-  <td class="table-warning">...</td>
-  <td class="table-info">...</td>
-  <td class="table-light">...</td>
-  <td class="table-dark">...</td>
-</tr> -->
+      </script>
    
 </div>
-
-    <%- include("template/footer") %>
+<%- include("template/footer") %>

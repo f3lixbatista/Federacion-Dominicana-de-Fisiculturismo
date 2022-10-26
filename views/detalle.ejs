@@ -1,62 +1,290 @@
 <%- include("template/cabecera", {tituloWeb: "Detalle de Atleta"}) %>
 
-    <div class="contenedor">
-        <h1>Detalle Atleta</h1>
-
+    <div class="container ml-auto mr-auto caja">
+        
+        <h1 id="titulo" class="mx-4">Editar Miembro</h1>
+                
+                <div class="container width-50 row ml-auto mr-auto">
+                    <img src="/img/fdff.svg" class="col-2">
+                    <h1 class="text-primary fw-bold text-center mt-5 col-8"><DE class="spanFed">FEDERACION DOMINICANA DE FISICULTURISMO</span></h1>
+                    <img src="/img/ifbb.svg" class="imgIfbb col-2">
+                </div>
+               
         <% if (error) { %>
             <p>   
                 <%= mensaje %> 
             </p>
             <a href="/atletas" class="btn btn-warning btn-block">Volver a Atletas</a>
         <% } %>
-
         <% if (!error) { %>
 
-            <form id="formularioEditar" data-id="<%= atleta.id %>">
-                <input 
-                    type="text"
-                    class="form-control my-2"
-                    name="Nombre"
-                    value="<%= atleta.Nombre %>"
-                    id="nombreInput"
-                >
-                <input 
-                    type="text"
-                    class="form-control my-2"
-                    name="Categoria"
-                    value="<%= atleta.Categoria %>"
-                    id="categoriaInput"
-                >
-                <input 
-                    type="text"
-                    class="form-control my-2"
-                    name="IDFDFF"
-                    value="<%= atleta.IDFDFF %>"
-                    id="IDFDFFInput"
-                >
+            <div class="container border border-primary border-3">
 
-                <button
-                    class="btn btn-warning btn-block mt-2"
-                    type="submit"
-                >
-                    Editar
-                </button>
+            <form id="formularioEditar" class="row g-3 needs-validation was-validated" data-id="<%= atleta.id %>">
+                
+
+                <h6 class="position-relative mt-5 opacity-25">Del Atleta</h6>
+                    <div class="col-md-3 py-0 pt-0 m-0">
+                        <label for="validationTooltip05" class="form-label">ID-FDFF</label>
+                        <input value="<%= atleta.IDFDFF %>" type="number" class="form-control" id="validationTooltip05" name="IDFDFF" required="">
+                        <div class="invalid-tooltip">
+                          ID de la Federacion (FDFF)
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0 m-0 invisible">
+                      <label for="validationTooltip05" class="form-label">Fecha de Inscripcion</label>
+                      <button class="form-control" name="invi" id="validationTooltip05" required=""> </button>
+                      
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0 m-0 invisible">
+                        <label for="validationTooltip05" class="form-label">Pasaporte</label>
+                        <button class="form-control" name="inv" id="validationTooltip05" required=""></button> 
+                    </div>
+                    
+                    <div class="col-md-3 py-0 pt-0 m-0">
+                        <label for="validationTooltip05" class="form-label">Fecha de Inscripcion</label>
+                        <input value="<%= atleta.FechaInscripcion %>" type="datetime" class="form-control" name="FechaInscripcion" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                          Fecha de Hoy
+                        </div>
+                      </div>
+
+                    <div class="col-md-6 pt-0 mt-4">
+                        <label for="validationTooltip03" class="form-label">Nombre(s) y Apellido(s)</label>
+                        <input value="<%= atleta.Nombre %>" type="text" class="form-control" name="Nombre" id="validationTooltip03" required="">
+                        <div class="invalid-tooltip">
+                          Segun Documento de Identidad
+                        </div>
+                      </div>
+
+                    <div class="col-md-3 py-0 pt-0 mt-4">
+                        <label for="validationTooltip05" class="form-label">Cedula</label>
+                        <input value="<%= atleta.Cedula %>" type="number" class="form-control" name="Cedula" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                          Numero de Cedula 
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0 mt-4">
+                        <label for="validationTooltip05" class="form-label">Pasaporte</label>
+                        <input value="<%= atleta.Pasaporte %>" type="text" class="form-control" name="Pasaporte" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Pasaporte
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Nacionalidad</label>
+                        <input value="<%= atleta.Nacionalidad %>" type="text" class="form-control" name="Nacionalidad" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                          Nacionalidad
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Fecha de Nacimiento</label>
+                        <input value="<%= atleta.Nacimiento %>" type="datetime" class="form-control" name="Nacimiento" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Fecha de Nacimiento
+                        </div>
+                    </div>
+
+                    <div class="col-md-1 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Sexo</label>
+                        <input value="<%= atleta.Sexo %>" type="text" class="form-control" name="Sexo" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Sexo
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Ocupacion</label>
+                        <input value="<%= atleta.Ocupacion %>" type="text" class="form-control" name="Ocupacion" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Ocupacion
+                        </div>
+                    </div>
+
+
+
+                    <h6 class="position-relative mt-5 opacity-25">De la Residencia</h6>
+                    <div class="col-md-6 py-0 pt-0 m-0">
+                        <label for="validationTooltip05" class="form-label">Calle y Numero de Residencia</label>
+                        <input value="<%= atleta.Calle %>" type="text" class="form-control" name="Calle" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Nombre de la Calle y Numero de la Casa o Apartamento
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0 m-0">
+                        <label for="validationTooltip05" class="form-label">Sector/Barrio</label>
+                        <input value="<%= atleta.Sector %>" type="text" class="form-control" name="Sector" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Sector o Barrio de Residencia
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0 m-0">
+                        <label for="validationTooltip05" class="form-label">Municipio/Distrito</label>
+                        <input value="<%= atleta.Municipio %>" type="text" class="form-control" name="Municipio" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Municipio o Distrito de Residencia
+                        </div>
+                    </div>
+
+                    <div class="col-md-5 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Provincia/Estado</label>
+                        <input value="<%= atleta.Provincia %>" type="text" class="form-control" name="Provincia" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Provincia o Estado de Residencia
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Pais</label>
+                        <input value="<%= atleta.Pais %>" type="text" class="form-control" name="Pais" id="validationTooltip05" required="" >
+                        <div class="invalid-tooltip">
+                            Pais de Residencia
+                        </div>
+                    </div>
+
+                    <!-- <div class="col-md-2 py-0 pt-0 my-4 invisible">
+                        <label for="validationTooltip05" class="form-label">Codigo Postal</label>
+                        <input type="text" class="form-control" name="CodigoPostal" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Codigo Postal
+                        </div>
+                    </div> -->
+
+                    <div class="col-md-3 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Codigo Postal</label>
+                        <input value="<%= atleta.Postal %>" type="text" class="form-control" name="Postal" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Codigo Postal
+                        </div>
+                    </div>
+
+                    
+
+
+                    <h6 class="position-relative mt-5 opacity-25">Contactos</h6>
+                    <div class="col-md-3 py-0 pt-0 mb-4">
+                        <label for="validationTooltip05" class="form-label">Celular</label>
+                        <input value="<%= atleta.Celular %>" type="tel" class="form-control" name="Celular" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Celular
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Telefono Residencial</label>
+                        <input value="<%= atleta.TelFijo %>" type="tel" class="form-control" name="TelFijo" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Telefono Alterno
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Email</label>
+                        <input value="<%= atleta.Email %>" type="email" class="form-control" name="Email" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Correo Electronico
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Instagram</label>
+                        <input value="<%= atleta.Instagram %>" type="text" class="form-control" name="Instagram" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Usuario de Instagram
+                        </div>
+                    </div>
+
+                    <h6 class="position-relative mt-5 opacity-25">Del Deporte</h6>
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Categoria</label>
+                        <input value="<%= atleta.Categoria %>" type="text" class="form-control" name="Categoria" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Categoria
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Estatura en Centimetros</label>
+                        <input value="<%= atleta.Estatura %>" type="number" step="0.01" min="0" class="form-control" name="Estatura" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Estatura en Centimetros
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Peso en Kilos</label>
+                        <input value="<%= atleta.Peso %>" type="number" step="0.01" min="0" class="form-control" name="Peso" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Peso en Kilos
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Gimnasio</label>
+                        <input value="<%= atleta.Gimnasio %>" type="text" class="form-control" name="Gimnasio" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Gimnasio en que Practica
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Preparador</label>
+                        <input value="<%= atleta.Preparador %>" type="text" class="form-control" name="Preparador" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Entrendor o Coach
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Celular del Preparador</label>
+                        <input value="<%= atleta.CelPreparador %>" type="tel" class="form-control" name="CelPreparador" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Cel/Whatsapp
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Email del Preparador</label>
+                        <input value="<%= atleta.EmailPreparador %>" type="email" class="form-control" name="EmailPreparador" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Correo Electronico de su Preparador
+                        </div>
+                    </div>
+                
+                
+                    <button 
+                        type="submit"
+                        class="btn btn-danger btn-lg my-5 col-3" 
+                        id="print"  
+                    >
+                        Editar
+                    </button> 
             </form>
-
-            <hr>
-
-            <a href="/atletas" class="btn btn-success btn-block mt-1.5">Volver a Atletas</a>
-   
-
-            <hr>
+        </div>
+            <div class="d-grid gap-3 d-md-block">
+            <a href="/atletas" class="btn btn-success btn-lg col-md-3">Volver a Atletas</a>
+       
 
             <button 
-                class="btn btn-danger btn-sm mt-5" 
+                class="btn btn-danger btn-lg col-3" 
                 id="btnEliminar" 
                 data-id="<%= atleta.id %>"
             >
                 Eliminar 
              </button>
+            </div>
+
+             <H4>
+                Firma de Atleta_______________________________________<span class="fs-6">Con esta firma certifico que no tengo antecedentes penales ni asuntos pendientes con la justici</span>
+            </H4>
 
 
 
@@ -93,6 +321,7 @@
     <%- include("template/footer") %>
 
     <script>
+        
 
         const btnEliminar = document.querySelector('#btnEliminar')
 
@@ -123,9 +352,32 @@
         formularioEditar.addEventListener('submit', async(e) => {
             e.preventDefault()
         
+            const FechaInscripcion = formularioEditar.elements['FechaInscripcion'].value
+            const Cedula = formularioEditar.elements['Cedula'].value
+            const Pasaporte = formularioEditar.elements['Pasaporte'].value
+            const Nacionalidad = formularioEditar.elements['Nacionalidad'].value
+            const Nacimiento = formularioEditar.elements['Nacimiento'].value
+            const Sexo = formularioEditar.elements['Sexo'].value
+            const Ocupacion = formularioEditar.elements['Ocupacion'].value
+            const Calle = formularioEditar.elements['Calle'].value
+            const Sector = formularioEditar.elements['Sector'].value
+            const Municipio = formularioEditar.elements['Municipio'].value
+            const Provincia = formularioEditar.elements['Provincia'].value
+            const Pais = formularioEditar.elements['Pais'].value
+            const Postal = formularioEditar.elements['Postal'].value
+            const Celular = formularioEditar.elements['Celular'].value
+            const TelFijo = formularioEditar.elements['TelFijo'].value
+            const Email = formularioEditar.elements['Email'].value
+            const Instagram = formularioEditar.elements['Instagram'].value
+            const Estatura = formularioEditar.elements['Estatura'].value
+            const Peso = formularioEditar.elements['Peso'].value
+            const Gimnasio = formularioEditar.elements['Gimnasio'].value
+            const Preparador = formularioEditar.elements['Preparador'].value
+            const CelPreparador = formularioEditar.elements['CelPreparador'].value
+            const EmailPreparador = formularioEditar.elements['EmailPreparador'].value
+            const Categoria = formularioEditar.elements['Categoria'].value
+            const IDFDFF = formularioEditar.elements['IDFDFF'].value
             const Nombre = formularioEditar.elements['Nombre'].value
-            const Categoria = document.querySelector('#categoriaInput').value
-            const IDFDFF = document.querySelector('#IDFDFFInput').value
             const id = formularioEditar.dataset.id
         
         try {
@@ -134,7 +386,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({Nombre, Categoria, IDFDFF})
+                body: JSON.stringify({Nombre, Categoria, IDFDFF, EmailPreparador, CelPreparador, Preparador, Gimnasio, Peso, Estatura, Instagram, Email, TelFijo, Celular, Postal, Pais, Provincia, Municipio, Sector, Calle, Ocupacion, Sexo, Nacimiento, Nacionalidad, Pasaporte, Cedula, FechaInscripcion})
             })
             const res = await data.json()
             console.log(res)
@@ -148,6 +400,13 @@
             console.log(error)
         }
 
-    })
+    });
+
+    const printBtn = document.getElementById('print');
+        
+        printBtn.addEventListener('click', function() {
+            print();
+            
+        });
 
 </script>

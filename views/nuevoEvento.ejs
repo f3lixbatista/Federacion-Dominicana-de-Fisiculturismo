@@ -1,0 +1,94 @@
+<%- include("template/cabecera", {tituloWeb: "Agregar Categoria"}) %>
+
+    <div class="container w-75">
+
+        <form method="post">
+            <label class="fs-1">Crear Evento</label><br>
+            <input class="col-sm-8 form-control"
+             type="text" 
+             placeholder="Nombre del Evento" 
+             class="form-control my-3 mb-4" 
+             name="NombreEvento"   
+            >
+            <label class="my-4 fs-3 fw-bold">
+                Seleccione las Categorias a Disputarse en este Evento
+            </label>
+            <div class="table-responsive" id="mydatatable-container">
+                <table class="records_list table table-striped table-bordered table-hover" id="mydatatable">
+                    <thead>
+                        <tr>
+                    
+                            <th scope="col" class="fs-4">Categorias <span class="mx-2 position-absolute top-50 end-0 translate-middle-y">Seleccione</span> </th>
+                           
+                        </tr>
+                    </thead>
+
+                    <tfoot>
+                        <tr>
+                    
+                           <th>Filter..</th>
+                     
+                        </tr>
+                    </tfoot>
+
+                    <tbody>
+                        <% if (arrayCategorias.length > 0) { %>
+                            <% arrayCategorias.forEach(categoria => { %>
+                                <tr> 
+                                    <td class="col-sm-6"> 
+                                        <div class="form-check form-switch position-relative input-group mb-3"></div>
+                                        
+                                            <label class="form-check-label fs-3" for="flexSwitchCheckDefault"><%= categoria.Categoria %></label>
+                                            <input role="switch" aria-label="Checkbox for following text input" value="<%= categoria.Categoria %>" class="form-check-input fs-4 mx-5 p-2 form-check-reverse position-absolute top-50 end-0 translate-middle-y" name="Categoria" type="checkbox" id="flexSwitchCheckReverse">
+                                        </div>
+                                    </td>
+                                    
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btn-primary btn-block my-3" type="submit" id="botonAgregar">
+                Agregar
+            </button> 
+        </form>
+    
+    </div>
+
+        <script type="text/javascript">
+
+            $(document).ready(function () {
+                $('#mydatatable tfoot th').each(function () {
+                    var title = $(this).text();
+                    $(this).html('<input type="text" placeholder="Filtrar.." />');
+                });
+        
+                var table = $('#mydatatable').DataTable({
+                    "dom": 'B<"float-left"i><"float-right"f>t<"float-left"l><"float-right"p><"clearfix">',
+                    "responsive": false,
+                    "language": {
+                        "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json"
+                    },
+                    "order": [
+                        [0, "desc"]
+                    ],
+                    "initComplete": function () {
+                        this.api().columns().every(function () {
+                            var that = this;
+        
+                            $('input', this.footer()).on('keyup change', function () {
+                                if (that.search() !== this.value) {
+                                    that
+                                        .search(this.value)
+                                        .draw();
+                                }
+                            });
+                        })
+                    },
+                    "buttons": ['csv', 'excel', 'pdf', 'print']
+                });
+            });
+        </script>
+
+<%- include("template/footer") %>

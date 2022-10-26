@@ -1,0 +1,111 @@
+<%- include("template/cabecera", {tituloWeb: "Incluir Categorias"}) %>
+
+    <div class="container container-fluid p-5">
+        <!--<h1>Nuevo Evento</h1>
+        <form action="/nuevoEvento" method="post">
+
+            <input 
+                type="text" 
+                placeholder="Nombre del Evento" 
+                class="form-control my-2" 
+                name="Nombre"
+            >
+        </form> -->
+            <a class="btn btn-dark btn-block my-4" href="/categorias/NuevaCategoria">
+                Nueva Categoria
+            </a>
+
+        
+            <div class="table-responsive" id="mydatatable-container">
+                <table class="records_list table table-striped table-bordered table-hover" id="mydatatable">
+                    <thead>
+                      <tr>
+                        <th scope="col">Orden</th>
+                        <!-- <th scope="col">Categoria</th>
+                        <th scope="col">Incluir</th> -->
+                      </tr>
+                    </thead>
+                        <tfoot>
+                            <tr>
+                                <th>Filter..</th>
+                                <!-- <th>Filter..</th>
+                                <td></td>  -->
+                            </tr>
+                        </tfoot>
+                    <tbody>
+            
+                        <% if (arrayEvento.length > 0) { %>
+                            <% arrayEvento.forEach(Evento => { %>
+                                <tr>
+                                    <!-- <td><input type="text" placeholder="Numero" class="form-control my-2" name="Salida"></td> -->
+                                    <td><%= Evento.Evento_form %></td>
+                                    <!-- <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" Nombre="Categoria">
+                                            <label class="form-check-label" for="flexSwitchCheckDefault">Agregar</label>
+                                        </div>
+                                    </td> -->
+                                </tr>
+                            <% }) %>
+                        <% } %>
+            
+                    </tbody>
+                </table>
+              </div>
+            
+
+            <button 
+                class="btn btn-light btn-block" 
+                type="submit"
+            >
+                Agregar
+            </button> 
+        
+
+        <script type="text/javascript">
+            $(document).ready(function () {
+                $('#mydatatable tfoot th').each(function () {
+                    var title = $(this).text();
+                    $(this).html('<input type="text" placeholder="Filtrar.." />');
+                });
+        
+                var table = $('#mydatatable').DataTable({
+                    "dom": 'B<"float-left"i><"float-right"f>t<"float-left"l><"float-right"p><"clearfix">',
+                    "responsive": false,
+                    "language": {
+                        "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json"
+                    },
+                    "order": [
+                        [0, "desc"]
+                    ],
+                    "initComplete": function () {
+                        this.api().columns().every(function () {
+                            var that = this;
+        
+                            $('input', this.footer()).on('keyup change', function () {
+                                if (that.search() !== this.value) {
+                                    that
+                                        .search(this.value)
+                                        .draw();
+                                }
+                            });
+                        })
+                    },
+                    "buttons": ['csv', 'excel', 'pdf', 'print']
+                });
+            });
+          </script>
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+
+<%- include("template/footer") %>
