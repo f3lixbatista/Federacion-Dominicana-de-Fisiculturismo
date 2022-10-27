@@ -94,15 +94,12 @@
 
 const express = require('express');
 
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
 // const { Conexion } = require("./db");
 const app = express();
 
 // const favicon = require ('serve-favicon');
 // const path = require ('path');
-
-
-
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
@@ -110,7 +107,7 @@ app.use(bodyParser.json())
 
 require('dotenv').config()
 
-const port = process.env.PORT || port;
+const port = process.env.PORT || 3000;
 
 //conexion a base de datos
 const mongoose = require('mongoose');
@@ -127,16 +124,14 @@ app.set('views', __dirname + '/views');
 app.use(express.static(__dirname + "/public"));
 // app.use(favicon(path.join(__dirname, 'public', 'mini2.ico')));
 
-app.use('/categorias', require('./router/Categoria'));
-
-
-app.use('/atletas', require('./router/Atletas'));
 // rutas web
 app.use('/', require('./router/rutasBat'));
+// ruta categorias
+app.use('/categorias', require('./router/Categoria'));
+// ruta atletas
+app.use('/atletas', require('./router/Atletas'));
 
 app.use(express.urlencoded({extended: true}));
-// ruta atletas
-
 
 app.use((req, res, next) => {
     res.status(404).render("404", {
