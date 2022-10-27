@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node app",
     "ini": "nodemon app"
-    },
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -28,5 +28,9 @@
   "repository": {
     "type": "git",
     "url": "https://git.heroku.com/gorjea.git"
+  },
+  "devDependencies": {
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
   }
 }
