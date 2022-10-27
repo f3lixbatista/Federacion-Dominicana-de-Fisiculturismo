@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
 // const { db, collection } = require('../models/categoriamodel');
-const Schema = mongoose.Schema;
+// const Schema = mongoose.Schema;
 const Atleta = require('../models/atletamodel')
 
 router.get('/', async (req, res) => {
