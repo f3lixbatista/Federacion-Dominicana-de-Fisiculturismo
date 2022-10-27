@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const { collection } = require('../models/atletamodel');
-const { db } = require('../models/categoriamodel');
+// const { collection } = require('../models/atletamodel');
+// const { db } = require('../models/categoriamodel');
 const Schema = mongoose.Schema;
 
 const Categoria = require('../models/categoriamodel');
