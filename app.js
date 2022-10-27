@@ -98,9 +98,7 @@ const bodyParser = require('body-parser');
 // const { Conexion } = require("./db");
 const app = express();
 
-// const favicon = require ('serve-favicon');
-// const path = require ('path');
-// parse application/x-www-form-urlencoded
+
 app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
 app.use(bodyParser.json())
@@ -122,7 +120,7 @@ mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
 app.use(express.static(__dirname + "/public"));
-// app.use(favicon(path.join(__dirname, 'public', 'mini2.ico')));
+
 
 // rutas web
 app.use('/', require('./router/rutasBat'));
