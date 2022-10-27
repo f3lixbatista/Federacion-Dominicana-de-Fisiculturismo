@@ -1,7 +1,7 @@
 {
   "name": "fundamentosnode",
   "version": "1.0.0",
-  "main": "app.js",
+  "main": "app",
   "engines": {
     "node": "16.13.1",
     "npm": "8.13.1"
