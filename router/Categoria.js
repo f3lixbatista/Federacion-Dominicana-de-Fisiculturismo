@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 // const { db } = require('../models/categoriamodel');
 const Schema = mongoose.Schema;
 
-const Atleta = require('../models/atletamodel');
+const Categoria = require('../models/categoriamodel');
 
 
 
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
 
     try {
 
-        const arrayCategoriaDB = await Atleta.find();
+        const arrayCategoriaDB = await Categoria.find();
         console.log(arrayCategoriaDB)
         
         res.render("categorias", {
