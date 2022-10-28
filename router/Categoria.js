@@ -266,14 +266,7 @@ router.post('/formDinamica', async (req, res) => {
 
   
 
-router.get('/inscripcion',  (req, res) => {
-       
-    res.render("inscripcion")
-           
-})
 
-
-module.exports = router;
 
  
 
