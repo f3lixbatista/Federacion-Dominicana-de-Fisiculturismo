@@ -56,7 +56,7 @@ router.get('/nuevoEvento', async (req, res) => {
         console.log(arrayCategoriaDB)
         
         res.render('nuevoEvento', {
-            // Evento: Evento_form.Evento_form,
+           
             arrayCategorias: arrayCategoriaDB
         })
     
@@ -178,16 +178,16 @@ router.post('/formDinamica', async (req, res) => {
 
 // NombreEvento
 
-router.get('/crearEvento',  (req, res) => {
+// router.get('/crearEvento',  (req, res) => {
        
-    res.render("crearEvento")
+//     res.render("crearEvento")
            
-})
+// })
     
 
-router.post('/crearEvento', async (req, res) => {
+// router.post('/crearEvento', async (req, res) => {
     // const arrayBody = req.body
-    const Evento_form = req.body
+    // const Evento_form = req.body
     // const {Salida} = req.body
     // const {Categoria} = req.body
     // console.log(arrayBody)
@@ -261,7 +261,7 @@ router.post('/crearEvento', async (req, res) => {
 
 
 
-}) 
+// }) 
 
 
   
