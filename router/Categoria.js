@@ -52,12 +52,12 @@ router.get('/nuevoEvento', async (req, res) => {
 
     try {
     
-        const arrayCategoriaDB = await Categoria.find();
-        console.log(arrayCategoriaDB)
+        const arrayCategoryDB = await Categoria.find();
+        console.log(arrayCategoryDB)
         
         res.render('nuevoEvento', {
            
-            arrayCategorias: arrayCategoriaDB
+            arrayCategorias: arrayCategoryDB
         })
     
     } catch (error) {
