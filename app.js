@@ -128,6 +128,8 @@ app.use('/', require('./router/rutasBat'));
 app.use('/categorias', require('./router/Categoria'));
 // ruta atletas
 app.use('/atletas', require('./router/Atletas'));
+//ruta inscripcion
+app.use('/inscripcion', require('./router/Inscripcion'));
 
 app.use(express.urlencoded({extended: true}));
 
