@@ -2,23 +2,42 @@
 
 <h1>Inscripcion</h1>
 
-<div class="container mx-3">
+<div class="container">
     <div class="justify-content">
-        <h1 class="text-primary fw-bold">FEDERACION DOMINICANA DE FISICULTURISM (FDFF)</h1>
+        <h1 class="text-primary fw-bold">FEDERACION DOMINICANA DE FISICULTURISMO (FDFF)</h1>
     </div>
     <div class="border border-primary border-5">
         <form action="">
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">ID-FDFF</p>
+
+            <div class="col-md-3 py-0 pt-0 my-4">
+                <label for="exampleDataList" class="form-label"><p class="my-3">ID-FDFF</p></label>
+                <input class="form-control" list="datalistOptions" id="exampleDataList" placeholder="">
+                <datalist id="datalistOptions">
+                    <% if (inscripcionAtletas.length > 0) { %>
+                        <% inscripcionAtletas.forEach(atleta => { %>
+                        <option value="<%= atleta.IDFDFF %>"><%= atleta.Nombre %></option>
+                        <% }) %>
+                    <% } %>
+                </datalist>
+                <div class="invalid-tooltip">
+                    Busque por ID-FDFF
+                </div> 
+            </div>
+
+        <label class="nav justify-content-start my-2 fs-6">
             <input type="number" class="form-control my-2 mx-1 col-sm-3 nav-item nav-pills">
         </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Fecha de Inscripcion</p>
+        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Fecha</p>
             <input type="date" class="form-control my-2 mx-1 col-sm-3 nav-item nav-pills">
         </label>
-        <label class="nav justify-content-start fs-6">Nombres y Apellidos<br>segun identificacion
-            <input type="text" class="form-control my-2 mx-1 col-sm-6 nav-item nav-pills">
+        <label class="nav justify-content-start fs-6">Nombres y Apellidos
+            <input  none;" type="text" class="form-control my-2 mx-1 col-sm-6 nav-item nav-pills">
+                <select name="" id="">
+                     <option value="<%= atleta.Nombre %>"></option> 
+                </select>
         </label>
         <label class="nav justify-content-start display-flex fs-6"><p class="my-3">Cedula</p>
-            <input type="number" class="form-control my-2 mx-1 col-sm-3 nav-item nav-pills">
+            <input value="<%= atleta.Cedula %> type="number" class="d-none form-control my-2 mx-1 col-sm-3 nav-item nav-pills">
         </label> 
         <label class="nav justify-content-start fs-6"><p class="my-3">Pasaporte</p>
             <input type="text" class="form-control my-2 mx-1 col-sm-3 nav-item nav-pills">
@@ -26,51 +45,20 @@
         <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Nacionalidad</p>
             <input type="text" class="form-control my-2 mx-1 col-sm-3 nav-item nav-pills">
         </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Fecha de Nacimiento</p>
+        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Edad</p>
             <input type="date" class="form-control my-2 mx-1 col-sm-3 nav-item nav-pills">
         </label>
         <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Sexo</p>
-            <input type="text" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
+            <input value="<%= atleta.Sexo %> type="text" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
         </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Calle de Residencia</p>
-            <input type="text" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
-        </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Numero Residencia</p>
-            <input type="number" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
-        </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Apartamento #</p>
-            <input type="text" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
-        </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Sector/Barrio</p>
-            <input type="text" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
-        </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Municipio/Distrito</p>
-            <input type="text" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
-        </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Provincia/Estado</p>
-            <input type="text" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
-        </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Pais</p>
-            <input type="text" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
-        </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Codigo Postal</p>
-            <input type="number" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
-        </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Ocupacion</p>
+        
+        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Ciudad</p>
             <input type="text" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
         </label>
         <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Celular</p>
             <input type="tel" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
         </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Telefono Residencial</p>
-            <input type="tel" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
-        </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Email</p>
-            <input type="email" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
-        </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Instagram</p>
-            <input type="text" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
-        </label>
+        
         <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Categoria</p>
             <input type="text" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
         </label>
@@ -80,14 +68,12 @@
         <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Peso en Kilos</p>
             <input type="number" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
         </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Gimnasio</p>
-            <input type="text" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
-        </label>
-        <label class="nav justify-content-start my-2 fs-6"><p class="my-3">Preparador</p>
-            <input type="text" class="form-control my-2 mx-1 col-sm-2 nav-item nav-pills">
-        </label> 
     </form>
 </div>
 </div>
+
+<script>
+    
+</script>
 
 <%- include("template/footer") %>
