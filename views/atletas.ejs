@@ -2,24 +2,24 @@
 
 
 <!-- // class="container container-fluid" -->
-<div>
-    
-    <h1>Atletas</h1>
-
-    <a 
-        class="btn btn-dark btn-block my-4" 
-        href="/atletas/crear"
-    >
-        Nueva Membresía
-    </a>
-  
+<div class="bg-warning p-2">
+    <div class="row g-2">
+        <div class="col-6">
+            <h1 class="my-4">Seccion Atletas</h1>
+        </div>
+        <div class="col-6 d-flex flex-row-reverse">
+            <a class="btn btn-primary border border-dark btn-lg col-5 my-4" href="/atletas/crear">
+                Nueva Membresía
+            </a>
+        </div>
+    </div>
     <div class="table-responsive" id="mydatatable-container">
         <table class="records_list table table-striped table-bordered table-hover" id="mydatatable">
             <thead>
                 <tr  class="table-blue">
-                    <th scope="col">Accion</th>
-                    <th scope="col">IDFDFF</th>
-                    <th scope="col" class="nombreAtleta col col-md-8">Nombre</th>
+                    <th scope="col" class="bg-primary">Accion</th>
+                    <th scope="col" class="bg-primary">IDFDFF</th>
+                    <th scope="col" class="bg-primary fs-5 mx-5 pl-5 pr-5 mx-4 position-relative"><p class="position-absolute top-0 start-0">Atleta</p></th>
                     <th scope="col">Categoria</th>
                     <th scope="col">FechaInscripcion</th>
                     <th scope="col">Cedula</th>
