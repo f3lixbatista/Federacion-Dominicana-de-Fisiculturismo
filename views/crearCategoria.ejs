@@ -130,7 +130,7 @@
             </div>
         </div>
 
-        <button class="btn btn-success text-dark fw-bold border border-dark col-sm-2 mb-5 position-absolute bottom-0 start-50 translate-middle-x" type="submit" id="btnAddCategoria">
+        <button style="display: none;" class="btn btn-primary text-dark fw-bold border border-success border-3 col-sm-2 mb-5 position-absolute bottom-0 start-50 translate-middle-x" type="submit" id="btnAddCategoria">
             Agregar
         </button> 
 
@@ -488,7 +488,7 @@
         }
     }); 
 
-//--------------------------------campo division-------------------------------------
+//---------------------------------campo division--------------------------------------
     const division = document.getElementById('division')
     division.addEventListener('change', function() {
         if (division.value == 'Open') {
@@ -544,18 +544,38 @@
             document.getElementById('campoEdad').style.display = 'none';
             document.getElementById('campoPeso').style.display = 'none';
         } 
+
     });
 
-   
+//-----------------------------------Campo Edad----------------------------------------
+const edadInterval = document.getElementById('hastaEdad')
+    edadInterval.addEventListener('change', function() {
+        if (document.getElementById('desdeEdad').value != "") {
+    document.getElementById('btnAddCategoria').style.display = 'block';
+    }
+});
+//-----------------------------------Campo Peso----------------------------------------
+const pesoInterval = document.getElementById('hastaPeso')
+    pesoInterval.addEventListener('change', function() {
+        if (document.getElementById('desdePeso').value != "") {
+    document.getElementById('btnAddCategoria').style.display = 'block';
+    }
+});
 
+//---------------------------------Campo Estatura--------------------------------------
+const estaturaInterval = document.getElementById('hastaEstatura')
+    estaturaInterval.addEventListener('change', function() {
+        if (document.getElementById('desdeEstatura').value != "") {
+    document.getElementById('btnAddCategoria').style.display = 'block';
+    }
+});
+
+
+//---------------------------------Boton Agregar--------------------------------------
     const clickBtn = document.getElementById('btnAddCategoria');
     
     clickBtn.addEventListener('click', function() {
-        // console.log(document.getElementById('desdePeso').value) required=""
-        // console.log(document.getElementById('hastaPeso').value)
-        // document.getElementById('desdePeso').required.delete
-        // document.getElementById('hastaPeso').required.delete
-       
+
         if (document.getElementById('desdePeso').value == "") {
             document.getElementById('desdePeso').name = ''
             document.getElementById('hastaPeso').name = ''
@@ -570,7 +590,9 @@
             document.getElementById('desdeEstatura').name = ''
             document.getElementById('hastaEstatura').name = ''
         } 
-    })
+    });
+
+
 
 </script>
 
