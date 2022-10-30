@@ -9,11 +9,11 @@ router.get('/', async (req, res) => {
 
     try {
 
-        const inscripcionAtletasDB = await Atleta.find();
-        console.log(inscripcionAtletasDB)
+        const arrayAtletaDB = await Atleta.find();
+        console.log(arrayAtletaDB)
         
         res.render("inscripcion", {
-            inscripcionAtletas: inscripcionAtletasDB
+            arrayAtletas: arrayAtletaDB
         })
     
     } catch (error) {
@@ -21,6 +21,30 @@ router.get('/', async (req, res) => {
     }
 
 })
+
+router.get('/:id', async (req, res) => {
+        
+    const id = req.params.id
+     
+    try {     
+
+        const atletaDB = await Atleta.findOne({ _id: id })
+        // console.log(atletaDB)
+        
+        res.render('detalleInscripcion', {
+            atleta: atletaDB,
+            error: false           
+        })       
+        
+    } catch (error) {       
+        res.render('detalleInscripcion', { 
+            error: true,
+            mensaje:"no encontrado"
+        })
+    }
+})
+
+
 
 // router.get('/crear', (req, res) => {
 //     res.render('crear')
