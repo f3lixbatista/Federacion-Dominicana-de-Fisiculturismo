@@ -1,14 +1,6 @@
 <%- include("template/cabecera", {tituloWeb: "Detalle de Atleta"}) %>
 
-    <div class="container ml-auto mr-auto caja">
-        
-        <h1 id="titulo" class="mx-4">Editar Miembro</h1>
-                
-                <div class="container width-50 row ml-auto mr-auto">
-                    <img src="/img/fdff.svg" class="col-2">
-                    <h1 class="text-primary fw-bold text-center mt-5 col-8"><DE class="spanFed">FEDERACION DOMINICANA DE FISICULTURISMO</span></h1>
-                    <img src="/img/ifbb.svg" class="imgIfbb col-2">
-                </div>
+  
                
         <% if (error) { %>
             <p>   
@@ -45,7 +37,7 @@
                     
                     <div class="col-md-3 py-0 pt-0 m-0">
                         <label for="validationTooltip05" class="form-label">Fecha de Inscripcion</label>
-                        <input value="<%= atleta.FechaInscripcion %>" type="datetime" class="form-control" name="FechaInscripcion" id="validationTooltip05" required="">
+                        <input value="<%= atleta.FechaInscripcion %>" type="date" class="form-control" name="FechaInscripcion" id="validationTooltip05" required="">
                         <div class="invalid-tooltip">
                           Fecha de Hoy
                         </div>
@@ -77,7 +69,7 @@
 
                     <div class="col-md-4 py-0 pt-0 my-4">
                         <label for="validationTooltip05" class="form-label">Nacionalidad</label>
-                        <input value="<%= atleta.Nacionalidad %>" type="text" class="form-control" name="Nacionalidad" id="validationTooltip05" required="">
+                        <input value="<%= atleta.Nacionalidad %>" type="date" class="form-control" name="Nacionalidad" id="validationTooltip05" required="">
                         <div class="invalid-tooltip">
                           Nacionalidad
                         </div>
@@ -274,7 +266,7 @@
        
 
             <button 
-                class="btn btn-danger btn-md col-3 my-2" 
+                class="btn btn-danger btn-md col-3 my-3 mx-4" 
                 id="btnEliminar" 
                 data-id="<%= atleta.id %>"
             >
@@ -316,7 +308,7 @@
         
         <% } %>
         
-    </div>  
+    
 
     <%- include("template/footer") %>
 
