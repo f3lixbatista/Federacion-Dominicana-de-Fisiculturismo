@@ -1,0 +1,296 @@
+<%- include("template/cabecera", {tituloWeb: "Detalle de Atleta"}) %>
+
+  
+               
+        <% if (error) { %>
+            <p>   
+                <%= mensaje %> 
+            </p>
+            <a href="/inscripcion" class="btn btn-warning btn-block">Volver a Inscripcion</a>
+        <% } %>
+        <% if (!error) { %>
+
+            <div class="container border border-primary border-3 mb-2">
+
+            <form id="formularioEditar" class="row g-3 needs-validation was-validated" data-id="<%= atleta.id %>">
+                
+
+                <h6 class="position-relative mt-5 opacity-25">Del Atleta</h6>
+                    
+                <div class="col-md-2 py-0 pt-0 mt-4">
+                    <label for="validationTooltip05" class="form-label">ID-FDFF</label>
+                    <input value="<%= atleta.IDFDFF %>" type="number" class="form-control" id="validationTooltip05" name="IDFDFF" required="">
+                    <div class="invalid-tooltip">
+                      ID de la Federacion (FDFF)
+                    </div>
+                </div>
+
+                    <div class="col-md-5 py-0 pt-0 m-0 invisible">
+                      <label for="validationTooltip05" class="form-label">Fecha</label>
+                      <button class="form-control" name="invi" id="validationTooltip05" required=""> </button>
+                    </div>
+                    <div class="col-md-2 py-0 pt-0 m-0 invisible">
+                        <label for="validationTooltip05" class="form-label">Fecha</label>
+                        <button class="form-control" name="invi" id="validationTooltip05" required=""> </button>
+                      </div>
+
+                    <div class="col-md-3 py-0 pt-0 mb-1">
+                        <label for="validationTooltip05" class="form-label">Fecha</label>
+                        <input value="" type="datetime" class="form-control" name="Nacimiento" id="validationTooltip05">
+                        <div class="invalid-tooltip">
+                            Fecha Actual
+                        </div>
+                    </div>
+                    
+
+                    <div class="col-md-3 pt-0 mt-4">
+                        <label for="validationTooltip03" class="form-label">Nombre(s) y Apellido(s)</label>
+                        <input value="<%= atleta.Nombre %>" type="text" class="form-control" name="Nombre" id="validationTooltip03" required="">
+                        <div class="invalid-tooltip">
+                          Segun Documento de Identidad
+                        </div>
+                      </div>
+
+                    <div class="col-md-2 py-0 pt-0 mt-4">
+                        <label for="validationTooltip05" class="form-label">Cedula</label>
+                        <input value="<%= atleta.Cedula %>" type="number" class="form-control" name="Cedula" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                          Numero de Cedula 
+                        </div>
+                    </div>
+
+                    <div class="col-md-2 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Fecha de Nacimiento</label>
+                        <input value="<%= atleta.Nacimiento %>" type="text" class="form-control" name="Nacimiento" id="fechaNacimiento" required="">
+                        <div class="invalid-tooltip">
+                            Fecha de Nacimiento
+                        </div>
+                    </div>
+
+                    <div class="col-md-1 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Edad</label>
+                        <input value="" type="datetime" class="form-control" name="Nacimiento" id="edad">
+                        <div class="invalid-tooltip">
+                            Edad en Años
+                        </div>
+                    </div>
+
+                    <!-- <div class="idedad"><h1 id="edad"></h1></div> -->
+
+                    <div class="col-md-1 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Sexo</label>
+                        <input value="<%= atleta.Sexo %>" type="text" class="form-control" name="Sexo" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Sexo
+                        </div>
+                    </div>
+
+                    <div class="col-md-1 py-0 pt-0  my-4">
+                        <label for="validationTooltip05" class="form-label">Peso en Kilos</label>
+                        <input value="" type="number" step="0.01" min="0" class="form-control" name="Peso" id="validationTooltip05">
+                        <div class="invalid-tooltip">
+                            Peso en Kilos
+                        </div>
+                    </div>
+
+                    <div class="col-md-2 py-0 pt-0  my-4">
+                        <label for="validationTooltip05" class="form-label">Estatura en Centimetros</label>
+                        <input value="" type="number" step="0.01" min="0" class="form-control" name="Estatura" id="validationTooltip05">
+                        <div class="invalid-tooltip">
+                            Estatura en Centimetros
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0 mb-4">
+                        <label for="validationTooltip05" class="form-label">Sector/Barrio</label>
+                        <input value="<%= atleta.Sector %>" type="text" class="form-control" name="Sector" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Sector o Barrio de Residencia
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Preparador</label>
+                        <input value="<%= atleta.Preparador %>" type="text" class="form-control" name="Preparador" id="validationTooltip05" required="">
+                        <div class="invalid-tooltip">
+                            Entrendor o Coach
+                        </div>
+                    </div>
+
+                  
+                
+                    <button 
+                     
+                        class="btn btn-danger btn-md mt-5 mb-4 col-3" 
+                        id="print"  
+                        type="submit"
+                    >
+                        Inscribir
+                    </button> 
+            </form>
+        </div>
+            <div class="d-grid gap-3 d-md-block">
+            <!-- <a href="/atletas" class="btn btn-success btn-lg col-md-3">Volver a Atletas</a> -->
+       
+
+          
+
+             <H4 class="mb-2">
+                Firma de Atleta_______________________________________<span class="fs-6">Con esta firma certifico que no tengo antecedentes penales ni asuntos pendientes con la justici</span>
+            </H4>
+        
+        <% } %>
+        
+    
+
+    <%- include("template/footer") %>
+
+    <script>
+
+    const printBtn = document.getElementById('print');
+    printBtn.addEventListener('click', function() {
+        print();
+                   
+    });
+
+    window.addEventListener('load', function () {
+
+    const fechaNacimiento = document.getElementById("fechaNacimiento");
+
+    // const edad = document.getElementById("edad");
+    // console.log(fechaNacimiento.value)
+    // const calcularEdad = (fechaNacimiento) => {
+        const fechaActual = new Date();
+        const anoActual = parseInt(fechaActual.getFullYear());
+        const mesActual = parseInt(fechaActual.getMonth()) + 1;
+        const diaActual = parseInt(fechaActual.getDate());
+  
+        const fechaPartes = fechaNacimiento.value.split(' ')
+        // 2016-07-11
+        const anoNacimiento = fechaPartes[3];
+        const mesNacimientoText = fechaPartes[1];
+        const diaNacimiento = fechaPartes[2];
+        // console.log(diaNacimiento)
+        // console.log(mesNacimientoText)
+        // console.log(anoNacimiento)
+
+        const meses = ['Ano', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const mesNacimiento = meses.findIndex((elemento) => elemento === mesNacimientoText);
+        // console.log(mesNacimiento)
+  
+        
+        let edad = anoActual - anoNacimiento;
+            if (mesActual < mesNacimiento) {
+                edad--;
+            } else if (mesActual === mesNacimiento) {
+                if (diaActual < diaNacimiento) {
+                    edad--;
+                }
+            }
+        // return edad;
+
+        console.log(edad)
+
+        document.getElementById('edad').value = edad
+    // };
+
+    // calcularEdad()
+
+    // window.addEventListener('load', function () {
+
+    //     fechaNacimiento.addEventListener('change', function () {
+    //         if (this.value) {
+    //             edad.innerText = `La edad es: ${calcularEdad(this.value)} años`;
+    //         }
+    //     });
+    });
+
+        
+
+    //     const btnEliminar = document.querySelector('#btnEliminar')
+
+    //     btnEliminar.addEventListener('click', async() => {
+    //         console.log('hciste click')
+    //         const id = btnEliminar.dataset.id
+    //         console.log('Nombre', id)
+    //         try {
+                
+    //             const data = await fetch(`/atletas/${id}`, {
+    //                 method: "delete"
+    //             })
+    //             const res = await data.json()
+
+    //             if(res.estado){
+    //                 window.location.href = '/atletas'
+    //             }else {
+    //                 console.log(res)
+    //             }
+
+    //         } catch (error) {
+    //             console.log(error)
+    //         }
+    //     })
+
+    //     const formularioEditar = document.querySelector('#formularioEditar')
+
+    //     formularioEditar.addEventListener('submit', async(e) => {
+    //         e.preventDefault()
+        
+    //         const FechaInscripcion = formularioEditar.elements['FechaInscripcion'].value
+    //         const Cedula = formularioEditar.elements['Cedula'].value
+    //         const Pasaporte = formularioEditar.elements['Pasaporte'].value
+    //         const Nacionalidad = formularioEditar.elements['Nacionalidad'].value
+    //         const Nacimiento = formularioEditar.elements['Nacimiento'].value
+    //         const Sexo = formularioEditar.elements['Sexo'].value
+    //         const Ocupacion = formularioEditar.elements['Ocupacion'].value
+    //         const Calle = formularioEditar.elements['Calle'].value
+    //         const Sector = formularioEditar.elements['Sector'].value
+    //         const Municipio = formularioEditar.elements['Municipio'].value
+    //         const Provincia = formularioEditar.elements['Provincia'].value
+    //         const Pais = formularioEditar.elements['Pais'].value
+    //         const Postal = formularioEditar.elements['Postal'].value
+    //         const Celular = formularioEditar.elements['Celular'].value
+    //         const TelFijo = formularioEditar.elements['TelFijo'].value
+    //         const Email = formularioEditar.elements['Email'].value
+    //         const Instagram = formularioEditar.elements['Instagram'].value
+    //         const Estatura = formularioEditar.elements['Estatura'].value
+    //         const Peso = formularioEditar.elements['Peso'].value
+    //         const Gimnasio = formularioEditar.elements['Gimnasio'].value
+    //         const Preparador = formularioEditar.elements['Preparador'].value
+    //         const CelPreparador = formularioEditar.elements['CelPreparador'].value
+    //         const EmailPreparador = formularioEditar.elements['EmailPreparador'].value
+    //         const Categoria = formularioEditar.elements['Categoria'].value
+    //         const IDFDFF = formularioEditar.elements['IDFDFF'].value
+    //         const Nombre = formularioEditar.elements['Nombre'].value
+    //         const id = formularioEditar.dataset.id
+        
+    //     try {
+    //         const data = await fetch(`/atletas/${id}`, {
+    //             method: 'put',
+    //             headers: {
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify({Nombre, Categoria, IDFDFF, EmailPreparador, CelPreparador, Preparador, Gimnasio, Peso, Estatura, Instagram, Email, TelFijo, Celular, Postal, Pais, Provincia, Municipio, Sector, Calle, Ocupacion, Sexo, Nacimiento, Nacionalidad, Pasaporte, Cedula, FechaInscripcion})
+    //         })
+    //         const res = await data.json()
+    //         console.log(res)
+            
+    //         if(res.estado){
+    //             window.location.href = '/atletas'
+    //         }else{
+    //             console.log(res)
+    //         }
+    //     } catch (error) {
+    //         console.log(error)
+    //     }
+
+    // });
+
+    // const printBtn = document.getElementById('print');
+        
+    //     printBtn.addEventListener('click', function() {
+    //         print();
+            
+    //     });
+
+</script>
