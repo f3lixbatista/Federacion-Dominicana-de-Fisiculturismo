@@ -130,6 +130,8 @@ app.use('/categorias', require('./router/Categoria'));
 app.use('/atletas', require('./router/Atletas'));
 //ruta inscripcion
 app.use('/inscripcion', require('./router/Inscripcion'));
+//ruta Estadisticas
+app.use('/estadisticas', require('./router/Estadisticas'));
 
 app.use(express.urlencoded({extended: true}));
 
