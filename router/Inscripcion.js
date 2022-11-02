@@ -4,16 +4,21 @@ const router = express.Router();
 // const { db, collection } = require('../models/categoriamodel');
 // const Schema = mongoose.Schema;
 const Atleta = require('../models/atletamodel')
+const Categoria = require('../models/categoriamodel')
+
 
 router.get('/', async (req, res) => {
 
     try {
 
+        
+
         const arrayAtletaDB = await Atleta.find();
         console.log(arrayAtletaDB)
         
         res.render("inscripcion", {
-            arrayAtletas: arrayAtletaDB
+            arrayAtletas: arrayAtletaDB,
+            
         })
     
     } catch (error) {
@@ -28,11 +33,15 @@ router.get('/:id', async (req, res) => {
      
     try {     
 
+        const arrayCategoriaDB = await Categoria.find();
+        console.log(arrayCategoriaDB)
+
         const atletaDB = await Atleta.findOne({ _id: id })
         // console.log(atletaDB)
         
         res.render('detalleInscripcion', {
             atleta: atletaDB,
+            arrayCategorias: arrayCategoriaDB,
             error: false           
         })       
         
@@ -131,30 +140,30 @@ router.get('/:id', async (req, res) => {
 // })
 
 
-// router.put('/:id', async (req, res) => {
-//     const id = req.params.id
-    
-//     const body = req.body
-    
-//     try {
+router.put('/:id', async (req, res) => {
 
-//         const atletaDB = await Atleta.findByIdAndUpdate(id, body, { useFindAndModify: false })
-//         console.log(atletaDB)
+    const body = req.body
+    console.log(body);
+    
+    // try {
 
-//         res.json({
-//             estado: true,
-//             mensaje: 'Editado'
-//         })
+    //     const atletaDB = await Atleta.findByIdAndUpdate(id, body, { useFindAndModify: false })
+    //     console.log(atletaDB)
+
+    //     res.json({
+    //         estado: true,
+    //         mensaje: 'Editado'
+    //     })
         
-//     } catch (error) {
-//         console.log(error)
+    // } catch (error) {
+    //     console.log(error)
         
-//         res.json({
-//             estado: false,
-//             mensaje: 'Fallamos!!'
-//         })
-//     }
-// })
+    //     res.json({
+    //         estado: false,
+    //         mensaje: 'Fallamos!!'
+    //     })
+    // }
+})
 
 
 module.exports = router;
