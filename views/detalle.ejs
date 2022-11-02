@@ -1,7 +1,5 @@
 <%- include("template/cabecera", {tituloWeb: "Detalle de Atleta"}) %>
-
-  
-               
+ 
         <% if (error) { %>
             <p>   
                 <%= mensaje %> 
@@ -83,13 +81,27 @@
                         </div>
                     </div>
 
+                    
                     <div class="col-md-1 py-0 pt-0 my-4">
                         <label for="validationTooltip05" class="form-label">Sexo</label>
-                        <input value="<%= atleta.Sexo %>" type="text" class="form-control" name="Sexo" id="validationTooltip05" required="">
+                        <select class="form-control" name="Sexo" required="true">
+                            <option selected><%= atleta.Sexo %></option>
+                            <option value="F">F</option>
+                            <option value="M">M</option>
+                        </select>
+                        <div class="invalid-tooltip">
+                            Sexo
+                        </div> 
+                    </div>
+
+<!-- 
+                    <div class="col-md-1 py-0 pt-0 my-4">
+                        <label for="validationTooltip05" class="form-label">Sexo</label>
+                        <input value="" type="text" class="form-control" name="Sexo" id="validationTooltip05" required="">
                         <div class="invalid-tooltip">
                             Sexo
                         </div>
-                    </div>
+                    </div> -->
 
                     <div class="col-md-4 py-0 pt-0 my-4">
                         <label for="validationTooltip05" class="form-label">Ocupacion</label>
@@ -98,8 +110,6 @@
                             Ocupacion
                         </div>
                     </div>
-
-
 
                     <h6 class="position-relative mt-5 opacity-25">De la Residencia</h6>
                     <div class="col-md-6 py-0 pt-0 m-0">
