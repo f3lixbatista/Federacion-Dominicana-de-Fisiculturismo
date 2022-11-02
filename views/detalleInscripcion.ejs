@@ -1,6 +1,9 @@
-<%- include("template/cabecera", {tituloWeb: "Detalle de Atleta"}) %>
+<%- include("template/cabecera", {tituloWeb: "Seleccion de Categoria"}) %>
 
-  
+<div class="container border border-primary border-3 mb-2">
+
+    <form id="formularioEditar" class="row g-3 needs-validation was-validated" data-id="<%= atleta.id %>">
+        
                
         <% if (error) { %>
             <p>   
@@ -10,10 +13,7 @@
         <% } %>
         <% if (!error) { %>
 
-            <div class="container border border-primary border-3 mb-2">
-
-            <form id="formularioEditar" class="row g-3 needs-validation was-validated" data-id="<%= atleta.id %>">
-                
+           
 
                 <h6 class="position-relative mt-5 opacity-25">Del Atleta</h6>
                     
@@ -36,7 +36,7 @@
 
                     <div class="col-md-3 py-0 pt-0 mb-1">
                         <label for="validationTooltip05" class="form-label">Fecha</label>
-                        <input value="" type="datetime" class="form-control" name="Nacimiento" id="validationTooltip05">
+                        <input value="" type="datetime" class="form-control" name="FechaActual" id="fechaActual">
                         <div class="invalid-tooltip">
                             Fecha Actual
                         </div>
@@ -69,7 +69,7 @@
 
                     <div class="col-md-1 py-0 pt-0 my-4">
                         <label for="validationTooltip05" class="form-label">Edad</label>
-                        <input value="" type="datetime" class="form-control" name="Nacimiento" id="edad">
+                        <input value="" type="datetime" class="form-control" name="Edad" id="edad">
                         <div class="invalid-tooltip">
                             Edad en Años
                         </div>
@@ -111,7 +111,7 @@
 
                     <div class="col-md-3 py-0 pt-0  mb-4">
                         <label for="validationTooltip05" class="form-label">Preparador</label>
-                        <input value="<%= atleta.Preparador %>" type="text" class="form-control" name="Preparador" id="validationTooltip05" required="">
+                        <input value="<%= atleta.Preparador %>" type="text" class="form-control  d-none" name="Preparador" id="validationTooltip05" required="">
                         <div class="invalid-tooltip">
                             Entrendor o Coach
                         </div>
@@ -127,31 +127,45 @@
                     >
                         Inscribir
                     </button> 
-            </form>
-        </div>
-            <div class="d-grid gap-3 d-md-block">
-            <!-- <a href="/atletas" class="btn btn-success btn-lg col-md-3">Volver a Atletas</a> -->
+          
+        <div class="container my-5">
+            <hr class="lg-1">
        
 
+        <% if (arrayCategorias.length > 0) { %>
+            <% arrayCategorias.forEach(categoria => { %>
+                 
+                    <div class="row"> 
+                        <div class="col-10"> 
+                        <label class="form-check-label lh-1 fs-4 col-10" for="flexSwitchCheckDefault"><p class="lh-1"><%= categoria.Categoria %></p></label>
+                            
+                        <input role="switch" aria-label="Checkbox for following text input" value="<%= categoria.Categoria %>" class="valores form-check-input fs-4 p-0 mt-0 mb-0 form-check-reverse mx-4 col-2" name="Categoria" type="checkbox" id="flexSwitchCheckReverse">
+                        </div>  
+                        <div class="col-1 p-0 m-0">
+                            <input value="<%= categoria.id %>" type="text" class="form-control my-2 invisible" name="IdCategoria" id="idCategoria">
+                        </div>
+                           
+                            <hr class="lg-1">
+                        
+                    </div>
+                    
           
-
-             <H4 class="mb-2">
-                Firma de Atleta_______________________________________<span class="fs-6">Con esta firma certifico que no tengo antecedentes penales ni asuntos pendientes con la justici</span>
-            </H4>
-        
+            <% }) %>
         <% } %>
-        
-    
+        <% } %>
+        </div>
+    </form>
+</div>
+  
+        <H4 class="mb-2">
+            Firma de Atleta_______________________________________<span class="fs-6">Con esta firma certifico que no tengo antecedentes penales ni asuntos pendientes con la justici</span>
+        </H4>    
 
     <%- include("template/footer") %>
 
     <script>
 
-    const printBtn = document.getElementById('print');
-    printBtn.addEventListener('click', function() {
-        print();
-                   
-    });
+    
 
     window.addEventListener('load', function () {
 
@@ -164,7 +178,7 @@
         const anoActual = parseInt(fechaActual.getFullYear());
         const mesActual = parseInt(fechaActual.getMonth()) + 1;
         const diaActual = parseInt(fechaActual.getDate());
-  
+  const id = formularioEditar.dataset.id;
         const fechaPartes = fechaNacimiento.value.split(' ')
         // 2016-07-11
         const anoNacimiento = fechaPartes[3];
@@ -231,60 +245,121 @@
     //         }
     //     })
 
-    //     const formularioEditar = document.querySelector('#formularioEditar')
+    const printBtn = document.getElementById('print');
+    printBtn.addEventListener('click', function() {
 
-    //     formularioEditar.addEventListener('submit', async(e) => {
-    //         e.preventDefault()
         
-    //         const FechaInscripcion = formularioEditar.elements['FechaInscripcion'].value
-    //         const Cedula = formularioEditar.elements['Cedula'].value
-    //         const Pasaporte = formularioEditar.elements['Pasaporte'].value
-    //         const Nacionalidad = formularioEditar.elements['Nacionalidad'].value
-    //         const Nacimiento = formularioEditar.elements['Nacimiento'].value
-    //         const Sexo = formularioEditar.elements['Sexo'].value
-    //         const Ocupacion = formularioEditar.elements['Ocupacion'].value
-    //         const Calle = formularioEditar.elements['Calle'].value
-    //         const Sector = formularioEditar.elements['Sector'].value
-    //         const Municipio = formularioEditar.elements['Municipio'].value
-    //         const Provincia = formularioEditar.elements['Provincia'].value
-    //         const Pais = formularioEditar.elements['Pais'].value
-    //         const Postal = formularioEditar.elements['Postal'].value
-    //         const Celular = formularioEditar.elements['Celular'].value
-    //         const TelFijo = formularioEditar.elements['TelFijo'].value
-    //         const Email = formularioEditar.elements['Email'].value
-    //         const Instagram = formularioEditar.elements['Instagram'].value
-    //         const Estatura = formularioEditar.elements['Estatura'].value
-    //         const Peso = formularioEditar.elements['Peso'].value
-    //         const Gimnasio = formularioEditar.elements['Gimnasio'].value
-    //         const Preparador = formularioEditar.elements['Preparador'].value
-    //         const CelPreparador = formularioEditar.elements['CelPreparador'].value
-    //         const EmailPreparador = formularioEditar.elements['EmailPreparador'].value
-    //         const Categoria = formularioEditar.elements['Categoria'].value
-    //         const IDFDFF = formularioEditar.elements['IDFDFF'].value
-    //         const Nombre = formularioEditar.elements['Nombre'].value
-    //         const id = formularioEditar.dataset.id
         
-    //     try {
-    //         const data = await fetch(`/atletas/${id}`, {
-    //             method: 'put',
-    //             headers: {
-    //                 'Content-Type': 'application/json'
-    //             },
-    //             body: JSON.stringify({Nombre, Categoria, IDFDFF, EmailPreparador, CelPreparador, Preparador, Gimnasio, Peso, Estatura, Instagram, Email, TelFijo, Celular, Postal, Pais, Provincia, Municipio, Sector, Calle, Ocupacion, Sexo, Nacimiento, Nacionalidad, Pasaporte, Cedula, FechaInscripcion})
-    //         })
-    //         const res = await data.json()
-    //         console.log(res)
+        // const idprueba = document.getElementById('IdCategoria').value
+        // const idcategory = document.getElementById('IdCategoria').value        
+   
+
+        const formularioEditar = document.querySelector('#formularioEditar')
+        // const vueltas = formularioEditar.elements['Categoria'].length 
+        let checks = formularioEditar.elements['Categoria'] 
+
+        for (let i = 0; i < checks.length; i++) {
+        if(checks[i].checked == true){
+            // console.log(checks[i].value)
+            // for (let index = 0; index < vueltas; index++) {
+        
+        
+        formularioEditar.addEventListener('submit', async(e) => {
+            e.preventDefault()
+            // const arrayForm = formularioEditar.elements
+
+            // arrayForm.forEach(element => {
+            //     console.log(element)
+            // });
             
-    //         if(res.estado){
-    //             window.location.href = '/atletas'
-    //         }else{
-    //             console.log(res)
-    //         }
-    //     } catch (error) {
-    //         console.log(error)
-    //     }
+            // var boton = document.getElementById('boton')
+// var lista = document.getElementById('lista')
+ //clase de los checbox
+// for (const key in checks) {
+//     if(checks.checked == true){
+//         const element = checks[key];
+//         console.log(element)
+//     }
 
-    // });
+   
+        // }
+        // const element = checks[i];
+        // console.log(element)
+    // }
+// }
+	// boton.addEventListener('click', function(){
+		// lista.innerHTML = '';
+		// checks.forEach((e)=>{
+          
+		// 	if(e.checked == true){
+		// // 		// var elemento = document.createElement('li');
+		// // 		// elemento.className = 'list-group-item';
+		// // 		// lista.appendChild(elemento);
+
+        // console.log(e)
+		// 	}
+		
+
+		// });
+
+	// });
+                
+            
+            const FechaActual = formularioEditar.elements['FechaActual'].value
+            const Cedula = formularioEditar.elements['Cedula'].value
+            
+            const Edad = formularioEditar.elements['Edad'].value
+            const Sexo = formularioEditar.elements['Sexo'].value
+            
+            const Sector = formularioEditar.elements['Sector'].value
+            
+            const IdCategoria = formularioEditar.elements['IdCategoria'][i].value
+
+            const Categoria = formularioEditar.elements['Categoria'][i].value
+            const Estatura = formularioEditar.elements['Estatura'].value
+            const Peso = formularioEditar.elements['Peso'].value
+          
+            const Preparador = formularioEditar.elements['Preparador'].value
+
+       
+            const IDFDFF = formularioEditar.elements['IDFDFF'].value
+            const Nombre = formularioEditar.elements['Nombre'].value
+            const id = formularioEditar.dataset.id
+                console.log(Categoria)
+            
+        try {
+            const data = await fetch(`/inscripcion/${id}`, {
+                method: 'put',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({Nombre, IDFDFF, IdCategoria, Categoria, Preparador, Peso, Estatura, Sector, Sexo, Edad, Cedula, FechaActual})
+            })
+        
+            const res = await data.json()
+            console.log(res)
+        
+            if(res.estado){
+                console.log(res)
+                window.location.href = `/inscripcion/${id}`
+            }else{
+                console.log(res)
+            }
+        } catch (error) {
+            console.log(error)
+        }
+
+        
+   
+        
+    });
+
+}
+        }
+
+    print();
+
+});
 
     // const printBtn = document.getElementById('print');
         
