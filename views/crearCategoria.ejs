@@ -1,8 +1,11 @@
 <%- include("template/cabecera", {tituloWeb: "Crear Categoria"}) %>
 
 <div class="container w-75 my-4">
-    <form class="row g-4 needs-validation was-validated" action="" method="post" id="formCreaCat">
-        <div class="col-md-3 py-0 pt-0 my-6 mx-4">
+    <form class="mx-0 p-0 row g-4 needs-validation was-validated" action="" method="post" id="formCreaCat">
+       
+       <input type="text" id="newCat" name="Categoria" value="" class="border border-none border-0 border-light fs-3 fw-bold">
+
+        <div class="col-md-2 py-0 pt-0 my-6 mr-4">
             <label for="validationTooltip05" class="form-label">Modalidad</label>
             <select class="form-control" id="modalidad" name="Modalidad" required="false">
                 <option selected></option>
@@ -16,7 +19,7 @@
             </div> 
         </div>
         
-        <div class="col-md-3 py-0 pt-0">
+        <div class="col-md-2 py-0 pt-0 mx-4">
             <label for="validationTooltip05" class="form-label">Genero</label>
             <select class="form-control" name="Genero" id="genero" required="">
                 <option selected></option>
@@ -29,14 +32,14 @@
         </div>
         
         
-        <div id="campoSenior" class="col-md-4 py-0 pt-0  mx-4">
+        <div id="campoSenior" class="col-md-3 py-0 pt-0  mx-4">
             <label for="validationTooltip05" class="form-label">Disciplina</label>
-            <select id="disciplina" class="form-control modalidades" name="Disciplina" required="false">
+            <select onchange="writeMessage()" id="disciplina" class="form-control modalidades" name="Disciplina" required="false">
                 <option selected value="select"></option>
-                <option value="Fisiculturismo" id="optBB" class="optSenior m optJunior">Fisiculturismo</option>
-                <option value="Fisiculturismo Clasico" id="optBBClas" class="optSenior m optJunior">Fisiculturismo Clasico</option>
-                <option value="Games Classic" id="optGame" class="optSenior m optJunior">Games Classic</option>
-                <option value="Classic Physique" id="optClasPh" class="optSenior m optJunior">Classic Physique</option>
+                <option value="Men’s Bodybuilding" id="optBB" class="optSenior m optJunior">Men’s Bodybuilding</option>
+                <option value="Men’s Classic Bodybuilding" id="optBBClas" class="optSenior m optJunior">Men’s Classic Bodybuilding</option>
+                <option value="Games Classic" id="optGame" class="optSenior m optJunior">Men’s Games Classic</option>
+                <option value="Classic Physique" id="optClasPh" class="optSenior m optJunior">Men’s Classic Physique</option>
                 <option value="Men's Fitness" id="optMensFit" class="optSenior m optJunior">Men's Fitness</option>
                 <option value="Men's Physique" id="optMPh" class="optSenior m optJunior">Men's Physique</option>
                 <option value="Men's Fit-Model" id="optMensModel" class="m optSenior">Men's Fit-Model</option>
@@ -48,8 +51,8 @@
                 <option value="Women’s Acrobatic Fitness" id="optAcrobat" class="optSenior f optJunior">Women’s Acrobatic Fitness</option>
                 <option value="Women's Bodyfitness" id="optBody" class="optSenior f optJunior">Women's Bodyfitness</option>
                 <option value="Women’s Physique" id="optWomensPh" class="f optSenior">Women’s Physique</option>
-                <option value="Female Children Fitness" id="optFChild" class="">Female Children Fitness</option>
-                <option value="Male Children Fitness" id="optMChild"  class="">Male Children Fitness</option>
+                <option value="Female Fitness" id="optFChild" class="">Female Children Fitness</option>
+                <option value="Male Fitness" id="optMChild"  class="">Male Children Fitness</option>
                 <option value="Mixed-pairs" id="optMixP" class="optSenior">Mixed-pairs</option>
                 <option value="Fit-pairs" id="optFPairs" class="optSenior optJunior">Fit-pairs</option>
             </select>
@@ -58,10 +61,10 @@
             </div> 
         </div> 
             
-        <div id="campoDivision" class="col-md-3 py-0 pt-0">
+        <div id="campoDivision" class="col-md-3 py-0 pt-0 mx-4">
             
             <label for="validationTooltip05" class="form-label">Division</label>
-            <select id="division" name="Division" class="form-control divisiones" required="false">
+            <select onchange="writeMessage()" id="division" name="Division" class="form-control divisiones" required="false">
                 <option selected></option>
                 <option value="Bantamweight" id="" class="bantam bb">Bantamweight</option>
                 <option value="Lightweight" id="" class="Light bb">Lightweight</option>
@@ -101,7 +104,7 @@
             </div>
             <div class="col-md-6 py-0 pt-0 my-4">
                 <label for="validationTooltip05" class="form-label">Hasta</label>
-                <input value="" type="text" class="form-control" name="HastaEdad" id="hastaEdad">
+                <input onchange="writeMessage()" value="" type="text" class="form-control" name="HastaEdad" id="hastaEdad">
                 <div class="invalid-tooltip">
                     Hasta
                 </div>
@@ -119,7 +122,7 @@
             </div>
             <div class="col-md-6 py-0 pt-0 my-4">
                 <label for="validationTooltip05" class="form-label">Hasta</label>
-                <input value="" type="text" class="form-control" name="HastaEstatura" id="hastaEstatura">
+                <input onchange="writeMessage()" value="" type="text" class="form-control" name="HastaEstatura" id="hastaEstatura">
                 <div class="invalid-tooltip">
                     Hasta
                 </div>
@@ -137,7 +140,7 @@
             </div>
             <div class="col-md-6 py-0 pt-0 my-4">
                 <label for="validationTooltip05" class="form-label">Hasta</label>
-                <input value="" type="text" class="form-control" name="HastaPeso" id="hastaPeso">
+                <input  onchange="writeMessage()" value="" type="text" class="form-control" name="HastaPeso" id="hastaPeso">
                 <div class="invalid-tooltip">
                     Hasta
                 </div>
@@ -154,9 +157,62 @@
 
 <script>
 
+function writeMessage() {
+    //newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' ' + hastaEdad.value + ' ' + hastaEstatura.value + ' ' + hastaPeso.value;
+       
+        if (modalidad.value == 'Childrem') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' Up to ' + hastaEdad.value + ' años.';
+        }
+
+        if (modalidad.value == 'Senior' && disciplina.value == 'Men’s Bodybuilding') { 
+              
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' Up to ' + hastaPeso.value + ' kg.';
+        }
+        
+        if (modalidad.value == 'Senior' && disciplina.value !== 'Men’s Bodybuilding') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' Up to ' + hastaEstatura.value + ' cm.'; 
+        }
+
+        if (modalidad.value == 'Junior' && disciplina.value == 'Men’s Bodybuilding') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' años-' + ' Up to ' + hastaPeso.value + ' kg.';
+        }
+        
+        if (modalidad.value == 'Junior' && disciplina.value !== 'Men’s Bodybuilding') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' años-' + ' Up to ' + hastaEstatura.value + ' cm.';
+        }
+
+        if (modalidad.value == 'Master' && disciplina.value == 'Men’s Bodybuilding') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' años-' + ' Up to ' + hastaPeso.value + ' kg.';
+        }
+
+        if (modalidad.value == 'Master' && disciplina.value !== 'Men’s Bodybuilding') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' años-' + ' Up to ' + hastaEstatura.value + ' cm.';
+        }
+
+
+        
+        };
+
 //--------------------------------campo modalidad-------------------------------------
  const modalidad = document.getElementById('modalidad')
     modalidad.addEventListener('change', function() {
+
+//         const divCat = document.querySelector('#newCat');
+
+// const cat = document.createElement('H3');
+// cat.textContent = 'Categoria: ' + modalidad.value;
+
+// divCat.appendChild(cat);
+    // const objModalidad = document.getElementById("modalidad");
+    // const objDisciplina = document.getElementById("disciplina");  
+    //     document.getElementById("newCat").innerHTML = 
+    //     objModalidad.options[objModalidad.selectedIndex].text;
+
+    
+  
+
+
+
         document.getElementById('genero').value = '';
         document.getElementById('campoSenior').style.display = 'none';
         
@@ -185,26 +241,10 @@
 
     })
 
-
-
-//--------------------------------campo Genero-------------------------------------
+//--------------------------------campo Genero----------------------------------------
 const Genero = document.getElementById('genero');
         Genero.addEventListener('change', function() {
-            // if (Genero.value == 'F') {
-                // console.log(Genero);
-            //     for (let x = 0; x < 19; x++) {
-            //         document.getElementsByClassName('m')[x].style.display = 'none';
-            //         document.getElementsByClassName('f')[x].style.display = 'block';
-            //     }
-
-            // }else{
-            //     for (let x = 0; x < 19; x++) {
-            //         document.getElementsByClassName('m')[x].style.display = 'block';
-            //         document.getElementsByClassName('f')[x].style.display = 'none';
-            //     }
-            // }
-               
-    // });
+          
     document.getElementById('disciplina').style.display = 'block';
         // console.log(modalidad.value)
        
@@ -366,6 +406,7 @@ const Genero = document.getElementById('genero');
         document.getElementById('optArt').style.display = 'none';
         document.getElementById('optAcrobat').style.display = 'none';
         document.getElementById('optBody').style.display = 'none';
+        document.getElementById('optMuscular').style.display = 'none';
 
     }
 
@@ -390,13 +431,13 @@ const Genero = document.getElementById('genero');
 
     }
 
-    if (modalidad.value == 'Master'  && Genero.value == 'F') {
+    if (modalidad.value == 'Master' && Genero.value == 'F') {
         document.getElementById('campoEstatura').style.display = 'none';
         document.getElementById('campoEdad').style.display = 'none';
         document.getElementById('campoPeso').style.display = 'none';
         document.getElementById('campoDivision').style.display = 'none';
         document.getElementById('disciplina').value = ""
-        document.getElementById('campoSenior').style.display = 'none';
+        document.getElementById('campoSenior').style.display = 'block';
         document.getElementById('optBB').style.display = 'none';
         document.getElementById('optBBClas').style.display = 'none';
         document.getElementById('optGame').style.display = 'none';
@@ -407,7 +448,8 @@ const Genero = document.getElementById('genero');
         document.getElementById('optBkn').style.display = 'block';
         document.getElementById('optBody').style.display = 'block';
         document.getElementById('optWomensPh').style.display = 'block';
-
+        document.getElementById('optMuscular').style.display = 'none';
+        
     
     }
 
@@ -428,24 +470,29 @@ const Genero = document.getElementById('genero');
         document.getElementById('optBkn').style.display = 'none';
         document.getElementById('optBody').style.display = 'none';
         document.getElementById('optWomensPh').style.display = 'none';
-
+        document.getElementById('optMuscular').style.display = 'none';
     
     }
 
 });
 
-
-
 //--------------------------------campo disciplina-------------------------------------
     disciplina = document.getElementById('disciplina')
     disciplina.addEventListener('change', function() {
-        
+
+       
+
+    // const objModalidad = document.getElementById("modalidad");
+    // const objDisciplina = document.getElementById("disciplina");  
+    //     document.getElementById("newCat").innerHTML = 
+    //     objModalidad.options[objModalidad.selectedIndex].text + " " +  objDisciplina.options[objDisciplina.selectedIndex].text;
+
         if (disciplina.value) {
             document.getElementById('campoDivision').style.display = 'block';
             division.value = "" 
         }
     
-        if (disciplina.value == 'Fisiculturismo') {
+        if (disciplina.value == 'Men’s Bodybuilding') {
             document.getElementById('campoEstatura').style.display = 'none';
             document.getElementById('campoEdad').style.display = 'none';
 
@@ -466,7 +513,7 @@ const Genero = document.getElementById('genero');
             division.value = ""
         }
 
-        if (disciplina.value == 'Fisiculturismo Clasico') {
+        if (disciplina.value == 'Men’s Classic Bodybuilding') {
             document.getElementById('campoEstatura').style.display = 'none';
             document.getElementById('campoPeso').style.display = 'none';
             document.getElementById('campoEdad').style.display = 'none';
@@ -634,7 +681,7 @@ const Genero = document.getElementById('genero');
             division.value = ""
         }
 
-        if (disciplina.value == "Female Children Fitness") {
+        if (disciplina.value == "Female Fitness") {
             document.getElementById('campoEstatura').style.display = 'none';
             document.getElementById('campoPeso').style.display = 'none';
             document.getElementById('campoEdad').style.display = 'none';
@@ -645,7 +692,7 @@ const Genero = document.getElementById('genero');
             division.value = ""
         }
 
-        if (disciplina.value == "Male Children Fitness") {
+        if (disciplina.value == "Male Fitness") {
             document.getElementById('campoEstatura').style.display = 'none';
             document.getElementById('campoPeso').style.display = 'none';
             document.getElementById('campoEdad').style.display = 'none';
@@ -675,13 +722,21 @@ const Genero = document.getElementById('genero');
 //---------------------------------campo division--------------------------------------
     const division = document.getElementById('division')
     division.addEventListener('change', function() {
+
+        // const objModalidad = document.getElementById("modalidad");
+        // const objDisciplina = document.getElementById("disciplina");  
+        // const objDivision = document.getElementById("division");
+        // document.getElementById("newCat").innerHTML = 
+        // objModalidad.options[objModalidad.selectedIndex].text + " " +  objDisciplina.options[objDisciplina.selectedIndex].text + " " +  objDivision.options[objDivision.selectedIndex].text;
+
+
         if (division.value == 'Open') {
             document.getElementById('campoEstatura').style.display = 'none';
             document.getElementById('campoEdad').style.display = 'none';
             document.getElementById('campoPeso').style.display = 'none';
         }
         
-        else if (disciplina.value == 'Fisiculturismo' && modalidad.value == 'Senior') {
+        else if (disciplina.value == 'Men’s Bodybuilding' && modalidad.value == 'Senior') {
             document.getElementById('campoPeso').style.display = 'block'; 
             document.getElementById('campoEdad').style.display = 'none';
             document.getElementById('campoEstatura').style.display = 'none';
@@ -693,31 +748,31 @@ const Genero = document.getElementById('genero');
             document.getElementById('campoEdad').style.display = 'block';
         }
 
-        else if (modalidad.value == 'Master' && disciplina.value !== 'Fisiculturismo') {
+        else if (modalidad.value == 'Master' && disciplina.value !== 'Men’s Bodybuilding') {
             document.getElementById('campoEdad').style.display = 'block';
             document.getElementById('campoPeso').style.display = 'none';
             document.getElementById('campoEstatura').style.display = 'block';
         }
 
-        else if (modalidad.value == 'Master' && disciplina.value == 'Fisiculturismo') {
+        else if (modalidad.value == 'Master' && disciplina.value == 'Men’s Bodybuilding') {
             document.getElementById('campoEdad').style.display = 'block';
             document.getElementById('campoPeso').style.display = 'block';
             document.getElementById('campoEstatura').style.display = 'none';
         }
 
-        else if (modalidad.value == 'Junior' && disciplina.value !== 'Fisiculturismo') {    
+        else if (modalidad.value == 'Junior' && disciplina.value !== 'Men’s Bodybuilding') {    
             document.getElementById('campoEdad').style.display = 'block';
             document.getElementById('campoPeso').style.display = 'none';
             document.getElementById('campoEstatura').style.display = 'block';
         }
 
-        else if (modalidad.value == 'Junior' && disciplina.value == 'Fisiculturismo') {
+        else if (modalidad.value == 'Junior' && disciplina.value == 'Men’s Bodybuilding') {
             document.getElementById('campoEdad').style.display = 'block';
             document.getElementById('campoPeso').style.display = 'block';
             document.getElementById('campoEstatura').style.display = 'none';
         }
 
-       else if (division.value && disciplina.value == "Women's Bikini",  "Fisiculturismo Clasico", "Men's Physique", "Women’s Physique", "Women's Bodyfitness", "Women’s Acrobatic Fitness", "Women’s Artistic Fitness", "Women’s Fit-Model", "Games Classic", "Men's Fitness", "Men's Fit-Model", "Muscular Men's Physique", "Women's Wellness") {
+       else if (division.value && disciplina.value == "Women's Bikini",  "Men’s Classic Bodybuilding", "Men's Physique", "Women’s Physique", "Women's Bodyfitness", "Women’s Acrobatic Fitness", "Women’s Artistic Fitness", "Women’s Fit-Model", "Games Classic", "Men's Fitness", "Men's Fit-Model", "Muscular Men's Physique", "Women's Wellness") {
             document.getElementById('campoEstatura').style.display = 'block';
             document.getElementById('campoPeso').style.display = 'none';
             document.getElementById('campoEdad').style.display = 'none';
@@ -734,6 +789,15 @@ const Genero = document.getElementById('genero');
 //-----------------------------------Campo Edad----------------------------------------
 const edadInterval = document.getElementById('hastaEdad')
     edadInterval.addEventListener('change', function() {
+
+        const objModalidad = document.getElementById("modalidad");
+        const objDisciplina = document.getElementById("disciplina");  
+        const objDivision = document.getElementById("division");
+        const objEdad = document.getElementById("objEdad");
+        // document.getElementById("newCat").innerHTML = 
+        // objModalidad.options[objModalidad.selectedIndex].text + " " +  objDisciplina.options[objDisciplina.selectedIndex].text + " " +  objDivision.options[objDivision.selectedIndex].text + " hasta " +  document.getElementById('hastaEdad').value + " años";
+
+
         if (document.getElementById('desdeEdad').value != "") {
     document.getElementById('btnAddCategoria').style.display = 'block';
     }
@@ -753,7 +817,6 @@ const estaturaInterval = document.getElementById('hastaEstatura')
     document.getElementById('btnAddCategoria').style.display = 'block';
     }
 });
-
 
 //---------------------------------Boton Agregar--------------------------------------
     const clickBtn = document.getElementById('btnAddCategoria');
@@ -776,7 +839,25 @@ const estaturaInterval = document.getElementById('hastaEstatura')
         } 
     });
 
+   
 
+    // const myText = document.getElementById("modalidad").textContent;
+    // document.getElementById("newCat").innerHTML = myText; 
+
+//     $(document).ready(function() {
+//   var myText = $("#modalidad").value();
+//   $("#newCat").text(myText); 
+// });
+
+// $(document).ready(function() {
+//   var content = $("#modalidad").html();
+//   $("#newCat").html(content);
+// });
+
+// const myElement = document.getElementById("modalidad");
+// document.getElementById("newCat").innerHTML = "Categoria: " + myElement.innerHTML;
+
+    //---------------------------------------Fin--------------------------------------------
 
 </script>
 
