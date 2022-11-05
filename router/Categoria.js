@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
     try {
 
         const arrayCategoriaDB = await Categoria.find();
-        console.log(arrayCategoriaDB)
+        // console.log(arrayCategoriaDB)
         
         res.render("categorias", {
             arrayCategorias: arrayCategoriaDB
@@ -33,19 +33,19 @@ router.get('/crearCategoria', (req, res) => {
 
 router.post('/crearCategoria', async (req, res) => {
     const body = req.body
-    console.log(body)
+    // console.log(body)
 
-    // try {
+    try {
     //     // const atletaDB = new Atleta(body)
     //     // await atletaDB.save()
 
-    //     await Categoria.create(body)
+        await Categoria.create(body)
 
-    //     res.redirect('/categorias')    
+        res.redirect('/categorias')    
 
-    // } catch (error) {
-    //     console.log(error)
-    // }
+    } catch (error) {
+        console.log(error)
+    }
 })  
 
 router.get('/nuevoEvento', async (req, res) => {
@@ -53,7 +53,7 @@ router.get('/nuevoEvento', async (req, res) => {
     try {
     
         const arrayCategoryDB = await Categoria.find();
-        console.log(arrayCategoryDB)
+        // console.log(arrayCategoryDB)
         
         res.render('nuevoEvento', {
            
@@ -67,12 +67,12 @@ router.get('/nuevoEvento', async (req, res) => {
 
 router.post('/nuevoEvento', async (req, res) => {
     const {NombreEvento} = req.body
-    console.log(NombreEvento)
+    // console.log(NombreEvento)
     // const datosCategoria = req.body
   
     const {Categoria} = req.body
     
-    console.log(Categoria)
+    // console.log(Categoria)
 
     // // db.createCollection(NombreEvento)
     // // console.log(datosCategoria)
@@ -158,9 +158,9 @@ router.post('/formDinamica', async (req, res) => {
     const dinamicG = mongoose.model(dinamicGlobal, DinamicaSchema);
 //mongoose.Collection.find()
     try {
-        console.log(dinamicGlobal)
+        // console.log(dinamicGlobal)
         const arrayDinamico = await dinamicG.find(); 
-        console.log(arrayDinamico)
+        // console.log(arrayDinamico)
         
         res.render("dinamica", {
             arrayDinamicos: arrayDinamico,
