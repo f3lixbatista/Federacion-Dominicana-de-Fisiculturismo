@@ -3,7 +3,7 @@
 <div class="container w-75 my-4">
     <form class="mx-0 p-0 row g-4 needs-validation was-validated" action="" method="post" id="formCreaCat">
        
-       <input type="text" id="newCat" name="Categoria" value="" class="border border-none border-0 border-light fs-3 fw-bold">
+       <input type="text" id="newCat" name="Categoria" value="" class="border-0 fs-3 fw-bold" readonly>
 
         <div class="col-md-2 py-0 pt-0 my-6 mr-4">
             <label for="validationTooltip05" class="form-label">Modalidad</label>
@@ -34,7 +34,7 @@
         
         <div id="campoSenior" class="col-md-3 py-0 pt-0  mx-4">
             <label for="validationTooltip05" class="form-label">Disciplina</label>
-            <select onchange="writeMessage()" id="disciplina" class="form-control modalidades" name="Disciplina" required="false">
+            <select id="disciplina" class="form-control modalidades" name="Disciplina" required="false">
                 <option selected value="select"></option>
                 <option value="Men’s Bodybuilding" id="optBB" class="optSenior m optJunior">Men’s Bodybuilding</option>
                 <option value="Men’s Classic Bodybuilding" id="optBBClas" class="optSenior m optJunior">Men’s Classic Bodybuilding</option>
@@ -66,15 +66,16 @@
             <label for="validationTooltip05" class="form-label">Division</label>
             <select onchange="writeMessage()" id="division" name="Division" class="form-control divisiones" required="false">
                 <option selected></option>
+                <option value="Open" id="" class="bb clase">Open</option>
                 <option value="Bantamweight" id="" class="bantam bb">Bantamweight</option>
                 <option value="Lightweight" id="" class="Light bb">Lightweight</option>
                 <option value="Welterweight" id="" class="Welter bb">Welterweight</option>
                 <option value="Light-Middleweight" id="" class="Mid bb">Light-Middleweight</option>
                 <option value="Middleweight" id="" class="Middle bb">Middleweight</option>
+                <option value="Super-Middleweight" id="" class="SuperMiddle bb">Super-Middleweight</option>
                 <option value="Light-Heavyweight" id="" class="Heavy bb">Light-Heavyweight</option>
                 <option value="Heavyweight" id="" class="Heavyweight bb">Heavyweight</option>
                 <option value="Super-Heavyweight" id="" class="SuperHeavy bb">Super-Heavyweight</option>
-                <option value="Open" id="" class="bb clase">Open</option>
                 <option value="Class A" id="" class="clase">Class A</option>
                 <option value="Class B" id="" class="clase">Class B</option>
                 <option value="Class C" id="" class="clase">Class C</option>
@@ -147,54 +148,93 @@
             </div>
         </div>
 
-
-        <button style="display: none;" class="btn btn-primary text-dark fw-bold border border-success border-3 col-sm-2 mb-5 position-absolute bottom-0 start-50 translate-middle-x" type="submit" id="btnAddCategoria">
+        <div class="container position-relative w-25">
+        <button style="display: none; margin-top: 28vh; margin-left: 0;" class="btn btn-primary text-dark fw-bold border border-success border-3 col-lg-6 mb-5 p-0" type="submit" id="btnAddCategoria">
             Agregar
         </button> 
-
+        </div>
     </form>
  
 
 <script>
-
+//--------------------------------campo Categoria-------------------------------------
 function writeMessage() {
-    //newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' ' + hastaEdad.value + ' ' + hastaEstatura.value + ' ' + hastaPeso.value;
        
         if (modalidad.value == 'Childrem') {
-            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' Up to ' + hastaEdad.value + ' años.';
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' Up to ' + hastaEdad.value + ' years.';
         }
 
-        if (modalidad.value == 'Senior' && disciplina.value == 'Men’s Bodybuilding') { 
+        if (modalidad.value == 'Senior' && disciplina.value == 'Men’s Bodybuilding' && hastaPeso.value) { 
               
             newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' Up to ' + hastaPeso.value + ' kg.';
+        }
+
+        if (modalidad.value == 'Senior' && disciplina.value == 'Men’s Bodybuilding' && hastaPeso.value == '1000') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' Over ' + desdePeso.value + ' kg.';
         }
         
         if (modalidad.value == 'Senior' && disciplina.value !== 'Men’s Bodybuilding') {
             newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' Up to ' + hastaEstatura.value + ' cm.'; 
         }
 
+        if (modalidad.value == 'Senior' && disciplina.value !== 'Men’s Bodybuilding' && hastaEstatura.value == '1000') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' Over ' + desdeEstatura.value + ' cm.'; 
+        }
+
         if (modalidad.value == 'Junior' && disciplina.value == 'Men’s Bodybuilding') {
-            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' años-' + ' Up to ' + hastaPeso.value + ' kg.';
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' years-' + ' Up to ' + hastaPeso.value + ' kg.';
+        }
+
+        if (modalidad.value == 'Junior' && disciplina.value == 'Men’s Bodybuilding' && hastaPeso.value == '1000') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' years-' + ' Over ' + desdePeso.value + ' kg.';
         }
         
         if (modalidad.value == 'Junior' && disciplina.value !== 'Men’s Bodybuilding') {
-            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' años-' + ' Up to ' + hastaEstatura.value + ' cm.';
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' years-' + ' Up to ' + hastaEstatura.value + ' cm.';
+        }
+
+        if (modalidad.value == 'Junior' && disciplina.value !== 'Men’s Bodybuilding' && hastaEstatura.value == '1000') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' years-' + ' Over ' + desdeEstatura.value + ' cm.'; 
         }
 
         if (modalidad.value == 'Master' && disciplina.value == 'Men’s Bodybuilding') {
-            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' años-' + ' Up to ' + hastaPeso.value + ' kg.';
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' years-' + ' Up to ' + hastaPeso.value + ' kg.';
         }
 
         if (modalidad.value == 'Master' && disciplina.value !== 'Men’s Bodybuilding') {
-            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' años-' + ' Up to ' + hastaEstatura.value + ' cm.';
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' years-' + ' Up to ' + hastaEstatura.value + ' cm.';
         }
 
+        if (modalidad.value == 'Master' && disciplina.value == 'Men’s Bodybuilding' && hastaPeso.value == '1000') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' years-' + ' Over ' + desdePeso.value + ' kg.';
+        }
 
-        
-        };
+        if (division.value == 'Open') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value;
+        }
+
+        if (modalidad.value == 'Junior' && division.value == 'Open' && hastaEdad.value) {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' years-' + ' ' + division.value;
+        }
+
+        if (modalidad.value == 'Master' && division.value == 'Open' && hastaEdad.value) {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' years-' + ' ' + division.value;
+        }
+
+        if (modalidad.value == 'Master' && division.value == 'Open' && hastaEdad.value == '1000') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' -' + desdeEdad.value + ' years of age and over -Open category- ';
+        }
+
+        if (modalidad.value == 'Master' && hastaEstatura.value == '1000') {
+            newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' years-' + ' Over ' + desdeEstatura.value + ' cm.';
+        }
+        // newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' -' + desdeEdad.value + ' to ' + hastaEdad.value + ' years-' + ' Over ' + desdeEstatura.value + ' cm.';
+        //newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value + ' Over ' + desdeEstatura.value + ' cm.'; 
+
+    };
 
 //--------------------------------campo modalidad-------------------------------------
- const modalidad = document.getElementById('modalidad')
+const modalidad = document.getElementById('modalidad')
     modalidad.addEventListener('change', function() {
 
 //         const divCat = document.querySelector('#newCat');
@@ -207,9 +247,14 @@ function writeMessage() {
     // const objDisciplina = document.getElementById("disciplina");  
     //     document.getElementById("newCat").innerHTML = 
     //     objModalidad.options[objModalidad.selectedIndex].text;
-
-    
-  
+    document.getElementById('btnAddCategoria').style.display = 'none';
+        desdeEdad.value = '';
+        hastaEdad.value = '';
+        desdeEstatura.value = '';
+        hastaEstatura.value = '';
+        desdePeso.value = '';
+        hastaPeso.value = '';
+        newCat.value = '';
 
 
 
@@ -243,10 +288,18 @@ function writeMessage() {
 
 //--------------------------------campo Genero----------------------------------------
 const Genero = document.getElementById('genero');
-        Genero.addEventListener('change', function() {
+    Genero.addEventListener('change', function() {
           
+        document.getElementById('btnAddCategoria').style.display = 'none';
+        desdeEdad.value = '';
+        hastaEdad.value = '';
+        desdeEstatura.value = '';
+        hastaEstatura.value = '';
+        desdePeso.value = '';
+        hastaPeso.value = '';
+        newCat.value = '';
+
     document.getElementById('disciplina').style.display = 'block';
-        // console.log(modalidad.value)
        
     if (modalidad.value == 'Childrem' && Genero.value == 'F') {
         document.getElementById('campoEstatura').style.display = 'none';
@@ -274,7 +327,6 @@ const Genero = document.getElementById('genero');
         document.getElementById('optWomensPh').style.display = 'none';
         document.getElementById('optMixP').style.display = 'none';
         document.getElementById('optFPairs').style.display = 'none';
-      
 
     }
     
@@ -306,11 +358,6 @@ const Genero = document.getElementById('genero');
         document.getElementById('optFPairs').style.display = 'none';
      
     } 
-    // else{
-    //     // document.getElementById('campoSenior').style.display = 'none';
-    //     // document.getElementById('campoEdad').style.display = 'none'; 
-        
-    // }
 
     if (modalidad.value == 'Senior' && Genero.value == 'F') {
         document.getElementById('campoEstatura').style.display = 'none';
@@ -367,27 +414,7 @@ const Genero = document.getElementById('genero');
         document.getElementById('optMChild').style.display = 'none';
         document.getElementById('optFChild').style.display = 'none';
     }
-
-    // else {
-    //     document.getElementById('optBB').style.display = 'none';
-    //     document.getElementById('optBBClas').style.display = 'none';
-    //     document.getElementById('optGame').style.display = 'none';
-    //     document.getElementById('optClasPh').style.display = 'none';
-    //     document.getElementById('optMensFit').style.display = 'none';
-    //     document.getElementById('optMPh').style.display = 'none';
-    //     document.getElementById('optMensModel').style.display = 'none';
-    //     document.getElementById('optMuscular').style.display = 'none';
-    //     document.getElementById('optWell').style.display = 'none';
-    //     document.getElementById('optWomenModel').style.display = 'none';
-    //     document.getElementById('optBkn').style.display = 'none';
-    //     document.getElementById('optArt').style.display = 'none';
-    //     document.getElementById('optAcrobat').style.display = 'none';
-    //     document.getElementById('optBody').style.display = 'none';
-    //     document.getElementById('optWomensPh').style.display = 'none';
-    //     document.getElementById('optMixP').style.display = 'none';
-    //     document.getElementById('optFPairs').style.display = 'none';
-    // }
-    
+  
     if (modalidad.value == 'Junior' && Genero.value == 'M') {
         document.getElementById('campoEstatura').style.display = 'none';
         document.getElementById('campoEdad').style.display = 'none';
@@ -407,7 +434,7 @@ const Genero = document.getElementById('genero');
         document.getElementById('optAcrobat').style.display = 'none';
         document.getElementById('optBody').style.display = 'none';
         document.getElementById('optMuscular').style.display = 'none';
-
+        document.getElementById('optWomensPh').style.display = 'none';
     }
 
     if (modalidad.value == 'Junior' && Genero.value == 'F') {
@@ -428,7 +455,7 @@ const Genero = document.getElementById('genero');
         document.getElementById('optArt').style.display = 'block';
         document.getElementById('optAcrobat').style.display = 'block';
         document.getElementById('optBody').style.display = 'block';
-
+        document.getElementById('optWomenModel').style.display = 'none';
     }
 
     if (modalidad.value == 'Master' && Genero.value == 'F') {
@@ -471,22 +498,25 @@ const Genero = document.getElementById('genero');
         document.getElementById('optBody').style.display = 'none';
         document.getElementById('optWomensPh').style.display = 'none';
         document.getElementById('optMuscular').style.display = 'none';
-    
+        document.getElementById('optMensModel').style.display = 'none';
+        document.getElementById('optMensFit').style.display = 'none';
     }
 
 });
 
 //--------------------------------campo disciplina-------------------------------------
-    disciplina = document.getElementById('disciplina')
+disciplina = document.getElementById('disciplina')
     disciplina.addEventListener('change', function() {
 
+        document.getElementById('btnAddCategoria').style.display = 'none';
+        desdeEdad.value = '';
+        hastaEdad.value = '';
+        desdeEstatura.value = '';
+        hastaEstatura.value = '';
+        desdePeso.value = '';
+        hastaPeso.value = '';
+        newCat.value = '';
        
-
-    // const objModalidad = document.getElementById("modalidad");
-    // const objDisciplina = document.getElementById("disciplina");  
-    //     document.getElementById("newCat").innerHTML = 
-    //     objModalidad.options[objModalidad.selectedIndex].text + " " +  objDisciplina.options[objDisciplina.selectedIndex].text;
-
         if (disciplina.value) {
             document.getElementById('campoDivision').style.display = 'block';
             division.value = "" 
@@ -496,11 +526,11 @@ const Genero = document.getElementById('genero');
             document.getElementById('campoEstatura').style.display = 'none';
             document.getElementById('campoEdad').style.display = 'none';
 
-            for (let x = 0; x < 10; x++) {
+            for (let x = 0; x < 11; x++) {
                 document.getElementsByClassName('clase')[x].style.display = 'none'; 
             }
        
-            for (let x = 0; x < 10; x++) {
+            for (let x = 0; x < 11; x++) {
                 document.getElementsByClassName('bb')[x].style.display = 'block'; 
             }
         }
@@ -524,7 +554,7 @@ const Genero = document.getElementById('genero');
         }
 
         else {
-            for (let x = 0; x < 10; x++) {
+            for (let x = 0; x < 11; x++) {
                 document.getElementsByClassName('clase')[x].style.display = 'none'; 
             }
 
@@ -559,6 +589,7 @@ const Genero = document.getElementById('genero');
             document.getElementById('campoEstatura').style.display = 'none';
             document.getElementById('campoPeso').style.display = 'none';
             document.getElementById('campoEdad').style.display = 'none';
+            document.getElementsByClassName('clase')[0].style.display = 'block'; 
         }
 
         if (disciplina.value == "Men's Physique") {
@@ -686,7 +717,7 @@ const Genero = document.getElementById('genero');
             document.getElementById('campoPeso').style.display = 'none';
             document.getElementById('campoEdad').style.display = 'none';
 
-            for (let x = 0; x < 10; x++) {
+            for (let x = 0; x < 11; x++) {
                 document.getElementsByClassName('clase')[x].style.display = 'block';
             }
             division.value = ""
@@ -709,6 +740,7 @@ const Genero = document.getElementById('genero');
             document.getElementById('campoPeso').style.display = 'none';
             document.getElementById('campoEdad').style.display = 'none';
             division.value = ""
+            document.getElementsByClassName('clase')[0].style.display = 'block';
         }
 
         if (disciplina.value == "Fit-pairs") {
@@ -716,24 +748,28 @@ const Genero = document.getElementById('genero');
             document.getElementById('campoPeso').style.display = 'none';
             document.getElementById('campoEdad').style.display = 'none';
             division.value = ""
+            document.getElementsByClassName('clase')[0].style.display = 'block';
         }
     }); 
 
 //---------------------------------campo division--------------------------------------
-    const division = document.getElementById('division')
+const division = document.getElementById('division')
     division.addEventListener('change', function() {
 
-        // const objModalidad = document.getElementById("modalidad");
-        // const objDisciplina = document.getElementById("disciplina");  
-        // const objDivision = document.getElementById("division");
-        // document.getElementById("newCat").innerHTML = 
-        // objModalidad.options[objModalidad.selectedIndex].text + " " +  objDisciplina.options[objDisciplina.selectedIndex].text + " " +  objDivision.options[objDivision.selectedIndex].text;
+        document.getElementById('btnAddCategoria').style.display = 'none';
+        desdeEdad.value = '';
+        hastaEdad.value = '';
+        desdeEstatura.value = '';
+        hastaEstatura.value = '';
+        desdePeso.value = '';
+        hastaPeso.value = '';
+        newCat.value = modalidad.value + ' ' + disciplina.value + ' ' + division.value;
 
-
-        if (division.value == 'Open') {
+        if (modalidad.value == 'Senior' && division.value == 'Open') {
             document.getElementById('campoEstatura').style.display = 'none';
             document.getElementById('campoEdad').style.display = 'none';
             document.getElementById('campoPeso').style.display = 'none';
+            document.getElementById('btnAddCategoria').style.display = 'block';
         }
         
         else if (disciplina.value == 'Men’s Bodybuilding' && modalidad.value == 'Senior') {
@@ -748,6 +784,18 @@ const Genero = document.getElementById('genero');
             document.getElementById('campoEdad').style.display = 'block';
         }
 
+        else if (modalidad.value == 'Master' && disciplina.value !== 'Men’s Bodybuilding' && division.value == 'Open') {    
+            document.getElementById('campoEdad').style.display = 'block';
+            document.getElementById('campoPeso').style.display = 'none';
+            document.getElementById('campoEstatura').style.display = 'none';
+        }
+
+        else if (modalidad.value == 'Master' && disciplina.value == 'Men’s Bodybuilding' && division.value == 'Open') {    
+            document.getElementById('campoEdad').style.display = 'block';
+            document.getElementById('campoPeso').style.display = 'none';
+            document.getElementById('campoEstatura').style.display = 'none';
+        }
+
         else if (modalidad.value == 'Master' && disciplina.value !== 'Men’s Bodybuilding') {
             document.getElementById('campoEdad').style.display = 'block';
             document.getElementById('campoPeso').style.display = 'none';
@@ -760,10 +808,28 @@ const Genero = document.getElementById('genero');
             document.getElementById('campoEstatura').style.display = 'none';
         }
 
+        // else if (modalidad.value == 'Master') {
+        //     document.getElementById('campoEdad').style.display = 'block';
+        //     document.getElementById('campoPeso').style.display = 'none';
+        //     document.getElementById('campoEstatura').style.display = 'none';
+        // }
+
         else if (modalidad.value == 'Junior' && disciplina.value !== 'Men’s Bodybuilding') {    
             document.getElementById('campoEdad').style.display = 'block';
             document.getElementById('campoPeso').style.display = 'none';
             document.getElementById('campoEstatura').style.display = 'block';
+        }
+
+        else if (modalidad.value == 'Junior' && disciplina.value !== 'Men’s Bodybuilding' && division.value == 'Open') {    
+            document.getElementById('campoEdad').style.display = 'block';
+            document.getElementById('campoPeso').style.display = 'none';
+            document.getElementById('campoEstatura').style.display = 'none';
+        }
+
+        else if (modalidad.value == 'Junior' && disciplina.value == 'Men’s Bodybuilding' && division.value == 'Open') {    
+            document.getElementById('campoEdad').style.display = 'block';
+            document.getElementById('campoPeso').style.display = 'none';
+            document.getElementById('campoEstatura').style.display = 'none';
         }
 
         else if (modalidad.value == 'Junior' && disciplina.value == 'Men’s Bodybuilding') {
@@ -784,19 +850,24 @@ const Genero = document.getElementById('genero');
             document.getElementById('campoPeso').style.display = 'none';
         } 
 
+        if (modalid == 'Junior' && disciplina.value && division.value == 'Open') {
+            document.getElementById('campoEdad').style.display = 'block';
+            document.getElementById('campoPeso').style.display = 'none';
+            document.getElementById('campoEstatura').style.display = 'none';
+        }
+
+        
+        if (modalidad.value == 'Master' && division.value == 'Open') {
+            document.getElementById('campoEdad').style.display = 'block';
+            document.getElementById('campoPeso').style.display = 'none';
+            document.getElementById('campoEstatura').style.display = 'none';
+        }
+
     });
 
 //-----------------------------------Campo Edad----------------------------------------
 const edadInterval = document.getElementById('hastaEdad')
     edadInterval.addEventListener('change', function() {
-
-        const objModalidad = document.getElementById("modalidad");
-        const objDisciplina = document.getElementById("disciplina");  
-        const objDivision = document.getElementById("division");
-        const objEdad = document.getElementById("objEdad");
-        // document.getElementById("newCat").innerHTML = 
-        // objModalidad.options[objModalidad.selectedIndex].text + " " +  objDisciplina.options[objDisciplina.selectedIndex].text + " " +  objDivision.options[objDivision.selectedIndex].text + " hasta " +  document.getElementById('hastaEdad').value + " años";
-
 
         if (document.getElementById('desdeEdad').value != "") {
     document.getElementById('btnAddCategoria').style.display = 'block';
@@ -808,6 +879,7 @@ const pesoInterval = document.getElementById('hastaPeso')
         if (document.getElementById('desdePeso').value != "") {
     document.getElementById('btnAddCategoria').style.display = 'block';
     }
+
 });
 
 //---------------------------------Campo Estatura--------------------------------------
@@ -819,8 +891,7 @@ const estaturaInterval = document.getElementById('hastaEstatura')
 });
 
 //---------------------------------Boton Agregar--------------------------------------
-    const clickBtn = document.getElementById('btnAddCategoria');
-    
+const clickBtn = document.getElementById('btnAddCategoria');
     clickBtn.addEventListener('click', function() {
 
         if (document.getElementById('desdePeso').value == "") {
@@ -839,25 +910,7 @@ const estaturaInterval = document.getElementById('hastaEstatura')
         } 
     });
 
-   
-
-    // const myText = document.getElementById("modalidad").textContent;
-    // document.getElementById("newCat").innerHTML = myText; 
-
-//     $(document).ready(function() {
-//   var myText = $("#modalidad").value();
-//   $("#newCat").text(myText); 
-// });
-
-// $(document).ready(function() {
-//   var content = $("#modalidad").html();
-//   $("#newCat").html(content);
-// });
-
-// const myElement = document.getElementById("modalidad");
-// document.getElementById("newCat").innerHTML = "Categoria: " + myElement.innerHTML;
-
-    //---------------------------------------Fin--------------------------------------------
+//---------------------------------------Fin--------------------------------------------
 
 </script>
 
