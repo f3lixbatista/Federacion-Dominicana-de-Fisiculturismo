@@ -3,11 +3,16 @@ const Schema = mongoose.Schema;
 
 const categoriaSchema = new Schema({
     Categoria: String,
-    Open: Boolean,
-    Sexo: String,
-    Edad: Number,
-    Peso: Number,
-    Estatura: Number
+    Modalidad: String,
+    Genero: String,
+    Disciplina: String,
+    Division: String,
+    DesdeEdad: Number,
+    HastaEdad: Number,
+    DesdePeso: Number,
+    HastaPeso: Number,
+    DesdeEstatura: Number,
+    HastaEstatura: Number
 })
 
 
