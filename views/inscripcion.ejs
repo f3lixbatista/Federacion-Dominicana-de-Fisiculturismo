@@ -1,24 +1,16 @@
 <%- include("template/cabecera", {tituloWeb: "Pagina de Atletas"}) %>
 
-<div class="container divGeneral p-2 col-8">
-    <div class="row g-2">
-        <div class="col-6">
+<div class="container divGeneral border border-1 border-dark p-2 col-10">
+    <div class="table-responsive col-10 ml-auto mr-auto" id="mydatatable-container">     
+        <div class="col-6 ml-0 p-0">
             <h1 class="my-4">Inscripcion a Evento</h1>
         </div>
-        <!-- <div class="col-6 d-flex flex-row-reverse">
-            <a class="btn btn-primary border border-dark btn-lg col-5 my-4" href="/atletas/crear">
-                Inscripcion a Evento
-            </a>
-        </div> -->
-    </div>
-    <div class="table-responsive" id="mydatatable-container">
+       
         <table class="records_list table table-striped table-bordered border border-dark border-3 table-hover" id="mydatatable">
             <thead>
-                <tr class="table-blue">
-                    
+                <tr class="table-blue"> 
                     <th scope="col" class="bg-primary">Cedula</th>
-                    <th scope="col" class="bg-primary fs-5 mx-5 pl-5 pr-5 mx-4 position-relative"><p class="position-absolute top-0 start-0">Nombre</p></th>
-                    
+                    <th scope="col" class="bg-primary fs-5 mx-5 pl-5 pr-5 mx-4 position-relative"><p class="position-absolute top-0 start-0">Nombre</p></th>  
                     <th scope="col" class="bg-primary">IDFDFF</th>
                     <th scope="col" class="bg-primary">Accion</th>
                 </tr>
