@@ -47,17 +47,17 @@ router.post('/crear', async (req, res) => {
 
     //  }
 
-    // try {
-    //     // const atletaDB = new Atleta(body)
-    //     // await atletaDB.save()
+    try {
+        // const atletaDB = new Atleta(body)
+        // await atletaDB.save()
 
-    //     await Atleta.create(body)
+        await Atleta.create(body)
 
-    //     res.redirect('/atletas')    
+        res.redirect('/atletas')    
 
-    // } catch (error) {
-    //     console.log(error)
-    // }
+    } catch (error) {
+        console.log(error)
+    }
 })    
 
 router.get('/:id', async (req, res) => {
