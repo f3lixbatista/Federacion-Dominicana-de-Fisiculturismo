@@ -34,7 +34,7 @@ router.get('/:id', async (req, res) => {
     try {     
 
         const arrayCategoriaDB = await Categoria.find();
-        console.log(arrayCategoriaDB)
+        // console.log(arrayCategoriaDB)
 
         const atletaDB = await Atleta.findOne({ _id: id })
         // console.log(atletaDB)
