@@ -23,14 +23,14 @@
             <label for="validationTooltip05" class="form-label">Genero</label>
             <select class="form-control" name="Genero" id="genero" required="">
                 <option selected></option>
-                <option value="F">F</option>
-                <option value="M">M</option>
+                <option class="sexgen" value="F">F</option>
+                <option class="sexgen" value="M">M</option>
+                <option id="sexgenfm" value="F-M">F-M</option>
             </select>
             <div class="invalid-tooltip">
                 Genero
             </div> 
         </div>
-        
         
         <div id="campoSenior" class="col-md-3 py-0 pt-0  mx-4">
             <label for="validationTooltip05" class="form-label">Disciplina</label>
@@ -157,6 +157,8 @@
  
 
 <script>
+
+document.getElementById('sexgenfm').style.display = 'none';
 //--------------------------------campo Categoria-------------------------------------
 function writeMessage() {
        
@@ -237,16 +239,6 @@ function writeMessage() {
 const modalidad = document.getElementById('modalidad')
     modalidad.addEventListener('change', function() {
 
-//         const divCat = document.querySelector('#newCat');
-
-// const cat = document.createElement('H3');
-// cat.textContent = 'Categoria: ' + modalidad.value;
-
-// divCat.appendChild(cat);
-    // const objModalidad = document.getElementById("modalidad");
-    // const objDisciplina = document.getElementById("disciplina");  
-    //     document.getElementById("newCat").innerHTML = 
-    //     objModalidad.options[objModalidad.selectedIndex].text;
     document.getElementById('btnAddCategoria').style.display = 'none';
         desdeEdad.value = '';
         hastaEdad.value = '';
@@ -255,8 +247,6 @@ const modalidad = document.getElementById('modalidad')
         desdePeso.value = '';
         hastaPeso.value = '';
         newCat.value = '';
-
-
 
         document.getElementById('genero').value = '';
         document.getElementById('campoSenior').style.display = 'none';
@@ -272,6 +262,9 @@ const modalidad = document.getElementById('modalidad')
 
         if (modalidad.value == 'Senior'){   
             document.getElementById('genero').style.display = 'block';
+            document.getElementById('sexgenfm').style.display = 'block'; 
+        } else {
+            document.getElementById('sexgenfm').style.display = 'none';
         }
 
         if (modalidad.value == 'Junior') {
@@ -281,8 +274,6 @@ const modalidad = document.getElementById('modalidad')
         if (modalidad.value == 'Master') {
             document.getElementById('genero').style.display = 'block';
         }
-
-
 
     })
 
@@ -300,7 +291,7 @@ const Genero = document.getElementById('genero');
         newCat.value = '';
 
     document.getElementById('disciplina').style.display = 'block';
-       
+
     if (modalidad.value == 'Childrem' && Genero.value == 'F') {
         document.getElementById('campoEstatura').style.display = 'none';
         document.getElementById('campoEdad').style.display = 'none';
@@ -327,7 +318,6 @@ const Genero = document.getElementById('genero');
         document.getElementById('optWomensPh').style.display = 'none';
         document.getElementById('optMixP').style.display = 'none';
         document.getElementById('optFPairs').style.display = 'none';
-
     }
     
     if (modalidad.value == 'Childrem' && Genero.value == 'M') {
@@ -356,9 +346,8 @@ const Genero = document.getElementById('genero');
         document.getElementById('optWomensPh').style.display = 'none';
         document.getElementById('optMixP').style.display = 'none';
         document.getElementById('optFPairs').style.display = 'none';
-     
     } 
-
+        
     if (modalidad.value == 'Senior' && Genero.value == 'F') {
         document.getElementById('campoEstatura').style.display = 'none';
         document.getElementById('campoEdad').style.display = 'none';
@@ -381,8 +370,8 @@ const Genero = document.getElementById('genero');
         document.getElementById('optAcrobat').style.display = 'block';
         document.getElementById('optBody').style.display = 'block';
         document.getElementById('optWomensPh').style.display = 'block';
-        document.getElementById('optMixP').style.display = 'block';
-        document.getElementById('optFPairs').style.display = 'block';
+        document.getElementById('optMixP').style.display = 'none';
+        document.getElementById('optFPairs').style.display = 'none';
         document.getElementById('optMChild').style.display = 'none';
         document.getElementById('optFChild').style.display = 'none';
     }
@@ -402,6 +391,34 @@ const Genero = document.getElementById('genero');
         document.getElementById('optMPh').style.display = 'block';
         document.getElementById('optMensModel').style.display = 'block';
         document.getElementById('optMuscular').style.display = 'block';
+        document.getElementById('optWell').style.display = 'none';
+        document.getElementById('optWomenModel').style.display = 'none';
+        document.getElementById('optBkn').style.display = 'none';
+        document.getElementById('optArt').style.display = 'none';
+        document.getElementById('optAcrobat').style.display = 'none';
+        document.getElementById('optBody').style.display = 'none';
+        document.getElementById('optWomensPh').style.display = 'none';
+        document.getElementById('optMixP').style.display = 'none';
+        document.getElementById('optFPairs').style.display = 'none';
+        document.getElementById('optMChild').style.display = 'none';
+        document.getElementById('optFChild').style.display = 'none';
+    }  
+    
+    if (modalidad.value == 'Senior' && Genero.value == 'F-M') {
+        document.getElementById('campoEstatura').style.display = 'none';
+        document.getElementById('campoEdad').style.display = 'none';
+        document.getElementById('campoPeso').style.display = 'none';
+        document.getElementById('campoDivision').style.display = 'none';
+        document.getElementById('disciplina').value = ""
+        document.getElementById('campoSenior').style.display = 'block';
+        document.getElementById('optBB').style.display = 'none';
+        document.getElementById('optBBClas').style.display = 'none';
+        document.getElementById('optGame').style.display = 'none';
+        document.getElementById('optClasPh').style.display = 'none';
+        document.getElementById('optMensFit').style.display = 'none';
+        document.getElementById('optMPh').style.display = 'none';
+        document.getElementById('optMensModel').style.display = 'none';
+        document.getElementById('optMuscular').style.display = 'none';
         document.getElementById('optWell').style.display = 'none';
         document.getElementById('optWomenModel').style.display = 'none';
         document.getElementById('optBkn').style.display = 'none';
@@ -808,12 +825,6 @@ const division = document.getElementById('division')
             document.getElementById('campoEstatura').style.display = 'none';
         }
 
-        // else if (modalidad.value == 'Master') {
-        //     document.getElementById('campoEdad').style.display = 'block';
-        //     document.getElementById('campoPeso').style.display = 'none';
-        //     document.getElementById('campoEstatura').style.display = 'none';
-        // }
-
         else if (modalidad.value == 'Junior' && disciplina.value !== 'Men’s Bodybuilding') {    
             document.getElementById('campoEdad').style.display = 'block';
             document.getElementById('campoPeso').style.display = 'none';
@@ -867,7 +878,7 @@ const division = document.getElementById('division')
 
 //-----------------------------------Campo Edad----------------------------------------
 const edadInterval = document.getElementById('hastaEdad')
-    edadInterval.addEventListener('change', function() {
+    edadInterval.addEventListener('keyup', function() {
 
         if (document.getElementById('desdeEdad').value != "") {
     document.getElementById('btnAddCategoria').style.display = 'block';
@@ -875,7 +886,7 @@ const edadInterval = document.getElementById('hastaEdad')
 });
 //-----------------------------------Campo Peso----------------------------------------
 const pesoInterval = document.getElementById('hastaPeso')
-    pesoInterval.addEventListener('change', function() {
+    pesoInterval.addEventListener('keyup', function() {
         if (document.getElementById('desdePeso').value != "") {
     document.getElementById('btnAddCategoria').style.display = 'block';
     }
@@ -884,7 +895,7 @@ const pesoInterval = document.getElementById('hastaPeso')
 
 //---------------------------------Campo Estatura--------------------------------------
 const estaturaInterval = document.getElementById('hastaEstatura')
-    estaturaInterval.addEventListener('change', function() {
+    estaturaInterval.addEventListener('keyup', function() {
         if (document.getElementById('desdeEstatura').value != "") {
     document.getElementById('btnAddCategoria').style.display = 'block';
     }
