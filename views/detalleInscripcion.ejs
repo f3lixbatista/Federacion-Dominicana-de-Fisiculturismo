@@ -479,17 +479,19 @@
                 //--------------------------------------------------------- Junior ---------------------------------------------------------------               
                     if (edadJunior < 24 && modal == 'Junior') {
 
-                        if (disciplina == "Men's Fitness" && division == "Open") {
+                        // if (disciplina == "Men's Fitness" && division == "Open") {
              
                             if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
                                
                                 if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
                                     divCategoria[index].style.display = 'block';
-                                } else {
+                                }
+                                
+                                if (!estaturaInicial) {
                                     divCategoria[index].style.display = 'block';
                                 }
                             }    
-                        }
+                        // }
 
                         // if (disciplina == "Men's Physique") {
 
@@ -534,6 +536,297 @@
 
         })
 
+    const botonWomenph = document.getElementById("btnwomenph")
+    botonWomenph.addEventListener('click', function() {
+                
+        btnbb.style.display = "none";
+            btnbikini.style.display = "none";
+            btnmph.style.display = "none";
+            btnwomenph.style.display = "none";
+            btnwellness.style.display = "none";
+            btnbdf.style.display = "none";
+            btnmusc.style.display = "none";
+
+            for (let index = 0; index < checkCategoria.length; index++) {
+                
+                let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
+                let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
+                let pesoAtleta = peso.value
+    
+                let modal = checkCategoria[index].dataset.datamodal
+                let division = checkCategoria[index].dataset.datadivision
+                let disciplina = checkCategoria[index].dataset.datadisciplina
+    
+                let edadInicial = parseInt(checkCategoria[index].dataset.pardesdeedad)
+                let edadFinal = parseInt(checkCategoria[index].dataset.paredad)
+                let edadAtleta = edad
+    
+                let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
+                let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
+                let estaturaAtleta = estatura.value
+    
+                let genero = checkCategoria[index].dataset.genero
+                let generoAtleta = sexo.value
+
+                if (disciplina == "Mixed-pairs") {
+                    divCategoria[index].style.display = 'block';
+                }
+
+                //----------------------------------------------------  -----------------------------------------------------------
+                if (generoAtleta == 'F' && genero == 'F') {
+                
+                //--------------------------------------------------------- Junior ---------------------------------------------------------------               
+                    if (edadJunior < 24 && modal == 'Junior') {
+
+                        // if (disciplina == "Men's Fitness" && division == "Open") {
+             
+                            if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
+                               
+                                if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
+                                    divCategoria[index].style.display = 'block';
+                                }
+                                
+                                if (!estaturaInicial) {
+                                    divCategoria[index].style.display = 'block';
+                                }
+                            }    
+                        // }
+
+                        // if (disciplina == "Men's Physique") {
+
+                        //     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
+                        //         if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
+                        //             divCategoria[index].style.display = 'block';
+                        //         } if (!estaturaInicial) {
+                        //             divCategoria[index].style.display = 'block';
+                        //         }
+                        //     }  
+                        // }
+                    }
+                //---------------------------------------------------- Master -----------------------------------------------------------
+                    if (edad > 34 && modal == 'Master') {
+                       
+                        if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
+                            if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
+                                divCategoria[index].style.display = 'block';
+                            } 
+                            
+                            if (!estaturaInicial) {
+                                divCategoria[index].style.display = 'block';
+                            }
+                        } 
+
+                    }
+                }
+
+                if (!pesoInicial && !edadInicial && !estaturaInicial && genero == generoAtleta) {
+                    divCategoria[index].style.display = 'block';
+                }
+
+            if (generoAtleta == 'F' && genero == 'F' && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta && modal == 'Senior') {
+                divCategoria[index].style.display = 'block';
+            } 
+
+            if (disciplina == "Women's Wellness" || disciplina == "Women's Bodyfitness" || disciplina == "Women's Bikini" || disciplina == "Fit-pairs" || disciplina == "Women’s Acrobatic Fitness" || disciplina == "Women’s Artistic Fitness" || disciplina == "Women’s Fit-Model") {
+                divCategoria[index].style.display = 'none';
+            } 
+ 
+        }
+
+        })
+
+
+    const botonWellness = document.getElementById("btnwellness")
+    botonWellness.addEventListener('click', function() {
+                
+        btnbb.style.display = "none";
+            btnbikini.style.display = "none";
+            btnmph.style.display = "none";
+            btnwomenph.style.display = "none";
+            btnwellness.style.display = "none";
+            btnbdf.style.display = "none";
+            btnmusc.style.display = "none";
+
+            for (let index = 0; index < checkCategoria.length; index++) {
+                
+                let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
+                let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
+                let pesoAtleta = peso.value
+    
+                let modal = checkCategoria[index].dataset.datamodal
+                let division = checkCategoria[index].dataset.datadivision
+                let disciplina = checkCategoria[index].dataset.datadisciplina
+    
+                let edadInicial = parseInt(checkCategoria[index].dataset.pardesdeedad)
+                let edadFinal = parseInt(checkCategoria[index].dataset.paredad)
+                let edadAtleta = edad
+    
+                let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
+                let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
+                let estaturaAtleta = estatura.value
+    
+                let genero = checkCategoria[index].dataset.genero
+                let generoAtleta = sexo.value
+
+                
+                //----------------------------------------------------  -----------------------------------------------------------
+                if (generoAtleta == 'F' && genero == 'F') {
+                
+                //--------------------------------------------------------- Junior ---------------------------------------------------------------               
+                    if (edadJunior < 24 && modal == 'Junior') {
+
+                        // if (disciplina == "Men's Fitness" && division == "Open") {
+             
+                            if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
+                               
+                                if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
+                                    divCategoria[index].style.display = 'block';
+                                }
+                                
+                                if (!estaturaInicial) {
+                                    divCategoria[index].style.display = 'block';
+                                }
+                            }    
+                        // }
+
+                        // if (disciplina == "Men's Physique") {
+
+                        //     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
+                        //         if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
+                        //             divCategoria[index].style.display = 'block';
+                        //         } if (!estaturaInicial) {
+                        //             divCategoria[index].style.display = 'block';
+                        //         }
+                        //     }  
+                        // }
+                    }
+                //---------------------------------------------------- Master -----------------------------------------------------------
+                    if (edad > 34 && modal == 'Master') {
+                       
+                        if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
+                            if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
+                                divCategoria[index].style.display = 'block';
+                            } 
+                            
+                            if (!estaturaInicial) {
+                                divCategoria[index].style.display = 'block';
+                            }
+                        } 
+
+                    }
+                }
+
+                if (!pesoInicial && !edadInicial && !estaturaInicial && genero == generoAtleta) {
+                    divCategoria[index].style.display = 'block';
+                }
+
+            if (generoAtleta == 'F' && genero == 'F' && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta && modal == 'Senior') {
+                divCategoria[index].style.display = 'block';
+            } 
+
+            if (disciplina == "Women’s Physique" || disciplina == "Women's Bodyfitness" || disciplina == "Women's Bikini" || disciplina == "Fit-pairs" || disciplina == "Mixed-pairs" || disciplina == "Women’s Acrobatic Fitness" || disciplina == "Women’s Artistic Fitness") {
+                divCategoria[index].style.display = 'none';
+            } 
+ 
+        }
+
+        })
+
+    const botonBodyFit = document.getElementById("btnbdf")
+    botonBodyFit.addEventListener('click', function() {
+                
+        btnbb.style.display = "none";
+            btnbikini.style.display = "none";
+            btnmph.style.display = "none";
+            btnwomenph.style.display = "none";
+            btnwellness.style.display = "none";
+            btnbdf.style.display = "none";
+            btnmusc.style.display = "none";
+
+            for (let index = 0; index < checkCategoria.length; index++) {
+                
+                let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
+                let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
+                let pesoAtleta = peso.value
+    
+                let modal = checkCategoria[index].dataset.datamodal
+                let division = checkCategoria[index].dataset.datadivision
+                let disciplina = checkCategoria[index].dataset.datadisciplina
+    
+                let edadInicial = parseInt(checkCategoria[index].dataset.pardesdeedad)
+                let edadFinal = parseInt(checkCategoria[index].dataset.paredad)
+                let edadAtleta = edad
+    
+                let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
+                let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
+                let estaturaAtleta = estatura.value
+    
+                let genero = checkCategoria[index].dataset.genero
+                let generoAtleta = sexo.value
+
+                
+                //----------------------------------------------------  -----------------------------------------------------------
+                if (generoAtleta == 'F' && genero == 'F') {
+                
+                //--------------------------------------------------------- Junior ---------------------------------------------------------------               
+                    if (edadJunior < 24 && modal == 'Junior') {
+
+                        // if (disciplina == "Men's Fitness" && division == "Open") {
+             
+                            if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
+                               
+                                if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
+                                    divCategoria[index].style.display = 'block';
+                                }
+                                
+                                if (!estaturaInicial) {
+                                    divCategoria[index].style.display = 'block';
+                                }
+                            }    
+                        // }
+
+                        // if (disciplina == "Men's Physique") {
+
+                        //     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
+                        //         if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
+                        //             divCategoria[index].style.display = 'block';
+                        //         } if (!estaturaInicial) {
+                        //             divCategoria[index].style.display = 'block';
+                        //         }
+                        //     }  
+                        // }
+                    }
+                //---------------------------------------------------- Master -----------------------------------------------------------
+                    if (edad > 34 && modal == 'Master') {
+                       
+                        if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
+                            if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
+                                divCategoria[index].style.display = 'block';
+                            } 
+                            
+                            if (!estaturaInicial) {
+                                divCategoria[index].style.display = 'block';
+                            }
+                        } 
+
+                    }
+                }
+
+                if (!pesoInicial && !edadInicial && !estaturaInicial && genero == generoAtleta) {
+                    divCategoria[index].style.display = 'block';
+                }
+
+            if (generoAtleta == 'F' && genero == 'F' && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta && modal == 'Senior') {
+                divCategoria[index].style.display = 'block';
+            } 
+
+            if (disciplina == "Women’s Physique" || disciplina == "Women's Wellness" || disciplina == "Women's Bikini" || disciplina == "Fit-pairs" || disciplina == "Mixed-pairs" || disciplina == "Women’s Artistic Fitness" || disciplina == "Women’s Fit-Model") {//Women’s Fit-Model
+                divCategoria[index].style.display = 'none';
+            } 
+ 
+        }
+
+        })
 
 
     
