@@ -133,6 +133,8 @@ app.use('/inscripcion', require('./router/Inscripcion'));
 //ruta Estadisticas
 app.use('/estadisticas', require('./router/Estadisticas'));
 
+app.use('/jueces', require('./router/Jueces'));
+
 app.use(express.urlencoded({extended: true}));
 
 app.use((req, res, next) => {
