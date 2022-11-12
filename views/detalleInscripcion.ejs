@@ -232,57 +232,460 @@
                     if (edadJunior < 24 && modal == 'Junior') {
                         divCategoria[index].style.display = 'none';  
                         if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-                            divCategoria[index].style.display = 'block';
-                        }    
+                            // divCategoria[index].style.display = 'block';
+                        //--------------------------------------------------------- Junior classic BB Open---------------------------------------------------------------               
+                            if (disciplina == "Men’s Classic Bodybuilding") {
+                                if (estaturaAtleta <= 168 && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+                            if (estaturaAtleta > 168 && estaturaAtleta <= 171 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 1) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+                            if (estaturaAtleta > 171 && estaturaAtleta <= 175 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+                            if (estaturaAtleta > 175 && estaturaAtleta <= 180 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+                            if (estaturaAtleta > 180 && estaturaAtleta <= 188 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 5) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+                            if (estaturaAtleta > 188 && estaturaAtleta <= 196 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+                            if (estaturaAtleta > 196 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+                            } 
+
+    //--------------------------------------------------------- Junior Games classic Open---------------------------------------------------------------
+                if (estaturaAtleta <= 162 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 3) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 162 && estaturaAtleta <= 165 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 2) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 165 && estaturaAtleta <= 168 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 3) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 5) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+        //---------------------------------------------------- Classic Physique Jr -----------------------------------------------------------
+                if (estaturaAtleta <= 168 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 3) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 8) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 9) {
+                    divCategoria[index].style.display = 'block'; 
+                }       
+                        
+                        }   
+
                     }
                 //---------------------------------------------------- Master -----------------------------------------------------------
                     if (edad > 39 && modal == 'Master') {
                         divCategoria[index].style.display = 'none';       
                         if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-                            divCategoria[index].style.display = 'block';
-                        }
+        //---------------------------------------------------- Classic Bodybuilding Master edad -----------------------------------------------------------
+
+                    if (estaturaAtleta <= 168 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                        divCategoria[index].style.display = 'block';
+                    
                     }
+                    if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                        divCategoria[index].style.display = 'block';
+                    
+                    }
+                    if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                        divCategoria[index].style.display = 'block';
+                    
+                    }
+                    if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                        divCategoria[index].style.display = 'block';
+                    
+                    }
+                    if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 9) {
+                        divCategoria[index].style.display = 'block';
+                    
+                    }
+                    if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 11) {
+                        divCategoria[index].style.display = 'block';
+                    
+                    }
+                    if (estaturaAtleta > 196 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 13) {
+                        divCategoria[index].style.display = 'block';
+                    
+                    }
+
+//---------------------------------------------------- games Classic Bodybuilding master edad -----------------------------------------------------------
+                if (estaturaAtleta <= 162 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 2) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 162 && estaturaAtleta <= 165 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 165 && estaturaAtleta <= 168 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 5) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                    divCategoria[index].style.display = 'block';   
                 }
 
-                // if (!pesoInicial && !edadInicial && !estaturaInicial && genero == generoAtleta) {
-                //     divCategoria[index].style.display = 'block';
-                // }
+    //---------------------------------------------------- Classic Physique master -----------------------------------------------------------
+                if (estaturaAtleta <= 168 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 8) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 11) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 13) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 15) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 17) {
+                    divCategoria[index].style.display = 'block'; 
 
+                        }
+                    }
+                    }
                  //---------------------------------------------------- Senior BB -----------------------------------------------------------
         
             if (generoAtleta == 'M' && genero == 'M' && pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta && modal == 'Senior') {
                 divCategoria[index].style.display = 'block';   
             }
 
-            if (modal == 'Junior' && pesoInicial || modal == 'Master' && pesoInicial) {
+             //----------------------------------------------------Classic BB Junior con Estatura -----------------------------------------------------------
+            if (modal == 'Junior' && pesoInicial) {
                 divCategoria[index].style.display = 'none';   
                 if (pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta) {
                     if (edadJunior < 24 && modal == 'Junior') { 
                         if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-                            divCategoria[index].style.display = 'block';
+                            // divCategoria[index].style.display = 'block';
+                            if (estaturaAtleta <= 168 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+                            if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Men’s Classic Bodybuilding" && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 1) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+                            if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Men’s Classic Bodybuilding" && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+                            if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Men’s Classic Bodybuilding" && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+                            if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Men’s Classic Bodybuilding" && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 5) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+                            if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Men’s Classic Bodybuilding" && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+                            if (estaturaAtleta > 196 && disciplina == "Men’s Classic Bodybuilding" && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                                divCategoria[index].style.display = 'block';
+                    
+                            }
+
+
+            //--------------------------------------------------------- Junior Games classic estatura---------------------------------------------------------------
+                if (estaturaAtleta <= 162 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 3) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 162 && estaturaAtleta <= 165 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 2) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 165 && estaturaAtleta <= 168 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 3) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 5) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+        //---------------------------------------------------- Classic Physique Jr -----------------------------------------------------------
+                if (estaturaAtleta <= 168 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 3) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 8) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 9) {
+                    divCategoria[index].style.display = 'block'; 
+                }
+
                         }    
                     }
+                }
+            }
+          //----------------------------------------------------Classic BB master con Estatura -----------------------------------------------------------            
+          if (modal == 'Master' && pesoInicial) {
+                divCategoria[index].style.display = 'none';   
+                if (pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta) {       
+                        
                     if (edad > 39 && modal == 'Master') {                          
                         if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-                            divCategoria[index].style.display = 'block';
+                            if (estaturaAtleta <= 168 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                        divCategoria[index].style.display = 'block';
+                    
+                    }
+                    if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                        divCategoria[index].style.display = 'block';
+                    
+                    }
+                    if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                        divCategoria[index].style.display = 'block';
+                    
+                    }
+                    if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                        divCategoria[index].style.display = 'block';
+                    
+                    }
+                    if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 9) {
+                        divCategoria[index].style.display = 'block';
+                    
+                    }
+                    if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 11) {
+                        divCategoria[index].style.display = 'block';
+                    
+                    }
+                    if (estaturaAtleta > 196 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 13) {
+                        divCategoria[index].style.display = 'block';
+                    
+                    }
+
+        //---------------------------------------------------- games Classic Bodybuilding master -----------------------------------------------------------
+                if (estaturaAtleta <= 162 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 2) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 162 && estaturaAtleta <= 165 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 165 && estaturaAtleta <= 168 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 5) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                    divCategoria[index].style.display = 'block';   
+                }
+
+    //---------------------------------------------------- Classic Physique master estatura -----------------------------------------------------------
+                if (estaturaAtleta <= 168 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 8) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 11) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 13) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 15) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 17) {
+                    divCategoria[index].style.display = 'block'; 
+                }
+
                         }
                     }
                 }
             }
 
-            if (generoAtleta == 'M' && genero == 'M' && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta && modal == 'Senior') {
-                divCategoria[index].style.display = 'block';
-            } 
+            //---------------------------------------------------- Classic Bodybuilding Sr -----------------------------------------------------------
 
-            if (generoAtleta == 'F' && genero == 'F' && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta && modal == 'Senior') {
-                divCategoria[index].style.display = 'block';
+            if (generoAtleta == 'M' && genero == 'M' && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta && modal == 'Senior') {
+                
+                if (estaturaAtleta <= 168 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 9) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 11) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 13) {
+                    divCategoria[index].style.display = 'block';   
+                }
+
+ //---------------------------------------------------- games Classic Bodybuilding Sr -----------------------------------------------------------
+                if (estaturaAtleta <= 162 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 2) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 162 && estaturaAtleta <= 165 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 165 && estaturaAtleta <= 168 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 5) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                    divCategoria[index].style.display = 'block';   
+                }
+        //---------------------------------------------------- Classic Physique Sr -----------------------------------------------------------
+                if (estaturaAtleta <= 168 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 8) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 11) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 13) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 15) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 17) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                 
             } 
 
             if (disciplina == "Men's Physique" || disciplina == "Muscular Men's Physique" || disciplina == "Men's Fitness" || disciplina == "Men's Fit-Model") {
                 divCategoria[index].style.display = 'none';
             }
 
-            }
+            
+
+        }
+    }
         })
 
     const botonmph = document.getElementById("btnmph")
