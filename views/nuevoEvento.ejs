@@ -1,9 +1,17 @@
 <%- include("template/cabecera", {tituloWeb: "Agregar Categoria"}) %>
 
-    <div class="container w-75">
+    <div class="container w-75" style="margin-top: -5vh;">
 
-        <form method="post">
-            <label class="fs-1">Crear Evento</label><br>
+        <form id="formEditar">
+            <% if (error) { %>
+                <p>   
+                    <%= mensaje %> 
+                </p>
+                <a href="/inscripcion" class="btn btn-warning btn-block">Volver a Inscripcion</a>
+            <% } %>
+            <% if (!error) { %>
+    
+             <label class="fs-1">Crear Evento</label><br>
             <input class="col-sm-8 form-control"
              type="text" 
              placeholder="Nombre del Evento" 
@@ -13,82 +21,125 @@
             <label class="my-4 fs-3 fw-bold">
                 Seleccione las Categorias a Disputarse en este Evento
             </label>
-            <div class="table-responsive" id="mydatatable-container">
-                <table class="records_list table table-striped table-bordered table-hover" id="mydatatable">
-                    <thead>
-                        <tr>
-                    
-                            <th scope="col" class="fs-4">Categorias <span class="mx-2 position-absolute top-50 end-0 translate-middle-y">Seleccione</span> </th>
-                           
-                        </tr>
-                    </thead>
 
-                    <tfoot>
-                        <tr>
-                    <!-- //jhklklh -->
-                           <th>Filter..</th>
-                     
-                        </tr>
-                    </tfoot>
+                <div class="mb-2 row">
+                    <label for="buscar" class="fs-5 fw-bold col-sm-1 form-label mr-0 pr-0">
+                        Buscar:
+                    </label>
+                    <div class="col-sm-3 ml-2 pl-0">
+                    <input 
+                    type="text" 
+                    placeholder="Buscar Categoria" 
+                    class="form-control ml-0" 
+                    name="Buscar"
+                    id="buscar"   
+                   >
+                    </div>
+                    </div>
 
-                    <tbody>
-                        <% if (arrayCategorias.length > 0) { %>
-                            <% arrayCategorias.forEach(categoria => { %>
-                                <tr> 
-                                    <td class="col-sm-8"> 
-                                        
-                                        
-                                            <label class="form-check-label fs-3 my-2" for="flexSwitchCheckDefault"><%= categoria.Categoria %></label>
-                                            <input role="switch" aria-label="Checkbox for following text input" value="<%= categoria.Categoria %>" class="form-check-input fs-4 mx-5 p-2 form-check-reverse position-absolute top-50 end-0 translate-middle-y" name="Categoria" type="checkbox" id="flexSwitchCheckReverse">
-                                        
-                                    </td>
-                                    
-                                </tr>
-                            <% }) %>
-                        <% } %>
-                    </tbody>
-                </table>
+            
+            <div class="container mt-2 col-12 bg-striped" id="allCategorias">
+                
+                <% if (arrayCategorias.length > 0) { %>
+                    <% arrayCategorias.forEach(categoria => { %>
+                 
+                        <div class="row" id="trcategoria"> 
+                            <hr id="hrCategoria" class="col-10 mx-2">
+                            
+                            <div class="col-11 p-0 m-0 form-check fila pt-2"> 
+                                 
+                                <label id="labelCategoria" class="mx-4 form-check-label lh-1 fs-4 col-11 p-0" for="checkCategoria"><b><p class="lh-1"><%= categoria.Categoria %></p></b></label>
+                            
+                                <input role="" aria-label="Checkbox for following text input" value="<%= categoria.Categoria %>" class="valores form-check-input fs-4 p-0 mt-0 mb-0 form-check-reverse  col-1" name="Categoria" type="checkbox" id="checkCategoria" data-datadisciplina="<%= categoria.Disciplina %>" data-id="<%= categoria.id %>" data-datadivision="<%= categoria.Division %>" data-datamodal="<%= categoria.Modalidad %>" data-genero="<%= categoria.Genero %>" data-paredad='<%= categoria.HastaEdad %>' data-pardesdeedad='<%= categoria.DesdeEdad %>' data-pardesdepeso='<%= categoria.DesdePeso %>' data-parhastapeso='<%= categoria.HastaPeso %>' data-pardesdeestatura='<%= categoria.DesdeEstatura %>' data-parhastaestatura='<%= categoria.HastaEstatura %>'>
+                                <input role="" aria-label="Checkbox for following text input" value="<%= categoria.Categoria %>" class="valores form-check-input fs-4 p-0 mt-0 mb-0 form-check-reverse  col-1" name="id" type="checkbox" id="checkCategoriaEvent">
+
+                            </div>  
+                            
+                        </div>                   
+                    <% }) %>
+                <% } %>
+                <hr class="lg-2 mr-5 pt-0 mt-0">
             </div>
-            <button class="btn btn-primary btn-block my-3" type="submit" id="botonAgregar">
+            
+            <button class="btn btn-primary btn-block my-3" type="button" id="botonAgregar">
                 Agregar
             </button> 
+            <% } %> 
         </form>
     
     </div>
 
-        <script type="text/javascript">
+        <script>
+            
+            
+const inputBuscar = document.getElementById("buscar")
+  inputBuscar.addEventListener('keyup', function() {
+Buscar = buscar.value
+  
+        for (let index = 0; index < checkCategoria.length; index++) {
+            const minus = checkCategoria[index].value.toLowerCase()
+            const minus2 = Buscar.toLowerCase()
+            // console.log(minus)
+            // console.log(minus2)
+         
+                if (!minus.includes(minus2)) {
+                    trcategoria[index].style.display = "none"
+                
+                }else{
+                    trcategoria[index].style.display = "block"
+              
+                }
+             
+        }
+    })
 
-            $(document).ready(function () {
-                $('#mydatatable tfoot th').each(function () {
-                    var title = $(this).text();
-                    $(this).html('<input type="text" placeholder="Filtrar.." />');
-                });
+
+for (let index = 0; index < checkCategoriaEvent.length; index++) {
+    
+const printBtn = document.getElementById('botonAgregar');
+    printBtn.addEventListener('click', async(e) => { 
+        e.preventDefault()
+        const hay = checkCategoriaEvent[index].checked
+    if (hay === true) {
+        const Categoria = checkCategoriaEvent[index].value
+       
+ const formEditar = document.getElementById('formEditar')
+    
+    const Evento = formEditar.elements['NombreEvento'].value
+    const id = checkCategoria[index].dataset.id
+   
+try {
+    const data = await fetch(`/categorias/nuevoEvento`, {
+        method: 'put',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({Evento, Categoria})
+    })
+    const res = await data.json()
+    console.log(res)
+    
+    if(res.estado){
+ 
+    }else{
+        console.log(res)
         
-                var table = $('#mydatatable').DataTable({
-                    "dom": 'B<"float-left"i><"float-right"f>t<"float-left"l><"float-right"p><"clearfix">',
-                    "responsive": false,
-                    "language": {
-                        "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json"
-                    },
-                    "order": [
-                        [0, "desc"]
-                    ],
-                    "initComplete": function () {
-                        this.api().columns().every(function () {
-                            var that = this;
-        
-                            $('input', this.footer()).on('keyup change', function () {
-                                if (that.search() !== this.value) {
-                                    that
-                                        .search(this.value)
-                                        .draw();
-                                }
-                            });
-                        })
-                    },
-                    "buttons": ['csv', 'excel', 'pdf', 'print']
-                });
-            });
-        </script>
+    }
+} catch (error) {
+    console.log(error)
+}
+
+}
+
+
+
+// print();
+
+});
+
+}
+
+
+</script>
 
 <%- include("template/footer") %>
