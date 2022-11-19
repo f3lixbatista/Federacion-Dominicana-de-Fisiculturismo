@@ -15,49 +15,52 @@
                 <h6 class="position-relative mt-5 opacity-25">Del Atleta</h6>
                     
                 <div class="col-md-2 py-0 pt-0 mt-4">
-                    <label for="validationTooltip05" class="form-label">ID-FDFF</label>
-                    <input value="<%= atleta.IDFDFF %>" type="number" class="form-control" id="validationTooltip05" name="IDFDFF" required="">
+                    <label for="idfdff" class="form-label">ID-FDFF</label>
+                    <input value="<%= atleta.IDFDFF %>" type="number" class="form-control" id="idfdff" name="IDFDFF" required="">
                     <div class="invalid-tooltip">
                       ID de la Federacion (FDFF)
                     </div>
                 </div>
 
-                    <div class="col-md-5 py-0 pt-0 m-0 invisible">
+                
+                <div class="col-md-3 pt-0 mt-4">
+                    <label for="nombre" class="form-label">Nombre(s) y Apellido(s)</label>
+                    <input value="<%= atleta.Nombre %>" type="text" class="form-control" name="Nombre" id="nombre" required="">
+                    <div class="invalid-tooltip">
+                      Segun Documento de Identidad
+                    </div>
+                  </div>
+
+
+                    <!-- <div class="col-md-5 py-0 pt-0 m-0 invisible">
                       <label for="validationTooltip05" class="form-label">Fecha</label>
                       <button class="form-control" name="invi" id="validationTooltip05" required=""> </button>
-                    </div>
-                    <div class="col-md-2 py-0 pt-0 m-0 invisible">
+                    </div> -->
+                    <div class="col-md-4 py-0 pt-0 m-0 invisible">
                         <label for="validationTooltip05" class="form-label">Fecha</label>
                         <button class="form-control" name="invi" id="validationTooltip05" required=""> </button>
                       </div>
 
                     <div class="col-md-3 py-0 pt-0 mb-1">
-                        <label for="validationTooltip05" class="form-label">Fecha</label>
-                        <input value="" type="datetime" class="form-control" name="FechaActual" id="fechaActual">
+                        <label for="fechaActual" class="form-label">Fecha</label>
+                        <input value="<%= Date() %>" class="form-control" name="FechaActual" id="fechaActual">
                         <div class="invalid-tooltip">
                             Fecha Actual
                         </div>
                     </div>
                     
 
-                    <div class="col-md-3 pt-0 mt-4">
-                        <label for="validationTooltip03" class="form-label">Nombre(s) y Apellido(s)</label>
-                        <input value="<%= atleta.Nombre %>" type="text" class="form-control" name="Nombre" id="validationTooltip03" required="">
-                        <div class="invalid-tooltip">
-                          Segun Documento de Identidad
-                        </div>
-                      </div>
 
                     <div class="col-md-2 py-0 pt-0 mt-4">
-                        <label for="validationTooltip05" class="form-label">Cedula</label>
-                        <input value="<%= atleta.Cedula %>" type="number" class="form-control" name="Cedula" id="validationTooltip05" required="">
+                        <label for="cedula" class="form-label">Cedula</label>
+                        <input value="<%= atleta.Cedula %>" type="number" class="form-control" name="Cedula" id="cedula" required="">
                         <div class="invalid-tooltip">
                           Numero de Cedula 
                         </div>
                     </div>
 
                     <div class="col-md-2 py-0 pt-0 my-4">
-                        <label for="validationTooltip05" class="form-label">Fecha de Nacimiento</label>
+                        <label for="fechaNacimiento" class="form-label">Fecha de Nacimiento</label>
                         <input value="<%= atleta.Nacimiento %>" type="text" class="form-control" name="Nacimiento" id="fechaNacimiento" required="">
                         <div class="invalid-tooltip">
                             Fecha de Nacimiento
@@ -65,7 +68,7 @@
                     </div>
 
                     <div class="col-md-1 py-0 pt-0 my-4">
-                        <label for="validationTooltip05" class="form-label">Edad</label>
+                        <label for="edad" class="form-label">Edad</label>
                         <input value="" type="datetime" class="form-control" name="Edad" id="edad">
                         <div class="invalid-tooltip">
                             Edad en Años
@@ -82,7 +85,25 @@
                         </div>
                     </div>
 
-                    <div class="col-md-1 py-0 pt-0  my-4">
+
+
+                    <div class="col-md-3 py-0 pt-0 my-4">
+                        <label for="sector" class="form-label">Sector/Barrio</label>
+                        <input value="<%= atleta.Sector %>" type="text" class="form-control" name="Sector" id="sector" required="">
+                        <div class="invalid-tooltip">
+                            Sector o Barrio de Residencia
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 py-0 pt-0  my-4">
+                        <label for="preparador" class="form-label">Preparador</label>
+                        <input value="<%= atleta.Preparador %>" type="text" class="form-control" name="Preparador" id="preparador" required="">
+                        <div class="invalid-tooltip">
+                            Entrendor o Coach
+                        </div>
+                    </div>
+
+                    <div class="col-md-1 py-0 pt-0  my-4" id="divPeso">
                         <label for="peso" class="form-label">Peso en Kilos</label>
                         <input value="" type="number" step="0.01" min="0" class="form-control" name="Peso" id="peso">
                         <div class="invalid-tooltip">
@@ -90,29 +111,62 @@
                         </div>
                     </div>
 
-                    <div class="col-md-2 py-0 pt-0  my-4">
-                        <label for="estatura" class="form-label">Estatura en Centimetros</label>
-                        <input value="" type="number" step="0.01" min="0" class="form-control" name="Estatura" id="estatura">
+                    <div class="col-md-2 py-0 pt-0  my-4" id="divEstaturaBB">
+                        <label for="estaturaBB" class="form-label">Estatura en Centimetros</label>
+                        <input value="" type="number" step="0.01" min="0" class="form-control" name="Estatura" id="estaturaBB">
                         <div class="invalid-tooltip">
                             Estatura en Centimetros
                         </div>
                     </div>
 
-                    <div class="col-md-3 py-0 pt-0 mb-4">
-                        <label for="validationTooltip05" class="form-label">Sector/Barrio</label>
-                        <input value="<%= atleta.Sector %>" type="text" class="form-control" name="Sector" id="validationTooltip05" required="">
+                    <div class="col-md-2 py-0 pt-0  my-4" id="divEstaturaMPH">
+                        <label for="estaturaMPH" class="form-label">Estatura en Centimetros</label>
+                        <input value="" type="number" step="0.01" min="0" class="form-control" name="Estatura" id="estaturaMPH">
                         <div class="invalid-tooltip">
-                            Sector o Barrio de Residencia
+                            Estatura en Centimetros
                         </div>
                     </div>
 
-                    <div class="col-md-3 py-0 pt-0  mb-4">
-                        <label for="validationTooltip05" class="form-label">Preparador</label>
-                        <input value="<%= atleta.Preparador %>" type="text" class="form-control" name="Preparador" id="validationTooltip05" required="">
+                    <div class="col-md-2 py-0 pt-0  my-4" id="divEstaturaMuscular">
+                        <label for="estaturamuscular" class="form-label">Estatura en Centimetros</label>
+                        <input value="" type="number" step="0.01" min="0" class="form-control" name="Estatura" id="estaturamuscular">
                         <div class="invalid-tooltip">
-                            Entrendor o Coach
+                            Estatura en Centimetros
                         </div>
                     </div>
+
+                    <div class="col-md-2 py-0 pt-0  my-4" id="divEstaturaBKN">
+                        <label for="estaturabkn" class="form-label">Estatura en Centimetros</label>
+                        <input value="" type="number" step="0.01" min="0" class="form-control" name="Estatura" id="estaturabkn">
+                        <div class="invalid-tooltip">
+                            Estatura en Centimetros
+                        </div>
+                    </div>
+
+                    <div class="col-md-2 py-0 pt-0  my-4" id="divEstaturaWell">
+                        <label for="estaturawell" class="form-label">Estatura en Centimetros</label>
+                        <input value="" type="number" step="0.01" min="0" class="form-control" name="Estatura" id="estaturawell">
+                        <div class="invalid-tooltip">
+                            Estatura en Centimetros
+                        </div>
+                    </div>
+
+                    <div class="col-md-2 py-0 pt-0  my-4" id="divEstaturaBdf">
+                        <label for="estaturabdf" class="form-label">Estatura en Centimetros</label>
+                        <input value="" type="number" step="0.01" min="0" class="form-control" name="Estatura" id="estaturabdf">
+                        <div class="invalid-tooltip">
+                            Estatura en Centimetros
+                        </div>
+                    </div>
+
+                    <div class="col-md-2 py-0 pt-0  my-4" id="divEstaturaWph">
+                        <label for="estaturawph" class="form-label">Estatura en Centimetros</label>
+                        <input value="" type="number" step="0.01" min="0" class="form-control" name="Estatura" id="estaturawph">
+                        <div class="invalid-tooltip">
+                            Estatura en Centimetros
+                        </div>
+                    </div>
+
             <button class="btn btn-primary btn-md mt-5 mb-4 col-1 mx-2 p-1" id="btnbb" type="button">Culturismo</button>
             <button class="btn btn-primary btn-md mt-5 mb-4 col-1 mx-2" id="btnbikini" type="button">Bikini</button>     
             <button class="btn btn-warning btn-md mt-5 mb-4 col-1 mx-2 p-0 fw-bold" style="font-size: 0.9vw" id="btnmph" type="button">Men's Physique</button> 
@@ -120,7 +174,7 @@
             <button class="btn btn-success btn-md mt-5 mb-4 col-1 mx-2" id="btnwellness" type="button">Wellness</button>
             <button class="btn btn-dark btn-md mt-5 mb-4 col-1 mx-2 p-1" id="btnbdf" type="button">Bodyfitness</button>     
             <button class="btn btn-success btn-md mt-5 mb-4 col-1 mx-2" id="btnmusc" type="button">Muscular</button>   
-            <button class="btn btn-danger btn-md mt-5 mb-4 col-1 mx-2" id="print" type="submit">Inscribir</button>  
+            <button class="btn btn-danger btn-md mt-5 mb-4 col-1 mx-2" id="btnPrint" type="submit"><a href="/inscripcion">Inscribir</a></button>  
           
             <div class="container mt-5 col-12" id="allCategorias">
                 
@@ -134,6 +188,8 @@
                                 <label id="labelCategoria" class="mx-4 form-check-label lh-1 fs-4 col-9 p-0" for="checkCategoria"><b><p class="lh-1"><%= categoria.Categoria %></p></b></label>
                             
                                 <input role="" aria-label="Checkbox for following text input" value="<%= categoria.Categoria %>" class="valores form-check-input fs-4 p-0 mt-0 mb-0 form-check-reverse  col-1" name="Categoria" type="checkbox" id="checkCategoria" data-datadisciplina="<%= categoria.Disciplina %>" data-id="<%= categoria.id %>" data-datadivision="<%= categoria.Division %>" data-datamodal="<%= categoria.Modalidad %>" data-genero="<%= categoria.Genero %>" data-paredad='<%= categoria.HastaEdad %>' data-pardesdeedad='<%= categoria.DesdeEdad %>' data-pardesdepeso='<%= categoria.DesdePeso %>' data-parhastapeso='<%= categoria.HastaPeso %>' data-pardesdeestatura='<%= categoria.DesdeEstatura %>' data-parhastaestatura='<%= categoria.HastaEstatura %>'>
+                                <input role="" aria-label="Checkbox for following text input" value="<%= categoria.id %>" class="valores form-check-input fs-4 p-0 mt-0 mb-0 form-check-reverse  col-1" name="id" type="checkbox" id="checkCategoria1">
+
                             </div>  
                             
                         </div>                   
@@ -153,6 +209,17 @@
 
 <script>
 
+            divEstaturaMPH.style.display = "none";
+            btnPrint.style.display = "none";
+            divPeso.style.display = "none";
+            divEstaturaBB.style.display = "none";
+
+            divEstaturaMuscular.style.display = "none";
+            divEstaturaBKN.style.display = "none";
+            divEstaturaWell.style.display = "none";
+            divEstaturaBdf.style.display = "none";
+            divEstaturaWph.style.display = "none";
+
             btnbb.style.display = "none";
             btnbikini.style.display = "none";
             btnmph.style.display = "none";
@@ -162,7 +229,6 @@
             btnmusc.style.display = "none";
 
     const fechaNacimiento = document.getElementById("fechaNacimiento");
-    const id = formularioEditar.dataset.id;
 
     const fechaActual = new Date();
     const anoActual = parseInt(fechaActual.getFullYear());
@@ -187,10 +253,13 @@
     }
 
     let edadJunior = anoActual - anoNacimiento;
-
+//---------------------------------------------------- Boton Culturismo -----------------------------------------------------------       
     const botonCulturismo = document.getElementById("btnbb")
     botonCulturismo.addEventListener('click', function() {
-             
+
+        divPeso.style.display = "block";
+        divEstaturaBB.style.display = "block";
+
             btnbb.style.display = "none";
             btnbikini.style.display = "none";
             btnmph.style.display = "none";
@@ -199,73 +268,168 @@
             btnbdf.style.display = "none";
             btnmusc.style.display = "none";
 
-            for (let index = 0; index < checkCategoria.length; index++) {
-                
-                let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
-                let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
-                let pesoAtleta = peso.value
-    
-                let modal = checkCategoria[index].dataset.datamodal
-                let division = checkCategoria[index].dataset.datadivision
-                let disciplina = checkCategoria[index].dataset.datadisciplina
-    
-                let edadInicial = parseInt(checkCategoria[index].dataset.pardesdeedad)
-                let edadFinal = parseInt(checkCategoria[index].dataset.paredad)
-                let edadAtleta = edad
-    
-                let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
-                let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
-                let estaturaAtleta = estatura.value
-    
-                let genero = checkCategoria[index].dataset.genero
-                let generoAtleta = sexo.value
+            divEstaturaMPH.style.display = "none";
+            divEstaturaMuscular.style.display = "none";
+            divEstaturaBKN.style.display = "none";
+            divEstaturaWell.style.display = "none";
+            divEstaturaBdf.style.display = "none";
+            divEstaturaWph.style.display = "none";
 
-                if (disciplina == "Mixed-pairs") {
-                    divCategoria[index].style.display = 'block';
+    })
+//---------------------------------------------------- Campo Peso culturismo -----------------------------------------------------------       
+    const inputpeso = document.getElementById("peso")
+    inputpeso.addEventListener('keyup', function() {
+         
+            
+        for (let index = 0; index < checkCategoria.length; index++) {
+             
+            let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
+            let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
+            let pesoAtleta = peso.value
+    
+            let modal = checkCategoria[index].dataset.datamodal
+            let division = checkCategoria[index].dataset.datadivision
+            let disciplina = checkCategoria[index].dataset.datadisciplina
+    
+            let edadInicial = parseInt(checkCategoria[index].dataset.pardesdeedad)
+            let edadFinal = parseInt(checkCategoria[index].dataset.paredad)
+            let edadAtleta = edad
+    
+            let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
+            let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
+            let estaturaAtleta = estaturaBB.value
+    
+            let genero = checkCategoria[index].dataset.genero
+            let generoAtleta = sexo.value
+            estaturaBB.value = ""
+            divCategoria[index].style.display = 'none';
+
+            if (disciplina == "Men's Physique" || disciplina == "Muscular Men's Physique" || disciplina == "Men's Fitness" || disciplina == "Men's Fit-Model") {
+                divCategoria[index].style.display = 'none';
+            }
+            if (disciplina == "Mixed-pairs") {
+                divCategoria[index].style.display = 'block';
+            }
+            //---------------------------------------------------- BB Junior -----------------------------------------------------------
+            if (edadJunior < 24 && modal == 'Junior') {
+                if (disciplina == "Men’s Bodybuilding" || disciplina == "Men's Classic Bodybuilding" || disciplina == "Men's Games Classic" || disciplina == "Men's Classic Physique") {     
+                    if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) { 
+                        if (pesoInicial && pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta) {
+                            divCategoria[index].style.display = 'block'; 
+                        }else{
+                            divCategoria[index].style.display = 'none';
+                        }
+                        if (!pesoInicial) {
+                            divCategoria[index].style.display = 'block';
+                        }
+                    }
                 }
+            }
+            //---------------------------------------------------- BB Sr -----------------------------------------------------------       
+            if (generoAtleta == 'M' && genero == 'M' && pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta && modal == 'Senior') {
+                 divCategoria[index].style.display = 'block';   
+            }
 
-                //---------------------------------------------------- Genero Masculino -----------------------------------------------------------
-                if (generoAtleta == 'M' && genero == 'M') {
+                //---------------------------------------------------- master BB ----------------------------------------------------------
+            if (edad > 39 && modal == 'Master') {
+                if (disciplina == "Men’s Bodybuilding") {
+                    if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) { 
+                        if (pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta) {
+                            divCategoria[index].style.display = 'block';
+                        }
+                        if (!pesoInicial) {
+                            divCategoria[index].style.display = 'block';
+                        }
+                    }
+                }
+            }
+        }
+        btnPrint.style.display = "block";
+    })
+//---------------------------------------------------- Campo Estatura culturismo -----------------------------------------------------------       
+    const inputestatura = document.getElementById("estaturaBB")
+    inputestatura.addEventListener('keyup', function() {
+      
+        if (peso.value == "") {
+            alert("Debe ingresar el peso del atleta");
+        }
                 
-                   
-                //--------------------------------------------------------- Junior ---------------------------------------------------------------               
-                    if (edadJunior < 24 && modal == 'Junior') {
-                        divCategoria[index].style.display = 'none';  
-                        if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-                            // divCategoria[index].style.display = 'block';
-                        //--------------------------------------------------------- Junior classic BB Open---------------------------------------------------------------               
-                            if (disciplina == "Men’s Classic Bodybuilding") {
-                                if (estaturaAtleta <= 168 && pesoAtleta <= (estaturaAtleta - 100) + 0) {
-                                divCategoria[index].style.display = 'block';
+        for (let index = 0; index < checkCategoria.length; index++) {
+            
+            let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
+            let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
+            let pesoAtleta = peso.value
+    
+            let modal = checkCategoria[index].dataset.datamodal
+            let division = checkCategoria[index].dataset.datadivision
+            let disciplina = checkCategoria[index].dataset.datadisciplina
+    
+            let edadInicial = parseInt(checkCategoria[index].dataset.pardesdeedad)
+            let edadFinal = parseInt(checkCategoria[index].dataset.paredad)
+            let edadAtleta = edad
+    
+            let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
+            let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
+            let estaturaAtleta = estaturaBB.value
+    
+            let genero = checkCategoria[index].dataset.genero
+            let generoAtleta = sexo.value
+
+            estaturabdf.removeAttribute('name');
+                estaturawell.removeAttribute('name');
+                estaturawph.removeAttribute('name');
+                estaturabkn.removeAttribute('name');
+                estaturamuscular.removeAttribute('name');
+                estaturaMPH.removeAttribute('name');
                     
+            if (estaturaAtleta.length >= 3) {
+                    btnPrint.style.display = "block";    
+                }
+            
+            if (disciplina == "Men's Physique" || disciplina == "Muscular Men's Physique" || disciplina == "Men's Fitness" || disciplina == "Men's Fit-Model") {
+                divCategoria[index].style.display = 'none';
+            }
+         
+            if (estaturaAtleta.length < 3 && disciplina != "Men’s Bodybuilding" && disciplina != "Mixed-pairs") {
+                divCategoria[index].style.display = 'none';     
+            }
+            //---------------------------------------------------- Categorias Jr. Classsic -----------------------------------------------------------       
+            if (edadJunior < 24 && modal == 'Junior') {
+               
+                if (disciplina == "Men’s Classic Bodybuilding" || disciplina == "Games Classic" || disciplina == "Classic Physique") {     
+                    if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) { 
+                        if (estaturaAtleta.length < 3) {
+                            divCategoria[index].style.display = 'none'; 
+                        }
+                         if (estaturaInicial) {
+                            if (estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta) {
+                        //    --------------------------------------------------------- Junior classic BB Open---------------------------------------------------------------               
+                        if (disciplina == "Men’s Classic Bodybuilding") {
+                            divCategoria[index].style.display = 'none';
+                                if (estaturaAtleta <= 168 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                                divCategoria[index].style.display = 'block';
                             }
                             if (estaturaAtleta > 168 && estaturaAtleta <= 171 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 1) {
                                 divCategoria[index].style.display = 'block';
-                    
                             }
                             if (estaturaAtleta > 171 && estaturaAtleta <= 175 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 2) {
                                 divCategoria[index].style.display = 'block';
-                    
                             }
                             if (estaturaAtleta > 175 && estaturaAtleta <= 180 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 4) {
                                 divCategoria[index].style.display = 'block';
-                    
                             }
                             if (estaturaAtleta > 180 && estaturaAtleta <= 188 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 5) {
                                 divCategoria[index].style.display = 'block';
-                    
                             }
                             if (estaturaAtleta > 188 && estaturaAtleta <= 196 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 6) {
                                 divCategoria[index].style.display = 'block';
-                    
                             }
                             if (estaturaAtleta > 196 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 7) {
                                 divCategoria[index].style.display = 'block';
-                    
                             }
-                            } 
-
-    //--------------------------------------------------------- Junior Games classic Open---------------------------------------------------------------
+                        } 
+        //--------------------------------------------------------- Junior Games classic Open---------------------------------------------------------------
+               
                 if (estaturaAtleta <= 162 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 3) {
                     divCategoria[index].style.display = 'block';  
                 }
@@ -314,44 +478,206 @@
                 }
                 if (estaturaAtleta > 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 9) {
                     divCategoria[index].style.display = 'block'; 
-                }       
-                        
-                        }   
-
                     }
-                //---------------------------------------------------- Master -----------------------------------------------------------
-                    if (edad > 39 && modal == 'Master') {
-                        divCategoria[index].style.display = 'none';       
-                        if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-        //---------------------------------------------------- Classic Bodybuilding Master edad -----------------------------------------------------------
+                 }     
+                        }   
+                        else{
+            //--------------------------------------------------------- Junior classic BB Open---------------------------------------------------------------               
+                        if (disciplina == "Men’s Classic Bodybuilding") {
+                            divCategoria[index].style.display = 'none';
+                            if (estaturaAtleta <= 168 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                                divCategoria[index].style.display = 'block';
+                            }
+                            if (estaturaAtleta > 168 && estaturaAtleta <= 171 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 1) {
+                                divCategoria[index].style.display = 'block';
+                            }
+                            if (estaturaAtleta > 171 && estaturaAtleta <= 175 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                                divCategoria[index].style.display = 'block';
+                            }
+                            if (estaturaAtleta > 175 && estaturaAtleta <= 180 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                                divCategoria[index].style.display = 'block';
+                            }
+                            if (estaturaAtleta > 180 && estaturaAtleta <= 188 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 5) {
+                                divCategoria[index].style.display = 'block';
+                            }
+                            if (estaturaAtleta > 188 && estaturaAtleta <= 196 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                                divCategoria[index].style.display = 'block';
+                            }
+                            if (estaturaAtleta > 196 && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                                divCategoria[index].style.display = 'block';
+                            }
+                        } 
+                //--------------------------------------------------------- Junior Games classic Open---------------------------------------------------------------
+                if (disciplina == "Games Classic") {
+                
+                if (estaturaAtleta.length < 3 && disciplina == "Games Classic") {
+                            divCategoria[index].style.display = 'none'; 
+                }        
+                if (estaturaAtleta <= 162 && pesoAtleta <= (estaturaAtleta - 100) - 3) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 162 && estaturaAtleta <= 165 && pesoAtleta <= (estaturaAtleta - 100) - 2) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 165 && estaturaAtleta <= 168 && pesoAtleta <= (estaturaAtleta - 100) - 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && pesoAtleta <= (estaturaAtleta - 100) + 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && pesoAtleta <= (estaturaAtleta - 100) + 3) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && pesoAtleta <= (estaturaAtleta - 100) + 5) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                }
+        //---------------------------------------------------- Classic Physique Jr -----------------------------------------------------------
+                
+                if (estaturaAtleta.length < 3) {
+                    divCategoria[index].style.display = 'none'; 
+                }
+                if (estaturaAtleta <= 168 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 3) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 8) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 9) {
+                    divCategoria[index].style.display = 'block'; 
+                }             
+                }       
+            }
+        }
+    }
 
+        //--------------------------------------------------------- Masters Classic---------------------------------------------------------------               
+
+            if (edad > 39 && modal == 'Master') { 
+               if (disciplina == "Men’s Classic Bodybuilding" || disciplina == "Games Classic" || disciplina == "Classic Physique") {     
+                   if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) { 
+                       if (estaturaAtleta.length < 3) {
+                           divCategoria[index].style.display = 'none'; 
+                        }
+                        if (estaturaInicial) {
+                           if (estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta) {
+            //---------------------------------------------------- Classic Bodybuilding Master edad -----------------------------------------------------------
                     if (estaturaAtleta <= 168 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
-                        divCategoria[index].style.display = 'block';
-                    
+                        divCategoria[index].style.display = 'block';                   
                     }
                     if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
-                        divCategoria[index].style.display = 'block';
-                    
+                        divCategoria[index].style.display = 'block';                    
                     }
                     if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
-                        divCategoria[index].style.display = 'block';
-                    
+                        divCategoria[index].style.display = 'block';                    
                     }
                     if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
-                        divCategoria[index].style.display = 'block';
-                    
+                        divCategoria[index].style.display = 'block';                    
                     }
                     if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 9) {
-                        divCategoria[index].style.display = 'block';
-                    
+                        divCategoria[index].style.display = 'block';                   
                     }
                     if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 11) {
-                        divCategoria[index].style.display = 'block';
-                    
+                        divCategoria[index].style.display = 'block';                    
                     }
                     if (estaturaAtleta > 196 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 13) {
                         divCategoria[index].style.display = 'block';
-                    
+                    }
+//---------------------------------------------------- games Classic Bodybuilding master edad -----------------------------------------------------------
+                if (estaturaAtleta <= 162 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 2) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 162 && estaturaAtleta <= 165 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 165 && estaturaAtleta <= 168 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 1) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 5) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                    divCategoria[index].style.display = 'block';   
+                }
+    //---------------------------------------------------- Classic Physique master -----------------------------------------------------------
+                if (estaturaAtleta <= 168 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                    divCategoria[index].style.display = 'block';  
+                }
+                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 8) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 11) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 13) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 15) {
+                    divCategoria[index].style.display = 'block';   
+                }
+                if (estaturaAtleta > 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 17) {
+                    divCategoria[index].style.display = 'block'; 
+                        }
+                    }
+                    }else{
+           //---------------------------------------------------- Classic Bodybuilding Master edad -----------------------------------------------------------
+
+                    if (estaturaAtleta <= 168 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
+                        divCategoria[index].style.display = 'block';                   
+                    }
+                    if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                        divCategoria[index].style.display = 'block';                    
+                    }
+                    if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
+                        divCategoria[index].style.display = 'block';                    
+                    }
+                    if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
+                        divCategoria[index].style.display = 'block';                    
+                    }
+                    if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 9) {
+                        divCategoria[index].style.display = 'block';
+                    }
+                    if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 11) {
+                        divCategoria[index].style.display = 'block';                   
+                    }
+                    if (estaturaAtleta > 196 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 13) {
+                        divCategoria[index].style.display = 'block';                    
                     }
 
 //---------------------------------------------------- games Classic Bodybuilding master edad -----------------------------------------------------------
@@ -404,205 +730,21 @@
                 }
                 if (estaturaAtleta > 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 17) {
                     divCategoria[index].style.display = 'block'; 
-
                         }
+                    }                
                     }
-                    }
-                 //---------------------------------------------------- Senior BB -----------------------------------------------------------
-        
-            if (generoAtleta == 'M' && genero == 'M' && pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta && modal == 'Senior') {
-                divCategoria[index].style.display = 'block';   
+               }
+            //---------------------------------------------------- BB Sr -----------------------------------------------------------       
             }
 
-             //----------------------------------------------------Classic BB Junior con Estatura -----------------------------------------------------------
-            if (modal == 'Junior' && pesoInicial) {
-                divCategoria[index].style.display = 'none';   
-                if (pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta) {
-                    if (edadJunior < 24 && modal == 'Junior') { 
-                        if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-                            // divCategoria[index].style.display = 'block';
-                            if (estaturaAtleta <= 168 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
-                                divCategoria[index].style.display = 'block';
-                    
-                            }
-                            if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Men’s Classic Bodybuilding" && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 1) {
-                                divCategoria[index].style.display = 'block';
-                    
-                            }
-                            if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Men’s Classic Bodybuilding" && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 2) {
-                                divCategoria[index].style.display = 'block';
-                    
-                            }
-                            if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Men’s Classic Bodybuilding" && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 4) {
-                                divCategoria[index].style.display = 'block';
-                    
-                            }
-                            if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Men’s Classic Bodybuilding" && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 5) {
-                                divCategoria[index].style.display = 'block';
-                    
-                            }
-                            if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Men’s Classic Bodybuilding" && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 6) {
-                                divCategoria[index].style.display = 'block';
-                    
-                            }
-                            if (estaturaAtleta > 196 && disciplina == "Men’s Classic Bodybuilding" && modal == 'Junior' && pesoAtleta <= (estaturaAtleta - 100) + 7) {
-                                divCategoria[index].style.display = 'block';
-                    
-                            }
-
-
-            //--------------------------------------------------------- Junior Games classic estatura---------------------------------------------------------------
-                if (estaturaAtleta <= 162 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 3) {
-                    divCategoria[index].style.display = 'block';  
-                }
-                if (estaturaAtleta > 162 && estaturaAtleta <= 165 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 2) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 165 && estaturaAtleta <= 168 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 1) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 1) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 3) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 5) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
-                    divCategoria[index].style.display = 'block';   
-                }
-        //---------------------------------------------------- Classic Physique Jr -----------------------------------------------------------
-                if (estaturaAtleta <= 168 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
-                    divCategoria[index].style.display = 'block';  
-                }
-                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 3) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 8) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 9) {
-                    divCategoria[index].style.display = 'block'; 
-                }
-
-                        }    
-                    }
-                }
-            }
-          //----------------------------------------------------Classic BB master con Estatura -----------------------------------------------------------            
-          if (modal == 'Master' && pesoInicial) {
-                divCategoria[index].style.display = 'none';   
-                if (pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta) {       
-                        
-                    if (edad > 39 && modal == 'Master') {                          
-                        if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-                            if (estaturaAtleta <= 168 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
-                        divCategoria[index].style.display = 'block';
-                    
-                    }
-                    if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
-                        divCategoria[index].style.display = 'block';
-                    
-                    }
-                    if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
-                        divCategoria[index].style.display = 'block';
-                    
-                    }
-                    if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
-                        divCategoria[index].style.display = 'block';
-                    
-                    }
-                    if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 9) {
-                        divCategoria[index].style.display = 'block';
-                    
-                    }
-                    if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 11) {
-                        divCategoria[index].style.display = 'block';
-                    
-                    }
-                    if (estaturaAtleta > 196 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 13) {
-                        divCategoria[index].style.display = 'block';
-                    
-                    }
-
-        //---------------------------------------------------- games Classic Bodybuilding master -----------------------------------------------------------
-                if (estaturaAtleta <= 162 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 2) {
-                    divCategoria[index].style.display = 'block';  
-                }
-                if (estaturaAtleta > 162 && estaturaAtleta <= 165 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 1) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 165 && estaturaAtleta <= 168 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 1) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 5) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
-                    divCategoria[index].style.display = 'block';   
-                }
-
-    //---------------------------------------------------- Classic Physique master estatura -----------------------------------------------------------
-                if (estaturaAtleta <= 168 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
-                    divCategoria[index].style.display = 'block';  
-                }
-                if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 6) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 8) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 11) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 180 && estaturaAtleta <= 188 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 13) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 188 && estaturaAtleta <= 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 15) {
-                    divCategoria[index].style.display = 'block';   
-                }
-                if (estaturaAtleta > 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 17) {
-                    divCategoria[index].style.display = 'block'; 
-                }
-
-                        }
-                    }
-                }
-            }
-
-            //---------------------------------------------------- Classic Bodybuilding Sr -----------------------------------------------------------
+ //---------------------------------------------------- Classic Bodybuilding Sr -----------------------------------------------------------
 
             if (generoAtleta == 'M' && genero == 'M' && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta && modal == 'Senior') {
                 
+                if (disciplina == "Men’s Classic Bodybuilding") {
+                
+                if (estaturaAtleta.length < 3) {
+                           divCategoria[index].style.display = 'none'; }
                 if (estaturaAtleta <= 168 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
                     divCategoria[index].style.display = 'block';  
                 }
@@ -624,8 +766,14 @@
                 if (estaturaAtleta > 196 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 13) {
                     divCategoria[index].style.display = 'block';   
                 }
-
+            }
  //---------------------------------------------------- games Classic Bodybuilding Sr -----------------------------------------------------------
+                
+                 if (disciplina == "Games Classic") {
+                    if (estaturaAtleta.length < 3) {
+                        divCategoria[index].style.display = 'none'; 
+                    }
+ 
                 if (estaturaAtleta <= 162 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) - 2) {
                     divCategoria[index].style.display = 'block';  
                 }
@@ -638,7 +786,7 @@
                 if (estaturaAtleta > 168 && estaturaAtleta <= 171 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 1) {
                     divCategoria[index].style.display = 'block';   
                 }
-                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 2) {
+                if (estaturaAtleta > 171 && estaturaAtleta <= 175 && pesoAtleta <= (estaturaAtleta - 100) + 2) {
                     divCategoria[index].style.display = 'block';   
                 }
                 if (estaturaAtleta > 175 && estaturaAtleta <= 180 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
@@ -653,6 +801,7 @@
                 if (estaturaAtleta > 196 && disciplina == "Games Classic" && pesoAtleta <= (estaturaAtleta - 100) + 7) {
                     divCategoria[index].style.display = 'block';   
                 }
+            }
         //---------------------------------------------------- Classic Physique Sr -----------------------------------------------------------
                 if (estaturaAtleta <= 168 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 4) {
                     divCategoria[index].style.display = 'block';  
@@ -674,22 +823,17 @@
                 }
                 if (estaturaAtleta > 196 && disciplina == "Classic Physique" && pesoAtleta <= (estaturaAtleta - 100) + 17) {
                     divCategoria[index].style.display = 'block';   
-                }
-                 
+                }   
             } 
-
-            if (disciplina == "Men's Physique" || disciplina == "Muscular Men's Physique" || disciplina == "Men's Fitness" || disciplina == "Men's Fit-Model") {
-                divCategoria[index].style.display = 'none';
-            }
-
-            
-
         }
-    }
-        })
-
+    })
+//---------------------------------------------------- Boton Men's Physique -----------------------------------------------------------       
     const botonmph = document.getElementById("btnmph")
     botonmph.addEventListener('click', function() {
+
+        divEstaturaMPH.style.display = "block";
+        divPeso.style.display = "none";
+        divEstaturaBB.style.display = "none";
              
             btnbb.style.display = "none";
             btnbikini.style.display = "none";
@@ -699,7 +843,17 @@
             btnbdf.style.display = "none";
             btnmusc.style.display = "none";
 
-            for (let index = 0; index < checkCategoria.length; index++) {
+            divEstaturaMuscular.style.display = "none";
+            divEstaturaBKN.style.display = "none";
+            divEstaturaWell.style.display = "none";
+            divEstaturaBdf.style.display = "none";
+            divEstaturaWph.style.display = "none";
+
+    })
+//---------------------------------------------------- Campo Estatura Men's Physique -----------------------------------------------------------       
+    const inputestaturaMPH = document.getElementById("estaturaMPH")
+    inputestaturaMPH.addEventListener('keyup', function() {
+        for (let index = 0; index < checkCategoria.length; index++) {
                 
                 let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
                 let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
@@ -715,10 +869,25 @@
     
                 let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
                 let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
-                let estaturaAtleta = estatura.value
+                let estaturaAtleta = estaturaMPH.value
     
                 let genero = checkCategoria[index].dataset.genero
                 let generoAtleta = sexo.value
+
+                estaturabdf.removeAttribute('name');
+                estaturawell.removeAttribute('name');
+                estaturawph.removeAttribute('name');
+                estaturabkn.removeAttribute('name');
+                estaturamuscular.removeAttribute('name');
+                estaturaBB.removeAttribute('name');
+                peso.removeAttribute('name');
+
+                if (estaturaAtleta.length < 3) {
+                    divCategoria[index].style.display = 'none';     
+                }
+                if (estaturaAtleta.length >= 3) {
+                    btnPrint.style.display = "block";    
+                }
 
                 if (disciplina == "Fit-pairs") {
                     divCategoria[index].style.display = 'block';
@@ -783,9 +952,8 @@
  
         }
 
-        })
-
-
+        })   
+//---------------------------------------------------- Boton Muscular -----------------------------------------------------------       
     const botonMusc = document.getElementById("btnmusc")
     botonMusc.addEventListener('click', function() {
 
@@ -798,48 +966,66 @@
             btnbdf.style.display = "none";
             btnmusc.style.display = "none";
 
-            for (let index = 0; index < checkCategoria.length; index++) {
-                
-                let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
-                let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
-                let pesoAtleta = peso.value
-    
-                let modal = checkCategoria[index].dataset.datamodal
-                let division = checkCategoria[index].dataset.datadivision
-                let disciplina = checkCategoria[index].dataset.datadisciplina
-    
-                let edadInicial = parseInt(checkCategoria[index].dataset.pardesdeedad)
-                let edadFinal = parseInt(checkCategoria[index].dataset.paredad)
-                let edadAtleta = edad
-    
-                let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
-                let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
-                let estaturaAtleta = estatura.value
-    
-                let genero = checkCategoria[index].dataset.genero
-                let generoAtleta = sexo.value
+            divEstaturaMPH.style.display = "none";
+            divPeso.style.display = "none";
+            divEstaturaBB.style.display = "none";
 
-                // if (disciplina == "Muscular Men's Physique") {
-                //     divCategoria[index].style.display = 'block';
-                // }
+            divEstaturaMuscular.style.display = "block";
+            divEstaturaBKN.style.display = "none";
+            divEstaturaWell.style.display = "none";
+            divEstaturaBdf.style.display = "none";
+            divEstaturaWph.style.display = "none";
 
-                if (disciplina == "Muscular Men's Physique") {
+            
+    })
+//---------------------------------------------------- Campo Estatura Muscular -----------------------------------------------------------       
+    const inputestaturaMuscular = document.getElementById("estaturamuscular")
+    inputestaturaMuscular.addEventListener('keyup', function() {
+        for (let index = 0; index < checkCategoria.length; index++) {              
+            let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
+            let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
+            let pesoAtleta = peso.value
+    
+            let modal = checkCategoria[index].dataset.datamodal
+            let division = checkCategoria[index].dataset.datadivision
+            let disciplina = checkCategoria[index].dataset.datadisciplina
+    
+            let edadInicial = parseInt(checkCategoria[index].dataset.pardesdeedad)
+            let edadFinal = parseInt(checkCategoria[index].dataset.paredad)
+            let edadAtleta = edad
+    
+            let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
+            let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
+            let estaturaAtleta = estaturamuscular.value
+    
+            let genero = checkCategoria[index].dataset.genero
+            let generoAtleta = sexo.value
 
-                  
-                        if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
-                            divCategoria[index].style.display = 'block';
-                        } if (!estaturaInicial) {
-                            divCategoria[index].style.display = 'block';
-                        }
-                     
+            estaturabdf.removeAttribute('name');
+                estaturawell.removeAttribute('name');
+                estaturawph.removeAttribute('name');
+                estaturabkn.removeAttribute('name');
+                estaturaMPH.removeAttribute('name');
+                estaturaBB.removeAttribute('name');
+                peso.removeAttribute('name');
+
+            if (estaturaAtleta.length >= 3) {
+                    btnPrint.style.display = "block";    
+                }
+                if (estaturaAtleta.length < 3) {
+                    divCategoria[index].style.display = 'none';     
                 }
 
-
-
+            if (disciplina == "Muscular Men's Physique") {
+                if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
+                    divCategoria[index].style.display = 'block';
+                } if (!estaturaInicial) {
+                    divCategoria[index].style.display = 'block';
+                }    
             }
+        }
     })
-
-
+//---------------------------------------------------- boton Estatura bikini -----------------------------------------------------------       
     const botonBkn = document.getElementById("btnbikini")
     botonBkn.addEventListener('click', function() {
                 
@@ -851,7 +1037,21 @@
             btnbdf.style.display = "none";
             btnmusc.style.display = "none";
 
-            for (let index = 0; index < checkCategoria.length; index++) {
+            divEstaturaMPH.style.display = "none";
+            divPeso.style.display = "none";
+            divEstaturaBB.style.display = "none";
+
+            divEstaturaMuscular.style.display = "none";
+            divEstaturaBKN.style.display = "block";
+            divEstaturaWell.style.display = "none";
+            divEstaturaBdf.style.display = "none";
+            divEstaturaWph.style.display = "none";
+
+        })
+//---------------------------------------------------- Campo Estatura Bikini -----------------------------------------------------------       
+    const inputestaturaBKN = document.getElementById("estaturabkn")
+    inputestaturaBKN.addEventListener('keyup', function() {
+        for (let index = 0; index < checkCategoria.length; index++) {
                 
                 let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
                 let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
@@ -867,10 +1067,27 @@
     
                 let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
                 let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
-                let estaturaAtleta = estatura.value
+                let estaturaAtleta = estaturabkn.value
     
                 let genero = checkCategoria[index].dataset.genero
                 let generoAtleta = sexo.value
+
+                estaturabdf.removeAttribute('name');
+                estaturawell.removeAttribute('name');
+                estaturawph.removeAttribute('name');
+                estaturamuscular.removeAttribute('name');
+                estaturaMPH.removeAttribute('name');
+                estaturaBB.removeAttribute('name');
+                peso.removeAttribute('name');
+
+                
+                if (estaturaAtleta.length < 3) {
+                    divCategoria[index].style.display = 'none';     
+                }
+
+                if (estaturaAtleta.length >= 3) {
+                    btnPrint.style.display = "block";    
+                }
 
                 if (disciplina == "Fit-pairs") {
                     divCategoria[index].style.display = 'block';
@@ -881,9 +1098,6 @@
                 
                 //--------------------------------------------------------- Junior ---------------------------------------------------------------               
                     if (edadJunior < 24 && modal == 'Junior') {
-
-                        // if (disciplina == "Men's Fitness" && division == "Open") {
-             
                             if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
                                
                                 if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
@@ -894,18 +1108,6 @@
                                     divCategoria[index].style.display = 'block';
                                 }
                             }    
-                        // }
-
-                        // if (disciplina == "Men's Physique") {
-
-                        //     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-                        //         if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
-                        //             divCategoria[index].style.display = 'block';
-                        //         } if (!estaturaInicial) {
-                        //             divCategoria[index].style.display = 'block';
-                        //         }
-                        //     }  
-                        // }
                     }
                 //---------------------------------------------------- Master -----------------------------------------------------------
                     if (edad > 34 && modal == 'Master') {
@@ -934,11 +1136,9 @@
             if (disciplina == "Women's Wellness" || disciplina == "Women's Bodyfitness" || disciplina == "Women’s Physique" || disciplina == "Mixed-pairs" || disciplina == "Women’s Acrobatic Fitness") {
                 divCategoria[index].style.display = 'none';
             } 
- 
         }
-
-        })
-
+    })
+//---------------------------------------------------- Boton Women's physique -----------------------------------------------------------       
     const botonWomenph = document.getElementById("btnwomenph")
     botonWomenph.addEventListener('click', function() {
                 
@@ -950,7 +1150,20 @@
             btnbdf.style.display = "none";
             btnmusc.style.display = "none";
 
-            for (let index = 0; index < checkCategoria.length; index++) {
+            divEstaturaMPH.style.display = "none";
+            divPeso.style.display = "none";
+            divEstaturaBB.style.display = "none";
+
+            divEstaturaMuscular.style.display = "none";
+            divEstaturaBKN.style.display = "none";
+            divEstaturaWell.style.display = "none";
+            divEstaturaBdf.style.display = "none";
+            divEstaturaWph.style.display = "block";
+        })
+//---------------------------------------------------- Campo Estatura Women's Physique -----------------------------------------------------------       
+    const inputestaturaWph = document.getElementById("estaturawph")
+    inputestaturaWph.addEventListener('keyup', function() {
+        for (let index = 0; index < checkCategoria.length; index++) {
                 
                 let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
                 let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
@@ -966,10 +1179,25 @@
     
                 let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
                 let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
-                let estaturaAtleta = estatura.value
+                let estaturaAtleta = estaturawph.value
     
                 let genero = checkCategoria[index].dataset.genero
                 let generoAtleta = sexo.value
+
+                estaturabdf.removeAttribute('name');
+                estaturawell.removeAttribute('name');
+                estaturabkn.removeAttribute('name');
+                estaturamuscular.removeAttribute('name');
+                estaturaMPH.removeAttribute('name');
+                estaturaBB.removeAttribute('name');
+                peso.removeAttribute('name');
+
+                if (estaturaAtleta.length < 3) {
+                    divCategoria[index].style.display = 'none';     
+                }
+                if (estaturaAtleta.length >= 3) {
+                    btnPrint.style.display = "block";    
+                }
 
                 if (disciplina == "Mixed-pairs") {
                     divCategoria[index].style.display = 'block';
@@ -980,9 +1208,6 @@
                 
                 //--------------------------------------------------------- Junior ---------------------------------------------------------------               
                     if (edadJunior < 24 && modal == 'Junior') {
-
-                        // if (disciplina == "Men's Fitness" && division == "Open") {
-             
                             if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
                                
                                 if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
@@ -993,18 +1218,6 @@
                                     divCategoria[index].style.display = 'block';
                                 }
                             }    
-                        // }
-
-                        // if (disciplina == "Men's Physique") {
-
-                        //     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-                        //         if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
-                        //             divCategoria[index].style.display = 'block';
-                        //         } if (!estaturaInicial) {
-                        //             divCategoria[index].style.display = 'block';
-                        //         }
-                        //     }  
-                        // }
                     }
                 //---------------------------------------------------- Master -----------------------------------------------------------
                     if (edad > 34 && modal == 'Master') {
@@ -1035,10 +1248,8 @@
             } 
  
         }
-
-        })
-
-
+    })
+//---------------------------------------------------- Boton Wellness -----------------------------------------------------------       
     const botonWellness = document.getElementById("btnwellness")
     botonWellness.addEventListener('click', function() {
                 
@@ -1050,7 +1261,20 @@
             btnbdf.style.display = "none";
             btnmusc.style.display = "none";
 
-            for (let index = 0; index < checkCategoria.length; index++) {
+            divEstaturaMPH.style.display = "none";
+            divPeso.style.display = "none";
+            divEstaturaBB.style.display = "none";
+
+            divEstaturaMuscular.style.display = "none";
+            divEstaturaBKN.style.display = "none";
+            divEstaturaWell.style.display = "block";
+            divEstaturaBdf.style.display = "none";
+            divEstaturaWph.style.display = "none";
+        })
+//---------------------------------------------------- Campo Estatura Wellness -----------------------------------------------------------       
+    const inputestaturaWell = document.getElementById("estaturawell")
+    inputestaturaWell.addEventListener('keyup', function() {
+        for (let index = 0; index < checkCategoria.length; index++) {
                 
                 let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
                 let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
@@ -1066,19 +1290,31 @@
     
                 let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
                 let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
-                let estaturaAtleta = estatura.value
+                let estaturaAtleta = estaturawell.value
     
                 let genero = checkCategoria[index].dataset.genero
                 let generoAtleta = sexo.value
 
-                
+                estaturabdf.removeAttribute('name');
+                estaturawph.removeAttribute('name');
+                estaturabkn.removeAttribute('name');
+                estaturamuscular.removeAttribute('name');
+                estaturaMPH.removeAttribute('name');
+                estaturaBB.removeAttribute('name');
+                peso.removeAttribute('name');
+
+                if (estaturaAtleta.length < 3) {
+                    divCategoria[index].style.display = 'none';     
+                }
+                if (estaturaAtleta.length >= 3) {
+                    btnPrint.style.display = "block";    
+                }
+ 
                 //----------------------------------------------------  -----------------------------------------------------------
                 if (generoAtleta == 'F' && genero == 'F') {
                 
                 //--------------------------------------------------------- Junior ---------------------------------------------------------------               
                     if (edadJunior < 24 && modal == 'Junior') {
-
-                        // if (disciplina == "Men's Fitness" && division == "Open") {
              
                             if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
                                
@@ -1090,18 +1326,6 @@
                                     divCategoria[index].style.display = 'block';
                                 }
                             }    
-                        // }
-
-                        // if (disciplina == "Men's Physique") {
-
-                        //     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-                        //         if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
-                        //             divCategoria[index].style.display = 'block';
-                        //         } if (!estaturaInicial) {
-                        //             divCategoria[index].style.display = 'block';
-                        //         }
-                        //     }  
-                        // }
                     }
                 //---------------------------------------------------- Master -----------------------------------------------------------
                     if (edad > 34 && modal == 'Master') {
@@ -1130,11 +1354,9 @@
             if (disciplina == "Women’s Physique" || disciplina == "Women's Bodyfitness" || disciplina == "Women's Bikini" || disciplina == "Fit-pairs" || disciplina == "Mixed-pairs" || disciplina == "Women’s Acrobatic Fitness" || disciplina == "Women’s Artistic Fitness") {
                 divCategoria[index].style.display = 'none';
             } 
- 
         }
-
-        })
-
+    })
+//---------------------------------------------------- Boton Bodyfitness -----------------------------------------------------------       
     const botonBodyFit = document.getElementById("btnbdf")
     botonBodyFit.addEventListener('click', function() {
                 
@@ -1146,7 +1368,22 @@
             btnbdf.style.display = "none";
             btnmusc.style.display = "none";
 
-            for (let index = 0; index < checkCategoria.length; index++) {
+            divEstaturaMPH.style.display = "none";
+            divPeso.style.display = "none";
+            divEstaturaBB.style.display = "none";
+
+            divEstaturaMuscular.style.display = "none";
+            divEstaturaBKN.style.display = "none";
+            divEstaturaWell.style.display = "none";
+            divEstaturaBdf.style.display = "block";
+            divEstaturaWph.style.display = "none";
+
+            
+        })
+//---------------------------------------------------- Campo Estatura Bodyfitness -----------------------------------------------------------       
+  const inputestaturaBdf = document.getElementById("estaturabdf")
+  inputestaturaBdf.addEventListener('keyup', function() {
+        for (let index = 0; index < checkCategoria.length; index++) {
                 
                 let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
                 let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
@@ -1162,42 +1399,43 @@
     
                 let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
                 let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
-                let estaturaAtleta = estatura.value
+                let estaturaAtleta = estaturabdf.value
     
                 let genero = checkCategoria[index].dataset.genero
                 let generoAtleta = sexo.value
 
-                
+                estaturawell.removeAttribute('name');
+                estaturawph.removeAttribute('name');
+                estaturabkn.removeAttribute('name');
+                estaturamuscular.removeAttribute('name');
+                estaturaMPH.removeAttribute('name');
+                estaturaBB.removeAttribute('name');
+                peso.removeAttribute('name');
+
+
+                if (estaturaAtleta.length < 3) {
+                    divCategoria[index].style.display = 'none';     
+                }
+
+                if (estaturaAtleta.length >= 3) {
+                    btnPrint.style.display = "block";    
+                }
                 //----------------------------------------------------  -----------------------------------------------------------
                 if (generoAtleta == 'F' && genero == 'F') {
                 
                 //--------------------------------------------------------- Junior ---------------------------------------------------------------               
                     if (edadJunior < 24 && modal == 'Junior') {
-
-                        // if (disciplina == "Men's Fitness" && division == "Open") {
              
-                            if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
+                        if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
                                
-                                if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
-                                    divCategoria[index].style.display = 'block';
-                                }
+                            if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
+                                divCategoria[index].style.display = 'block';
+                            }
                                 
-                                if (!estaturaInicial) {
-                                    divCategoria[index].style.display = 'block';
-                                }
-                            }    
-                        // }
-
-                        // if (disciplina == "Men's Physique") {
-
-                        //     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-                        //         if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
-                        //             divCategoria[index].style.display = 'block';
-                        //         } if (!estaturaInicial) {
-                        //             divCategoria[index].style.display = 'block';
-                        //         }
-                        //     }  
-                        // }
+                            if (!estaturaInicial) {
+                                divCategoria[index].style.display = 'block';
+                            }
+                        }    
                     }
                 //---------------------------------------------------- Master -----------------------------------------------------------
                     if (edad > 34 && modal == 'Master') {
@@ -1226,15 +1464,9 @@
             if (disciplina == "Women’s Physique" || disciplina == "Women's Wellness" || disciplina == "Women's Bikini" || disciplina == "Fit-pairs" || disciplina == "Mixed-pairs" || disciplina == "Women’s Artistic Fitness" || disciplina == "Women’s Fit-Model") {//Women’s Fit-Model
                 divCategoria[index].style.display = 'none';
             } 
- 
         }
-
-        })
-
-
-    
-
-
+    })
+//---------------------------------------------------- al cargar la pagina -----------------------------------------------------------
     window.addEventListener('load', function () {
         document.getElementById('edad').value = edad; 
 
@@ -1258,317 +1490,85 @@
             btnmusc.style.display = "none";
         }
             
-        for (let index = 0; index < checkCategoria.length; index++) {
-                
-            let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
-            let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
-            let pesoAtleta = peso.value
-
-            let modal = checkCategoria[index].dataset.datamodal
-            let division = checkCategoria[index].dataset.datadivision
-            let disciplina = checkCategoria[index].dataset.datadisciplina
-
-            let edadInicial = parseInt(checkCategoria[index].dataset.pardesdeedad)
-            let edadFinal = parseInt(checkCategoria[index].dataset.paredad)
-            let edadAtleta = edad
-
-            let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
-            let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
-            let estaturaAtleta = estatura.value
-
-            let genero = checkCategoria[index].dataset.genero
-            let generoAtleta = sexo.value
-
-//---------------------------------------------------- categorias open full -----------------------------------------------------------
-            // if (!pesoInicial && !edadInicial && !estaturaInicial && genero == generoAtleta && edadAtleta > 15) {
-            //     divCategoria[index].style.display = 'block';
-            // }
-
-           
-         
-//---------------------------------------------------- Genero Masculino -----------------------------------------------------------
-            // if (generoAtleta == 'M' && genero == 'M') {
-                
-            //     if (edad < 16 && modal == 'Childrem' && edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-            //         divCategoria[index].style.display = 'block';
-            //     }
-            //     //--------------------------------------------------------- Junior ---------------------------------------------------------------               
-            //     if (edadJunior < 24 && modal == 'Junior') {
-            //         divCategoria[index].style.display = 'none';  
-            //         if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-            //             divCategoria[index].style.display = 'block';
-            //         }    
-            //     }
-            //     //---------------------------------------------------- Master -----------------------------------------------------------
-            //     if (edad > 39 && modal == 'Master') {
-            //         divCategoria[index].style.display = 'none';       
-            //         if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-            //             divCategoria[index].style.display = 'block';
-            //         }
-            //     }
-            // }
-//---------------------------------------------------- Genero Femenino -----------------------------------------------------------
-            // if (generoAtleta == 'F' && genero == 'F') {
-
-                
-            //     if (edad < 16 && modal == 'Childrem' && edadInicial < edadAtleta && edadFinal >= edadAtleta) {
-            //         divCategoria[index].style.display = 'block';
-            //     }
-            //     //--------------------------------------------------------- Junior ---------------------------------------------------------------               
-            //     if (edadJunior < 24 && modal == 'Junior') {
-            //         divCategoria[index].style.display = 'none';  
-            //         if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-            //             divCategoria[index].style.display = 'block';
-            //         }      
-            //     }
-            //     //---------------------------------------------------- Master -----------------------------------------------------------
-            //     if (edad > 34 && modal == 'Master') {
-            //         divCategoria[index].style.display = 'none';                           
-            //         if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-            //             divCategoria[index].style.display = 'block';
-            //         }
-            //     }
-            // }
-        }
     });
-//---------------------------------------------------- Campo Peso -----------------------------------------------------------
-//         const inputpeso = document.getElementById("peso")
-//         inputpeso.addEventListener('keyup', function() {
-//             for (let index = 0; index < checkCategoria.length; index++) {
-               
+//---------------------------------------------------- boton imprimir -----------------------------------------------------------
+   
+for (let index = 0; index < checkCategoria1.length; index++) {
 
-//                 let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
-//             let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
-//             let pesoAtleta = peso.value
 
-//             let modal = checkCategoria[index].dataset.datamodal
-//             let division = checkCategoria[index].dataset.datadivision
-//             let disciplina = checkCategoria[index].dataset.datadisciplina
-
-//             let edadInicial = parseInt(checkCategoria[index].dataset.pardesdeedad)
-//             let edadFinal = parseInt(checkCategoria[index].dataset.paredad)
-//             let edadAtleta = edad
-
-//             let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
-//             let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
-//             let estaturaAtleta = estatura.value
-
-//             let genero = checkCategoria[index].dataset.genero
-//             let generoAtleta = sexo.value
-
-//             divCategoria[index].style.display = 'none';
-
-//             if (!pesoInicial && !edadInicial && !estaturaInicial && genero == generoAtleta) {
-//                 divCategoria[index].style.display = 'block';
-//             }
-
-//             if (genero == 'F-M') {
-//                 divCategoria[index].style.display = 'block';
-//             }
-
-//             // ---------------------------------------------------- Genero Masculino -----------------------------------------------------------
-//             if (generoAtleta == 'M' && genero == 'M') {
-//                 //--------------------------------------------------------- Junior ---------------------------------------------------------------               
-//                 if (edadJunior < 24 && modal == 'Junior') {
-//                     divCategoria[index].style.display = 'none';  
-//                     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-//                         divCategoria[index].style.display = 'block';
-//                     }    
-//                 }
-//                 //---------------------------------------------------- Master -----------------------------------------------------------
-//                 if (edad > 39 && modal == 'Master') {
-//                     divCategoria[index].style.display = 'none';       
-//                     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-//                         divCategoria[index].style.display = 'block';
-//                     }
-//                 }
-//             }
-// //---------------------------------------------------- Genero Femenino -----------------------------------------------------------
-//             if (generoAtleta == 'F' && genero == 'F') {
-//                 //--------------------------------------------------------- Junior ---------------------------------------------------------------               
-//                 if (edadJunior < 24 && modal == 'Junior') {
-//                     divCategoria[index].style.display = 'none';  
-//                     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-//                         divCategoria[index].style.display = 'block';
-//                     }      
-//                 }
-//                 //---------------------------------------------------- Master -----------------------------------------------------------
-//                 if (edad > 34 && modal == 'Master') {
-//                     divCategoria[index].style.display = 'none';                           
-//                     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-//                         divCategoria[index].style.display = 'block';
-//                     }
-//                 }
-//             }
-            
-//         // //---------------------------------------------------- Senior BB -----------------------------------------------------------
-        
-//         //     if (generoAtleta == 'M' && genero == 'M' && pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta && modal == 'Senior') {
-//         //         divCategoria[index].style.display = 'block';   
-//         //     }
-
-//         //     if (modal == 'Junior' && pesoInicial || modal == 'Master' && pesoInicial) {
-//         //         divCategoria[index].style.display = 'none';   
-//         //         if (pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta) {
-//         //             if (edadJunior < 24 && modal == 'Junior') { 
-//         //                 if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-//         //                     divCategoria[index].style.display = 'block';
-//         //                 }    
-//         //             }
-//         //             if (edad > 39 && modal == 'Master') {                          
-//         //                 if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-//         //                     divCategoria[index].style.display = 'block';
-//         //                 }
-//         //             }
-//         //         }
-//         //     }
-
-//         //     if (generoAtleta == 'M' && genero == 'M' && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta && modal == 'Senior') {
-//         //         divCategoria[index].style.display = 'block';
-//         //     } 
-
-//         //     if (generoAtleta == 'F' && genero == 'F' && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta && modal == 'Senior') {
-//         //         divCategoria[index].style.display = 'block';
-//         //     } 
-
-//             };
-//         })
-
-//---------------------------------------------------- Campo Estatura -----------------------------------------------------------
-
-//         const inputestatura = document.getElementById("estatura")
-//         inputestatura.addEventListener('keyup', function() {
-//             for (let index = 0; index < checkCategoria.length; index++) {
-                
-           
-//             let pesoInicial = parseInt(checkCategoria[index].dataset.pardesdepeso)
-//             let pesoFinal = parseInt(checkCategoria[index].dataset.parhastapeso)
-//             let pesoAtleta = peso.value
     
-//             let modal = checkCategoria[index].dataset.datamodal
-//             let division = checkCategoria[index].dataset.datadivision
-//             let disciplina = checkCategoria[index].dataset.datadisciplina
-    
-//             let edadInicial = parseInt(checkCategoria[index].dataset.pardesdeedad)
-//             let edadFinal = parseInt(checkCategoria[index].dataset.paredad)
-//             let edadAtleta = edad
-    
-//             let estaturaInicial = parseInt(checkCategoria[index].dataset.pardesdeestatura)
-//             let estaturaFinal = parseInt(checkCategoria[index].dataset.parhastaestatura)
-//             let estaturaAtleta = estatura.value
-    
-//             let genero = checkCategoria[index].dataset.genero
-//             let generoAtleta = sexo.value
-
-
-//             divCategoria[index].style.display = 'none';
-
-//             if (!pesoInicial && !edadInicial && !estaturaInicial && genero == generoAtleta) {
-//                 divCategoria[index].style.display = 'block';
-//             }
-
-//             if (genero == 'F-M') {
-//                 divCategoria[index].style.display = 'block';
-//             }
-// //---------------------------------------------------- Genero Masculino -----------------------------------------------------------
-// if (generoAtleta == 'M' && genero == 'M') {
-// //--------------------------------------------------------- Junior ---------------------------------------------------------------               
-// if (edadJunior < 24 && modal == 'Junior') {
-//     divCategoria[index].style.display = 'none';  
-//     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-//         divCategoria[index].style.display = 'block';
-//     }    
-// }
-// //---------------------------------------------------- Master -----------------------------------------------------------
-// if (edad > 39 && modal == 'Master') {
-//     divCategoria[index].style.display = 'none';       
-//     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-//         divCategoria[index].style.display = 'block';
-//     }
-// }
-// }
-// //---------------------------------------------------- Genero Femenino -----------------------------------------------------------
-// if (generoAtleta == 'F' && genero == 'F') {
-// //--------------------------------------------------------- Junior ---------------------------------------------------------------               
-// if (edadJunior < 24 && modal == 'Junior') {
-//     divCategoria[index].style.display = 'none';  
-//     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-//         divCategoria[index].style.display = 'block';
-//     }      
-// }
-// //---------------------------------------------------- Master -----------------------------------------------------------
-// if (edad > 34 && modal == 'Master') {
-//     divCategoria[index].style.display = 'none';                           
-//     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-//         divCategoria[index].style.display = 'block';
-//     }
-// }
-// }
-
-// //---------------------------------------------------- Senior BB -----------------------------------------------------------
-
-// if (generoAtleta == 'M' && genero == 'M' && pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta && modal == 'Senior') {
-// divCategoria[index].style.display = 'block';
-
-// }
-
-// if (modal == 'Junior' && pesoInicial || modal == 'Master' && pesoInicial) {
-// divCategoria[index].style.display = 'none';
-
-
-// if (pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta) {
-
-//     if (edadJunior < 24 && modal == 'Junior') { 
-//         if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-//             divCategoria[index].style.display = 'block';
-//         }
-        
-//     }
-
-//     if (edad > 39 && modal == 'Master') {                          
-//         if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
-//             divCategoria[index].style.display = 'block';
-//         }
-//     }
-// }
-// }
-
-//             if (generoAtleta == 'M' && genero == 'M' && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta && modal == 'Senior') {
-//                 divCategoria[index].style.display = 'block';
-//             } 
-
-//             if (generoAtleta == 'F' && genero == 'F' && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta && modal == 'Senior') {
-//                 divCategoria[index].style.display = 'block';
-//             } 
-
-
-//         }
-//         })
-
-        // const printBtn = document.getElementById('divCategoria');
-        // const katt = document.querySelectorAll(".valores")
-        
-
-        // printBtn.addEventListener('input', function() {
-        //     katt.forEach(element => {
-        //         if (element.checked.dataset.datadisciplina == "men's bodybuilding") {
-        //             console.log(element.value)
-        //         }
-               
-        //     });
-           
+const printBtn = document.getElementById('btnPrint');
+    printBtn.addEventListener('click', async(e) => { 
+        // e.preventDefault()
+        const hay = checkCategoria1[index].checked
+    if (hay === true) {
+        const id = checkCategoria1[index].value
     // });
-           
+ const formularioEditar = document.getElementById('formularioEditar')
+
+// formularioEditar.addEventListener('click', async(e) => {
+    
+
+ 
+  
+  
+    
+    
+    const FechaActual = formularioEditar.elements['FechaActual'].value
+    const Cedula = formularioEditar.elements['Cedula'].value
+    const Nacimiento = formularioEditar.elements['Nacimiento'].value
+    const Edad = formularioEditar.elements['Edad'].value
+    const Sexo = formularioEditar.elements['Sexo'].value
+    const Sector = formularioEditar.elements['Sector'].value
+    const Estatura = formularioEditar.elements['Estatura'].value
+    const Peso = formularioEditar.elements['Peso'].value
+    const Preparador = formularioEditar.elements['Preparador'].value
+    // const Categoria = formularioEditar.elements['Categoria'].value
+    const IDFDFF = formularioEditar.elements['IDFDFF'].value
+    const Nombre = formularioEditar.elements['Nombre'].value
+    // const id = formularioEditar.elements['id'].value
+    // const id = checkCategoria1.elements['id'].value
+   
+    // console.log(id, FechaActual, Cedula, Nacimiento, Edad, Sexo, Sector, Estatura, Preparador, Categoria, IDFDFF, Nombre)
+    
+
+
+try {
+    const data = await fetch(`/inscripcion/${id}`, {
+        method: 'put',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({id, FechaActual, IDFDFF, Nombre, Cedula, Nacimiento, Edad, Sexo, Peso, Estatura, Sector, Preparador})
+    })
+    const res = await data.json()
+    console.log(res)
+    
+    if(res.estado){
+        // window.location.href = '/inscripcion'
+    }else{
+        console.log(res)
         
-         
+    }
+} catch (error) {
+    console.log(error)
+}
 
-        // const printBtn = document.getElementById('print');
-        // printBtn.addEventListener('click', function() {
+}
 
-            
-        //     print();
 
-        // });
 
+// print();
+
+});
+
+}
+
+
+    const printBtn = document.getElementById('btnPrint');
+    printBtn.addEventListener('click', function() { 
+        print();
+        // window.location.href = '/inscripcion'
+    });
 
 </script>
