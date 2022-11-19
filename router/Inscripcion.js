@@ -139,31 +139,74 @@ router.get('/:id', async (req, res) => {
 
 // })
 
+// router.post('/:id', async (req, res) => {
+//     const {id} = req.body
+//     const body = req.body
 
-router.put('/:id', async (req, res) => {
-
-    const body = req.body
-    console.log(body);
+    // for (let index = 0; index < id.length; index++) {
+    //     const el = id[index];
+    //     console.log(el)
+    //     console.log(body)
     
-    // try {
 
-    //     const atletaDB = await Atleta.findByIdAndUpdate(id, body, { useFindAndModify: false })
-    //     console.log(atletaDB)
+// id.forEach(element => {
+//     console.log(element); 
+router.put('/:id', async (req, res) => {
+    // router.post('/:id', async (req, res) => {
+       const {id} = req.body
+        const body = req.body
+    // console.log(id)
+    // console.log(body.Nombre)
+     
+    try {
 
-    //     res.json({
-    //         estado: true,
-    //         mensaje: 'Editado'
-    //     })
+        // console.log(id)
+        // console.log(body)
+
+        // const categoriaDB = await Categoria.findByIdAndUpdate(id, body, { useFindAndModify: false })
+       
+       
+        const categoriaDB = await Categoria.findByIdAndUpdate({ _id: id },{
+            $push: {
+                Competidor: {
+                    FechaActual: body.FechaActual, 
+                    IDFDFF: body.IDFDFF, 
+                    Nombre: body.Nombre, 
+                    Cedula: body.Cedula, 
+                    Nacimiento: body.Nacimiento,
+                    Edad: body.Edad,
+                    Sexo: body.Sexo,
+                    Peso: body.Peso,
+                    Estatura: body.Estatura, 
+                    Sector: body.Sector,
+                    Preparador: body.Preparador
+                }
+            }
+         })
+
+    // });
+        // console.log(atletaDB)
         
-    // } catch (error) {
-    //     console.log(error)
+        // res.json({
+        //     estado: true,
+        //     mensaje: 'Editado'
+        // })
         
-    //     res.json({
-    //         estado: false,
-    //         mensaje: 'Fallamos!!'
-    //     })
-    // }
+    } catch (error) {
+        console.log(error)
+        
+        // res.json({
+        //     estado: false,
+        //     mensaje: 'Fallamos!!'
+        // })
+    }
+
+
+
 })
+
+// })
+// })
 
 
 module.exports = router;
