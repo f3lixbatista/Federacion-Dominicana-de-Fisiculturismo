@@ -8,7 +8,6 @@ const Schema = mongoose.Schema;
 const Categoria = require('../models/categoriamodel');
 
 
-
 router.get('/', async (req, res) => {
 
     try {
@@ -48,6 +47,28 @@ router.post('/crearCategoria', async (req, res) => {
     }
 })  
 
+router.get ('/:id', async (req, res) => {
+   
+    try {
+    
+        const arrayCategoryDB = await Categoria.find();
+        // console.log(arrayCategoryDB)
+        
+        res.render('nuevoEvento', {
+           
+            arrayCategorias: arrayCategoryDB,
+            error: false  
+        })
+    
+    } catch (error) {
+        res.render('nuevoEvento', { 
+            error: true,
+            mensaje:"no encontrado"
+        })
+    }
+
+})
+
 router.get('/nuevoEvento', async (req, res) => {
 
     try {
@@ -57,22 +78,31 @@ router.get('/nuevoEvento', async (req, res) => {
         
         res.render('nuevoEvento', {
            
-            arrayCategorias: arrayCategoryDB
+            arrayCategorias: arrayCategoryDB,
+            error: false  
         })
     
     } catch (error) {
-        console.log(error)
+        res.render('nuevoEvento', { 
+            error: true,
+            mensaje:"no encontrado"
+        })
     }
 })
 
-router.post('/nuevoEvento', async (req, res) => {
-    const {NombreEvento} = req.body
+// router.post('/nuevoEvento', async (req, res) => {
+router.put('/nuevoEvento', async (req, res) => {
+    // const {NombreEvento} = req.body
+    // const {Salida} = req.body
     // console.log(NombreEvento)
-    // const datosCategoria = req.body
-  
-    const {Categoria} = req.body
+    // // const datosCategoria = req.body
+    // console.log(Salida)
+    // const {Categoria} = req.body
     
     // console.log(Categoria)
+
+    const body = req.body
+    console.log(body)
 
     // // db.createCollection(NombreEvento)
     // // console.log(datosCategoria)
@@ -101,16 +131,16 @@ router.post('/nuevoEvento', async (req, res) => {
     //     }
 
     //     console.log(datosCategoria)
-    //     console.log(categoriasAdds)
-        // const atletaDB = new Atleta(body)
-        // await atletaDB.save()
+    // //     console.log(categoriasAdds)
+    //     // const atletaDB = new Atleta(body)
+    //     // await atletaDB.save()
 
-    //     await categoriasAdds.create(datosCategoria)
+    // //     await categoriasAdds.create(datosCategoria)
    
         
     // }
 
-        // res.redirect('/categorias') 
+    //     // res.redirect('/categorias') 
 
     // } catch (error) {
     //     console.log(error)
@@ -122,10 +152,7 @@ router.post('/nuevoEvento', async (req, res) => {
     // for (let cuerpo in prueba){  
     //         console.log(cuerpo + " " + prueba[cuerpo]);
     //     }
-
-    
-
-    
+  
 })
 
 
@@ -137,11 +164,11 @@ router.get('/formDinamica', (req, res) => {
 // router.get('/dinamica', (req, res) => {
 //     res.render('dinamica') 
 // });
-router.get('/dinamica',  (req, res) => {
+// router.get('/dinamica',  (req, res) => {
        
-    res.render("dinamica")
+//     res.render("dinamica")
            
-})
+// })
 
 router.post('/formDinamica', async (req, res) => {
     // res.render('/formDinamica')
