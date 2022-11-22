@@ -170,11 +170,11 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
             liberado = checkCategoriaEvent[index].value;
 // let parrraf = datoparrafo[2];
 //             for (const par of parrraf) {
-            for (let index = 0; index < datoparrafo.length; index++) { 
-                console.log(datoparrafo[1].innerText)
+            for (let index = 0; index <= datoparrafo.length; index++) { 
+             
                  if (checkCategoriaEvent[index].checked === false && datoparrafo[index].innerText == liberado) {
                     datoparrafo[index].remove()
-             console.log('first')
+          
 
                 }
                 // console.log(datoparrafo.length)
@@ -183,6 +183,8 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
 
                 // resultado.appendChild(datoParrafo);
             }
+
+            
 // // datos.push(dato);
 // let resultado = document.getElementById('resultado');
 // // resultado.innerHTML = '';
