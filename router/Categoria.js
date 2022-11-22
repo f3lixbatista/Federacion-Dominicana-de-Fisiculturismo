@@ -47,27 +47,27 @@ router.post('/crearCategoria', async (req, res) => {
     }
 })  
 
-router.get ('/:id', async (req, res) => {
+// router.get ('/:id', async (req, res) => {
    
-    try {
+//     try {
     
-        const arrayCategoryDB = await Categoria.find();
-        // console.log(arrayCategoryDB)
+//         const arrayCategoryDB = await Categoria.find();
+//         // console.log(arrayCategoryDB)
         
-        res.render('nuevoEvento', {
+//         res.render('nuevoEvento', {
            
-            arrayCategorias: arrayCategoryDB,
-            error: false  
-        })
+//             arrayCategorias: arrayCategoryDB,
+//             error: false  
+//         })
     
-    } catch (error) {
-        res.render('nuevoEvento', { 
-            error: true,
-            mensaje:"no encontrado"
-        })
-    }
+//     } catch (error) {
+//         res.render('nuevoEvento', { 
+//             error: true,
+//             mensaje:"no encontrado"
+//         })
+//     }
 
-})
+// })
 
 router.get('/nuevoEvento', async (req, res) => {
 
@@ -92,55 +92,205 @@ router.get('/nuevoEvento', async (req, res) => {
 
 // router.post('/nuevoEvento', async (req, res) => {
 router.put('/nuevoEvento', async (req, res) => {
-    // const {NombreEvento} = req.body
+    const NombreEvento = req.body
     // const {Salida} = req.body
-    // console.log(NombreEvento)
+    console.log(NombreEvento)
     // // const datosCategoria = req.body
     // console.log(Salida)
     // const {Categoria} = req.body
     
     // console.log(Categoria)
-
+    // const {NombreEvento} = req.body
+    // console.log(NombreEvento)
     const body = req.body
     console.log(body)
+
+    // if (body.length > 1) {
+    //    console.log(body)
+
+    // }
+        
+
+    // try {
+    
+    //     const arrayBodyEvento = await body;
+    //     // console.log(arrayCategoryDB)
+        
+    //     res.render('transito', {
+           
+    //         arrayEvento: arrayBodyEvento,
+    //         nombreEvento: NombreEvento,
+    //         error: false  
+    //     })
+    
+    // } catch (error) {
+    //     res.render('nuevoEvento', { 
+    //         error: true,
+    //         mensaje:"no encontrado"
+    //     })
+    // }
+
+
+
 
     // // db.createCollection(NombreEvento)
     // // console.log(datosCategoria)
     // try {
 
-    //     const CategoriaSchema = new Schema({  
+    //     const EventoSchema = new Schema({ 
+    //         Evento: String, 
     //         Categoria: String,
     //         Salida: Number,
-    //         Competidor: Array,
-    //         Estadisticas: Array
+    //         Competidor: [{
+    //             FechaActual: Date, 
+    //             IDFDFF: String,
+    //             Nombre: String,
+    //             Cedula: String,
+    //             Nacimiento: Date,
+    //             Edad: Number,
+    //             Sexo: String,
+    //             Peso: Number,
+    //             Estatura: Number, 
+    //             Sector: String,
+    //             Preparador: String,
+    //             EstadisticasEliminatoria: [{
+    //                 J1: Number,
+    //                 J2: Number,
+    //                 J3: Number,
+    //                 J4: Number,
+    //                 J5: Number,
+    //                 J6: Number,
+    //                 J7: Number,
+    //                 J8: Number,
+    //                 J9: Number,
+    //                 J10: Number,
+    //                 J11: Number,
+    //                 J12: Number,
+    //                 J13: Number,
+    //                 Total: Number,
+    //                 Posicion: Number,
+    //             }],
+    //             EstadisticasSemiFinalR1: [{
+    //                 J1: Number,
+    //                 J2: Number,
+    //                 J3: Number,
+    //                 J4: Number,
+    //                 J5: Number,
+    //                 J6: Number,
+    //                 J7: Number,
+    //                 J8: Number,
+    //                 J9: Number,
+    //                 J10: Number,
+    //                 J11: Number,
+    //                 J12: Number,
+    //                 J13: Number,
+    //                 Total: Number,
+    //                 Posicion: Number,
+    //             }],   
+    //             EstadisticasSemiFinalR2: [{
+    //                 J1: Number,
+    //                 J2: Number,
+    //                 J3: Number,
+    //                 J4: Number,
+    //                 J5: Number,
+    //                 J6: Number,
+    //                 J7: Number,
+    //                 J8: Number,
+    //                 J9: Number,
+    //                 J10: Number,
+    //                 J11: Number,
+    //                 J12: Number,
+    //                 J13: Number,
+    //                 Total: Number,
+    //                 Posicion: Number,
+    //                 TotalGralSem: Number,
+    //                 PosicionGralSem: Number,
+    //             }], 
+    //             EstadisticasFinalR1: [{
+    //                 J1: Number,
+    //                 J2: Number,
+    //                 J3: Number,
+    //                 J4: Number,
+    //                 J5: Number,
+    //                 J6: Number,
+    //                 J7: Number,
+    //                 J8: Number,
+    //                 J9: Number,
+    //                 J10: Number,
+    //                 J11: Number,
+    //                 J12: Number,
+    //                 J13: Number,
+    //                 TotalR1: Number,
+    //                 PosicionR1: Number,
+    //             }], 
+    //             EstadisticasFinalR2: [{
+    //                 J1: Number,
+    //                 J2: Number,
+    //                 J3: Number,
+    //                 J4: Number,
+    //                 J5: Number,
+    //                 J6: Number,
+    //                 J7: Number,
+    //                 J8: Number,
+    //                 J9: Number,
+    //                 J10: Number,
+    //                 J11: Number,
+    //                 J12: Number,
+    //                 J13: Number,
+    //                 TotalR2: Number,
+    //                 PosicionR2: Number,
+    //                 TotalGralFinal: Number,
+    //                 PosicionGralFinal: Number,
+
+    //             }],
+    //             EstadisticasAbsoluto: [{
+    //                 J1: Number,
+    //                 J2: Number,
+    //                 J3: Number,
+    //                 J4: Number,
+    //                 J5: Number,
+    //                 J6: Number,
+    //                 J7: Number,
+    //                 J8: Number,
+    //                 J9: Number,
+    //                 J10: Number,
+    //                 J11: Number,
+    //                 J12: Number,
+    //                 J13: Number,
+    //                 Total: Number,
+    //                 Posicion: Number,
+            
+    //             }],
+    //         }]
+    // //         
     //     });
 
-    //     const categoriasAdds = mongoose.model(NombreEvento, CategoriaSchema);
+    //      const NuevoEvento = mongoose.model(Evento, EventoSchema);
      
-    // if (Categoria.length > 0)
-    // for (i = 0; i < Salida.length; i++) {
+    // // if (Categoria.length > 0)
+    // // for (i = 0; i < Salida.length; i++) {
         
         
        
-    //     datosCategoria = {
-    //         Categoria: Categoria[i],
-    //         Salida: Salida[i],
-    //         Competidor: [],
-    //         Estadisticas: []
+    // //     datosCategoria = {
+    // //         Categoria: Categoria[i],
+    // //         Salida: Salida[i],
+    // //         Competidor: [],
+    // //         Estadisticas: []
 
-    //     }
+    // //     }
 
-    //     console.log(datosCategoria)
-    // //     console.log(categoriasAdds)
-    //     // const atletaDB = new Atleta(body)
-    //     // await atletaDB.save()
+    // //     console.log(datosCategoria)
+    // // //     console.log(categoriasAdds)
+    // //     // const atletaDB = new Atleta(body)
+    // //     // await atletaDB.save()
 
-    // //     await categoriasAdds.create(datosCategoria)
+    //     await NuevoEvento.create(body)
    
         
-    // }
+    // // }
 
-    //     // res.redirect('/categorias') 
+    // //     // res.redirect('/categorias') 
 
     // } catch (error) {
     //     console.log(error)
@@ -151,7 +301,7 @@ router.put('/nuevoEvento', async (req, res) => {
 
     // for (let cuerpo in prueba){  
     //         console.log(cuerpo + " " + prueba[cuerpo]);
-    //     }
+       
   
 })
 
