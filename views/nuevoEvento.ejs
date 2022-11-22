@@ -16,7 +16,8 @@
              type="text" 
              placeholder="Nombre del Evento" 
              class="form-control my-3 mb-4" 
-             name="NombreEvento"   
+             name="NombreEvento"  
+             id="evento" 
             >
             <label class="my-4 fs-3 fw-bold">
                 Seleccione las Categorias a Disputarse en este Evento
@@ -46,12 +47,12 @@
                         <div class="row" id="trcategoria"> 
                             <hr id="hrCategoria" class="col-10 mx-2">
                             
-                            <div class="col-11 p-0 m-0 form-check fila pt-2"> 
+                            <div class="col-11 p-0 m-0 form-check fila pt-2" id="divCheck"> 
                                  
-                                <label id="labelCategoria" class="mx-4 form-check-label lh-1 fs-4 col-11 p-0" for="checkCategoria"><b><p class="lh-1"><%= categoria.Categoria %></p></b></label>
+                                <label id="labelCategoria" class="mx-4 form-check-label lh-1 fs-4 col-11 p-0" for="checkCategoriaEvent"><b><p class="lh-1"><%= categoria.Categoria %></p></b></label>
                             
-                                <input role="" aria-label="Checkbox for following text input" value="<%= categoria.Categoria %>" class="valores form-check-input fs-4 p-0 mt-0 mb-0 form-check-reverse  col-1" name="Categoria" type="checkbox" id="checkCategoria" data-datadisciplina="<%= categoria.Disciplina %>" data-id="<%= categoria.id %>" data-datadivision="<%= categoria.Division %>" data-datamodal="<%= categoria.Modalidad %>" data-genero="<%= categoria.Genero %>" data-paredad='<%= categoria.HastaEdad %>' data-pardesdeedad='<%= categoria.DesdeEdad %>' data-pardesdepeso='<%= categoria.DesdePeso %>' data-parhastapeso='<%= categoria.HastaPeso %>' data-pardesdeestatura='<%= categoria.DesdeEstatura %>' data-parhastaestatura='<%= categoria.HastaEstatura %>'>
-                                <input role="" aria-label="Checkbox for following text input" value="<%= categoria.Categoria %>" class="valores form-check-input fs-4 p-0 mt-0 mb-0 form-check-reverse  col-1" name="id" type="checkbox" id="checkCategoriaEvent">
+                               
+                                <input role="" aria-label="Checkbox for following text input" value="<%= categoria.Categoria %>" class="valores form-check-input fs-4 p-0 mt-0 mb-0 form-check-reverse  col-1" name="Ready" type="checkbox" id="checkCategoriaEvent">
 
                             </div>  
                             
@@ -64,6 +65,9 @@
             <button class="btn btn-primary btn-block my-3" type="button" id="botonAgregar">
                 Agregar
             </button> 
+            <div id="resultado"></div>
+
+
             <% } %> 
         </form>
     
@@ -72,41 +76,191 @@
         <script>
             
             
-const inputBuscar = document.getElementById("buscar")
-  inputBuscar.addEventListener('keyup', function() {
-Buscar = buscar.value
+// const inputBuscar = document.getElementById("buscar")
+//   inputBuscar.addEventListener('keyup', function() {
+// Buscar = buscar.value
   
-        for (let index = 0; index < checkCategoria.length; index++) {
-            const minus = checkCategoria[index].value.toLowerCase()
-            const minus2 = Buscar.toLowerCase()
-            // console.log(minus)
-            // console.log(minus2)
+//         for (let index = 0; index < checkCategoria.length; index++) {
+//             const minus = checkCategoria[index].value.toLowerCase()
+//             const minus2 = Buscar.toLowerCase()
+//             // console.log(minus)
+//             // console.log(minus2)
          
-                if (!minus.includes(minus2)) {
-                    trcategoria[index].style.display = "none"
+//                 if (!minus.includes(minus2)) {
+//                     trcategoria[index].style.display = "none"
                 
-                }else{
-                    trcategoria[index].style.display = "block"
+//                 }else{
+//                     trcategoria[index].style.display = "block"
               
-                }
+//                 }
              
-        }
-    })
+//         }
+//     })
+
+//     const printBtn = document.getElementById('botonAgregar');
+//     printBtn.addEventListener('click', async() => {
+//         const formEditar = document.getElementById('formEditar')
+//         const NombreEvento = formEditar.elements['NombreEvento'].value
+//         try {
+//     const data = await fetch(`/categorias/nuevoEvento`, {
+//         method: 'put',
+//         headers: {
+//             'Content-Type': 'application/json'
+//         },
+//         body: JSON.stringify({NombreEvento})
+//     })
+//     const res = await data.json()
+//     console.log(res)
+    
+//     if(res.estado){
+ 
+//     }else{
+//         console.log(res)
+        
+//     }
+// } catch (error) {
+//     console.log(error)
+// }
 
 
-for (let index = 0; index < checkCategoriaEvent.length; index++) {
+//     })
+
+// const formEditar = document.getElementById('formEditar')
+// const Categor = formEditar.elements['Ready'].value
+
+// window.onload = function() {
+//             window.datos = [];
+//         }
+
+for (let index = 0; index < checkCategoriaEvent.length; index++) { 
+    
+
+    
+   
+    // const checkTrue = document.getElementById('divCheck');
+    
+    checkCategoriaEvent[index].addEventListener('click', async() => {
+        // console.log(Categor)
+
+
+       
+        
+    //     const chekeo = checkCategoriaEvent[index].checked
+    //     const checkeada = checkCategoriaEvent[index].value
+    
+         if (checkCategoriaEvent[index].checked === true) {
+
+            let dato = checkCategoriaEvent[index].value;
+
+            // datos.push(dato);
+            resultado = document.getElementById('resultado');
+            // resultado.innerHTML = '';
+
+            datoParrafo = document.createElement('H5');
+                datoParrafo.innerText = dato;
+                datoParrafo.id = 'datoparrafo';
+                
+                resultado.appendChild(datoParrafo);
+
+            // console.log(checkCategoriaEvent[index].value)
+         }
+         // && datoparrafo[index].value == checkCategoriaEvent[index].value
+         if (checkCategoriaEvent[index].checked === false) {
+//             let dato = checkCategoriaEvent[index].value;
+            liberado = checkCategoriaEvent[index].value;
+// let parrraf = datoparrafo[2];
+//             for (const par of parrraf) {
+            for (let index = 0; index < datoparrafo.length; index++) { 
+                console.log(datoparrafo[1].innerText)
+                 if (checkCategoriaEvent[index].checked === false && datoparrafo[index].innerText == liberado) {
+                    datoparrafo[index].remove()
+             console.log('first')
+
+                }
+                // console.log(datoparrafo.length)
+                // let datoParrafo = document.createElement('p');
+                // datoParrafo.innerText = dato;
+
+                // resultado.appendChild(datoParrafo);
+            }
+// // datos.push(dato);
+// let resultado = document.getElementById('resultado');
+// // resultado.innerHTML = '';
+
+// let datoParrafo = document.createElement('H5');
+//     datoParrafo.innerText = dato;
+// console.log(resultado.innerText)
+            // resultado.remove();
+            
+         }
+       
+    //     console.log('al fin')
+    // // checkTrue.addEventListener('click', async() => { 
+    //     // console.log(checkTrue[index])
+    // console.log(checkeada)
+        //  }
+    //     const checkCategoria = document.querySelectorAll('.valores')
+    //     const trcategoria = document.querySelectorAll('#trcategoria')
+    //     const hrCategoria = document.querySelectorAll('#hrCategoria')
+    //     const labelCategoria = document.querySelectorAll('#labelCategoria')
+    //     const Buscar = document.getElementById('buscar')
+    //     const inputBuscar = document.getElementById("buscar")
+    //     const listado = document.getElementById('listado')
+    //     const botonAgregar = document.getElementById('botonAgregar')
+    //     const allCategorias = document.getElementById('allCategorias')
+    //     const formEditar = document.getElementById('formEditar')
+    //     const NombreEvento = formEditar.elements['NombreEvento'].value
+    //    console.log(NombreEvento)
+    //    console.log(checkCategoria)
+    //    console.log(trcategoria)
+    //      console.log(hrCategoria)
+    //         console.log(labelCategoria)
+    //         console.log(Buscar)
+    //         console.log(inputBuscar)
+    //         console.log(listado)
+    //         console.log(botonAgregar)
+    //         console.log(allCategorias)
+    //         console.log(formEditar)
+    //         console.log(NombreEvento)
+       
+        // console.log(checkCategoriaEvent)
+         
+            
+            // console.log(checkCategoriaEvent[index].value)
+            // const elegida = checkCategoriaEvent[index].cehcked
+            // if (elegida === true) {
+            //     console.log(elegida)
+            //     console.log(checkCategoriaEvent[index].value)
+            // //    console.log('hola')
+            //     // console.log(checkCategoriaEvent[index].value)
+            //  }
+         
+     })
+    } 
+
     
 const printBtn = document.getElementById('botonAgregar');
     printBtn.addEventListener('click', async(e) => { 
         e.preventDefault()
+        Evento = evento.value
+
+        for (let index = 0; index < checkCategoriaEvent.length; index++) {
+
         const hay = checkCategoriaEvent[index].checked
     if (hay === true) {
         const Categoria = checkCategoriaEvent[index].value
-       
+        
+
+        
  const formEditar = document.getElementById('formEditar')
     
-    const Evento = formEditar.elements['NombreEvento'].value
+    const NombreEvento = formEditar.elements['NombreEvento'].value
     const id = checkCategoria[index].dataset.id
+    console.log(Evento)
+    console.log(NombreEvento)
+    console.log(Categoria)
+    
+    // listado.value = Categoria[index]
    
 try {
     const data = await fetch(`/categorias/nuevoEvento`, {
@@ -114,7 +268,7 @@ try {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({Evento, Categoria})
+        body: JSON.stringify({Evento, Categoria, NombreEvento})
     })
     const res = await data.json()
     console.log(res)
@@ -132,12 +286,12 @@ try {
 }
 
 
-
+}
 // print();
 
 });
 
-}
+
 
 
 </script>
