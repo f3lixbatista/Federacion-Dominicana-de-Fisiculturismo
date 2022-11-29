@@ -312,32 +312,39 @@
             }
             //---------------------------------------------------- BB Junior -----------------------------------------------------------
             if (edadJunior < 24 && modal == 'Junior') {
-                if (disciplina == "Men’s Bodybuilding" || disciplina == "Men's Classic Bodybuilding" || disciplina == "Men's Games Classic" || disciplina == "Men's Classic Physique") {     
+                
+                if (disciplina == "Men's Bodybuilding" || disciplina == "Men’s Bodybuilding" || disciplina == "Men's Classic Bodybuilding" || disciplina == "Men's Games Classic" || disciplina == "Men's Classic Physique") {     
+                    console.log(pesoInicial)
                     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) { 
-                        if (pesoInicial && pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta) {
+                        if (pesoInicial && pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta || isNaN(pesoInicial)) {
                             divCategoria[index].style.display = 'block'; 
                         }else{
                             divCategoria[index].style.display = 'none';
                         }
-                        if (!pesoInicial) {
-                            divCategoria[index].style.display = 'block';
-                        }
+                        // if (isNaN(pesoInicial)) {
+                        //     divCategoria[index].style.display = 'block';
+                        // }
                     }
                 }
             }
             //---------------------------------------------------- BB Sr -----------------------------------------------------------       
             if (generoAtleta == 'M' && genero == 'M' && pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta && modal == 'Senior') {
-                 divCategoria[index].style.display = 'block';   
+                 divCategoria[index].style.display = 'block';  
+                 
             }
 
                 //---------------------------------------------------- master BB ----------------------------------------------------------
             if (edad > 39 && modal == 'Master') {
+                
                 if (disciplina == "Men’s Bodybuilding") {
+                     
                     if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) { 
+                       
                         if (pesoInicial < pesoAtleta && pesoFinal >= pesoAtleta) {
                             divCategoria[index].style.display = 'block';
+                            console.log(pesoInicial, pesoFinal, pesoAtleta)
                         }
-                        if (!pesoInicial) {
+                        if (isNaN(pesoInicial)) {
                             divCategoria[index].style.display = 'block';
                         }
                     }
@@ -401,7 +408,7 @@
                         if (estaturaAtleta.length < 3) {
                             divCategoria[index].style.display = 'none'; 
                         }
-                         if (estaturaInicial) {
+                         if (!isNaN(estaturaInicial)) {
                             if (estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta) {
                         //    --------------------------------------------------------- Junior classic BB Open---------------------------------------------------------------               
                         if (disciplina == "Men’s Classic Bodybuilding") {
@@ -580,7 +587,7 @@
                        if (estaturaAtleta.length < 3) {
                            divCategoria[index].style.display = 'none'; 
                         }
-                        if (estaturaInicial) {
+                        if (!isNaN(estaturaInicial)) {
                            if (estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta) {
             //---------------------------------------------------- Classic Bodybuilding Master edad -----------------------------------------------------------
                     if (estaturaAtleta <= 168 && disciplina == "Men’s Classic Bodybuilding" && pesoAtleta <= (estaturaAtleta - 100) + 0) {
@@ -739,9 +746,13 @@
 
  //---------------------------------------------------- Classic Bodybuilding Sr -----------------------------------------------------------
 
-            if (generoAtleta == 'M' && genero == 'M' && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta && modal == 'Senior') {
+            if (generoAtleta == 'M' && genero == 'M' && modal == 'Senior') {
                 
+                if (estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta || isNaN(estaturaInicial)) {
+
                 if (disciplina == "Men’s Classic Bodybuilding") {
+
+                    
                 
                 if (estaturaAtleta.length < 3) {
                            divCategoria[index].style.display = 'none'; }
@@ -825,6 +836,7 @@
                     divCategoria[index].style.display = 'block';   
                 }   
             } 
+        }
         }
     })
 //---------------------------------------------------- Boton Men's Physique -----------------------------------------------------------       
@@ -914,9 +926,10 @@
                         if (disciplina == "Men's Physique") {
 
                             if (edadInicial <= edadAtleta && edadFinal >= edadAtleta) {
+                                // console.log(isNaN(estaturaInicial), edadAtleta)
                                 if (estaturaInicial && estaturaInicial < estaturaAtleta && estaturaFinal >= estaturaAtleta){
                                     divCategoria[index].style.display = 'block';
-                                } if (!estaturaInicial) {
+                                } if (isNaN(estaturaInicial)) {
                                     divCategoria[index].style.display = 'block';
                                 }
                             }  
@@ -1542,7 +1555,7 @@ try {
         body: JSON.stringify({id, FechaActual, IDFDFF, Nombre, Cedula, Nacimiento, Edad, Sexo, Peso, Estatura, Sector, Preparador})
     })
     const res = await data.json()
-    console.log(res)
+    // console.log(res)
     
     if(res.estado){
         // window.location.href = '/inscripcion'
