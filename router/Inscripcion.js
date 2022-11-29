@@ -1,23 +1,162 @@
 const express = require('express');
 const router = express.Router();
-// const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 // const { db, collection } = require('../models/categoriamodel');
-// const Schema = mongoose.Schema;
+const Schema = mongoose.Schema;
 const Atleta = require('../models/atletamodel')
 const Categoria = require('../models/categoriamodel')
+
+const EventoSchema = new Schema({
+    Categoria: String,
+    Evento: String,
+    Modalidad: String,
+    Genero: String,
+    Disciplina: String,
+    Division: String,
+    DesdeEdad: Number,
+    HastaEdad: Number,
+    DesdePeso: Number,
+    HastaPeso: Number,
+    DesdeEstatura: Number,
+    HastaEstatura: Number, 
+    Salida: Number,
+    Competidor: [{
+        FechaActual: Date, 
+        IDFDFF: String,
+        Nombre: String,
+        Cedula: String,
+        Nacimiento: Date,
+        Edad: Number,
+        Sexo: String,
+        Peso: Number,
+        Estatura: Number, 
+        Sector: String,
+        Preparador: String,
+        EstadisticasEliminatoria: [{
+            J1: Number,
+            J2: Number,
+            J3: Number,
+            J4: Number,
+            J5: Number,
+            J6: Number,
+            J7: Number,
+            J8: Number,
+            J9: Number,
+            J10: Number,
+            J11: Number,
+            J12: Number,
+            J13: Number,
+            Total: Number,
+            Posicion: Number,
+        }],
+        EstadisticasSemiFinalR1: [{
+            J1: Number,
+            J2: Number,
+            J3: Number,
+            J4: Number,
+            J5: Number,
+            J6: Number,
+            J7: Number,
+            J8: Number,
+            J9: Number,
+            J10: Number,
+            J11: Number,
+            J12: Number,
+            J13: Number,
+            Total: Number,
+            Posicion: Number,
+        }],   
+        EstadisticasSemiFinalR2: [{
+            J1: Number,
+            J2: Number,
+            J3: Number,
+            J4: Number,
+            J5: Number,
+            J6: Number,
+            J7: Number,
+            J8: Number,
+            J9: Number,
+            J10: Number,
+            J11: Number,
+            J12: Number,
+            J13: Number,
+            Total: Number,
+            Posicion: Number,
+            TotalGralSem: Number,
+            PosicionGralSem: Number,
+        }], 
+        EstadisticasFinalR1: [{
+            J1: Number,
+            J2: Number,
+            J3: Number,
+            J4: Number,
+            J5: Number,
+            J6: Number,
+            J7: Number,
+            J8: Number,
+            J9: Number,
+            J10: Number,
+            J11: Number,
+            J12: Number,
+            J13: Number,
+            TotalR1: Number,
+            PosicionR1: Number,
+        }], 
+        EstadisticasFinalR2: [{
+            J1: Number,
+            J2: Number,
+            J3: Number,
+            J4: Number,
+            J5: Number,
+            J6: Number,
+            J7: Number,
+            J8: Number,
+            J9: Number,
+            J10: Number,
+            J11: Number,
+            J12: Number,
+            J13: Number,
+            TotalR2: Number,
+            PosicionR2: Number,
+            TotalGralFinal: Number,
+            PosicionGralFinal: Number,
+
+        }],
+        EstadisticasAbsoluto: [{
+            J1: Number,
+            J2: Number,
+            J3: Number,
+            J4: Number,
+            J5: Number,
+            J6: Number,
+            J7: Number,
+            J8: Number,
+            J9: Number,
+            J10: Number,
+            J11: Number,
+            J12: Number,
+            J13: Number,
+            Total: Number,
+            Posicion: Number,
+            
+        }],
+    }]
+})
+
+
+Eventos = mongoose.model('mr. region norte 2022', EventoSchema);
 
 
 router.get('/', async (req, res) => {
 
-    try {
-
-        
-
+    try {  
+        const arrayCategoriaDB = await Eventos.find();
         const arrayAtletaDB = await Atleta.find();
-        console.log(arrayAtletaDB)
+        // console.log(arrayAtletaDB)
         
         res.render("inscripcion", {
             arrayAtletas: arrayAtletaDB,
+            arrayCategorias: arrayCategoriaDB
             
         })
     
@@ -27,13 +166,21 @@ router.get('/', async (req, res) => {
 
 })
 
+
+
+
+
+
 router.get('/:id', async (req, res) => {
         
     const id = req.params.id
+
+   
+    // const Eventos = 'mr. region norte 2022'
      
     try {     
 
-        const arrayCategoriaDB = await Categoria.find();
+        const arrayCategoriaDB = await Eventos.find();
         // console.log(arrayCategoriaDB)
 
         const atletaDB = await Atleta.findOne({ _id: id })
@@ -166,7 +313,7 @@ router.put('/:id', async (req, res) => {
         // const categoriaDB = await Categoria.findByIdAndUpdate(id, body, { useFindAndModify: false })
        
        
-        const categoriaDB = await Categoria.findByIdAndUpdate({ _id: id },{
+        const categoriaDB = await Eventos.findByIdAndUpdate({ _id: id },{
             $push: {
                 Competidor: {
                     FechaActual: body.FechaActual, 
@@ -182,7 +329,7 @@ router.put('/:id', async (req, res) => {
                     Preparador: body.Preparador
                 }
             }
-         })
+        })
 
     // });
         // console.log(atletaDB)
