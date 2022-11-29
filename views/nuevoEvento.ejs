@@ -1,6 +1,6 @@
 <%- include("template/cabecera", {tituloWeb: "Agregar Categoria"}) %>
 
-    <div class="container w-75" style="margin-top: -5vh;">
+    <div class="container" style="margin-top: -5vh;">
 
         <form id="formEditar">
             <% if (error) { %>
@@ -40,62 +40,131 @@
 
             
             <div class="container mt-2 col-12 bg-striped" id="allCategorias">
+               
+                <div class="row" id="encabezado"> 
+                    <div class="col-9 my-2 m-0 form-check bg-primary pt-2 rounded-pill" id="divCabeza">
+                        <label id="labelCabeza" class="mx-4 form-check-label lh-1 fs-4 col-11 pt-1" for=""><b><p class="lh-1">Categorias Disponibles:</p></b></label> 
+                    </div> 
+
+                    <div class="col-1 my-2 m-0 form-check bg-primary pt-2 rounded-pill pl-1" id="divCabeza">
+                        <label id="labelCabeza" class="form-check-label lh-1 fs-6 col-12 p-0" for=""><b><p class="lh-1">Edad: Desde/Hasta</p></b></label> 
+                    </div> 
+                   
+                    <div class="col-1 my-2 m-0 form-check bg-primary pt-2 rounded-pill pl-1" id="divCabeza">
+                        <label id="labelCabeza" class="form-check-label lh-1 fs-6 col-12 p-0" for=""><b><p class="lh-1">Peso: Desde/Hasta</p></b></label> 
+                    </div> 
+                   
+                    <div class="col-1 my-2 m-0 form-check bg-primary pt-2 rounded-pill pl-1" id="divCabeza">
+                        <label id="labelCabeza" class="form-check-label lh-1 fs-6 col-12 p-0" for=""><b><p class="lh-1">Estatura: Desde/Hasta</p></b></label> 
+                    </div> 
+                    
+
+                </div>
                 
                 <% if (arrayCategorias.length > 0) { %>
                     <% arrayCategorias.forEach(categoria => { %>
                  
                         <div class="row" id="trcategoria"> 
-                            <hr id="hrCategoria" class="col-10 mx-2">
-                            
-                            <div class="col-11 p-0 m-0 form-check fila pt-2" id="divCheck"> 
+                            <!-- <hr id="hrCategoria" class="col-10 mx-4"> --> 
+                            <div class="col-9 my-2 m-0 form-check fila pt-2 rounded-pill pl-1" id="divCheck"> 
                                  
-                                <label id="labelCategoria" class="mx-4 form-check-label lh-1 fs-4 col-11 p-0" for="checkCategoriaEvent"><b><p class="lh-1"><%= categoria.Categoria %></p></b></label>
-                            
-                               
-                                <input role="" aria-label="Checkbox for following text input" value="<%= categoria.Categoria %>" class="valores form-check-input fs-4 p-0 mt-0 mb-0 form-check-reverse  col-1" name="Ready" type="checkbox" id="checkCategoriaEvent">
+                                <label id="labelCategoria" class="ml-2 form-check-label lh-1 fs-4 col-11 p-0" for="checkCategoriaEvent"><b><p class="lh-1"><%= categoria.Categoria %></p></b></label>                              
+                                <input role="" aria-label="Checkbox for following text input" value="<%= categoria.Categoria %>" class="ml-1 valores form-check-input fs-4 p-0 mt-1 mb-0 form-check-reverse col-1" name="Ready" type="checkbox" id="checkCategoriaEvent">
+                                <input id="checkCategoriaEvent2" type="text" name="Modalidad" value="<%= categoria.Modalidad %>" class="d-none">
+                                <input id="checkCategoriaEvent3" type="text" name="Genero" value="<%= categoria.Genero %>" class="d-none">
+                                <input id="checkCategoriaEvent4" type="text" name="Disciplina" value="<%= categoria.Disciplina %>" class="d-none">
+                                <input id="checkCategoriaEvent5" type="text" name="Division" value="<%= categoria.Division %>" class="d-none">
+                                <input id="checkCategoriaEvent6" type="text" name="DesdeEdad" value="<%= categoria.DesdeEdad %>" class="d-none">
+                                <input id="checkCategoriaEvent7" type="text" name="HastaEdad" value="<%= categoria.HastaEdad %>" class="d-none">
+                                <input id="checkCategoriaEvent8" type="text" name="DesdePeso" value="<%= categoria.DesdePeso %>" class="d-none">
+                                <input id="checkCategoriaEvent9" type="text" name="HastaPeso" value="<%= categoria.HastaPeso %>" class="d-none">
+                                <input id="checkCategoriaEvent10" type="text" name="DesdeEstatura" value="<%= categoria.DesdeEstatura %>" class="d-none">
+                                <input id="checkCategoriaEvent11" type="text" name="HastaEstatura" value="<%= categoria.HastaEstatura %>" class="d-none">
+                            </div> 
+                            <div class="col-1 my-2 m-0 form-check bg-primary pt-2 rounded-pill pl-1" id="divCabeza">
+                                <label id="labelCabeza" class="text-center form-check-label lh-1 fs-6 col-12 p-0" for=""><b><p class="lh-1"><%= categoria.DesdeEdad %>/<%= categoria.HastaEdad %></p></b></label>
+                            </div> 
+                           
+                            <div class="col-1 my-2 m-0 form-check bg-primary pt-2 rounded-pill pl-1" id="divCabeza">
+                                <label id="labelCabeza" class="text-center form-check-label lh-1 fs-6 col-12 p-0" for=""><b><p class="lh-1"><%= categoria.DesdePeso %>/<%= categoria.HastaPeso %></p></b></label> 
+                            </div> 
+                           
+                            <div class="col-1 my-2 m-0 form-check bg-primary pt-2 rounded-pill pl-1" id="divCabeza">
+                                <label id="labelCabeza" class="text-center form-check-label lh-1 fs-6 col-12 p-0" for=""><b><p class="lh-1"><%= categoria.DesdeEstatura %>/<%= categoria.HastaEstatura %></p></b></label> 
+                            </div> 
 
-                            </div>  
                             
                         </div>                   
                     <% }) %>
                 <% } %>
-                <hr class="lg-2 mr-5 pt-0 mt-0">
+                <!-- <hr class="lg-2 mr-5 pt-0 mt-0 col-10"> -->
             </div>
-            
-            <button class="btn btn-primary btn-block my-3" type="button" id="botonAgregar">
-                Agregar
-            </button> 
-            <div id="resultado"></div>
-
-
             <% } %> 
+        <div class="container w-50">
+            <a class="col-10 btn btn-dark btn-block my-4" href="/categorias/crearCategoria">
+                Nueva Categoria
+            </a>
+        </div>
         </form>
-    
+            <div class="container mt-5 mb-4 col-12 pl-0 ml-0">
+                <h1>Confirmar seleccion:</h1>
+            </div>
+
+        <form id="formEvento" method="post">
+            <div class="row mb-3">
+                <label for="inputEmail3" class="col-sm-1 col-form-label fs-3">Evento:</label>
+                <div id="divnombrenuevoevento" class="col-sm-10 pl-0 mt-2">
+                    <input type="text" id="nombrenuevoevento" name="NombreEvento" value="" class="border-0 fs-3 fw-bold col-10 bg-white pl-0" readonly>
+                </div>
+              </div>
+            <!-- <div class="mb-3"> -->
+                <!-- <h2 id="nombrenuevoevento" name="NombreNuevoEvento" value=""> -->
+                    
+                <!-- </h2> -->
+            <!-- </div> -->
+
+            <div id="resultado" class="mb-5" name="DivEvento"></div>
+            <div id="resultado2" class="d-none mb-5" name="DivEvento"></div>
+            <div id="resultado3" class="d-none mb-5" name="DivEvento"></div>
+            <div id="resultado4" class="d-none mb-5" name="DivEvento"></div>
+            <div id="resultado5" class="d-none mb-5" name="DivEvento"></div>
+            <div id="resultado6" class="d-none mb-5" name="DivEvento"></div>
+            <div id="resultado7" class="d-none mb-5" name="DivEvento"></div>
+            <div id="resultado8" class="d-none mb-5" name="DivEvento"></div>
+            <div id="resultado9" class="d-none mb-5" name="DivEvento"></div>
+            <div id="resultado10" class="d-none mb-5" name="DivEvento"></div>
+            <div id="resultado11" class="d-none mb-5" name="DivEvento"></div>
+
+
+
+            <div class="container w-50">
+                <button class="btn btn-primary col-10 my-3" type="submit" id="botonAgregar">
+                    Agregar
+                </button> 
+            </div>
+
+
+           
+        </form>
+        
     </div>
 
-        <script>
+<script>
             
-            
-// const inputBuscar = document.getElementById("buscar")
-//   inputBuscar.addEventListener('keyup', function() {
-// Buscar = buscar.value
-  
-//         for (let index = 0; index < checkCategoria.length; index++) {
-//             const minus = checkCategoria[index].value.toLowerCase()
-//             const minus2 = Buscar.toLowerCase()
-//             // console.log(minus)
-//             // console.log(minus2)
-         
-//                 if (!minus.includes(minus2)) {
-//                     trcategoria[index].style.display = "none"
-                
-//                 }else{
-//                     trcategoria[index].style.display = "block"
-              
-//                 }
-             
-//         }
-//     })
+    const inputBuscar = document.getElementById("buscar")
+    inputBuscar.addEventListener('keyup', function() {
+        Buscar = buscar.value  
+        for (let index = 0; index < checkCategoriaEvent.length; index++) {
+            const minus = checkCategoriaEvent[index].value.toLowerCase()
+            const minus2 = Buscar.toLowerCase()
+          
+            if (!minus.includes(minus2)) {
+                trcategoria[index].style.display = "none"                
+            }else{
+                trcategoria[index].style.display = "block"              
+            }    
+        }
+    })
 
 //     const printBtn = document.getElementById('botonAgregar');
 //     printBtn.addEventListener('click', async() => {
@@ -139,9 +208,9 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
    
     // const checkTrue = document.getElementById('divCheck');
     
-    checkCategoriaEvent[index].addEventListener('click', async() => {
+    checkCategoriaEvent[index].addEventListener('click', function() {
         // console.log(Categor)
-
+        
 
        
         
@@ -149,42 +218,182 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
     //     const checkeada = checkCategoriaEvent[index].value
     
          if (checkCategoriaEvent[index].checked === true) {
-
+          
             let dato = checkCategoriaEvent[index].value;
-
+            let modalidad = checkCategoriaEvent2[index].value;
+            let genero = checkCategoriaEvent3[index].value;
+            let disciplina = checkCategoriaEvent4[index].value;
+            let division = checkCategoriaEvent5[index].value;
+            let desdeedad = checkCategoriaEvent6[index].value;
+            let hastaedad = checkCategoriaEvent7[index].value;
+            let desdepeso = checkCategoriaEvent8[index].value;
+            let hastapeso = checkCategoriaEvent9[index].value;
+            let desdeestatura = checkCategoriaEvent10[index].value;
+            let hastaestatura = checkCategoriaEvent11[index].value;
+            // console.log(index)
             // datos.push(dato);
             resultado = document.getElementById('resultado');
             // resultado.innerHTML = '';
 
-            datoParrafo = document.createElement('H5');
-                datoParrafo.innerText = dato;
-                datoParrafo.id = 'datoparrafo';
+            datoParrafo = document.createElement('input');
+                datoParrafo.value = dato;
+                datoParrafo.id = 'datoparrafo' + index;
+                datoParrafo.name = 'Categorias';
+                datoParrafo.type = 'text';
+                datoParrafo.className = 'border-0 fs-5 fw-bold col-9 mt-2';
+                datoParrafo.readOnly = true;
+
+            resultado2 = document.getElementById('resultado2');
+                datoParrafo2 = document.createElement('input');
+                datoParrafo2.value = modalidad;
+                datoParrafo2.id = index;
+                datoParrafo2.name = 'Modalidad';
+                datoParrafo2.type = 'text';
+                datoParrafo2.className = 'oculto';
+                datoParrafo2.readOnly = true;
+
+                resultado3 = document.getElementById('resultado3');
+                datoParrafo3 = document.createElement('input');
+                datoParrafo3.value = genero;
+                datoParrafo3.id = index;
+                datoParrafo3.name = 'Genero';
+                datoParrafo3.type = 'text';
+                datoParrafo3.className = 'oculto';
+                datoParrafo3.readOnly = true;
+
+                resultado4 = document.getElementById('resultado4');
+                datoParrafo4 = document.createElement('input');
+                datoParrafo4.value = disciplina;
+                datoParrafo4.id = index;
+                datoParrafo4.name = 'Disciplina';
+                datoParrafo4.type = 'text';
+                datoParrafo4.className = 'oculto';
+                datoParrafo4.readOnly = true;
+
+                resultado5 = document.getElementById('resultado5');
+                datoParrafo5 = document.createElement('input');
+                datoParrafo5.value = division;
+                datoParrafo5.id = index;
+                datoParrafo5.name = 'Division';
+                datoParrafo5.type = 'text';
+                datoParrafo5.className = 'oculto';
+                datoParrafo5.readOnly = true;
+
+                resultado6 = document.getElementById('resultado6');
+                datoParrafo6 = document.createElement('input');
+                datoParrafo6.value = desdeedad;
+                datoParrafo6.id = index;
+                datoParrafo6.name = 'DesdeEdad';
+                datoParrafo6.type = 'text';
+                datoParrafo6.className = 'oculto';
+                datoParrafo6.readOnly = true;
+
+                resultado7 = document.getElementById('resultado7');
+                datoParrafo7 = document.createElement('input');
+                datoParrafo7.value = hastaedad;
+                datoParrafo7.id = index;
+                datoParrafo7.name = 'HastaEdad';
+                datoParrafo7.type = 'text';
+                datoParrafo7.className = 'oculto';
+                datoParrafo7.readOnly = true;
+
+                resultado8 = document.getElementById('resultado8');
+                datoParrafo8 = document.createElement('input');
+                datoParrafo8.value = desdepeso;
+                datoParrafo8.id = index;
+                datoParrafo8.name = 'DesdePeso';
+                datoParrafo8.type = 'text';
+                datoParrafo8.className = 'oculto';
+                datoParrafo8.readOnly = true;
+
+                resultado9 = document.getElementById('resultado9');
+                datoParrafo9 = document.createElement('input');
+                datoParrafo9.value = hastapeso;
+                datoParrafo9.id = index;
+                datoParrafo9.name = 'HastaPeso';
+                datoParrafo9.type = 'text';
+                datoParrafo9.className = 'oculto';
+                datoParrafo9.readOnly = true;
+
+                resultado10 = document.getElementById('resultado10');
+                datoParrafo10 = document.createElement('input');
+                datoParrafo10.value = desdeestatura;
+                datoParrafo10.id = index;
+                datoParrafo10.name = 'DesdeEstatura';
+                datoParrafo10.type = 'text';
+                datoParrafo10.className = 'oculto';
+                datoParrafo10.readOnly = true;
+
+                resultado11 = document.getElementById('resultado11');
+                datoParrafo11 = document.createElement('input');
+                datoParrafo11.value = hastaestatura;
+                datoParrafo11.id = index;
+                datoParrafo11.name = 'HastaEstatura';
+                datoParrafo11.type = 'text';
+                datoParrafo11.className = 'oculto';
+                datoParrafo11.readOnly = true;
+
                 
                 resultado.appendChild(datoParrafo);
-
+                resultado2.appendChild(datoParrafo2);
+                resultado3.appendChild(datoParrafo3);
+                resultado4.appendChild(datoParrafo4);
+                resultado5.appendChild(datoParrafo5);
+                resultado6.appendChild(datoParrafo6);
+                resultado7.appendChild(datoParrafo7);
+                resultado8.appendChild(datoParrafo8);
+                resultado9.appendChild(datoParrafo9);
+                resultado10.appendChild(datoParrafo10);
+                resultado11.appendChild(datoParrafo11);
+//<input type="text" id="resultado" name="NombreNuevoEvento" value="" class="border-0 fs-5 fw-bold" readonly>
             // console.log(checkCategoriaEvent[index].value)
          }
          // && datoparrafo[index].value == checkCategoriaEvent[index].value
          if (checkCategoriaEvent[index].checked === false) {
-//             let dato = checkCategoriaEvent[index].value;
-            liberado = checkCategoriaEvent[index].value;
+            const idparrafo = "datoparrafo" + index
+            console.log(idparrafo)
+            obtenerparrafos = document.getElementById(idparrafo)
+            console.log(obtenerparrafos)
+            const textparrafo = obtenerparrafos.value;
+            console.log(textparrafo);
+            obtenerparrafos.remove();
+            // const datopar = datoparrafo.length
+                // console.log(checkCategoriaEvent[index].checked)
 // let parrraf = datoparrafo[2];
 //             for (const par of parrraf) {
-            for (let index = 0; index <= datoparrafo.length; index++) { 
+   
+            // for (let i = 0; i < datopar; i++) {
+                
+            //     liberado = checkCategoriaEvent[index].value; 
+            //     inner = datoparrafo[i].innerText;
+            //     // console.log(inner)
+            //     // console.log(checkCategoriaEvent[index].checked)
              
-                 if (checkCategoriaEvent[index].checked === false && datoparrafo[index].innerText == liberado) {
-                    datoparrafo[index].remove()
+            //      if (checkCategoriaEvent[index].checked === false && inner == liberado || inner == "") {
+            //         datoparrafo[i].remove()
+            //         console.log(i)
+                    
+            //     }
+
+                // if (checkCategoriaEvent[index].checked === false && inner === inner) {
+                //     datoparrafo.remove()
+                //     console.log(i)
+                    
+                // }
+
+                // if (checkCategoriaEvent.checked === false && datoparrafo.innerText == liberado) {
+                //     datoparrafo.remove()
           
 
-                }
+                // }
                 // console.log(datoparrafo.length)
                 // let datoParrafo = document.createElement('p');
                 // datoParrafo.innerText = dato;
 
                 // resultado.appendChild(datoParrafo);
-            }
+            // }
 
-            
+        
 // // datos.push(dato);
 // let resultado = document.getElementById('resultado');
 // // resultado.innerHTML = '';
@@ -195,6 +404,10 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
             // resultado.remove();
             
          }
+
+        //  const cambio = checkCategoriaEvent[index].checked
+
+
        
     //     console.log('al fin')
     // // checkTrue.addEventListener('click', async() => { 
@@ -240,58 +453,74 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
      })
     } 
 
-    
-const printBtn = document.getElementById('botonAgregar');
-    printBtn.addEventListener('click', async(e) => { 
-        e.preventDefault()
-        Evento = evento.value
-
-        for (let index = 0; index < checkCategoriaEvent.length; index++) {
-
-        const hay = checkCategoriaEvent[index].checked
-    if (hay === true) {
-        const Categoria = checkCategoriaEvent[index].value
-        
-
-        
- const formEditar = document.getElementById('formEditar')
-    
-    const NombreEvento = formEditar.elements['NombreEvento'].value
-    const id = checkCategoria[index].dataset.id
-    console.log(Evento)
-    console.log(NombreEvento)
-    console.log(Categoria)
-    
-    // listado.value = Categoria[index]
-   
-try {
-    const data = await fetch(`/categorias/nuevoEvento`, {
-        method: 'put',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({Evento, Categoria, NombreEvento})
+    const division = document.getElementById('evento')
+    division.addEventListener('keyup', function() {
+        nombrenuevoevento.value = evento.value
     })
-    const res = await data.json()
-    console.log(res)
+
     
-    if(res.estado){
- 
-    }else{
-        console.log(res)
+// const printBtn = document.getElementById('botonAgregar');
+//     printBtn.addEventListener('click', async(e) => { 
+//         e.preventDefault()
+//         Evento = evento.value
+
+//         for (let index = 0; index < checkCategoriaEvent.length; index++) {
+            
+//             const idparrafo = "datoparrafo" + index
+//             // console.log(idparrafo)
+//             obtenerparrafos = document.getElementById(idparrafo)
+//             // console.log(obtenerparrafos)
+//             if (obtenerparrafos != null) {
+//                 const textparrafo = obtenerparrafos.innerText;
+//                 // console.log(textparrafo);
+//                 // datos.push(textparrafo);
+//             }
+//             // const textparrafo = obtenerparrafos.innerText;
+//             // console.log(textparrafo);
+
+//     //     const hay = checkCategoriaEvent[index].checked
+//     //     if (hay === true) {
+//     //         const Categoria = checkCategoriaEvent[index].value
         
-    }
-} catch (error) {
-    console.log(error)
-}
 
-}
+        
+//     //         const formEditar = document.getElementById('formEditar')
+    
+//     //         const NombreEvento = formEditar.elements['NombreEvento'].value
+//     //         const id = checkCategoria[index].dataset.id
+//     //         console.log(Evento)
+//     //         console.log(NombreEvento)
+//     //             console.log(Categoria)
+    
+//     // // listado.value = Categoria[index]
+   
+//     //         try {
+//     //             const data = await fetch(`/categorias/nuevoEvento`, {
+//     //                 method: 'put',
+//     //                 headers: {
+//     //                     'Content-Type': 'application/json'
+//     //                 },
+//     //                 body: JSON.stringify({Evento, Categoria, NombreEvento})
+//     //             })
+//     //             const res = await data.json()
+//     //             console.log(res)
+    
+//     //             if(res.estado){
+ 
+//     //             }else{
+//     //                 console.log(res)
+//     //             }
+//     //         } catch (error) {
+//     //             console.log(error)
+//     //         }
+
+//     //     }
 
 
-}
+//     }
 // print();
 
-});
+// });
 
 
 
