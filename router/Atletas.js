@@ -9,8 +9,9 @@ router.get('/', async (req, res) => {
 
     try {
 
+
         const arrayAtletaDB = await Atleta.find();
-        console.log(arrayAtletaDB)
+        // console.log(arrayAtletaDB)
         
         res.render("atletas", {
             arrayAtletas: arrayAtletaDB
@@ -31,7 +32,7 @@ router.post('/crear', async (req, res) => {
     const body = req.body
     // const {Pais} = req.body
     // console.log(Pais)
-    console.log(body)
+    // console.log(body)
     // const circular = db.circular
     
     // const arrayAtletaDB = await Atleta.find();
@@ -67,7 +68,7 @@ router.get('/:id', async (req, res) => {
     try {     
 
         const atletaDB = await Atleta.findOne({ _id: id })
-        console.log(atletaDB)
+        // console.log(atletaDB)
         
         res.render('detalle', {
             atleta: atletaDB,
@@ -115,7 +116,7 @@ router.put('/:id', async (req, res) => {
     try {
 
         const atletaDB = await Atleta.findByIdAndUpdate(id, body, { useFindAndModify: false })
-        console.log(atletaDB)
+        // console.log(atletaDB)
 
         res.json({
             estado: true,
