@@ -27,7 +27,8 @@ const atletaSchema = new Schema({
     Gimnasio: String,
     Preparador: String,
     CelPreparador: Number,
-    EmailPreparador: String
+    EmailPreparador: String,
+    Renovacion: Date,
 })
 
 // crear modelo
