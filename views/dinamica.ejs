@@ -2,15 +2,19 @@
 
 
 
-<div class="container container-fluid p-5">
+<div class="container container-fluid p-1">
+    <form method="get">
+
+    <input type="text" id="inputEvento" name="eventoDinamico" value="" class="border-0 fs-3 fw-bold col-10 bg-white" readonly>
     
-    <h1><%= eventosDinamicos %></h1>
+    <input type="text" id="hdinam" class="d-none" name="" value="<%= eventosDinamicos %>"><%= eventosDinamicos %></input>
+</form>
 
     <a
-        class="btn btn-dark btn-block my-4" 
-        href="/atletas/crear"
+        class="btn btn-dark btn-block mb-4 text-dark" 
+        
     >
-        Nueva Membresía
+      p
     </a>
   
     <div class="table-responsive" id="mydatatable-container">
@@ -37,7 +41,7 @@
                         <tr>
                             <th scope="row"><%= eventosDinamicos.Salida %></th>
                             <td><%= eventosDinamicos.Categoria %></td>
-                            <td><%= eventosDinamicos.Competidor %></td>
+                            <td><%= eventosDinamicos.Competidor[0].Nombre %></td>
                             <td><a href="atletas/<%= eventosDinamicos.id %>" class="btn btn-warning btn-sm">Editar</a></td>
                         </tr>
                     <% }) %>
@@ -79,6 +83,17 @@
             "buttons": ['csv', 'excel', 'pdf', 'print']
         });
     });
+
+     $(document).ready(function(){
+       
+       
+
+            var nombreEvento = $("#hdinam").val();
+            $("#inputEvento").val(nombreEvento);
+        
+    });
+
+
   </script>
 
         <!-- On tables
