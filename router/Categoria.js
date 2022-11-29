@@ -1,10 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-// const { collection } = require('../models/atletamodel');
-// const { db } = require('../models/categoriamodel');
+const { db } = require('../models/categoriamodel');
 const Schema = mongoose.Schema;
-
 const Categoria = require('../models/categoriamodel');
 
 
@@ -32,52 +30,24 @@ router.get('/crearCategoria', (req, res) => {
 
 router.post('/crearCategoria', async (req, res) => {
     const body = req.body
-    // console.log(body)
 
     try {
-    //     // const atletaDB = new Atleta(body)
-    //     // await atletaDB.save()
 
         await Categoria.create(body)
-
         res.redirect('/categorias')    
 
     } catch (error) {
         console.log(error)
     }
-})  
-
-// router.get ('/:id', async (req, res) => {
-   
-//     try {
-    
-//         const arrayCategoryDB = await Categoria.find();
-//         // console.log(arrayCategoryDB)
-        
-//         res.render('nuevoEvento', {
-           
-//             arrayCategorias: arrayCategoryDB,
-//             error: false  
-//         })
-    
-//     } catch (error) {
-//         res.render('nuevoEvento', { 
-//             error: true,
-//             mensaje:"no encontrado"
-//         })
-//     }
-
-// })
+}) 
 
 router.get('/nuevoEvento', async (req, res) => {
 
     try {
     
         const arrayCategoryDB = await Categoria.find();
-        // console.log(arrayCategoryDB)
-        
-        res.render('nuevoEvento', {
            
+        res.render('nuevoEvento', {           
             arrayCategorias: arrayCategoryDB,
             error: false  
         })
@@ -90,365 +60,652 @@ router.get('/nuevoEvento', async (req, res) => {
     }
 })
 
-// router.post('/nuevoEvento', async (req, res) => {
-router.put('/nuevoEvento', async (req, res) => {
-    const NombreEvento = req.body
-    // const {Salida} = req.body
-    console.log(NombreEvento)
-    // // const datosCategoria = req.body
-    // console.log(Salida)
-    // const {Categoria} = req.body
+router.post('/nuevoEvento', async (req, res) => {
+    const sbody = req.body
+    const {Categorias} = req.body
+    const {NombreEvento} = req.body
+    const {Modalidad} = req.body
+    const {Genero} = req.body
+    const {Disciplina} = req.body
+    const {Division} = req.body
+    const {DesdeEdad} = req.body
+    const {HastaEdad} = req.body
+    const {DesdePeso} = req.body
+    const {HastaPeso} = req.body
+    const {DesdeEstatura} = req.body
+    const {HastaEstatura} = req.body
+    // const splitEvento = NombreEvento.split(": ")
+    // newEvento = splitEvento[1]
+    // console.log(newEvento);
+    // console.log(NombreEvento);
+    // console.log(Modalidad);
+    // console.log(Genero);
+    // console.log(Disciplina);
+    // console.log(Division);
+    // console.log(DesdeEdad);
+    // console.log(HastaEdad);
+    // console.log(DesdePeso);
+    // console.log(HastaPeso);
+    // console.log(DesdeEstatura);
+    // console.log(HastaEstatura);
+
+    // const EventoSchema = new Schema({
+    // NombreEvento: String,
+    // Categorias: Array,
     
-    // console.log(Categoria)
-    // const {NombreEvento} = req.body
-    // console.log(NombreEvento)
-    const body = req.body
-    console.log(body)
+    // })
 
-    // if (body.length > 1) {
-    //    console.log(body)
-
-    // }
-        
-
-    // try {
+    const EventoSchema = new Schema({
+        Categoria: String,
+        Evento: String, 
+        Modalidad: String,
+        Genero: String,
+        Disciplina: String,
+        Division: String,
+        DesdeEdad: Number,
+        HastaEdad: Number,
+        DesdePeso: Number,
+        HastaPeso: Number,
+        DesdeEstatura: Number,
+        HastaEstatura: Number,
+        Salida: Number,
+        Competidor: [{
+            FechaActual: Date, 
+            IDFDFF: String,
+            Nombre: String,
+            Cedula: String,
+            Nacimiento: Date,
+            Edad: Number,
+            Sexo: String,
+            Peso: Number,
+            Estatura: Number, 
+            Sector: String,
+            Preparador: String,
+            EstadisticasEliminatoria: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                Total: Number,
+                Posicion: Number,
+            }],
+            EstadisticasSemiFinalR1: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                Total: Number,
+                Posicion: Number,
+            }],   
+            EstadisticasSemiFinalR2: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                Total: Number,
+                Posicion: Number,
+                TotalGralSem: Number,
+                PosicionGralSem: Number,
+            }], 
+            EstadisticasFinalR1: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                TotalR1: Number,
+                PosicionR1: Number,
+            }], 
+            EstadisticasFinalR2: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                TotalR2: Number,
+                PosicionR2: Number,
+                TotalGralFinal: Number,
+                PosicionGralFinal: Number,
     
-    //     const arrayBodyEvento = await body;
-    //     // console.log(arrayCategoryDB)
+            }],
+            EstadisticasAbsoluto: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                Total: Number,
+                Posicion: Number,
+                
+            }],
+        }]
+    })
+
+
+    const Eventos = mongoose.model(NombreEvento, EventoSchema);
+
+    try {
+
+        for (let x = 0; x < Categorias.length; x++) {
+            element = Categorias[x];
+            mod = Modalidad[x];
+            gen = Genero[x];
+            dis = Disciplina[x];
+            div = Division[x];
+            de = DesdeEdad[x];
+            he = HastaEdad[x];
+            dp = DesdePeso[x];
+            hp = HastaPeso[x];
+            des = DesdeEstatura[x];
+            hes = HastaEstatura[x];
+
+            // esquematizado = 'Categoria: ' + element
+
+            datosCategoria = {
+                Categoria: element,
+                Evento: NombreEvento,
+                Modalidad: mod,
+                Genero: gen,
+                Disciplina: dis,
+                Division: div,
+                DesdeEdad: de,
+                HastaEdad: he,
+                DesdePeso: dp,
+                HastaPeso: hp,
+                DesdeEstatura: des,
+                HastaEstatura: hes,
+                Salida: "",
+                Competidor: [{
+                FechaActual: "", 
+                IDFDFF: "",
+                Nombre: "",
+                Cedula: "",
+                Nacimiento: "",
+                Edad: "",
+                Sexo: "",
+                Peso: "",
+                Estatura: "", 
+                Sector: "",
+                Preparador: "",
+                EstadisticasEliminatoria: [{
+                    J1: "",
+                    J2: "",
+                    J3: "",
+                    J4: "",
+                    J5: "",
+                    J6: "",
+                    J7: "",
+                    J8: "",
+                    J9: "",
+                    J10: "",
+                    J11: "",
+                    J12: "",
+                    J13: "",
+                    Total: "",
+                    Posicion: "",
+                }],
+                EstadisticasSemiFinalR1: [{
+                    J1: "",
+                    J2: "",
+                    J3: "",
+                    J4: "",
+                    J5: "",
+                    J6: "",
+                    J7: "",
+                    J8: "",
+                    J9: "",
+                    J11: "",
+                    J10: "",
+                    J12: "",
+                    J13: "",
+                    Total: "",
+                    Posicion: "",
+                }],   
+                EstadisticasSemiFinalR2: [{
+                    J1: "",
+                    J2: "",
+                    J3: "",
+                    J4: "",
+                    J5: "",
+                    J6: "",
+                    J7: "",
+                    J8: "",
+                    J9: "",
+                    J10: "",
+                    J11: "",
+                    J12: "",
+                    J13: "",
+                    Total: "",
+                    Posicion: "",
+                    TotalGralSem: "",
+                    PosicionGralSem: "",
+                }], 
+                EstadisticasFinalR1: [{
+                    J1: "",
+                    J2: "",
+                    J3: "",
+                    J4: "",
+                    J5: "",
+                    J6: "",
+                    J7: "",
+                    J8: "",
+                    J9: "",
+                    J10: "",
+                    J11: "",
+                    J12: "",
+                    J13: "",
+                    TotalR1: "",
+                    PosicionR1: "",
+                }], 
+                EstadisticasFinalR2: [{
+                    J1: "",
+                    J2: "",
+                    J3: "",
+                    J4: "",
+                    J5: "",
+                    J6: "",
+                    J7: "",
+                    J8: "",
+                    J9: "",
+                    J11: "",
+                    J12: "",
+                    J10: "",
+                    J13: "",
+                    TotalR2: "",
+                    PosicionR2: "",
+                    TotalGralFinal: "",
+                    PosicionGralFinal: "",
         
-    //     res.render('transito', {
-           
-    //         arrayEvento: arrayBodyEvento,
-    //         nombreEvento: NombreEvento,
-    //         error: false  
-    //     })
+                }],
+                EstadisticasAbsoluto: [{
+                    J1: "",
+                    J2: "",
+                    J3: "",
+                    J4: "",
+                    J5: "",
+                    J6: "",
+                    J7: "",
+                    J8: "",
+                    J9: "",
+                    J10: "",
+                    J11: "",
+                    J12: "",
+                    J13: "",
+                    Total: "",
+                    Posicion: "",
+                    
+                }],
+                }]
+            }           
+            await Eventos.create(datosCategoria)
+            console.log(datosCategoria);
+        }
     
-    // } catch (error) {
-    //     res.render('nuevoEvento', { 
-    //         error: true,
-    //         mensaje:"no encontrado"
-    //     })
-    // }
+        // res.redirect('/categorias/formDinamica')      
 
+    } catch (error) {
+        console.log(error)
+     }
+})  
 
+// router.put('/nuevoEvento', async (req, res) => {
+//     const NombreEvento = req.body
+//     console.log(NombreEvento)
+//     const body = req.body
+//     console.log(body)
 
-
-    // // db.createCollection(NombreEvento)
-    // // console.log(datosCategoria)
-    // try {
-
-    //     const EventoSchema = new Schema({ 
-    //         Evento: String, 
-    //         Categoria: String,
-    //         Salida: Number,
-    //         Competidor: [{
-    //             FechaActual: Date, 
-    //             IDFDFF: String,
-    //             Nombre: String,
-    //             Cedula: String,
-    //             Nacimiento: Date,
-    //             Edad: Number,
-    //             Sexo: String,
-    //             Peso: Number,
-    //             Estatura: Number, 
-    //             Sector: String,
-    //             Preparador: String,
-    //             EstadisticasEliminatoria: [{
-    //                 J1: Number,
-    //                 J2: Number,
-    //                 J3: Number,
-    //                 J4: Number,
-    //                 J5: Number,
-    //                 J6: Number,
-    //                 J7: Number,
-    //                 J8: Number,
-    //                 J9: Number,
-    //                 J10: Number,
-    //                 J11: Number,
-    //                 J12: Number,
-    //                 J13: Number,
-    //                 Total: Number,
-    //                 Posicion: Number,
-    //             }],
-    //             EstadisticasSemiFinalR1: [{
-    //                 J1: Number,
-    //                 J2: Number,
-    //                 J3: Number,
-    //                 J4: Number,
-    //                 J5: Number,
-    //                 J6: Number,
-    //                 J7: Number,
-    //                 J8: Number,
-    //                 J9: Number,
-    //                 J10: Number,
-    //                 J11: Number,
-    //                 J12: Number,
-    //                 J13: Number,
-    //                 Total: Number,
-    //                 Posicion: Number,
-    //             }],   
-    //             EstadisticasSemiFinalR2: [{
-    //                 J1: Number,
-    //                 J2: Number,
-    //                 J3: Number,
-    //                 J4: Number,
-    //                 J5: Number,
-    //                 J6: Number,
-    //                 J7: Number,
-    //                 J8: Number,
-    //                 J9: Number,
-    //                 J10: Number,
-    //                 J11: Number,
-    //                 J12: Number,
-    //                 J13: Number,
-    //                 Total: Number,
-    //                 Posicion: Number,
-    //                 TotalGralSem: Number,
-    //                 PosicionGralSem: Number,
-    //             }], 
-    //             EstadisticasFinalR1: [{
-    //                 J1: Number,
-    //                 J2: Number,
-    //                 J3: Number,
-    //                 J4: Number,
-    //                 J5: Number,
-    //                 J6: Number,
-    //                 J7: Number,
-    //                 J8: Number,
-    //                 J9: Number,
-    //                 J10: Number,
-    //                 J11: Number,
-    //                 J12: Number,
-    //                 J13: Number,
-    //                 TotalR1: Number,
-    //                 PosicionR1: Number,
-    //             }], 
-    //             EstadisticasFinalR2: [{
-    //                 J1: Number,
-    //                 J2: Number,
-    //                 J3: Number,
-    //                 J4: Number,
-    //                 J5: Number,
-    //                 J6: Number,
-    //                 J7: Number,
-    //                 J8: Number,
-    //                 J9: Number,
-    //                 J10: Number,
-    //                 J11: Number,
-    //                 J12: Number,
-    //                 J13: Number,
-    //                 TotalR2: Number,
-    //                 PosicionR2: Number,
-    //                 TotalGralFinal: Number,
-    //                 PosicionGralFinal: Number,
-
-    //             }],
-    //             EstadisticasAbsoluto: [{
-    //                 J1: Number,
-    //                 J2: Number,
-    //                 J3: Number,
-    //                 J4: Number,
-    //                 J5: Number,
-    //                 J6: Number,
-    //                 J7: Number,
-    //                 J8: Number,
-    //                 J9: Number,
-    //                 J10: Number,
-    //                 J11: Number,
-    //                 J12: Number,
-    //                 J13: Number,
-    //                 Total: Number,
-    //                 Posicion: Number,
-            
-    //             }],
-    //         }]
-    // //         
-    //     });
-
-    //      const NuevoEvento = mongoose.model(Evento, EventoSchema);
-     
-    // // if (Categoria.length > 0)
-    // // for (i = 0; i < Salida.length; i++) {
-        
-        
-       
-    // //     datosCategoria = {
-    // //         Categoria: Categoria[i],
-    // //         Salida: Salida[i],
-    // //         Competidor: [],
-    // //         Estadisticas: []
-
-    // //     }
-
-    // //     console.log(datosCategoria)
-    // // //     console.log(categoriasAdds)
-    // //     // const atletaDB = new Atleta(body)
-    // //     // await atletaDB.save()
-
-    //     await NuevoEvento.create(body)
-   
-        
-    // // }
-
-    // //     // res.redirect('/categorias') 
-
-    // } catch (error) {
-    //     console.log(error)
-    // }
-
-    // const prueba = db.collections
-    // console.log(prueba)
-
-    // for (let cuerpo in prueba){  
-    //         console.log(cuerpo + " " + prueba[cuerpo]);
-       
-  
-})
-
+// })
 
 router.get('/formDinamica', (req, res) => {
     res.render('formDinamica')
     
 });
 
-// router.get('/dinamica', (req, res) => {
-//     res.render('dinamica') 
-// });
-// router.get('/dinamica',  (req, res) => {
-       
-//     res.render("dinamica")
-           
-// })
-
-router.post('/formDinamica', async (req, res) => {
-    // res.render('/formDinamica')
+router.get('/dinamica', async (req, res) => {
     const {eventoDinamico} = req.body
     const dinamicGlobal = eventoDinamico
-    
-    const DinamicaSchema = new Schema({  
+
+    const DinamicaSchema = new Schema({
+        Evento: String,
         Categoria: String,
         Salida: Number,
-        Competidor: Array,
-        Estadisticas: Array
-    });
-    // console.log(dinamicGlobal)
+        Competidor: [{
+            FechaActual: Date, 
+            IDFDFF: String,
+            Nombre: String,
+            Cedula: String,
+            Nacimiento: Date,
+            Edad: Number,
+            Sexo: String,
+            Peso: Number,
+            Estatura: Number, 
+            Sector: String,
+            Preparador: String,
+            EstadisticasEliminatoria: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                Total: Number,
+                Posicion: Number,
+            }],
+            EstadisticasSemiFinalR1: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                Total: Number,
+                Posicion: Number,
+            }],   
+            EstadisticasSemiFinalR2: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                Total: Number,
+                Posicion: Number,
+                TotalGralSem: Number,
+                PosicionGralSem: Number,
+            }], 
+            EstadisticasFinalR1: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                TotalR1: Number,
+                PosicionR1: Number,
+            }], 
+            EstadisticasFinalR2: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                TotalR2: Number,
+                PosicionR2: Number,
+                TotalGralFinal: Number,
+                PosicionGralFinal: Number,
+    
+            }],
+            EstadisticasAbsoluto: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                Total: Number,
+                Posicion: Number,
+                
+            }],
+        }]
+    })
+
     const dinamicG = mongoose.model(dinamicGlobal, DinamicaSchema);
-//mongoose.Collection.find()
+
     try {
-        // console.log(dinamicGlobal)
         const arrayDinamico = await dinamicG.find(); 
-        // console.log(arrayDinamico)
         
         res.render("dinamica", {
             arrayDinamicos: arrayDinamico,
-            eventosDinamicos: dinamicGlobal
-            
+            eventosDinamicos: dinamicGlobal    
         })
+
+    } catch (error) {
+        console.log(error)
+    }
+});
+
+router.post('/formDinamica', async (req, res) => {
+    const {eventoDinamico} = req.body
+    const dinamicGlobal = eventoDinamico
+    
+    const DinamicaSchema = new Schema({
+        Evento: String,
+        Categoria: String,
+        Salida: Number,
+        Competidor: [{
+            FechaActual: Date, 
+            IDFDFF: String,
+            Nombre: String,
+            // Cedula: String,
+            //Nacimiento: Date,
+            Edad: Number,
+            Sexo: String,
+            Peso: Number,
+            Estatura: Number, 
+            Sector: String,
+            Preparador: String,
+            EstadisticasEliminatoria: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                Total: Number,
+                Posicion: Number,
+            }],
+            EstadisticasSemiFinalR1: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                Total: Number,
+                Posicion: Number,
+            }],   
+            EstadisticasSemiFinalR2: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                Total: Number,
+                Posicion: Number,
+                TotalGralSem: Number,
+                PosicionGralSem: Number,
+            }], 
+            EstadisticasFinalR1: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                TotalR1: Number,
+                PosicionR1: Number,
+            }], 
+            EstadisticasFinalR2: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                TotalR2: Number,
+                PosicionR2: Number,
+                TotalGralFinal: Number,
+                PosicionGralFinal: Number,
+    
+            }],
+            EstadisticasAbsoluto: [{
+                J1: Number,
+                J2: Number,
+                J3: Number,
+                J4: Number,
+                J5: Number,
+                J6: Number,
+                J7: Number,
+                J8: Number,
+                J9: Number,
+                J10: Number,
+                J11: Number,
+                J12: Number,
+                J13: Number,
+                Total: Number,
+                Posicion: Number,
+                
+            }],
+        }]
+     })
+
+    const dinamicG = mongoose.model(dinamicGlobal, DinamicaSchema);
+
+    try {
+   
+        const arrayDinamico = await dinamicG.find(); 
+        res.render("dinamica", {
+            arrayDinamicos: arrayDinamico,
+            eventosDinamicos: dinamicGlobal
+        })
+        
+        res.redirect("/categorias/dinamica")
     
     } catch (error) {
         console.log(error)
     }
 
 })
-
-
-
-// NombreEvento
-
-// router.get('/crearEvento',  (req, res) => {
-       
-//     res.render("crearEvento")
-           
-// })
-    
-
-// router.post('/crearEvento', async (req, res) => {
-    // const arrayBody = req.body
-    // const Evento_form = req.body
-    // const {Salida} = req.body
-    // const {Categoria} = req.body
-    // console.log(arrayBody)
-    // console.log(Evento_form)
-    // console.log(Salida)
-    // console.log(Categoria);
-    
-
-    // let cat = Salida[2] + " " + Categoria[2]
-    // console.log(cat)
-
-    // if(Salida.length > 0) {
-    //     Salida.forEach((element) => console.log(element))}
-    //     if(Categoria.length > 0) {
-    //         Categoria.forEach((element) => console.log(element))}
-
-
-    // for (let cuerpo in arrayBody){  
-    //     console.log(cuerpo + " " + arrayBody[cuerpo]);
-    // }
-    
-    // const EventoSchema = new Schema({
-    //     Evento_form: String,
-    //     Categoria: String,
-    //     Salida: Number,
-    //     Competidores: Array
-    // });
-    
-    // const newEvento = mongoose.model(Evento_form, EventoSchema);
-
-    // const CategoriaSchema = new Schema({
-        
-    //     Categoria: String,
-    //     Salida: Number,
-    //     Competidores: Array
-    // });
-
-    // const categoriasAdds = mongoose.model(Evento_form, CategoriaSchema);
-
-    // try {
-        
-       
-        //  db.createCollection(Evento_form.Evento_form)
-        // categoriasAdds.create(arrayBody)
-
-        // router.get('/NuevaCategoria', async (req, res) => {
-        //     res.render('NuevaCategoria')
-
-            // try {
-        
-                
-                
-                // res.redirect('/categorias/NuevaCategoria')  
-            
-            // } catch (error) {
-            //     console.log(error)
-            // }
-        
-        // })
-         
-
-    // } catch (error) {
-    //     console.log(error)
-    // }
-
-
-
-
-
-
-
-
-
-// }) 
-
-
-  
-
-// router.get('/inscripcion',  (req, res) => {
-       
-//     res.render("inscripcion")
-           
-// })
-
 
 module.exports = router;
 
