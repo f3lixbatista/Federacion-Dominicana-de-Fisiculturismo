@@ -79,9 +79,16 @@
         
         }
 
-        th::after {
+        th::after, th::before {
             color: rgb(255, 255, 255);
             /* background-color: lawngreen; */
+        }
+
+        .records_list thead tr td::after, .records_list thead tr td::before {
+            /* color: rgb(255, 255, 255); */
+            /* background-color: lawngreen; */
+            display: none;
+            visibility: hidden;
         }
 
         .table-bordered td, .table-bordered th {
@@ -145,7 +152,7 @@
         margin-left: 1em;
     }
 
-        h4 {
+        h4, .oculto {
             display: none;
         }
 
