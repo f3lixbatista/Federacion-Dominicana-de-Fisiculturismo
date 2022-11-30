@@ -200,10 +200,97 @@
         <% } %> 
     </form>
 </div>
+
+<div id="imprimir" class="imprimirDescargo">
+
+<h3 class="text-center">Documento de descargo y consentimiento</h3>
+<h3 class="text-center">Convenio de participación en el</h3>
+<h1 class="text-center fw-bold">XI MR REGION NORTE 2022</h1>
+<h5 class="text-center">Santiago de los 30 Caballeros, 03 y 04 de diciembre 2022</h5>
+<p class="text-center">Por favor lea detenidamente este documento</p>
+<P>
+    Para poder participar como competidor en este evento, como firmante de este documento afirmo que entiendo y estoy de acuerdo con la constitución y las reglas de la IFBB/FDFF-El código de ética de la IFBB/FDFF y las reglas antidopajes de la IFBB/FDFF. También acuerdo cooperar con la IFBB/FDFF y los organizadores del evento.  
+</P>
+<p class="fw-bold">Entiendo, acepto y concuerdo con las siguientes condiciones:</p>
+<p>
+    1- Entiendo que para poder participar en este evento como competidor debo estar de acuerdo con todas las partes de este documento y que lo hago de manera voluntaria.
+</p>
+<p>
+    2- Que concuerdo en descargar a la federación de cualquier reclamación que tenga ahora o en un futuro sobre este evento y acuerdo nunca proceder legalmente contra la federación o el organizador de este evento, ni contra jueces, patrocinadores, colaboradores, hotel y su staff, por daños personales, muerte o daños a mi propiedad, gastos o perdida durante mi participación en el evento, dado por cualquier causa incluyendo pero no limitándose a negligencia y/o aplicación de los estatutos por parte de la federación.
+</p>
+<p>
+    3- Confirmo que estoy en buen estado de salud física y mental a la vez que entiendo que cualquier daño médico o personal en mi persona, mientras compito en este evento, es totalmente mi responsabilidad, tanto por el daño, como por el pago de cualquier gasto que pueda incurrir por el requerimiento de asistencia médica, y libero a los organizadores y a la federación de la cobertura económica que provenga de ello. 
+</p>
+<p>
+    4- Con este documento afirmo que nadie me obligó a participar en este evento y que lo hago por voluntad propia.
+</p>
+<p>
+    5- Acuerdo que voy a respetar las reglas de la IFBB/FDFF y que entiendo que si participo en 
+    competencias no avalados por la federación, soy pasible de ser sometido apruebas de dopaje, sin previo aviso, siendo esta prueba costeada por mi persona y que debo resarcir a la federación, antes de volver a competir en un evento IFBB/FDFF, nacional o internacional. 
+</p>
+<p>
+    6- Apruebo que cualquier foto o video que me sean tomadas durante el evento, por fotógrafos 
+acreditados por la federación, podrán ser utilizadas en por la federación, sin requerir el pago por derecho.
+</p>
+<p>
+    7- Confirmo que soy mayor de edad y que he leído, entendido y aceptado todas las partes de este documento, antes de firmarlo, y sé que este documento estará disponible para cualquier miembro, juez o colaborador de la federación, en el momento que sea necesario.
+</p>
+
+<div class="row pb-0 mb-0 mt-0 pt-0">
+    <label for="descNombre" class="col-sm-2 col-form-label pb-0 mb-0">NOMBRE:</label>
+    <div id="divdescNombre" class="col-sm-10 pl-0 pb-0 mb-0">
+        <input type="text" id="descNombre" name="NombreEvento" value="<%= atleta.Nombre %>" class="border-0 fs-5 fw-bold col-10 bg-white pl-0" readonly>
+    </div>
+</div>
+<div class="row pb-0 mb-0 mt-0 pt-0">
+    <label for="descCedula" class="col-sm-2 col-form-label pt-0 pb-0 mt-0 mb-0">CEDULA/PASAPORTE:</label>
+    <div id="divdescCedula" class="col-sm-10 pl-0 pb-0 mb-0 mt-0 pt-0">
+        <input type="text" id="descCedula" name="NombreEvento" value="<%= atleta.Cedula %>" class="border-0 fs-5 fw-bold col-10 bg-white pl-0" readonly>
+    </div>
+</div>
+<div class="row pb-0 mb-0 mt-0 pt-0">
+    <label for="descCity" class="col-sm-2 col-form-label pt-0 pb-0 mt-0 mb-0">PAIS/CIUDAD:</label>
+    <div id="divdescCity" class="col-sm-10 pl-0 pb-0 mb-0 mt-0 pt-0">
+        <input type="text" id="descCity" name="NombreEvento" value="<%= atleta.Sector %>" class="border-0 fs-5 fw-bold col-10 bg-white pl-0" readonly>
+    </div>
+</div>
+<div class="row pb-0 mb-0 mt-0 pt-0">
+    <label for="descTel" class="col-sm-2 col-form-label pt-0 pb-0 mt-0 mb-0">TELEFONO:</label>
+    <div id="divdescTel" class="col-sm-10 pl-0 pb-0 mb-0 mt-0 pt-0">
+        <input type="text" id="descTel" name="NombreEvento" value="<%= atleta.Celular %>" class="border-0 fs-5 fw-bold col-10 bg-white pl-0" readonly>
+    </div>
+
+</div>
+<div class="row mb-1 mt-0 pt-0>
+    <label for="descParam" class="col-sm-2 col-form-label pt-0 mt-0">PESO/ESTATURA/EDAD:</label>
+    <div id="divdescParam" class="col-sm-10 pl-0 pb-0 mb-0 mt-0 pt-0">
+        <input type="text" id="descParam" name="NombreEvento" value="" class="border-0 fs-5 fw-bold col-10 bg-white pl-0" readonly>
+    </div>
+</div>
+
+  <div id="divCatDes">
+
+  </div>
+<p>Como Atleta consciente de mi responsabilidad, afirmo que conozco y estoy de acuerdo de haberme inscrito en la(s) categoría(s) antes descrita</p><br>
+<div class="row pb-o mb-0">
+    <p class="col-6 text-center pb-o mb-0">_______________________________________</p>
+    <p class="col-6 text-center pb-o mb-0">_______________________________________</p>
+</div>
+<div class="row mb-3 pt-0 mt-0">
+    <p class="col-6 text-center pt-0 mt-0">Firma del Atleta</p>
+    <p class="col-6 text-center pt-0 mt-0">Firma de Juez de Pesaje</p>
+</div>
+
+
+
+
+
+
+</div>
   
-        <H4 class="mb-2">
+        <!-- <H4 class="mb-2">
             Firma de Atleta_______________________________________<span class="fs-6">Con esta firma certifico que no tengo antecedentes penales ni asuntos pendientes con la justicia</span>
-        </H4>    
+        </H4>     -->
 
 <%- include("template/footer") %>
 
@@ -1507,25 +1594,22 @@
 //---------------------------------------------------- boton imprimir -----------------------------------------------------------
    
 for (let index = 0; index < checkCategoria1.length; index++) {
-
-
-    
+   
 const printBtn = document.getElementById('btnPrint');
     printBtn.addEventListener('click', async(e) => { 
         // e.preventDefault()
         const hay = checkCategoria1[index].checked
+        let modal = checkCategoria[index].dataset.datamodal
+        let division = checkCategoria[index].dataset.datadivision
+        let disciplina = checkCategoria[index].dataset.datadisciplina
+
     if (hay === true) {
+        if (disciplina == "Men's Bodybuilding" || disciplina == "Men’s Bodybuilding" || disciplina == "Classic Physique" || disciplina == "Men’s Classic Bodybuilding" || disciplina == "Games Classic" || disciplina == "Mixed-pairs") {
         const id = checkCategoria1[index].value
     // });
  const formularioEditar = document.getElementById('formularioEditar')
 
 // formularioEditar.addEventListener('click', async(e) => {
-    
-
- 
-  
-  
-    
     
     const FechaActual = formularioEditar.elements['FechaActual'].value
     const Cedula = formularioEditar.elements['Cedula'].value
@@ -1541,6 +1625,15 @@ const printBtn = document.getElementById('btnPrint');
     const Nombre = formularioEditar.elements['Nombre'].value
     // const id = formularioEditar.elements['id'].value
     // const id = checkCategoria1.elements['id'].value
+    
+    // if (Peso == undefined) {
+    //     Peso = 0
+    // }
+    // if (Estatura == undefined) {
+    //     Estatura = 0
+    // }
+        
+    
    
     // console.log(id, FechaActual, Cedula, Nacimiento, Edad, Sexo, Sector, Estatura, Preparador, Categoria, IDFDFF, Nombre)
     
@@ -1567,21 +1660,78 @@ try {
     console.log(error)
 }
 
+}else{
+    const id = checkCategoria1[index].value
+    // });
+ const formularioEditar = document.getElementById('formularioEditar')
+
+// formularioEditar.addEventListener('click', async(e) => {
+    
+    const FechaActual = formularioEditar.elements['FechaActual'].value
+    const Cedula = formularioEditar.elements['Cedula'].value
+    const Nacimiento = formularioEditar.elements['Nacimiento'].value
+    const Edad = formularioEditar.elements['Edad'].value
+    const Sexo = formularioEditar.elements['Sexo'].value
+    const Sector = formularioEditar.elements['Sector'].value
+    const Estatura = formularioEditar.elements['Estatura'].value
+    // const Peso = formularioEditar.elements['Peso'].value
+    const Preparador = formularioEditar.elements['Preparador'].value
+    // const Categoria = formularioEditar.elements['Categoria'].value
+    const IDFDFF = formularioEditar.elements['IDFDFF'].value
+    const Nombre = formularioEditar.elements['Nombre'].value
+    // const id = formularioEditar.elements['id'].value
+    // const id = checkCategoria1.elements['id'].value
+    
+    // if (Peso == undefined) {
+    //     Peso = 0
+    // }
+    // if (Estatura == undefined) {
+    //     Estatura = 0
+    // }
+        
+    
+   
+    //console.log(id, FechaActual, Cedula, Nacimiento, Edad, Sexo, Sector, Estatura, Preparador, IDFDFF, Nombre)
+    
+
+
+try {
+    const data = await fetch(`/inscripcion/${id}`, {
+        method: 'put',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({id, FechaActual, IDFDFF, Nombre, Cedula, Nacimiento, Edad, Sexo, Estatura, Sector, Preparador})
+    })
+    const res = await data.json()
+    // console.log(res)
+    
+    if(res.estado){
+        // window.location.href = '/inscripcion'
+    }else{
+        console.log(res)
+        
+    }
+} catch (error) {
+    console.log(error)
+}
+
 }
 
 
 
 // print();
+    }
 
 });
 
 }
 
 
-    const printBtn = document.getElementById('btnPrint');
-    printBtn.addEventListener('click', function() { 
-        print();
-        // window.location.href = '/inscripcion'
-    });
+    // const printBtn = document.getElementById('btnPrint');
+    // printBtn.addEventListener('click', function() { 
+    //     print();
+    //     // window.location.href = '/inscripcion'
+    // });
 
 </script>
