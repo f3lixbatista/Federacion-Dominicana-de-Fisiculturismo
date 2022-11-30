@@ -152,7 +152,7 @@
         margin-left: 1em;
     }
 
-        h4, .oculto {
+        h4, .oculto, .imprimirDescargo {
             display: none;
         }
 
@@ -198,13 +198,17 @@
             }
 
         @media print {
-            .navbar, #titulo, button, script, hr, a {
+            .navbar, #titulo, button, script, hr, a, .divGralDetIns {
                 display: none;
                 visibility: hidden;
             }
-	        body * {
+	        body *, .imprimirDescargo {
 		        display: block;
 	        }
+
+            .detalleAll {
+                width: 50%;
+            }
 
             .firma {
                 margin-top: 5px;
