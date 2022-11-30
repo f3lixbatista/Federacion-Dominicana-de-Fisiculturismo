@@ -167,10 +167,6 @@ router.get('/', async (req, res) => {
 })
 
 
-
-
-
-
 router.get('/:id', async (req, res) => {
         
     const id = req.params.id
@@ -303,14 +299,25 @@ router.put('/:id', async (req, res) => {
        const {id} = req.body
         const body = req.body
     // console.log(id)
+    // console.log(body)
     // console.log(body.Nombre)
+    // console.log(body.IDFDFF)
+    // console.log(body.FechaActual)
+    // console.log(body.Cedula)
+    // console.log(body.Nacimiento)
+    // console.log(body.Edad)
+    // console.log(body.Sexo)
+    // console.log(body.Peso)
+    // console.log(body.Estatura)
+    // console.log(body.Sector)
+    // console.log(body.Preparador)
      
     try {
 
         // console.log(id)
         // console.log(body)
 
-        // const categoriaDB = await Categoria.findByIdAndUpdate(id, body, { useFindAndModify: false })
+        //const categoriaDB = await Categoria.findByIdAndUpdate(id, body, { useFindAndModify: false })
        
        
         const categoriaDB = await Eventos.findByIdAndUpdate({ _id: id },{
