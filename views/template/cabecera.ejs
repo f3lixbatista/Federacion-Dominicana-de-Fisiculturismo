@@ -10,6 +10,7 @@
     <link href="https://getbootstrap.com/docs/5.2/assets/css/docs.css" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
 
     <!-- Required meta tags -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -34,7 +35,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
 
     
-    
+        <!-- links para exportar a excel -->
+        <script src="https://unpkg.com/xlsx@0.16.9/dist/xlsx.full.min.js"></script>
+        <script src="https://unpkg.com/file-saverjs@latest/FileSaver.min.js"></script>
+        <script src="https://unpkg.com/tableexport@latest/dist/js/tableexport.min.js"></script>
 
 
     <style>
@@ -202,7 +206,7 @@
                 display: none;
                 visibility: hidden;
             }
-	        body *, .imprimirDescargo {
+	        body *, .imprimirDescargo, .imprInsc {
 		        display: block;
 	        }
 
