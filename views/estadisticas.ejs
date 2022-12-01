@@ -1,0 +1,125 @@
+<%- include("template/cabecera", {tituloWeb: "Pagina de Atletas"}) %>
+
+
+<!-- // class="container container-fluid" -->
+<div class="p-2 divGeneral">
+    <div class="row g-2">
+        <div class="col-6">
+            <h1 class="my-4 seccionAtl">Seccion Atletas</h1>
+        </div>
+        <div class="col-6 d-flex flex-row-reverse">
+            <a class="btn btn-primary border border-dark btn-lg col-6 my-4" href="/atletas/crear">
+                <p class="haciaMembresia p-0 m-0">Nueva Membresía</p>
+            </a>
+        </div>
+    </div>
+    <div class="table-responsive" id="mydatatable-container">
+     
+        <table class="records_list table table-striped table-bordered border-dark table-hover" id="mydatatable">
+            <% if (arrCategorias.length > 0) { %>
+                <% arrCategorias.forEach(categoria => { %>
+            <thead>
+                <tr class="table-blue">
+                    <th scope="col" class=" bg-primary border border-dark"><a href="estadisticas/<%= categoria.id %>" class="btn btn-warning btn-sm">Editar</a></th>
+                    <th colspan="18" class="bg-primary col-sm-12 fs-4 text-start fw-bold lh-1" id="catInscXLS"><%= categoria.Categoria %></th>
+                    
+                    
+                   
+                </tr>
+            </thead>
+            <tfoot>
+                <tr class="bg-primary">
+                    <td scope="col"></td>
+                   
+                    <td scope="col" class="atl"><h5 class="mb-0 col-sm-5 mr-0"><p class=" mr-0 pr-3 mb-0 col-sm-5">Atleta</p></h5></td>
+                  
+                    <td scope="col-1">No.</td>
+                    <td scope="col-1">J1</td>
+                    <td scope="col-1">J2</td>
+                    <td scope="col-1">J3</td>
+                    <td scope="col-1">J4</td>
+                    <td scope="col-1">J5</td>
+                    <td scope="col-1">J6</td>
+                    <td scope="col-1">J7</td>
+                    <td scope="col-1">J8</td>
+                    <td scope="col-1">J9</td>
+                    <td scope="col-1">J10</td>
+                    <td scope="col-1">J11</td>
+                    <td scope="col-1">J12</td>
+                    <td scope="col-1">J13</td>
+                    <td scope="col-1">Total</td>
+                    <td scope="col-1">Posicion</td>
+                 
+                </tr>
+            </tfoot>
+            <tbody>
+                <% for (let index = 1; index < categoria.Competidor.length; index++) { %> 
+                        <tr>
+<td class="border border-dark"></td>
+                          
+                       
+<td class="border border-dark col-sm-4"><%= categoria.Competidor[index].Nombre %></td>
+<td class="border border-dark">Num</td>
+
+<td class="border border-dark"><input id="j2" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="j1" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="j3" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="j4" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="j5" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="j6" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="j7" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="j8" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="j9" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="j10" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="j11" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="j12" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="j13" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="total" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+<td class="border border-dark"><input id="posicion" type="number" style="width:100%;" class="mt-1 text-center bg-white border border-dark p-0 m-0"></td>
+                            
+                        </tr>
+                        <% } %>     
+            </tbody>
+            <% }) %>
+            <% } %>
+        </table>
+       
+    </div>
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#mydatatable tfoot th').each(function () {
+                var title = $(this).text();
+                $(this).html('<input type="text" placeholder="Filtrar.." />');
+            });
+    
+            var table = $('#mydatatable').DataTable({
+                "dom": 'B<"float-left"i><"float-right"f>t<"float-left"l><"float-right"p><"clearfix">',
+                "responsive": false,
+                "language": {
+                    "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json"
+                },
+                "order": [
+                    [0, "desc"]
+                ],
+                "initComplete": function () {
+                    this.api().columns().every(function () {
+                        var that = this;
+    
+                        $('input', this.footer()).on('keyup change', function () {
+                            if (that.search() !== this.value) {
+                                that
+                                    .search(this.value)
+                                    .draw();
+                            }
+                        });
+                    })
+                },
+                "buttons": ['csv', 'excel', 'pdf', 'print']
+            });
+        });
+      </script>
+   
+</div>
+<%- include("template/footer") %>
