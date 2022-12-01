@@ -261,16 +261,18 @@ acreditados por la federación, podrán ser utilizadas en por la federación, si
     </div>
 
 </div>
-<div class="row mb-1 mt-0 pt-0>
+<div class="row mb-1 mt-0 pt-0">
     <label for="descParam" class="col-sm-2 col-form-label pt-0 mt-0">PESO/ESTATURA/EDAD:</label>
     <div id="divdescParam" class="col-sm-10 pl-0 pb-0 mb-0 mt-0 pt-0">
         <input type="text" id="descParam" name="NombreEvento" value="" class="border-0 fs-5 fw-bold col-10 bg-white pl-0" readonly>
     </div>
 </div>
-
-  <div id="divCatDes">
+<div class="row mb-0 mt-0 pt-0">
+    <label for="" class="col-sm-1 col-form-label pt-0 mt-0">CATEGORIA(S):</label>
+  <div id="divCatDes" class="mt-0 pt-0 col-10">
 
   </div>
+</div>
 <p>Como Atleta consciente de mi responsabilidad, afirmo que conozco y estoy de acuerdo de haberme inscrito en la(s) categoría(s) antes descrita</p><br>
 <div class="row pb-o mb-0">
     <p class="col-6 text-center pb-o mb-0">_______________________________________</p>
@@ -1592,7 +1594,51 @@ acreditados por la federación, podrán ser utilizadas en por la federación, si
             
     });
 //---------------------------------------------------- boton imprimir -----------------------------------------------------------
-   
+  
+for (let index = 0; index < checkCategoria1.length; index++) {
+checkCategoria1[index].addEventListener('click', function() {
+
+if (checkCategoria1[index].checked === true) {
+         
+           let dato = checkCategoria[index].value;
+
+resultado = document.getElementById('divCatDes');
+
+   datoParrafo = document.createElement('input');
+               datoParrafo.value = dato;
+               datoParrafo.id = 'datoparrafo' + index;
+               datoParrafo.name = 'CategoriaDesc';
+               datoParrafo.type = 'text';
+               datoParrafo.className = 'border-0 fs-6 fw-bold col-9 mt-0 pt-0 bg-white';
+               datoParrafo.readOnly = true;
+
+            resultado.appendChild(datoParrafo);
+}
+
+if (checkCategoria1[index].checked === false) {
+
+const idparrafo = "datoparrafo" + index
+
+obtenerparrafos = document.getElementById(idparrafo)
+obtenerparrafos.remove();
+}
+
+})
+
+}
+
+// const division = document.getElementById('evento')
+//    division.addEventListener('keyup', function() {
+// const formularioEditar = document.getElementById('formularioEditar')
+// const Edad = formularioEditar.elements['Edad'].value
+// const Estatura = formularioEditar.elements['Estatura'].value
+// const Peso = formularioEditar.elements['Peso'].value
+
+// const Parametros = Peso/Estatura/Edad
+//        descParam.value = Parametros
+//    })
+
+
 for (let index = 0; index < checkCategoria1.length; index++) {
    
 const printBtn = document.getElementById('btnPrint');
@@ -1633,12 +1679,9 @@ const printBtn = document.getElementById('btnPrint');
     //     Estatura = 0
     // }
         
-    
+    const Parametros = Peso + "kg." + "/" + Estatura + "cm." + "/" + Edad + "años"
+       descParam.value = Parametros
    
-    // console.log(id, FechaActual, Cedula, Nacimiento, Edad, Sexo, Sector, Estatura, Preparador, Categoria, IDFDFF, Nombre)
-    
-
-
 try {
     const data = await fetch(`/inscripcion/${id}`, {
         method: 'put',
@@ -1688,12 +1731,9 @@ try {
     // if (Estatura == undefined) {
     //     Estatura = 0
     // }
-        
-    
-   
-    //console.log(id, FechaActual, Cedula, Nacimiento, Edad, Sexo, Sector, Estatura, Preparador, IDFDFF, Nombre)
-    
-
+    const Parametros = "(N/A)" + "/" + Estatura + "cm." + "/" + Edad + "años"
+       descParam.value = Parametros
+    //    descParam.value = Parametros
 
 try {
     const data = await fetch(`/inscripcion/${id}`, {
@@ -1728,10 +1768,10 @@ try {
 }
 
 
-    // const printBtn = document.getElementById('btnPrint');
-    // printBtn.addEventListener('click', function() { 
-    //     print();
-    //     // window.location.href = '/inscripcion'
-    // });
+    const printBtn = document.getElementById('btnPrint');
+    printBtn.addEventListener('click', function() { 
+        print();
+        // window.location.href = '/inscripcion'
+    });
 
 </script>
