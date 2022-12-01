@@ -40,24 +40,30 @@
     </div>
 </div>
 
-    <div class="container table-responsive col-10 ml-auto mr-auto mt-0 pt-0" style="width: 65%;" id="mydatatable-container">     
+    <div class="imprInsc container table-responsive col-10 ml-auto mr-auto mt-0 pt-0" style="width: 65%;" id="mydatatable-container">     
         <div class="ml-0 p-0">
             <h1 style="color: rgb(0, 0, 0);" class="text-center fw-bold">Mr. Region Norte 2022</h1>
         </div>
-        
-        <table class="records_list table table-bordered border border-dark border-3 table-hover" id="mydatatable">
-            <% if (arrayCategorias.length > 0) { %>
-                <% arrayCategorias.forEach(categoria => { %>
+
+        <button id="btnExportar" class="btn btn-success">
+            <i class="fas fa-file-excel"></i> Exportar datos a Excel
+        </button>
+    <div id="mitabla">
+        <% if (arrayCategorias.length > 0) { %>
+            <% arrayCategorias.forEach(categoria => { %>
+
+        <table class="records_list table table-bordered border border-dark border-3 table-hover" id="tabla">
+           
            
             <thead>
                 <tr class=""> 
-                    <th colspan="5" class="col-sm-12 fs-4 text-center lh-1"><%= categoria.Categoria %></th>
+                    <th colspan="5" class="col-sm-12 fs-4 text-center lh-1" id="catInscXLS"><%= categoria.Categoria %></th>
                     <!-- <th scope="col" class="bg-primary fs-5 mx-5 pl-5 pr-5 mx-4 position-relative"><p class="position-absolute top-0 start-0">Nombre</p></th>  
                     <th scope="col" class="bg-primary">IDFDFF</th>
                     <th scope="col" class="bg-primary">Accion</th> -->
                 </tr>
             </thead>
-            <tfoot>
+            <tbody>
                 <tr class="fw-bold" style="background-color: rgb(229, 224, 224);">
                     <td>No.</td>
                     <td class="border border-dark border-3">Atleta</td>
@@ -65,8 +71,8 @@
                     <td class="border border-dark border-3">Peso</td>
                     <td>Estatura</td>
                 </tr>
-            </tfoot>
-            <tbody>
+            </tbody>
+            <tfoot>
                     <% for (let index = 1; index < categoria.Competidor.length; index++) { %>
                         <!-- const element = array[index]; -->
                         <tr class="border border-dark border-3 p-0 m-0 lh-1">
@@ -77,10 +83,11 @@
                             <td class="margin: 0%; padding: 0%; col fs-5"><%= categoria.Competidor[index].Estatura %></td>
                         </tr>
                     <% } %>
-            </tbody>
+            </tfoot>
+        </table>
             <% }) %>
         <% } %>
-        </table>
+    </div>
         
     </div>
 
@@ -88,6 +95,7 @@
 
 
     <script type="text/javascript">
+        
         $(document).ready(function () {
             $('#mydatatable tfoot th').each(function () {
                 var title = $(this).text();
@@ -119,6 +127,45 @@
                 "buttons": ['csv', 'excel', 'pdf', 'print']
             });
         });
+
+        // <!-- script para exportar a excel -->
+
+    const btnExportar = document.querySelector("#btnExportar")
+    // 
+        Mitabla = document.querySelector("#mitabla")
+        // tabla = document.querySelector("#tabla");
+
+        //
+
+            btnExportar.addEventListener("click", function() {
+                const long = Mitabla.children.length;
+                const hijos = Mitabla.children;
+                console.log(long);
+                console.log(hijos);
+                for (let index = 1; index < hijos.length; index++) {
+                    const tabla = hijos[index];
+                // console.log(tabla.length);
+                // Mitabla.forEach(element => {
+                  
+                // });
+                
+        let tableExport = new TableExport(tabla, {
+            exportButtons: false, // No queremos botones
+            filename: "Reporte de prueba", //Nombre del archivo de Excel
+            sheetname: "Reporte de prueba", //Título de la hoja
+            });
+            let datos = tableExport.getExportData(tabla);
+            let preferenciasDocumento = datos.tabla.xlsx;
+            tableExport.export2file(preferenciasDocumento.data, preferenciasDocumento.mimeType, preferenciasDocumento.filename, preferenciasDocumento.fileExtension, preferenciasDocumento.merges, preferenciasDocumento.RTL, preferenciasDocumento.sheetname);
+     }
+    });
+
+//
+    
+
+
+
+
       </script>
    
 
