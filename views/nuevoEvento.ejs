@@ -124,16 +124,16 @@
             <!-- </div> -->
 
             <div id="resultado" class="mb-5" name="DivEvento"></div>
-            <div id="resultado2" class="d-none mb-5" name="DivEvento"></div>
-            <div id="resultado3" class="d-none mb-5" name="DivEvento"></div>
-            <div id="resultado4" class="d-none mb-5" name="DivEvento"></div>
-            <div id="resultado5" class="d-none mb-5" name="DivEvento"></div>
-            <div id="resultado6" class="d-none mb-5" name="DivEvento"></div>
-            <div id="resultado7" class="d-none mb-5" name="DivEvento"></div>
-            <div id="resultado8" class="d-none mb-5" name="DivEvento"></div>
-            <div id="resultado9" class="d-none mb-5" name="DivEvento"></div>
-            <div id="resultado10" class="d-none mb-5" name="DivEvento"></div>
-            <div id="resultado11" class="d-none mb-5" name="DivEvento"></div>
+            <div id="resultado2" class="mb-5" name="DivEvento"></div>
+            <div id="resultado3" class="mb-5" name="DivEvento"></div>
+            <div id="resultado4" class="mb-5" name="DivEvento"></div>
+            <div id="resultado5" class="mb-5" name="DivEvento"></div>
+            <div id="resultado6" class="mb-5" name="DivEvento"></div>
+            <div id="resultado7" class="mb-5" name="DivEvento"></div>
+            <div id="resultado8" class="mb-5" name="DivEvento"></div>
+            <div id="resultado9" class="mb-5" name="DivEvento"></div>
+            <div id="resultado10" class="mb-5" name="DivEvento"></div>
+            <div id="resultado11" class="mb-5" name="DivEvento"></div>
 
 
 
@@ -246,7 +246,7 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
             resultado2 = document.getElementById('resultado2');
                 datoParrafo2 = document.createElement('input');
                 datoParrafo2.value = modalidad;
-                datoParrafo2.id = index;
+                datoParrafo2.id = 'datoParrafo2' + index;
                 datoParrafo2.name = 'Modalidad';
                 datoParrafo2.type = 'text';
                 datoParrafo2.className = 'oculto';
@@ -255,7 +255,7 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
                 resultado3 = document.getElementById('resultado3');
                 datoParrafo3 = document.createElement('input');
                 datoParrafo3.value = genero;
-                datoParrafo3.id = index;
+                datoParrafo3.id = 'datoParrafo3' + index;
                 datoParrafo3.name = 'Genero';
                 datoParrafo3.type = 'text';
                 datoParrafo3.className = 'oculto';
@@ -264,7 +264,7 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
                 resultado4 = document.getElementById('resultado4');
                 datoParrafo4 = document.createElement('input');
                 datoParrafo4.value = disciplina;
-                datoParrafo4.id = index;
+                datoParrafo4.id = 'datoParrafo4' + index;
                 datoParrafo4.name = 'Disciplina';
                 datoParrafo4.type = 'text';
                 datoParrafo4.className = 'oculto';
@@ -273,7 +273,7 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
                 resultado5 = document.getElementById('resultado5');
                 datoParrafo5 = document.createElement('input');
                 datoParrafo5.value = division;
-                datoParrafo5.id = index;
+                datoParrafo5.id = 'datoParrafo5' + index;
                 datoParrafo5.name = 'Division';
                 datoParrafo5.type = 'text';
                 datoParrafo5.className = 'oculto';
@@ -282,7 +282,7 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
                 resultado6 = document.getElementById('resultado6');
                 datoParrafo6 = document.createElement('input');
                 datoParrafo6.value = desdeedad;
-                datoParrafo6.id = index;
+                datoParrafo6.id = 'datoParrafo6' + index;
                 datoParrafo6.name = 'DesdeEdad';
                 datoParrafo6.type = 'text';
                 datoParrafo6.className = 'oculto';
@@ -291,7 +291,7 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
                 resultado7 = document.getElementById('resultado7');
                 datoParrafo7 = document.createElement('input');
                 datoParrafo7.value = hastaedad;
-                datoParrafo7.id = index;
+                datoParrafo7.id = 'datoParrafo7' + index;
                 datoParrafo7.name = 'HastaEdad';
                 datoParrafo7.type = 'text';
                 datoParrafo7.className = 'oculto';
@@ -300,7 +300,7 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
                 resultado8 = document.getElementById('resultado8');
                 datoParrafo8 = document.createElement('input');
                 datoParrafo8.value = desdepeso;
-                datoParrafo8.id = index;
+                datoParrafo8.id = 'datoParrafo8' + index;
                 datoParrafo8.name = 'DesdePeso';
                 datoParrafo8.type = 'text';
                 datoParrafo8.className = 'oculto';
@@ -309,7 +309,7 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
                 resultado9 = document.getElementById('resultado9');
                 datoParrafo9 = document.createElement('input');
                 datoParrafo9.value = hastapeso;
-                datoParrafo9.id = index;
+                datoParrafo9.id = 'datoParrafo9' + index;
                 datoParrafo9.name = 'HastaPeso';
                 datoParrafo9.type = 'text';
                 datoParrafo9.className = 'oculto';
@@ -318,7 +318,7 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
                 resultado10 = document.getElementById('resultado10');
                 datoParrafo10 = document.createElement('input');
                 datoParrafo10.value = desdeestatura;
-                datoParrafo10.id = index;
+                datoParrafo10.id = 'datoParrafo10' + index;
                 datoParrafo10.name = 'DesdeEstatura';
                 datoParrafo10.type = 'text';
                 datoParrafo10.className = 'oculto';
@@ -327,7 +327,7 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
                 resultado11 = document.getElementById('resultado11');
                 datoParrafo11 = document.createElement('input');
                 datoParrafo11.value = hastaestatura;
-                datoParrafo11.id = index;
+                datoParrafo11.id = 'datoParrafo11' + index; 
                 datoParrafo11.name = 'HastaEstatura';
                 datoParrafo11.type = 'text';
                 datoParrafo11.className = 'oculto';
@@ -351,12 +351,49 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
          // && datoparrafo[index].value == checkCategoriaEvent[index].value
          if (checkCategoriaEvent[index].checked === false) {
             const idparrafo = "datoparrafo" + index
-            console.log(idparrafo)
+            const idparrafo2 = "datoParrafo2" + index
+            const idparrafo3 = "datoParrafo3" + index
+            const idparrafo4 = "datoParrafo4" + index
+            const idparrafo5 = "datoParrafo5" + index
+            const idparrafo6 = "datoParrafo6" + index
+            const idparrafo7 = "datoParrafo7" + index
+            const idparrafo8 = "datoParrafo8" + index
+            const idparrafo9 = "datoParrafo9" + index
+            const idparrafo10 = "datoParrafo10" + index
+            const idparrafo11 = "datoParrafo11" + index
+
+            // console.log(idparrafo)
             obtenerparrafos = document.getElementById(idparrafo)
-            console.log(obtenerparrafos)
-            const textparrafo = obtenerparrafos.value;
-            console.log(textparrafo);
+            obtenerparrafos2 = document.getElementById(idparrafo2)
+            obtenerparrafos3 = document.getElementById(idparrafo3)
+            obtenerparrafos4 = document.getElementById(idparrafo4)
+            obtenerparrafos5 = document.getElementById(idparrafo5)
+            obtenerparrafos6 = document.getElementById(idparrafo6)
+            obtenerparrafos7 = document.getElementById(idparrafo7)
+            obtenerparrafos8 = document.getElementById(idparrafo8)
+            obtenerparrafos9 = document.getElementById(idparrafo9)
+            obtenerparrafos10 = document.getElementById(idparrafo10)
+            obtenerparrafos11 = document.getElementById(idparrafo11)
+            // console.log(obtenerparrafos2)
+            // const textparrafo = obtenerparrafos.value;
+            // const textparrafo2 = obtenerparrafos2.value;
+            // console.log(textparrafo);
             obtenerparrafos.remove();
+            obtenerparrafos2.remove();
+            obtenerparrafos3.remove();
+            obtenerparrafos4.remove();
+            obtenerparrafos5.remove();
+            obtenerparrafos6.remove();
+            obtenerparrafos7.remove();
+            obtenerparrafos8.remove();
+            obtenerparrafos9.remove();
+            obtenerparrafos10.remove();
+            obtenerparrafos11.remove();
+
+
+
+
+            // obtenerparrafos2.remove();
             // const datopar = datoparrafo.length
                 // console.log(checkCategoriaEvent[index].checked)
 // let parrraf = datoparrafo[2];
