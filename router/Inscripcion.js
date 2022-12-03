@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const { findOneAndReplace } = require('../models/atletamodel');
 const Schema = mongoose.Schema;
 const Atleta = require('../models/atletamodel')
 const Eventos = require('../models/eventomodel')
-
-
-
+const Competidor = require('../models/eventomodel')
 
 router.get('/', async (req, res) => {
 
@@ -14,7 +13,16 @@ router.get('/', async (req, res) => {
         const arrayCategoriaDB = await Eventos.find();
         const arrayAtletaDB = await Atleta.find();
         // console.log(arrayAtletaDB)
-        
+        arrayCategoriaDB.sort((o1, o2) => {
+            if (o1.Salida < o2.Salida) {
+                return -1;
+            } else if (o1.Salida > o2.Salida) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+
         res.render("inscripcion", {
             arrayAtletas: arrayAtletaDB,
             arrayCategorias: arrayCategoriaDB
@@ -26,6 +34,156 @@ router.get('/', async (req, res) => {
     }
 
 })
+
+
+router.post('/', async (req, res) => {
+    const body = req.body
+    // console.log(body)
+    for (let z = 0; z < body.Numero.length; z++) {
+    const id = body.IdCat[z]
+    const FechaActual = body.FechaActual[z]
+    const IDFDFF = body.IDFDFF[z] 
+    const Nombre = body.Nombre[z] 
+    const Cedula = body.Cedula[z]
+    const Nacimiento = body.Nacimiento[z]
+    const Edad = body.Edad[z]
+    const Sexo = body.Sexo[z]
+    const Peso = body.Peso[z]
+    const Estatura = body.Estatura[z] 
+    const Sector = body.Sector[z]
+    const Numero = body.Numero[z]
+    const Preparador = body.Preparador[z]
+    // console.log(id)
+    // console.log(IDFDFF)
+    // console.log(Nombre)
+    // console.log(Cedula)
+    // console.log(Nacimiento)
+    // console.log(Edad)
+    // console.log(Sexo)
+    // console.log(Peso)
+    // console.log(Estatura)
+    // console.log(Sector)
+    // console.log(Numero)
+    // console.log(Preparador)
+              
+                // const id = body.IdCat[z]
+                // const FechaActual = body.FechaActual[z]
+                // const IDFDFF = body.IDFDFF[z] 
+                // const Nombre = body.Nombre[z] 
+                // const Cedula = body.Cedula[z]
+                // const Nacimiento = body.Nacimiento[z]
+                // const Edad = body.Edad[z]
+                // const Sexo = body.Sexo[z]
+                // const Peso = body.Peso[z]
+                // const Estatura = body.Estatura[z] 
+                // const Sector = body.Sector[z]
+                // const Numero = body.Numero[z]
+                // const Preparador = body.Preparador[z]
+
+    // modifyBody = {
+    //     Competidor: [
+    //     //     z =
+    //      { $push: {
+    //         [z]: {
+         
+    //         IDFDFF: IDFDFF, 
+    //         Nombre: Nombre, 
+    //         FechaActual: FechaActual,
+    //         Cedula: Cedula, 
+    //         Nacimiento: Nacimiento,
+    //         Edad: Edad,
+    //         Sexo: Sexo,
+    //         Peso: Peso,
+    //         Estatura: Estatura, 
+    //         Sector: Sector,
+    //         Numero: Numero,
+    //         Preparador: Preparador
+    //         }
+    //      }
+    //     }] 
+    // }
+   
+        // console.log(modifyBody)
+
+        try {
+
+            const atletaDB = await Eventos.findByIdAndUpdate({ _id: id },{
+
+
+        //     // const EventoDB = await Eventos.findByIdAndUpdate({ _id: id }, {
+                
+            $set: 
+                { Competidor: [z ={
+                   IDFDFF: IDFDFF, 
+                       FechaActual: FechaActual,
+                       Nombre: Nombre, 
+                       Cedula: Cedula, 
+                       Nacimiento: Nacimiento,
+                       Edad: Edad,
+                       Sexo: Sexo,
+                       Peso: Peso,
+                       Estatura: Estatura, 
+                       Sector: Sector,
+                       Numero: Numero,
+                       Preparador: Preparador
+                 
+                }]
+        //     // })
+        }
+        //     // console.log(atletaDB)
+    
+        //     // res.json({
+        //     //     estado: true,
+        //     //     mensaje: 'Editado'
+            })
+            
+        } catch (error) {
+            console.log(error)
+            
+        //     // res.json({
+        //     //     estado: false,
+        //     //     mensaje: 'Fallamos!!'
+        //     // })
+         }
+
+
+
+        // try {
+
+        //     // const EventoDB = await Eventos.findByIdAndUpdate(id, numeroAtleta, { useFindAndModify: false })
+        //     // console.log(atletaDB)
+            // 
+            
+            //             [z] : {
+            //                 Numero: numero
+            //             }
+            //             // Numero: numero 
+                        
+                    
+            //     }
+            // })
+
+        // } catch (error) {
+        //     console.log(error)
+
+        }
+
+    
+
+
+    // try {
+    //     // const atletaDB = new Atleta(body)
+    //     // await atletaDB.save()
+
+    //     await Atleta.create(body)
+
+    //     res.redirect('/atletas')    
+
+    // } catch (error) {
+    //     console.log(error)
+    // }
+}) 
+
 
 
 router.get('/:id', async (req, res) => {
@@ -57,129 +215,13 @@ router.get('/:id', async (req, res) => {
     }
 })
 
-
-
-// router.get('/crear', (req, res) => {
-//     res.render('crear')
-
-// })
-
-// router.post('/crear', async (req, res) => {
-//     const body = req.body
-//     // const {Pais} = req.body
-//     // console.log(Pais)
-//     console.log(body)
-//     // const circular = db.circular
-    
-//     // const arrayAtletaDB = await Atleta.find();
-//     //     console.log(arrayAtletaDB)
-
-
-//     // const prueba = db.collections
-//     // console.log(prueba)
-
-//     // for (let cuerpo in prueba){  
-//     //     console.log(cuerpo + " " + prueba[cuerpo]);
-        
-
-//     //  }
-
-//     // try {
-//     //     // const atletaDB = new Atleta(body)
-//     //     // await atletaDB.save()
-
-//     //     await Atleta.create(body)
-
-//     //     res.redirect('/atletas')    
-
-//     // } catch (error) {
-//     //     console.log(error)
-//     // }
-// })    
-
-// router.get('/:id', async (req, res) => {
-        
-//     const id = req.params.id
-     
-//     try {     
-
-//         const atletaDB = await Atleta.findOne({ _id: id })
-//         console.log(atletaDB)
-        
-//         res.render('detalle', {
-//             atleta: atletaDB,
-//             error: false           
-//         })       
-        
-//     } catch (error) {       
-//         res.render('detalle', { 
-//             error: true,
-//             mensaje:"no encontrado"
-//         })
-//     }
-// })
-
-// router.delete('/:id', async (req, res) => {
-//     const id = req.params.id
-
-//     try {
-//         const atletaDB = await Atleta.findByIdAndDelete({ _id: id })
-        
-//         if (atletaDB) {
-//             res.json({
-//                 estado : true,
-//                 mensaje : "Eliminado!"
-//             });
-//         } else {
-//             res.json({
-//                 estado : false,
-//                 mensaje : "Fallo eliminar"
-//             });
-//         }
-
-//     } catch (error) {
-//         console.log(error)
-//     }
-
-// })
-
-// router.post('/:id', async (req, res) => {
-//     const {id} = req.body
-//     const body = req.body
-
-    // for (let index = 0; index < id.length; index++) {
-    //     const el = id[index];
-    //     console.log(el)
-    //     console.log(body)
-    
-
-// id.forEach(element => {
-//     console.log(element); 
+ 
 router.put('/:id', async (req, res) => {
     // router.post('/:id', async (req, res) => {
        const {id} = req.body
         const body = req.body
-    // console.log(id)
-    // console.log(body)
-    // console.log(body.Nombre)
-    // console.log(body.IDFDFF)
-    // console.log(body.FechaActual)
-    // console.log(body.Cedula)
-    // console.log(body.Nacimiento)
-    // console.log(body.Edad)
-    // console.log(body.Sexo)
-    // console.log(body.Peso)
-    // console.log(body.Estatura)
-    // console.log(body.Sector)
-    // console.log(body.Preparador)
      
     try {
-
-        // console.log(id)
-        // console.log(body)
-
-        //const categoriaDB = await Categoria.findByIdAndUpdate(id, body, { useFindAndModify: false })
-       
        
         const categoriaDB = await Eventos.findByIdAndUpdate({ _id: id },{
             $push: {
@@ -194,7 +236,9 @@ router.put('/:id', async (req, res) => {
                     Peso: body.Peso,
                     Estatura: body.Estatura, 
                     Sector: body.Sector,
+                    Numero: 0,
                     Preparador: body.Preparador
+                    
                 }
             }
         })
