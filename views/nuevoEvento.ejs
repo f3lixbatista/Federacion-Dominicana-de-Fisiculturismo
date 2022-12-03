@@ -111,7 +111,7 @@
             </div>
 
         <form id="formEvento" method="post">
-            <div class="row mb-3">
+            <div class="row mb-0">
                 <label for="inputEmail3" class="col-sm-1 col-form-label fs-3">Evento:</label>
                 <div id="divnombrenuevoevento" class="col-sm-10 pl-0 mt-2">
                     <input type="text" id="nombrenuevoevento" name="NombreEvento" value="" class="border-0 fs-3 fw-bold col-10 bg-white pl-0" readonly>
@@ -122,8 +122,8 @@
                     
                 <!-- </h2> -->
             <!-- </div> -->
-
-            <div id="resultado" class="mb-5" name="DivEvento"></div>
+            <p style="font-size: 65%;" class="pl-0 ml-0">Ingrese orden de Salida</p>
+            <div id="resultado" class="mb-5 col-10" name="DivEvento"></div>
             <div id="resultado2" class="mb-5" name="DivEvento"></div>
             <div id="resultado3" class="mb-5" name="DivEvento"></div>
             <div id="resultado4" class="mb-5" name="DivEvento"></div>
@@ -235,12 +235,20 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
             resultado = document.getElementById('resultado');
             // resultado.innerHTML = '';
 
+                datoSalida = document.createElement('input');
+                datoSalida.id = 'salida';
+                datoSalida.name = 'Salida';
+                datoSalida.type = 'number';
+                datoSalida.className = 'col-1 bg-info text-center text-danger pl-1 pr-0 mt-2 pt-1';
+                datoSalida.readOnly = false;
+                datoSalida.placeholder = 'orden salida';
+
             datoParrafo = document.createElement('input');
                 datoParrafo.value = dato;
                 datoParrafo.id = 'datoparrafo' + index;
                 datoParrafo.name = 'Categorias';
                 datoParrafo.type = 'text';
-                datoParrafo.className = 'border-0 fs-5 fw-bold col-9 mt-2';
+                datoParrafo.className = 'border-0 fs-5 fw-bold col-11 mt-2';
                 datoParrafo.readOnly = true;
 
             resultado2 = document.getElementById('resultado2');
@@ -333,7 +341,7 @@ for (let index = 0; index < checkCategoriaEvent.length; index++) {
                 datoParrafo11.className = 'oculto';
                 datoParrafo11.readOnly = true;
 
-                
+                resultado.appendChild(datoSalida);
                 resultado.appendChild(datoParrafo);
                 resultado2.appendChild(datoParrafo2);
                 resultado3.appendChild(datoParrafo3);
