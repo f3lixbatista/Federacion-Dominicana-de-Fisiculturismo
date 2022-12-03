@@ -20,17 +20,15 @@
                 <% arrCategorias.forEach(categoria => { %>
             <thead>
                 <tr class="table-blue">
-                    <th scope="col" class=" bg-primary border border-dark"><a href="estadisticas/<%= categoria.id %>" class="btn btn-warning btn-sm">Editar</a></th>
+                    <th style="background-color: rgb(0, 0, 0);" class="text-white fs-5 fw-bold text-center"><%= categoria.Salida %></th>
+                    
                     <th colspan="18" class="bg-primary col-sm-12 fs-4 text-start fw-bold lh-1" id="catInscXLS"><%= categoria.Categoria %></th>
-                    
-                    
-                   
                 </tr>
             </thead>
             <tfoot>
                 <tr class="bg-primary">
-                    <td scope="col"></td>
-                   
+                    
+                    <td scope="col" class=" bg-primary border border-dark"><a href="estadisticas/<%= categoria.id %>" class="btn btn-warning btn-sm">Editar</a></td>
                     <td scope="col" class="atl"><h5 class="mb-0 col-sm-5 mr-0"><p class=" mr-0 pr-3 mb-0 col-sm-5">Atleta</p></h5></td>
                   
                     <td scope="col-1">No.</td>
