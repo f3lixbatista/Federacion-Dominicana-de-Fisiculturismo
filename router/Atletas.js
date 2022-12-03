@@ -30,23 +30,6 @@ router.get('/crear', (req, res) => {
 
 router.post('/crear', async (req, res) => {
     const body = req.body
-    // const {Pais} = req.body
-    // console.log(Pais)
-    // console.log(body)
-    // const circular = db.circular
-    
-    // const arrayAtletaDB = await Atleta.find();
-    //     console.log(arrayAtletaDB)
-
-
-    // const prueba = db.collections
-    // console.log(prueba)
-
-    // for (let cuerpo in prueba){  
-    //     console.log(cuerpo + " " + prueba[cuerpo]);
-        
-
-    //  }
 
     try {
         // const atletaDB = new Atleta(body)
