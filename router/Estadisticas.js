@@ -148,6 +148,16 @@ router.get('/', async (req, res) => {
         const arrCategoriaDB = await Eventos.find();
         // const arrayAtletaDB = await Atleta.find();
         // console.log(arrayAtletaDB)
+
+        arrCategoriaDB.sort((o1, o2) => {
+            if (o1.Salida < o2.Salida) {
+                return -1;
+            } else if (o1.Salida > o2.Salida) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
         
         res.render('estadisticas', {
             // arrayAtletas: arrayAtletaDB,
