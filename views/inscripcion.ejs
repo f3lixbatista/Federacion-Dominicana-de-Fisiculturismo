@@ -45,10 +45,10 @@
             <h1 style="color: rgb(0, 0, 0);" class="text-center fw-bold">Mr. Region Norte 2022</h1>
         </div>
 
-        <button id="btnExportar" class="btn btn-success">
-            <i class="fas fa-file-excel"></i> Exportar datos a Excel
-        </button>
+
+        <form action="" method="post">
     <div id="mitabla">
+        
         <% if (arrayCategorias.length > 0) { %>
             <% arrayCategorias.forEach(categoria => { %>
 
@@ -56,8 +56,10 @@
            
            
             <thead>
-                <tr class=""> 
+                <tr class="">
+                    <th style="background-color: rgb(0, 0, 0);" class="text-white fs-5 fw-bold text-center"><%= categoria.Salida %></th> 
                     <th colspan="5" class="col-sm-12 fs-4 text-center lh-1" id="catInscXLS"><%= categoria.Categoria %></th>
+                    
                     <!-- <th scope="col" class="bg-primary fs-5 mx-5 pl-5 pr-5 mx-4 position-relative"><p class="position-absolute top-0 start-0">Nombre</p></th>  
                     <th scope="col" class="bg-primary">IDFDFF</th>
                     <th scope="col" class="bg-primary">Accion</th> -->
@@ -76,7 +78,20 @@
                     <% for (let index = 1; index < categoria.Competidor.length; index++) { %>
                         <!-- const element = array[index]; -->
                         <tr class="border border-dark border-3 p-0 m-0 lh-1">
-                            <td style="margin: 0%; padding: 0%; width: 8%;" class="pl-0 pr-0"><input style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0" type="text"></td>
+                            <td style="margin: 0%; padding: 0%; width: 8%;" class="pl-0 pr-0"><input id="numero" name="Numero" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0" type="text"></td>
+                            <input id="checkCategoriaEvent2" type="text" name="IdCat" value="<%= categoria.id %>" class="d-none">
+                            <input id="checkCategoriaEvent2" type="text" name="FechaActual" value="<%= categoria.Competidor[index].FechaActual %>" class="d-none">
+                            <input id="checkCategoriaEvent3" type="text" name="IDFDFF" value="<%= categoria.Competidor[index].IDFDFF %>" class="d-none">
+                            <input id="checkCategoriaEvent4" type="text" name="Nombre" value="<%= categoria.Competidor[index].Nombre %>" class="d-none">
+                            <input id="checkCategoriaEvent5" type="text" name="Cedula" value="<%= categoria.Competidor[index].Cedula %>" class="d-none">
+                            <input id="checkCategoriaEvent6" type="text" name="Nacimiento" value="<%= categoria.Competidor[index].Nacimiento %>" class="d-none">
+                            <input id="checkCategoriaEvent7" type="text" name="Edad" value="<%= categoria.Competidor[index].Edad %>" class="d-none">
+                            <input id="checkCategoriaEvent8" type="text" name="Sexo" value="<%= categoria.Competidor[index].Sexo %>" class="d-none">
+                            <input id="checkCategoriaEvent9" type="text" name="Peso" value="<%= categoria.Competidor[index].Peso %>" class="d-none">
+                            <input id="checkCategoriaEvent10" type="text" name="Estatura" value="<%= categoria.Competidor[index].Estatura %>" class="d-none">
+                            <input id="checkCategoriaEvent11" type="text" name="Sector" value="<%= categoria.Competidor[index].Sector %>" class="d-none">
+                            <input value="<%= categoria.Competidor[index].Preparador %>" id="preparador" name="Preparador" style="width:100%;" class="d-none" type="text"></td>
+                            <input value="<%= categoria.Competidor[index].id %>" id="idCompetidor" name="IdCompetidor" style="width:100%;" class="d-none" type="text"></td>
                             <td class="margin: 0%; padding: 0%; border border-dark border-3 fw-bold col fs-5"><%= categoria.Competidor[index].Nombre %></td>
                             <td class="margin: 0%; padding: 0%; col fs-5"><%= categoria.Competidor[index].Edad %></td>
                             <td class="margin: 0%; padding: 0%; border border-dark border-3 col fs-5"><%= categoria.Competidor[index].Peso %></td>
@@ -88,7 +103,12 @@
             <% }) %>
         <% } %>
     </div>
-        
+
+    <button id="btnInscripcion" class="btn btn-success mb-3" type="submit">
+        Registrar Inscripcion
+    </button>
+
+        </form>
     </div>
 
 
@@ -128,37 +148,48 @@
             });
         });
 
+         // input id="numero" name="Numero"
+        
+        window.addEventListener('load', function () {
+// console.log(numero.length);
+            for (let x = 0; x < numero.length; x++) {
+                numero[x].value = x + 1;
+                
+            }
+        // document.getElementById('edad').value = edad; 
+   
+        });
+
+
         // <!-- script para exportar a excel -->
 
-    const btnExportar = document.querySelector("#btnExportar")
-    // 
-        Mitabla = document.querySelector("#mitabla")
-        // tabla = document.querySelector("#tabla");
+    // const btnExportar = document.querySelector("#btnExportar")
+    // // 
+    //     Mitabla = document.querySelector("#mitabla")
+    //     // tabla = document.querySelector("#tabla");
 
-        //
-
-            btnExportar.addEventListener("click", function() {
-                const long = Mitabla.children.length;
-                const hijos = Mitabla.children;
-                console.log(long);
-                console.log(hijos);
-                for (let index = 1; index < hijos.length; index++) {
-                    const tabla = hijos[index];
-                // console.log(tabla.length);
-                // Mitabla.forEach(element => {
+    //         btnExportar.addEventListener("click", function() {
+    //             const long = Mitabla.children.length;
+    //             const hijos = Mitabla.children;
+    //             console.log(long);
+    //             console.log(hijos);
+    //             for (let index = 1; index < hijos.length; index++) {
+    //                 const tabla = hijos[index];
+    //             // console.log(tabla.length);
+    //             // Mitabla.forEach(element => {
                   
-                // });
+    //             // });
                 
-        let tableExport = new TableExport(tabla, {
-            exportButtons: false, // No queremos botones
-            filename: "Reporte de prueba", //Nombre del archivo de Excel
-            sheetname: "Reporte de prueba", //Título de la hoja
-            });
-            let datos = tableExport.getExportData(tabla);
-            let preferenciasDocumento = datos.tabla.xlsx;
-            tableExport.export2file(preferenciasDocumento.data, preferenciasDocumento.mimeType, preferenciasDocumento.filename, preferenciasDocumento.fileExtension, preferenciasDocumento.merges, preferenciasDocumento.RTL, preferenciasDocumento.sheetname);
-     }
-    });
+    //     let tableExport = new TableExport(tabla, {
+    //         exportButtons: false, // No queremos botones
+    //         filename: "Reporte de prueba", //Nombre del archivo de Excel
+    //         sheetname: "Reporte de prueba", //Título de la hoja
+    //         });
+    //         let datos = tableExport.getExportData(tabla);
+    //         let preferenciasDocumento = datos.tabla.xlsx;
+    //         tableExport.export2file(preferenciasDocumento.data, preferenciasDocumento.mimeType, preferenciasDocumento.filename, preferenciasDocumento.fileExtension, preferenciasDocumento.merges, preferenciasDocumento.RTL, preferenciasDocumento.sheetname);
+    //  }
+    // });
 
 //
     
