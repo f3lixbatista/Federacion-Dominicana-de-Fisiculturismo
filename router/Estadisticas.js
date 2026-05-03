@@ -1,196 +1,65 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-const Eventos = require('../models/eventomodel')
+const supabase = require('../supabaseClient');
 
-//     Categoria: String,
-//     Evento: String,
-//     Modalidad: String,
-//     Genero: String,
-//     Disciplina: String,
-//     Division: String,
-//     DesdeEdad: Number,
-//     HastaEdad: Number,
-//     DesdePeso: Number,
-//     HastaPeso: Number,
-//     DesdeEstatura: Number,
-//     HastaEstatura: Number, 
-//     Salida: Number,
-//     Competidor: [{
-//         FechaActual: Date, 
-//         IDFDFF: String,
-//         Nombre: String,
-//         Cedula: String,
-//         Nacimiento: Date,
-//         Edad: Number,
-//         Sexo: String,
-//         Peso: Number,
-//         Estatura: Number, 
-//         Sector: String,
-//         Preparador: String,
-//         EstadisticasEliminatoria: [{
-//             J1: Number,
-//             J2: Number,
-//             J3: Number,
-//             J4: Number,
-//             J5: Number,
-//             J6: Number,
-//             J7: Number,
-//             J8: Number,
-//             J9: Number,
-//             J10: Number,
-//             J11: Number,
-//             J12: Number,
-//             J13: Number,
-//             Total: Number,
-//             Posicion: Number,
-//         }],
-//         EstadisticasSemiFinalR1: [{
-//             J1: Number,
-//             J2: Number,
-//             J3: Number,
-//             J4: Number,
-//             J5: Number,
-//             J6: Number,
-//             J7: Number,
-//             J8: Number,
-//             J9: Number,
-//             J10: Number,
-//             J11: Number,
-//             J12: Number,
-//             J13: Number,
-//             Total: Number,
-//             Posicion: Number,
-//         }],   
-//         EstadisticasSemiFinalR2: [{
-//             J1: Number,
-//             J2: Number,
-//             J3: Number,
-//             J4: Number,
-//             J5: Number,
-//             J6: Number,
-//             J7: Number,
-//             J8: Number,
-//             J9: Number,
-//             J10: Number,
-//             J11: Number,
-//             J12: Number,
-//             J13: Number,
-//             Total: Number,
-//             Posicion: Number,
-//             TotalGralSem: Number,
-//             PosicionGralSem: Number,
-//         }], 
-//         EstadisticasFinalR1: [{
-//             J1: Number,
-//             J2: Number,
-//             J3: Number,
-//             J4: Number,
-//             J5: Number,
-//             J6: Number,
-//             J7: Number,
-//             J8: Number,
-//             J9: Number,
-//             J10: Number,
-//             J11: Number,
-//             J12: Number,
-//             J13: Number,
-//             TotalR1: Number,
-//             PosicionR1: Number,
-//         }], 
-//         EstadisticasFinalR2: [{
-//             J1: Number,
-//             J2: Number,
-//             J3: Number,
-//             J4: Number,
-//             J5: Number,
-//             J6: Number,
-//             J7: Number,
-//             J8: Number,
-//             J9: Number,
-//             J10: Number,
-//             J11: Number,
-//             J12: Number,
-//             J13: Number,
-//             TotalR2: Number,
-//             PosicionR2: Number,
-//             TotalGralFinal: Number,
-//             PosicionGralFinal: Number,
-
-//         }],
-//         EstadisticasAbsoluto: [{
-//             J1: Number,
-//             J2: Number,
-//             J3: Number,
-//             J4: Number,
-//             J5: Number,
-//             J6: Number,
-//             J7: Number,
-//             J8: Number,
-//             J9: Number,
-//             J10: Number,
-//             J11: Number,
-//             J12: Number,
-//             J13: Number,
-//             Total: Number,
-//             Posicion: Number,
-            
-//         }],
-//     }]
-// })
-
-// Eventos = mongoose.model('mr. region norte 2022', EventoSchema);
-
+// 1. VISTA PRINCIPAL DE ESTADÍSTICAS (LISTAR CATEGORÍAS/EVENTOS)
 router.get('/', async (req, res) => {
-    
     try {  
-        const arrCategoriaDB = await Eventos.find();
-        // const arrayAtletaDB = await Atleta.find();
-        // console.log(arrayAtletaDB)
+        // Consultamos la tabla eventos ordenada por la columna 'salida'
+        const { data: arrCategorias, error } = await supabase
+            .from('eventos')
+            .select('*')
+            .order('salida', { ascending: true });
 
-        arrCategoriaDB.sort((o1, o2) => {
-            if (o1.Salida < o2.Salida) {
-                return -1;
-            } else if (o1.Salida > o2.Salida) {
-                return 1;
-            } else {
-                return 0;
-            }
-        });
+        if (error) throw error;
         
         res.render('estadisticas', {
-            // arrayAtletas: arrayAtletaDB,
-            arrCategorias: arrCategoriaDB
-            
-        })
+            arrCategorias: arrCategorias
+        });
     
     } catch (error) {
-        console.log(error)
+        console.error("Error en estadísticas:", error.message);
+        res.render('estadisticas', { arrCategorias: [] });
     }
+});
 
-})
-
+// 2. VISTA DE CÁLCULOS PARA UN EVENTO ESPECÍFICO
 router.get('/:id', async (req, res) => {
-        
-    const id = req.params.id
+    const id = req.params.id;
      
     try {     
+        // Obtenemos los datos del evento/categoría
+        const { data: datosEvento, error: errEvento } = await supabase
+            .from('eventos')
+            .select('*')
+            .eq('id', id)
+            .single();
 
-        const datosEvento = await Eventos.findOne({ _id: id })
-        // console.log(atletaDB)
+        // OPCIONAL: Si necesitas los competidores de este evento para los cálculos
+        const { data: competidores, error: errComp } = await supabase
+            .from('competidores')
+            .select('*')
+            .eq('id_evento', id);
+
+        if (errEvento) throw errEvento;
         
+        // Combinamos los datos si tu vista 'calculos' espera ver a los competidores dentro
+        if (datosEvento) {
+            datosEvento.Competidor = competidores || [];
+        }
+
         res.render('calculos', {
             datos: datosEvento,
             error: false           
-        })       
+        });       
         
     } catch (error) {       
+        console.error(error);
         res.render('calculos', { 
             error: true,
-            mensaje:"no encontrado"
-        })
+            mensaje: "No encontrado"
+        });
     }
-})
+});
 
 module.exports = router;
