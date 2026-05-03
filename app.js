@@ -1,6 +1,10 @@
 const express = require('express');
 const path = require('path');
 require('dotenv').config();
+// supabaseClient.js
+
+console.log("URL de Supabase:", process.env.SUPABASE_URL); // Añade esta línea para ver qué imprime
+
 
 const app = express();
 const port = process.env.PORT || 3000;
