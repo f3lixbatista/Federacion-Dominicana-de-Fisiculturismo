@@ -1,275 +1,116 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
-const { findOneAndReplace } = require('../models/atletamodel');
-const Schema = mongoose.Schema;
-const Atleta = require('../models/atletamodel')
-const Eventos = require('../models/eventomodel')
-const Competidor = require('../models/eventomodel')
+const supabase = require('../supabaseClient');
 
+// 1. VISTA PRINCIPAL DE INSCRIPCIÓN
 router.get('/', async (req, res) => {
-
     try {  
-        const arrayCategoriaDB = await Eventos.find();
-        const arrayAtletaDB = await Atleta.find();
-        // console.log(arrayAtletaDB)
-        arrayCategoriaDB.sort((o1, o2) => {
-            if (o1.Salida < o2.Salida) {
-                return -1;
-            } else if (o1.Salida > o2.Salida) {
-                return 1;
-            } else {
-                return 0;
-            }
-        });
+        const { data: arrayCategorias, error: errCat } = await supabase
+            .from('eventos')
+            .select('*')
+            .order('salida', { ascending: true });
+
+        const { data: arrayAtletas, error: errAtl } = await supabase
+            .from('atletas')
+            .select('*');
+
+        if (errCat || errAtl) throw (errCat || errAtl);
 
         res.render("inscripcion", {
-            arrayAtletas: arrayAtletaDB,
-            arrayCategorias: arrayCategoriaDB
-            
-        })
-    
+            arrayAtletas: arrayAtletas,
+            arrayCategorias: arrayCategorias
+        });
     } catch (error) {
-        console.log(error)
+        console.error("Error al cargar inscripción:", error.message);
+        res.render("inscripcion", { arrayAtletas: [], arrayCategorias: [] });
     }
+});
 
-})
-
-
+// 2. PROCESAR INSCRIPCIÓN MULTIPLE (POST)
 router.post('/', async (req, res) => {
-    const body = req.body
-    // console.log(body)
-    for (let z = 0; z < body.Numero.length; z++) {
-    const id = body.IdCat[z]
-    const FechaActual = body.FechaActual[z]
-    const IDFDFF = body.IDFDFF[z] 
-    const Nombre = body.Nombre[z] 
-    const Cedula = body.Cedula[z]
-    const Nacimiento = body.Nacimiento[z]
-    const Edad = body.Edad[z]
-    const Sexo = body.Sexo[z]
-    const Peso = body.Peso[z]
-    const Estatura = body.Estatura[z] 
-    const Sector = body.Sector[z]
-    const Numero = body.Numero[z]
-    const Preparador = body.Preparador[z]
-    // console.log(id)
-    // console.log(IDFDFF)
-    // console.log(Nombre)
-    // console.log(Cedula)
-    // console.log(Nacimiento)
-    // console.log(Edad)
-    // console.log(Sexo)
-    // console.log(Peso)
-    // console.log(Estatura)
-    // console.log(Sector)
-    // console.log(Numero)
-    // console.log(Preparador)
-              
-                // const id = body.IdCat[z]
-                // const FechaActual = body.FechaActual[z]
-                // const IDFDFF = body.IDFDFF[z] 
-                // const Nombre = body.Nombre[z] 
-                // const Cedula = body.Cedula[z]
-                // const Nacimiento = body.Nacimiento[z]
-                // const Edad = body.Edad[z]
-                // const Sexo = body.Sexo[z]
-                // const Peso = body.Peso[z]
-                // const Estatura = body.Estatura[z] 
-                // const Sector = body.Sector[z]
-                // const Numero = body.Numero[z]
-                // const Preparador = body.Preparador[z]
-
-    // modifyBody = {
-    //     Competidor: [
-    //     //     z =
-    //      { $push: {
-    //         [z]: {
-         
-    //         IDFDFF: IDFDFF, 
-    //         Nombre: Nombre, 
-    //         FechaActual: FechaActual,
-    //         Cedula: Cedula, 
-    //         Nacimiento: Nacimiento,
-    //         Edad: Edad,
-    //         Sexo: Sexo,
-    //         Peso: Peso,
-    //         Estatura: Estatura, 
-    //         Sector: Sector,
-    //         Numero: Numero,
-    //         Preparador: Preparador
-    //         }
-    //      }
-    //     }] 
-    // }
-   
-        // console.log(modifyBody)
-
-        try {
-
-            const atletaDB = await Eventos.findByIdAndUpdate({ _id: id },{
-
-
-        //     // const EventoDB = await Eventos.findByIdAndUpdate({ _id: id }, {
-                
-            $set: 
-                { Competidor: [z ={
-                   IDFDFF: IDFDFF, 
-                       FechaActual: FechaActual,
-                       Nombre: Nombre, 
-                       Cedula: Cedula, 
-                       Nacimiento: Nacimiento,
-                       Edad: Edad,
-                       Sexo: Sexo,
-                       Peso: Peso,
-                       Estatura: Estatura, 
-                       Sector: Sector,
-                       Numero: Numero,
-                       Preparador: Preparador
-                 
-                }]
-        //     // })
-        }
-        //     // console.log(atletaDB)
+    const body = req.body;
     
-        //     // res.json({
-        //     //     estado: true,
-        //     //     mensaje: 'Editado'
-            })
-            
-        } catch (error) {
-            console.log(error)
-            
-        //     // res.json({
-        //     //     estado: false,
-        //     //     mensaje: 'Fallamos!!'
-        //     // })
-         }
-
-
-
-        // try {
-
-        //     // const EventoDB = await Eventos.findByIdAndUpdate(id, numeroAtleta, { useFindAndModify: false })
-        //     // console.log(atletaDB)
-            // 
-            
-            //             [z] : {
-            //                 Numero: numero
-            //             }
-            //             // Numero: numero 
-                        
-                    
-            //     }
-            // })
-
-        // } catch (error) {
-        //     console.log(error)
-
-        }
-
-    
-
-
-    // try {
-    //     // const atletaDB = new Atleta(body)
-    //     // await atletaDB.save()
-
-    //     await Atleta.create(body)
-
-    //     res.redirect('/atletas')    
-
-    // } catch (error) {
-    //     console.log(error)
-    // }
-}) 
-
-
-
-router.get('/:id', async (req, res) => {
+    try {
+        // Preparamos los datos para una inserción masiva
+        const inscripciones = [];
         
-    const id = req.params.id
+        // El loop asume que body.Numero es un array
+        const total = Array.isArray(body.Numero) ? body.Numero.length : 1;
 
-   
-    // const Eventos = 'mr. region norte 2022'
-     
+        for (let z = 0; z < total; z++) {
+            inscripciones.push({
+                id_evento: Array.isArray(body.IdCat) ? body.IdCat[z] : body.IdCat,
+                idfdff: Array.isArray(body.IDFDFF) ? body.IDFDFF[z] : body.IDFDFF,
+                nombre: Array.isArray(body.Nombre) ? body.Nombre[z] : body.Nombre,
+                cedula: Array.isArray(body.Cedula) ? body.Cedula[z] : body.Cedula,
+                numero_competidor: Array.isArray(body.Numero) ? body.Numero[z] : body.Numero,
+                // Agrega aquí el resto de campos que necesites guardar en la tabla competidores
+            });
+        }
+
+        const { error } = await supabase
+            .from('competidores')
+            .insert(inscripciones);
+
+        if (error) throw error;
+        res.redirect('/atletas');
+
+    } catch (error) {
+        console.error("Error al procesar inscripción:", error.message);
+        res.status(500).send("Error en la base de datos");
+    }
+});
+
+// 3. VISTA DETALLE DE INSCRIPCIÓN POR ATLETA
+router.get('/:id', async (req, res) => {
+    const id = req.params.id;
     try {     
+        const { data: arrayCategorias } = await supabase.from('eventos').select('*');
+        const { data: atleta, error } = await supabase
+            .from('atletas')
+            .select('*')
+            .eq('id', id)
+            .single();
 
-        const arrayCategoriaDB = await Eventos.find();
-        // console.log(arrayCategoriaDB)
-
-        const atletaDB = await Atleta.findOne({ _id: id })
-        // console.log(atletaDB)
+        if (error) throw error;
         
         res.render('detalleInscripcion', {
-            atleta: atletaDB,
-            arrayCategorias: arrayCategoriaDB,
+            atleta: atleta,
+            arrayCategorias: arrayCategorias,
             error: false           
-        })       
-        
+        });
     } catch (error) {       
         res.render('detalleInscripcion', { 
             error: true,
-            mensaje:"no encontrado"
-        })
+            mensaje: "Atleta no encontrado"
+        });
     }
-})
+});
 
- 
+// 4. INSCRIPCIÓN INDIVIDUAL (PUT/PUSH)
 router.put('/:id', async (req, res) => {
-    // router.post('/:id', async (req, res) => {
-       const {id} = req.body
-        const body = req.body
-     
+    const body = req.body;
     try {
-       
-        const categoriaDB = await Eventos.findByIdAndUpdate({ _id: id },{
-            $push: {
-                Competidor: {
-                    FechaActual: body.FechaActual, 
-                    IDFDFF: body.IDFDFF, 
-                    Nombre: body.Nombre, 
-                    Cedula: body.Cedula, 
-                    Nacimiento: body.Nacimiento,
-                    Edad: body.Edad,
-                    Sexo: body.Sexo,
-                    Peso: body.Peso,
-                    Estatura: body.Estatura, 
-                    Sector: body.Sector,
-                    Numero: 0,
-                    Preparador: body.Preparador
-                    
-                }
-            }
-        })
+        // En Supabase, para un "push", simplemente insertamos una nueva fila 
+        // en la tabla de relación (competidores)
+        const { error } = await supabase
+            .from('competidores')
+            .insert([{
+                id_evento: body.id, // El ID de la categoría/evento
+                idfdff: body.IDFDFF,
+                nombre: body.Nombre,
+                cedula: body.Cedula,
+                fecha_inscripcion: body.FechaActual,
+                numero_competidor: 0 // Valor por defecto inicial
+            }]);
 
-    // });
-        // console.log(atletaDB)
-        
-        // res.json({
-        //     estado: true,
-        //     mensaje: 'Editado'
-        // })
+        if (error) throw error;
+        res.json({ estado: true, mensaje: 'Inscrito con éxito' });
         
     } catch (error) {
-        console.log(error)
-        
-        // res.json({
-        //     estado: false,
-        //     mensaje: 'Fallamos!!'
-        // })
+        console.error(error);
+        res.json({ estado: false, mensaje: 'Error al inscribir' });
     }
-
-
-
-})
-
-// })
-// })
-
+});
 
 module.exports = router;
-// module.exports = Eventos;
-
- 
-

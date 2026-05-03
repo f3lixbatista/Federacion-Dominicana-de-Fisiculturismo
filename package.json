@@ -1,34 +1,24 @@
 {
-  "name": "fundamentosnode",
+  "name": "federacion-dominicana-fisiculturismo",
   "version": "1.0.0",
   "main": "app.js",
   "engines": {
-    "node": "16.13.1",
-    "npm": "8.13.1"
+    "node": ">=16.0.0"
   },
   "scripts": {
-    "start": "node app",
-    "ini": "nodemon app"
+    "start": "node app.js",
+    "dev": "nodemon app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.20.5",
-    "cowsay": "^1.6.0",
-    "dotenv": "^16.6.1",
+    "@supabase/supabase-js": "^2.45.0",
+    "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
-    "express": "^4.22.1",
-    "mongoose": "^6.13.9"
-  },
-  "description": "Url Mongodb: https://www.mongodb.com/",
-  "repository": {
-    "type": "git",
-    "url": "https://git.heroku.com/gorjea.git"
+    "express": "^4.19.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14",
-    "webpack": "^5.106.2",
-    "webpack-cli": "^4.10.0"
+    "nodemon": "^3.1.4"
   }
 }

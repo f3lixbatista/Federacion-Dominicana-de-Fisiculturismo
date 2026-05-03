@@ -1,123 +1,105 @@
 const express = require('express');
 const router = express.Router();
-// const mongoose = require('mongoose');
-// const { db, collection } = require('../models/categoriamodel');
-// const Schema = mongoose.Schema;
-const Atleta = require('../models/atletamodel')
+const supabase = require('../supabaseClient'); // Importamos el cliente que configuramos
 
+// 1. LISTAR TODOS LOS ATLETAS
 router.get('/', async (req, res) => {
-
     try {
+        const { data, error } = await supabase
+            .from('atletas')
+            .select('*')
+            .order('nombre', { ascending: true });
 
+        if (error) throw error;
 
-        const arrayAtletaDB = await Atleta.find();
-        // console.log(arrayAtletaDB)
-        
         res.render("atletas", {
-            arrayAtletas: arrayAtletaDB
-        })
-    
+            arrayAtletas: data
+        });
     } catch (error) {
-        console.log(error)
+        console.log("Error al listar:", error.message);
+        res.render("atletas", { arrayAtletas: [] });
     }
+});
 
-})
-
+// 2. VISTA CREAR
 router.get('/crear', (req, res) => {
-    res.render('crear')
+    res.render('crear');
+});
 
-})
-
+// 3. PROCESAR CREACIÓN
 router.post('/crear', async (req, res) => {
-    const body = req.body
-
     try {
-        // const atletaDB = new Atleta(body)
-        // await atletaDB.save()
+        const { error } = await supabase
+            .from('atletas')
+            .insert([req.body]); // Insertamos el objeto directamente
 
-        await Atleta.create(body)
-
-        res.redirect('/atletas')    
-
+        if (error) throw error;
+        res.redirect('/atletas');
     } catch (error) {
-        console.log(error)
+        console.log("Error al crear:", error.message);
+        res.redirect('/atletas');
     }
-})    
+});
 
+// 4. VER DETALLE DE UN ATLETA
 router.get('/:id', async (req, res) => {
-        
-    const id = req.params.id
-     
-    try {     
+    const id = req.params.id;
+    try {
+        const { data, error } = await supabase
+            .from('atletas')
+            .select('*')
+            .eq('id', id) // En Postgres/Supabase usamos el ID de la tabla
+            .single();
 
-        const atletaDB = await Atleta.findOne({ _id: id })
-        // console.log(atletaDB)
-        
+        if (error || !data) throw error;
+
         res.render('detalle', {
-            atleta: atletaDB,
-            error: false           
-        })       
-        
-    } catch (error) {       
-        res.render('detalle', { 
+            atleta: data,
+            error: false
+        });
+    } catch (error) {
+        res.render('detalle', {
             error: true,
-            mensaje:"no encontrado"
-        })
+            mensaje: "No encontrado"
+        });
     }
-})
+});
 
+// 5. ELIMINAR ATLETA
 router.delete('/:id', async (req, res) => {
-    const id = req.params.id
-
+    const id = req.params.id;
     try {
-        const atletaDB = await Atleta.findByIdAndDelete({ _id: id })
-        
-        if (atletaDB) {
-            res.json({
-                estado : true,
-                mensaje : "Eliminado!"
-            });
+        const { error } = await supabase
+            .from('atletas')
+            .delete()
+            .eq('id', id);
+
+        if (!error) {
+            res.json({ estado: true, mensaje: "Eliminado!" });
         } else {
-            res.json({
-                estado : false,
-                mensaje : "Fallo eliminar"
-            });
+            res.json({ estado: false, mensaje: "Fallo eliminar" });
         }
-
     } catch (error) {
-        console.log(error)
+        res.json({ estado: false, mensaje: error.message });
     }
+});
 
-})
-
-
+// 6. EDITAR ATLETA
 router.put('/:id', async (req, res) => {
-    const id = req.params.id
-    
-    const body = req.body
-    
+    const id = req.params.id;
+    const body = req.body;
     try {
+        const { error } = await supabase
+            .from('atletas')
+            .update(body)
+            .eq('id', id);
 
-        const atletaDB = await Atleta.findByIdAndUpdate(id, body, { useFindAndModify: false })
-        // console.log(atletaDB)
+        if (error) throw error;
 
-        res.json({
-            estado: true,
-            mensaje: 'Editado'
-        })
-        
+        res.json({ estado: true, mensaje: 'Editado' });
     } catch (error) {
-        console.log(error)
-        
-        res.json({
-            estado: false,
-            mensaje: 'Fallamos!!'
-        })
+        res.json({ estado: false, mensaje: 'Fallamos!!' });
     }
-})
-
+});
 
 module.exports = router;
-
- 
-
