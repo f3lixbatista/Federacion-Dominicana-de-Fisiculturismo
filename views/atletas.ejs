@@ -52,7 +52,7 @@
                     <% arrayAtletas.forEach(atleta => { %>
                         <tr>
                             <!-- CAMBIO CLAVE: atleta.id en lugar de atleta._id -->
-                            <td><a href="atletas/<%= atleta.idfdff %>" class="btn btn-warning btn-sm">Editar</a></td>
+                            <td><a href="atletas/crear/<%= atleta.idfdff %>" class="btn btn-warning btn-sm">Editar</a></td>
                             <th scope="row"><%= atleta.idfdff %></th>
                             <td class="col-sm-8"><%= atleta.nombre %></td>
                             <td><%= atleta.cedula %></td>
