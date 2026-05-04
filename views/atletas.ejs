@@ -18,13 +18,33 @@
                     <th scope="col">Accion</th>
                     <th scope="col">IDFDFF</th>
                     <th scope="col" class="atl"><h5 class="mb-0 col-sm-12 mr-5">Atleta</h5></th>
-                    <th scope="col">Categoria</th>
-                    <th scope="col">Inscripción</th>
                     <th scope="col">Cedula</th>
-                    <th scope="col">Email</th>
+                    <th scope="col">Pasaporte</th>
                     <th scope="col">Celular</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Instagram</th>
+                    <th scope="col">Categoria</th>
+                    <th scope="col">Fecha Inscripcion</th>
+                    <th scope="col">Renovacion</th>
+                    <th scope="col">Nacionalidad</th>
+                    <th scope="col">Pais</th>
                     <th scope="col">Provincia</th>
+                    <th scope="col">Municipio</th>
+                    <th scope="col">Ciudad</th>
+                    <th scope="col">Sector</th>
+                    <th scope="col">Calle</th>
+                    <th scope="col">Postal</th>
+                    <th scope="col">Nacimiento</th>
+                    <th scope="col">Edad</th>
+                    <th scope="col">Sexo</th>
+                    <th scope="col">Peso</th>
+                    <th scope="col">Estatura</th>
+                    <th scope="col">Ocupacion</th>
                     <th scope="col">Gimnasio</th>
+                    <th scope="col">Preparador</th>
+                    <th scope="col">Cel Preparador</th>
+                    <th scope="col">Email Preparador</th>
+            
                 </tr>
             </thead>
             <tbody>
@@ -35,13 +55,32 @@
                             <td><a href="atletas/<%= atleta.id %>" class="btn btn-warning btn-sm">Editar</a></td>
                             <th scope="row"><%= atleta.idfdff %></th>
                             <td class="col-sm-8"><%= atleta.nombre %></td>
+                            <td><%= atleta.cedula %></td>
+                            <td><%= atleta.pasaporte %></td>
+                            <td><%= atleta.celular %></td>
+                            <td><%= atleta.email %></td>
+                            <td><%= atleta.instagram %></td>
                             <td><%= atleta.categoria %></td>
                             <td><%= atleta.fecha_inscripcion %></td>
-                            <td><%= atleta.cedula %></td>
-                            <td><%= atleta.email %></td>
-                            <td><%= atleta.celular %></td>
+                            <td><%= atleta.renovacion %></td>  
+                            <td><%= atleta.nacionalidad %></td>
+                            <td><%= atleta.pais %></td>
                             <td><%= atleta.provincia %></td>
+                            <td><%= atleta.municipio %></td>
+                            <td><%= atleta.ciudad %></td>
+                            <td><%= atleta.sector %></td>
+                            <td><%= atleta.calle %></td>
+                            <td><%= atleta.postal %></td>                      
+                            <td><%= atleta.nacimiento %></td>
+                            <td><%= atleta.edad %></td>
+                            <td><%= atleta.sexo %></td>
+                            <td><%= atleta.peso %></td>
+                            <td><%= atleta.estatura %></td>
+                            <td><%= atleta.ocupacion %></td>
                             <td><%= atleta.gimnasio %></td>
+                            <td><%= atleta.preparador %></td>
+                            <td><%= atleta.celular_preparador %></td>
+                            <td><%= atleta.email_preparador %></td>  
                         </tr>
                     <% }) %>
                 <% } %>
