@@ -48,7 +48,7 @@ router.get('/:id', async (req, res) => {
         const { data, error } = await supabase
             .from('atletas')
             .select('*')
-            .eq('id', id) // En Postgres/Supabase usamos el ID de la tabla
+            .eq('id', req.params.id) // En Postgres/Supabase usamos el ID de la tabla
             .single();
 
         if (error || !data) throw error;
