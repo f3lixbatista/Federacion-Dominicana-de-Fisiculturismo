@@ -1,36 +1,27 @@
-<%- include("template/cabecera", {tituloWeb: "Pagina de Atletas"}) %>
+<%- include("template/cabecera", {tituloWeb: "Panel de Inscripción"}) %>
 
-<div class="container divGeneral border border-1 border-dark pl-2 pr-2 pb-2 col-10" style="height: 41vh; margin-top: -3vh;">
-    <div class="table-responsive col-10 ml-auto mr-auto mt-0 pt-0" id="mydatatable-container" style="height: 40vh;">     
-        <div class="col-6 ml-0 p-0">
-            <h1 class="">Inscripcion a Evento</h1>
-        </div>
+<!-- SECCIÓN 1: Seleccionar Atleta para Inscribir -->
+<div class="container divGeneral border border-1 border-dark p-2 col-10" style="min-height: 41vh;">
+    <div class="table-responsive col-12 mt-0 pt-0">     
+        <h1 class="my-3">Inscripción a Evento</h1>
        
-        <table class="records_list table table-striped table-bordered border border-dark border-3 table-hover" id="mydatatable">
+        <table class="records_list table table-striped table-bordered border-dark table-hover" id="mydatatable">
             <thead>
-                <tr class="table-blue"> 
-                    <th scope="col" class="bg-primary">Cedula</th>
-                    <th scope="col" class="bg-primary fs-5 mx-5 pl-5 pr-5 mx-4 position-relative"><p class="position-absolute top-0 start-0">Nombre</p></th>  
+                <tr class="table-blue text-white"> 
+                    <th scope="col" class="bg-primary">Cédula</th>
+                    <th scope="col" class="bg-primary">Nombre</th>  
                     <th scope="col" class="bg-primary">IDFDFF</th>
-                    <th scope="col" class="bg-primary">Accion</th>
+                    <th scope="col" class="bg-primary">Acción</th>
                 </tr>
             </thead>
-            <tfoot>
-                <tr>
-                   
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <td></td>
-                </tr>
-            </tfoot>
             <tbody>
                 <% if (arrayAtletas.length > 0) { %>
                     <% arrayAtletas.forEach(atleta => { %>
                         <tr>
-                            <td class="col-sm-3"><%= atleta.Cedula %></td>
-                            <td class="col-sm-8 fs-4"><%= atleta.Nombre %></td>
-                            <th class="col-sm-2" scope="row"><%= atleta.IDFDFF %></th>
+                            <td class="col-sm-3"><%= atleta.cedula %></td>
+                            <td class="col-sm-8 fs-4"><%= atleta.nombre %></td>
+                            <th class="col-sm-2" scope="row"><%= atleta.idfdff %></th>
+                            <!-- Cambio: atleta.id (Supabase) -->
                             <td><a href="inscripcion/<%= atleta.id %>" class="btn btn-warning btn-sm">Inscribir</a></td>
                         </tr>
                     <% }) %>
@@ -40,164 +31,78 @@
     </div>
 </div>
 
-    <div class="imprInsc container table-responsive col-10 ml-auto mr-auto mt-0 pt-0" style="width: 65%;" id="mydatatable-container">     
-        <div class="ml-0 p-0">
-            <h1 style="color: rgb(0, 0, 0);" class="text-center fw-bold">Mr. Region Norte 2022</h1>
+<!-- SECCIÓN 2: Listado de Competidores por Categoría (Para asignar Números) -->
+<div class="imprInsc container table-responsive col-10 mx-auto mt-5 pt-0">     
+    <div class="text-center mb-4">
+        <h1 class="fw-bold text-dark">Listado de Competidores Inscritos</h1>
+        <p class="text-muted">Asigne los números de competidor y guarde los cambios</p>
+    </div>
+
+    <form action="/inscripcion/asignar-numeros" method="POST">
+        <div id="mitabla">
+            <% if (arrayCategorias.length > 0) { %>
+                <% arrayCategorias.forEach(categoria => { %>
+
+                <table class="table table-bordered border-dark border-3 mb-5">
+                    <thead>
+                        <tr class="table-dark">
+                            <th class="text-center" style="width: 10%;"><%= categoria.salida %></th> 
+                            <th colspan="4" class="fs-4 text-center"><%= categoria.categoria %> - <%= categoria.nombre %></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="fw-bold bg-light text-center">
+                            <td style="width: 15%;">No. Competidor</td>
+                            <td>Atleta</td>
+                            <td>Edad</td>
+                            <td>Peso</td>
+                            <td>Estatura</td>
+                        </tr>
+                        
+                        <!-- Supabase: Los competidores vienen como array dentro de la categoria -->
+                        <% if (categoria.Competidor && categoria.Competidor.length > 0) { %>
+                            <% categoria.Competidor.forEach(comp => { %>
+                                <tr class="align-middle">
+                                    <td class="p-0">
+                                        <input name="Numero" value="<%= comp.numero_competidor %>" 
+                                               class="form-control text-center border-0 fw-bold" 
+                                               type="number" placeholder="---">
+                                        
+                                        <!-- Inputs ocultos para procesar el POST masivo -->
+                                        <input type="hidden" name="IdCompetidor" value="<%= comp.id %>">
+                                        <input type="hidden" name="IdCat" value="<%= categoria.id %>">
+                                    </td>
+                                    <td class="fs-5 fw-bold"><%= comp.nombre %></td>
+                                    <td class="text-center"><%= comp.edad || '--' %></td>
+                                    <td class="text-center"><%= comp.peso_real || '--' %> kg</td>
+                                    <td class="text-center"><%= comp.estatura_real || '--' %> cm</td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr><td colspan="5" class="text-center text-muted">Sin competidores aún</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+
+                <% }) %>
+            <% } %>
         </div>
 
+        <button id="btnInscripcion" class="btn btn-success btn-lg w-100 mb-5" type="submit">
+            Guardar Números de Competidor
+        </button>
+    </form>
+</div>
 
-        <form action="" method="post">
-    <div id="mitabla">
-        
-        <% if (arrayCategorias.length > 0) { %>
-            <% arrayCategorias.forEach(categoria => { %>
-
-        <table class="records_list table table-bordered border border-dark border-3 table-hover" id="tabla">
-           
-           
-            <thead>
-                <tr class="">
-                    <th style="background-color: rgb(0, 0, 0);" class="text-white fs-5 fw-bold text-center"><%= categoria.Salida %></th> 
-                    <th colspan="5" class="col-sm-12 fs-4 text-center lh-1" id="catInscXLS"><%= categoria.Categoria %></th>
-                    
-                    <!-- <th scope="col" class="bg-primary fs-5 mx-5 pl-5 pr-5 mx-4 position-relative"><p class="position-absolute top-0 start-0">Nombre</p></th>  
-                    <th scope="col" class="bg-primary">IDFDFF</th>
-                    <th scope="col" class="bg-primary">Accion</th> -->
-                </tr>
-            </thead>
-            <tbody>
-                <tr class="fw-bold" style="background-color: rgb(229, 224, 224);">
-                    <td>No.</td>
-                    <td class="border border-dark border-3">Atleta</td>
-                    <td>Edad</td>
-                    <td class="border border-dark border-3">Peso</td>
-                    <td>Estatura</td>
-                </tr>
-            </tbody>
-            <tfoot>
-                    <% for (let index = 1; index < categoria.Competidor.length; index++) { %>
-                        <!-- const element = array[index]; -->
-                        <tr class="border border-dark border-3 p-0 m-0 lh-1">
-                            <td style="margin: 0%; padding: 0%; width: 8%;" class="pl-0 pr-0"><input id="numero" name="Numero" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0" type="text"></td>
-                            <input id="checkCategoriaEvent2" type="text" name="IdCat" value="<%= categoria.id %>" class="d-none">
-                            <input id="checkCategoriaEvent2" type="text" name="FechaActual" value="<%= categoria.Competidor[index].FechaActual %>" class="d-none">
-                            <input id="checkCategoriaEvent3" type="text" name="IDFDFF" value="<%= categoria.Competidor[index].IDFDFF %>" class="d-none">
-                            <input id="checkCategoriaEvent4" type="text" name="Nombre" value="<%= categoria.Competidor[index].Nombre %>" class="d-none">
-                            <input id="checkCategoriaEvent5" type="text" name="Cedula" value="<%= categoria.Competidor[index].Cedula %>" class="d-none">
-                            <input id="checkCategoriaEvent6" type="text" name="Nacimiento" value="<%= categoria.Competidor[index].Nacimiento %>" class="d-none">
-                            <input id="checkCategoriaEvent7" type="text" name="Edad" value="<%= categoria.Competidor[index].Edad %>" class="d-none">
-                            <input id="checkCategoriaEvent8" type="text" name="Sexo" value="<%= categoria.Competidor[index].Sexo %>" class="d-none">
-                            <input id="checkCategoriaEvent9" type="text" name="Peso" value="<%= categoria.Competidor[index].Peso %>" class="d-none">
-                            <input id="checkCategoriaEvent10" type="text" name="Estatura" value="<%= categoria.Competidor[index].Estatura %>" class="d-none">
-                            <input id="checkCategoriaEvent11" type="text" name="Sector" value="<%= categoria.Competidor[index].Sector %>" class="d-none">
-                            <input value="<%= categoria.Competidor[index].Preparador %>" id="preparador" name="Preparador" style="width:100%;" class="d-none" type="text"></td>
-                            <input value="<%= categoria.Competidor[index].id %>" id="idCompetidor" name="IdCompetidor" style="width:100%;" class="d-none" type="text"></td>
-                            <td class="margin: 0%; padding: 0%; border border-dark border-3 fw-bold col fs-5"><%= categoria.Competidor[index].Nombre %></td>
-                            <td class="margin: 0%; padding: 0%; col fs-5"><%= categoria.Competidor[index].Edad %></td>
-                            <td class="margin: 0%; padding: 0%; border border-dark border-3 col fs-5"><%= categoria.Competidor[index].Peso %></td>
-                            <td class="margin: 0%; padding: 0%; col fs-5"><%= categoria.Competidor[index].Estatura %></td>
-                        </tr>
-                    <% } %>
-            </tfoot>
-        </table>
-            <% }) %>
-        <% } %>
-    </div>
-
-    <button id="btnInscripcion" class="btn btn-success mb-3" type="submit">
-        Registrar Inscripcion
-    </button>
-
-        </form>
-    </div>
-
-
-
-
-    <script type="text/javascript">
-        
-        $(document).ready(function () {
-            $('#mydatatable tfoot th').each(function () {
-                var title = $(this).text();
-                $(this).html('<input type="text" placeholder="Filtrar.." />');
-            });
-    
-            var table = $('#mydatatable').DataTable({
-                "dom": 'B<"float-left"i><"float-right"f>t<"float-left"l><"float-right"p><"clearfix">',
-                "responsive": false,
-                "language": {
-                    "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json"
-                },
-                "order": [
-                    [0, "desc"]
-                ],
-                "initComplete": function () {
-                    this.api().columns().every(function () {
-                        var that = this;
-    
-                        $('input', this.footer()).on('keyup change', function () {
-                            if (that.search() !== this.value) {
-                                that
-                                    .search(this.value)
-                                    .draw();
-                            }
-                        });
-                    })
-                },
-                "buttons": ['csv', 'excel', 'pdf', 'print']
-            });
+<script type="text/javascript">
+    $(document).ready(function () {
+        // Inicialización de DataTable para la tabla de atletas (arriba)
+        var table = $('#mydatatable').DataTable({
+            "dom": 'Bfrtip',
+            "language": { "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json" },
+            "buttons": ['excel', 'pdf']
         });
-
-         // input id="numero" name="Numero"
-        
-        window.addEventListener('load', function () {
-// console.log(numero.length);
-            for (let x = 0; x < numero.length; x++) {
-                numero[x].value = x + 1;
-                
-            }
-        // document.getElementById('edad').value = edad; 
-   
-        });
-
-
-        // <!-- script para exportar a excel -->
-
-    // const btnExportar = document.querySelector("#btnExportar")
-    // // 
-    //     Mitabla = document.querySelector("#mitabla")
-    //     // tabla = document.querySelector("#tabla");
-
-    //         btnExportar.addEventListener("click", function() {
-    //             const long = Mitabla.children.length;
-    //             const hijos = Mitabla.children;
-    //             console.log(long);
-    //             console.log(hijos);
-    //             for (let index = 1; index < hijos.length; index++) {
-    //                 const tabla = hijos[index];
-    //             // console.log(tabla.length);
-    //             // Mitabla.forEach(element => {
-                  
-    //             // });
-                
-    //     let tableExport = new TableExport(tabla, {
-    //         exportButtons: false, // No queremos botones
-    //         filename: "Reporte de prueba", //Nombre del archivo de Excel
-    //         sheetname: "Reporte de prueba", //Título de la hoja
-    //         });
-    //         let datos = tableExport.getExportData(tabla);
-    //         let preferenciasDocumento = datos.tabla.xlsx;
-    //         tableExport.export2file(preferenciasDocumento.data, preferenciasDocumento.mimeType, preferenciasDocumento.filename, preferenciasDocumento.fileExtension, preferenciasDocumento.merges, preferenciasDocumento.RTL, preferenciasDocumento.sheetname);
-    //  }
-    // });
-
-//
-    
-
-
-
-
-      </script>
-   
+    });
+</script>
 
 <%- include("template/footer") %>

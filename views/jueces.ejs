@@ -1,62 +1,67 @@
-<%- include("template/cabecera", {tituloWeb: "Pagina de Jueces"}) %>
+<%- include("template/cabecera", {tituloWeb: "Panel de Jueces"}) %>
 
-<h1>Ejemplo de presentacion de Federados:</h1>
+<div class="container mt-5">
+    <h1 class="text-center mb-5 fw-bold">Directiva y Comité de Jueces FDFF</h1>
 
-<div class="row row-cols-1 row-cols-md-5 g-2">
-    
-    <div class="col">
-    <div class="card text-bg-primary" style="width: 18rem;">
-        <img src="/img/perfil tony.jpg" class="card-img-top" alt="...">
-        <div class="card-body">
-            <h5 class="card-title">Presidente FDFF: Tony Peña</h5>
-          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+    <!-- Añadí justify-content-center para que si faltan jueces, queden centrados -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4 justify-content-center">
+        
+        <!-- Juez 1 -->
+        <div class="col">
+            <div class="card h-100 shadow-sm border-primary">
+                <img src="/img/perfil tony.jpg" class="card-img-top" alt="Tony Peña" style="height: 250px; object-fit: cover;">
+                <div class="card-body text-bg-primary">
+                    <h5 class="card-title fs-6">Presidente FDFF</h5>
+                    <p class="card-text fw-bold">Tony Peña</p>
+                </div>
+            </div>
         </div>
-    </div>
-    </div>
 
-    <div class="col">
-    <div class="card text-bg-danger" style="width: 18rem;">
-        <img src="/img/perfil tina.jpg" class="card-img-top" alt="...">
-        <div class="card-body">
-            <h5 class="card-title">Presidenta Comite Jueces: Dra. Argentina Figueroa</h5>
-          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+        <!-- Juez 2 -->
+        <div class="col">
+            <div class="card h-100 shadow-sm border-danger">
+                <img src="/img/perfil tina.jpg" class="card-img-top" alt="Dra. Argentina Figueroa" style="height: 250px; object-fit: cover;">
+                <div class="card-body text-bg-danger">
+                    <h5 class="card-title fs-6">Comité Jueces</h5>
+                    <p class="card-text fw-bold">Dra. Argentina Figueroa</p>
+                </div>
+            </div>
         </div>
-    </div>
-    </div>
 
-    <div class="col">
-    <div class="card text-bg-warning" style="width: 18rem;">
-        <img src="/img/perfil Dr.jpg" class="card-img-top" alt="...">
-        <div class="card-body">
-            <h5 class="card-title">Vice-Presidente: Dr. Batista</h5>
-          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+        <!-- Juez 3 -->
+        <div class="col">
+            <div class="card h-100 shadow-sm border-warning">
+                <img src="/img/perfil Dr.jpg" class="card-img-top" alt="Dr. Batista" style="height: 250px; object-fit: cover;">
+                <div class="card-body text-bg-warning text-dark">
+                    <h5 class="card-title fs-6">Vice-Presidente</h5>
+                    <p class="card-text fw-bold">Dr. Batista</p>
+                </div>
+            </div>
         </div>
-    </div>
-    </div>
 
-    <div class="col">
-    <div class="card text-bg-success" style="width: 18rem;">
-        <img src="/img/perfil yeri.jpg" class="card-img-top" alt="...">
-        <div class="card-body ">
-            <h5 class="card-title">Secretaria Organizacion: Dra. Jerelee Baez</h5>
-          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+        <!-- Juez 4 -->
+        <div class="col">
+            <div class="card h-100 shadow-sm border-success">
+                <img src="/img/perfil yeri.jpg" class="card-img-top" alt="Dra. Jerelee Baez" style="height: 250px; object-fit: cover;">
+                <div class="card-body text-bg-success">
+                    <h5 class="card-title fs-6">Organización</h5>
+                    <p class="card-text fw-bold">Dra. Jerelee Baez</p>
+                </div>
+            </div>
         </div>
-    </div>
-    </div>
 
-    <div class="col">
-    <div class="card text-bg-info" style="width: 18rem;">
-        <img src="/img/perfil junior.jpg" class="card-img-top" alt="...">
-        <div class="card-body">
-            <h5 class="card-title">Sec. Difusion: Felix Batista</h5>
-          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+        <!-- Juez 5 -->
+        <div class="col">
+            <div class="card h-100 shadow-sm border-info">
+                <img src="/img/perfil junior.jpg" class="card-img-top" alt="Felix Batista" style="height: 250px; object-fit: cover;">
+                <div class="card-body text-bg-info text-dark">
+                    <h5 class="card-title fs-6">Sec. Difusión</h5>
+                    <p class="card-text fw-bold">Felix Batista</p>
+                </div>
+            </div>
         </div>
+
     </div>
-    </div>
+</div>
 
-
-
-  </div>
-
-
-  <%- include("template/footer") %>
+<%- include("template/footer") %>

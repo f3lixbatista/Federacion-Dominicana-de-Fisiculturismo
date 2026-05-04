@@ -2,23 +2,37 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../supabaseClient');
 
-// 1. VISTA PRINCIPAL DE INSCRIPCIÓN
+// 1. VISTA PRINCIPAL: Carga atletas y categorías CON sus competidores ya inscritos
 router.get('/', async (req, res) => {
     try {  
+        // Traemos eventos
         const { data: arrayCategorias, error: errCat } = await supabase
             .from('eventos')
             .select('*')
             .order('salida', { ascending: true });
 
+        // Traemos atletas para la tabla de arriba
         const { data: arrayAtletas, error: errAtl } = await supabase
             .from('atletas')
             .select('*');
 
+        // TRUCO PRO: Traemos todos los competidores ya inscritos para mostrarlos abajo
+        const { data: todosLosCompetidores } = await supabase
+            .from('competidores')
+            .select('*');
+
+        // Cruzamos los datos: metemos a cada competidor en su categoría correspondiente
+        if (arrayCategorias) {
+            arrayCategorias.forEach(cat => {
+                cat.Competidor = todosLosCompetidores.filter(c => c.id_evento === cat.id);
+            });
+        }
+
         if (errCat || errAtl) throw (errCat || errAtl);
 
         res.render("inscripcion", {
-            arrayAtletas: arrayAtletas,
-            arrayCategorias: arrayCategorias
+            arrayAtletas: arrayAtletas || [],
+            arrayCategorias: arrayCategorias || []
         });
     } catch (error) {
         console.error("Error al cargar inscripción:", error.message);
@@ -26,46 +40,45 @@ router.get('/', async (req, res) => {
     }
 });
 
-// 2. PROCESAR INSCRIPCIÓN MULTIPLE (POST)
-router.post('/', async (req, res) => {
-    const body = req.body;
+// 2. ASIGNAR NÚMEROS DE COMPETIDOR (La ruta que faltaba para el botón verde)
+router.post('/asignar-numeros', async (req, res) => {
+    const { IdCompetidor, Numero } = req.body;
     
     try {
-        // Preparamos los datos para una inserción masiva
-        const inscripciones = [];
-        
-        // El loop asume que body.Numero es un array
-        const total = Array.isArray(body.Numero) ? body.Numero.length : 1;
+        const promesas = [];
+        const ids = Array.isArray(IdCompetidor) ? IdCompetidor : [IdCompetidor];
+        const numeros = Array.isArray(Numero) ? Numero : [Numero];
 
-        for (let z = 0; z < total; z++) {
-            inscripciones.push({
-                id_evento: Array.isArray(body.IdCat) ? body.IdCat[z] : body.IdCat,
-                idfdff: Array.isArray(body.IDFDFF) ? body.IDFDFF[z] : body.IDFDFF,
-                nombre: Array.isArray(body.Nombre) ? body.Nombre[z] : body.Nombre,
-                cedula: Array.isArray(body.Cedula) ? body.Cedula[z] : body.Cedula,
-                numero_competidor: Array.isArray(body.Numero) ? body.Numero[z] : body.Numero,
-                // Agrega aquí el resto de campos que necesites guardar en la tabla competidores
-            });
+        // Actualizamos cada competidor con su nuevo número
+        for (let i = 0; i < ids.length; i++) {
+            if (ids[i]) {
+                promesas.push(
+                    supabase
+                        .from('competidores')
+                        .update({ numero_competidor: numeros[i] })
+                        .eq('id', ids[i])
+                );
+            }
         }
 
-        const { error } = await supabase
-            .from('competidores')
-            .insert(inscripciones);
-
-        if (error) throw error;
-        res.redirect('/atletas');
+        await Promise.all(promesas);
+        res.redirect('/inscripcion');
 
     } catch (error) {
-        console.error("Error al procesar inscripción:", error.message);
-        res.status(500).send("Error en la base de datos");
+        console.error("Error al asignar números:", error.message);
+        res.status(500).send("Error actualizando números");
     }
 });
 
-// 3. VISTA DETALLE DE INSCRIPCIÓN POR ATLETA
+// 3. VISTA DETALLE PARA INSCRIBIR
 router.get('/:id', async (req, res) => {
     const id = req.params.id;
     try {     
-        const { data: arrayCategorias } = await supabase.from('eventos').select('*');
+        const { data: arrayCategorias } = await supabase
+            .from('eventos')
+            .select('*')
+            .order('nombre', { ascending: true });
+
         const { data: atleta, error } = await supabase
             .from('atletas')
             .select('*')
@@ -80,28 +93,25 @@ router.get('/:id', async (req, res) => {
             error: false           
         });
     } catch (error) {       
-        res.render('detalleInscripcion', { 
-            error: true,
-            mensaje: "Atleta no encontrado"
-        });
+        res.render('detalleInscripcion', { error: true, mensaje: "Atleta no encontrado" });
     }
 });
 
-// 4. INSCRIPCIÓN INDIVIDUAL (PUT/PUSH)
+// 4. PROCESAR INSCRIPCIÓN INDIVIDUAL (Vía AJAX/Fetch desde detalleInscripcion)
 router.put('/:id', async (req, res) => {
-    const body = req.body;
+    const body = req.body; // Viene del fetch de detalleInscripcion.ejs
     try {
-        // En Supabase, para un "push", simplemente insertamos una nueva fila 
-        // en la tabla de relación (competidores)
         const { error } = await supabase
             .from('competidores')
             .insert([{
-                id_evento: body.id, // El ID de la categoría/evento
-                idfdff: body.IDFDFF,
-                nombre: body.Nombre,
-                cedula: body.Cedula,
-                fecha_inscripcion: body.FechaActual,
-                numero_competidor: 0 // Valor por defecto inicial
+                id_evento: body.id_evento,
+                idfdff: body.idfdff,
+                nombre: body.nombre,
+                cedula: body.cedula,
+                peso_real: body.peso_real,
+                estatura_real: body.estatura_real,
+                preparador: body.preparador,
+                numero_competidor: 0 
             }]);
 
         if (error) throw error;

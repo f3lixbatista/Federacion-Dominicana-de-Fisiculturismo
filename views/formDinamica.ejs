@@ -1,26 +1,29 @@
-<%- include("template/cabecera", {tituloWeb: "Agregar Categoria"}) %>
+<%- include("template/cabecera", {tituloWeb: "Consultar Evento"}) %>
 
-    <div class="container col-sm-8">
-      <h1 class="my-5">Nombre del Evento a Consultar</h1>
-        <form id="formularioDinamico" method="post" name="formDinamica" action="formDinamica">
-            <input type="text" placeholder="Nombre del Evento" class="form-control my-2 col-sm-8" name="eventoDinamico" id="inputEvento">
-            <!-- <input type="text" placeholder="Segundo" class="form-control my-2 col-sm-8" name="dinamicoDos" id="inputDos"> -->
+    <div class="container col-sm-8 mt-5">
+      <h1 class="my-5">Consultar Estadísticas de Evento</h1>
+        <!-- Ajustamos el action para que coincida con tu ruta de estadísticas -->
+        <form id="formularioDinamico" method="POST" action="/estadisticas/buscar">
+            <div class="mb-3">
+                <label for="inputEvento" class="form-label">Escriba el nombre exacto del evento</label>
+                <input type="text" 
+                       placeholder="Ej: Mr. Región Norte 2022" 
+                       class="form-control my-2 col-sm-8" 
+                       name="nombre_evento" 
+                       id="inputEvento" 
+                       required>
+            </div>
             
             <button class="btn btn-primary btn-block my-3 col-sm-8" type="submit" id="botonAgregar">
-                Agregar
+                Consultar Categorías
             </button> 
-            <!-- <input type="text" id="inputEvento" name="eventoDinamico" value="" class="border-0 fs-3 fw-bold col-10 bg-white" readonly> -->
-            <!-- action="dinamica" -->
         </form>
-    </div>
-  
-    <!-- <div id="divDinam" class="d-none invisible" style="display: none;">
-        <div class="col-11 my-2 m-0 form-check fila pt-2 rounded-pill" id="divCheck"> 
-                                 
-            <label id="labelCategoria" class="mx-4 form-check-label lh-1 fs-4 col-11 p-0" for="checkCategoriaEvent"><b><p class="lh-1"></p></b></label>
-        
-        </div>
-    </div> -->
 
+        <div class="mt-4 p-3 bg-light border rounded">
+            <small class="text-muted">
+                <strong>Nota:</strong> Este formulario buscará todas las categorías asociadas al nombre del evento ingresado en la tabla <code>eventos</code> de Supabase.
+            </small>
+        </div>
+    </div>
 
 <%- include("template/footer") %>

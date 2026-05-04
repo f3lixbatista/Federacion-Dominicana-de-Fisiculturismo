@@ -1,123 +1,116 @@
-<%- include("template/cabecera", {tituloWeb: "Pagina de Atletas"}) %>
+<%- include("template/cabecera", {tituloWeb: "Cálculos de Competencia"}) %>
 
-
-<!-- // class="container container-fluid" -->
 <div class="p-2 divGeneral">
     <div class="row g-2">
         <div class="col-6">
-            <h1 class="my-4 seccionAtl">Seccion Atletas</h1>
+            <h1 class="my-4 seccionAtl">Panel de Jueces</h1>
         </div>
         <div class="col-6 d-flex flex-row-reverse">
-            <a class="btn btn-primary border border-dark btn-lg col-6 my-4" href="/atletas/crear">
-                <p class="haciaMembresia p-0 m-0">Nueva Membresía</p>
-            </a>
+            <h2 class="text-primary my-4"><%= datos.nombre %></h2>
         </div>
     </div>
+
     <div class="table-responsive" id="mydatatable-container">
-     
         <table class="records_list table table-striped table-bordered border-dark table-hover" id="mydatatable">
-           
             <thead>
-                <tr class="table-blue">
-                    <th scope="col">Accion</th>
-                   
-                    <th scope="col" class="atl"><h5 class="mb-0 col-sm-9 mr-5"><p class=" mr-5 pr-3 mb-0 col-sm-9">Atleta</p></h5></th>
-                  
-                    <th scope="col-1">No.</th>
-                    <th scope="col-1">J1</th>
-                    <th scope="col-1">J2</th>
-                    <th scope="col-1">J3</th>
-                    <th scope="col-1">J4</th>
-                    <th scope="col-1">J5</th>
-                    <th scope="col-1">J6</th>
-                    <th scope="col-1">J7</th>
-                    <th scope="col-1">J8</th>
-                    <th scope="col-1">J9</th>
-                    <th scope="col-1">J10</th>
-                    <th scope="col-1">J11</th>
-                    <th scope="col-1">J12</th>
-                    <th scope="col-1">J13</th>
-                    <th scope="col-1">Total</th>
-                    <th scope="col-1">Posicion</th>
-                   
+                <tr class="table-blue text-center">
+                    <th scope="col">Acción</th>
+                    <th scope="col">Atleta</th>
+                    <th scope="col">No.</th>
+                    <% for(let i=1; i<=13; i++) { %>
+                        <th scope="col">J<%= i %></th>
+                    <% } %>
+                    <th scope="col">Total</th>
+                    <th scope="col">Posición</th>
                 </tr>
             </thead>
             <tfoot>
                 <tr>
-                    <td class="text-white fs-5 fw-bold text-center"><%= datos.Salida %></td>
-                    <td colspan="18" class="bg-primary col-sm-12 fs-4 text-center fw-bold lh-1" id="catInscXLS"><%= datos.Categoria %></td>
-                    
-                 
+                    <td class="bg-dark text-white fs-5 fw-bold text-center"><%= datos.salida %></td>
+                    <td colspan="16" class="bg-primary text-white fs-4 text-center fw-bold lh-1">
+                        <%= datos.categoria %> - <%= datos.nombre %>
+                    </td>
                 </tr>
             </tfoot>
             <tbody>
-                <% for (let index = 1; index < datos.Competidor.length; index++) { %> 
+                <% if (datos.Competidor && datos.Competidor.length > 0) { %>
+                    <% datos.Competidor.forEach(comp => { %> 
                         <tr>
-<td><a href="" class="btn btn-warning btn-sm">Editar</a></td>
-                          
-                       
-<td class="col-sm-8"><%= datos.Competidor[index].Nombre %></td>
-<td>Num</td>
+                            <td><a href="/atletas/<%= comp.idfdff %>" class="btn btn-warning btn-sm">Perfil</a></td>
+                            <td class="fw-bold"><%= comp.nombre %></td>
+                            <td class="text-center bg-light fw-bold"><%= comp.numero_competidor %></td>
 
-<td><input id="j1" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="j2" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="j3" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="j4" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="j5" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="j6" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="j7" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="j8" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="j9" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="j10" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="j11" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="j12" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="j13" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="total" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-<td><input id="posicion" type="number" style="width:100%;" class="mt-1 text-center bg-white border-0 p-0 m-0"></td>
-                            
+                            <!-- Inputs para los 13 jueces -->
+                            <% for(let j=1; j<=13; j++) { %>
+                                <td class="p-0">
+                                    <input name="j<%= j %>" type="number" 
+                                           style="width:100%;" 
+                                           class="text-center border-0 p-1" 
+                                           data-atleta="<%= comp.id %>">
+                                </td>
+                            <% } %>
+
+                            <td class="p-0">
+                                <input id="total_<%= comp.id %>" type="number" readonly
+                                       style="width:100%; font-weight:bold;" 
+                                       class="text-center bg-light border-0 p-1">
+                            </td>
+                            <td class="p-0">
+                                <input id="pos_<%= comp.id %>" type="number" 
+                                       style="width:100%;" 
+                                       class="text-center border-0 p-1">
+                            </td>
                         </tr>
-                        <% } %>     
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="18" class="text-center">No hay competidores inscritos en esta categoría.</td>
+                    </tr>
+                <% } %>     
             </tbody>
-           
         </table>
-       
     </div>
-
 
     <script type="text/javascript">
         $(document).ready(function () {
-            $('#mydatatable tfoot th').each(function () {
-                var title = $(this).text();
-                $(this).html('<input type="text" placeholder="Filtrar.." />');
-            });
-    
             var table = $('#mydatatable').DataTable({
-                "dom": 'B<"float-left"i><"float-right"f>t<"float-left"l><"float-right"p><"clearfix">',
+                "dom": 'Bfrtip',
                 "responsive": false,
-                "language": {
-                    "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json"
-                },
-                "order": [
-                    [0, "desc"]
-                ],
-                "initComplete": function () {
-                    this.api().columns().every(function () {
-                        var that = this;
-    
-                        $('input', this.footer()).on('keyup change', function () {
-                            if (that.search() !== this.value) {
-                                that
-                                    .search(this.value)
-                                    .draw();
-                            }
-                        });
-                    })
-                },
-                "buttons": ['csv', 'excel', 'pdf', 'print']
+                "language": { "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json" },
+                "buttons": ['excel', 'pdf', 'print']
             });
         });
 
-      </script>
-   
+        // Lógica para calcular totales automáticamente
+document.addEventListener('input', function (e) {
+    // Verificamos si el input que cambió pertenece a un juez
+    if (e.target.name && e.target.name.startsWith('j')) {
+        
+        // Buscamos la fila (tr) donde está el juez que acaba de escribir
+        const fila = e.target.closest('tr');
+        
+        // Seleccionamos todos los inputs de jueces (j1 al j13) de ESA fila
+        const inputsJueces = fila.querySelectorAll('input[name^="j"]');
+        
+        let sumaTotal = 0;
+
+        inputsJueces.forEach(input => {
+            const valor = parseInt(input.value);
+            // Si el valor es un número válido, lo sumamos
+            if (!isNaN(valor)) {
+                sumaTotal += valor;
+            }
+        });
+
+        // Buscamos el input del total de esa fila y le asignamos el resultado
+        // Usamos una selección por atributo id parcial o clase
+        const inputTotal = fila.querySelector('input[id^="total_"]');
+        if (inputTotal) {
+            inputTotal.value = sumaTotal;
+        }
+    }
+});
+    
+    </script>
 </div>
 <%- include("template/footer") %>

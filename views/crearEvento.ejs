@@ -1,12 +1,59 @@
-<%- include("template/cabecera", {tituloWeb: "Agregar Categoria"}) %>
+<%- include("template/cabecera", {tituloWeb: "Crear Nuevo Evento"}) %>
 
-    <div class="container col-sm-8">
-      <h1>Nuevo Evento</h1>
-        <form id="formularioEvento" method="post" name="Evento_form">
-            <input type="text" placeholder="Nombre del Evento" class="form-control my-2 col-sm-8" name="Evento_form" id="inputEvento">
-            <button class="btn btn-primary btn-block my-3 col-sm-8" type="submit" id="botonAgregar">
-                Agregar
-            </button> 
+<div class="container col-sm-8 mt-5">
+    <h1 class="mb-4">Configurar Nuevo Evento</h1>
+    
+    <div class="card p-4 shadow-sm">
+        <!-- El action debe apuntar a la ruta POST de eventos -->
+        <form id="formularioEvento" action="/categorias/nuevoEvento" method="POST">
             
+            <div class="mb-3">
+                <label class="form-label">Nombre del Evento</label>
+                <input type="text" 
+                       placeholder="Ej: Mr. Región Norte 2024" 
+                       class="form-control" 
+                       name="NombreEvento" 
+                       id="inputEvento" 
+                       required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Seleccionar Categorías para este Evento</label>
+                <div class="border p-3 bg-light" style="max-height: 300px; overflow-y: auto;">
+                    <% if (arrayCategorias.length > 0) { %>
+                        <% arrayCategorias.forEach(cat => { %>
+                            <div class="form-check">
+                                <!-- Enviamos el nombre de la categoría en un array -->
+                                <input class="form-check-input" type="checkbox" name="Categorias" value="<%= cat.nombre %>" id="cat_<%= cat.id %>">
+                                <label class="form-check-label" for="cat_<%= cat.id %>">
+                                    <%= cat.nombre %>
+                                </label>
+                                
+                                <!-- Campos ocultos para enviar los metadatos de la categoría al servidor -->
+                                <input type="hidden" name="Modalidad" value="<%= cat.modalidad %>">
+                                <input type="hidden" name="Genero" value="<%= cat.genero %>">
+                                <input type="hidden" name="Disciplina" value="<%= cat.disciplina %>">
+                                <input type="hidden" name="Division" value="<%= cat.division %>">
+                                <input type="hidden" name="DesdeEdad" value="<%= cat.desde_edad %>">
+                                <input type="hidden" name="HastaEdad" value="<%= cat.hasta_edad %>">
+                                <input type="hidden" name="DesdePeso" value="<%= cat.desde_peso %>">
+                                <input type="hidden" name="HastaPeso" value="<%= cat.hasta_peso %>">
+                                <input type="hidden" name="DesdeEstatura" value="<%= cat.desde_estatura %>">
+                                <input type="hidden" name="HastaEstatura" value="<%= cat.hasta_estatura %>">
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <p class="text-muted">No hay categorías base creadas. <a href="/categorias/crearCategoria">Crear una ahora</a>.</p>
+                    <% } %>
+                </div>
+                <small class="text-muted">Selecciona todas las categorías que competirán en este evento.</small>
+            </div>
+
+            <button class="btn btn-primary btn-lg w-100 mt-3" type="submit" id="botonAgregar">
+                Crear Evento con Categorías Seleccionadas
+            </button> 
+        </form>
     </div>
+</div>
+
 <%- include("template/footer") %>

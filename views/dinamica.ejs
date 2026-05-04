@@ -1,133 +1,89 @@
-<%- include("template/cabecera", {tituloWeb: "Pagina de Atletas"}) %>
-
-
+<%- include("template/cabecera", {tituloWeb: "Categorías del Evento"}) %>
 
 <div class="container container-fluid p-1">
-    <form method="get">
+    <div class="my-4">
+        <!-- Mostramos el nombre del evento de forma limpia -->
+        <h2 class="fw-bold text-primary"><%= eventosDinamicos %></h2>
+        <hr>
+    </div>
 
-    <input type="text" id="inputEvento" name="eventoDinamico" value="" class="border-0 fs-3 fw-bold col-10 bg-white" readonly>
-    
-    <input type="text" id="hdinam" class="d-none" name="" value="<%= eventosDinamicos %>"><%= eventosDinamicos %></input>
-</form>
-
-    <a
-        class="btn btn-dark btn-block mb-4 text-dark" 
-        
-    >
-      p
-    </a>
-  
     <div class="table-responsive" id="mydatatable-container">
         <table class="records_list table table-striped table-bordered table-hover" id="mydatatable">
             <thead>
-                <tr>
+                <tr class="table-dark">
                     <th scope="col">Orden Salida</th>
-                    <th scope="col">Categoria</th>
-                    <th scope="col">Nombre</th>
-                    <th scope="col">Accion</th>
+                    <th scope="col">Categoría</th>
+                    <th scope="col">Estado / Info</th>
+                    <th scope="col">Acción</th>
                 </tr>
             </thead>
+            <tbody>
+                <% if (arrayDinamicos.length > 0) { %>
+                    <% arrayDinamicos.forEach(item => { %>
+                        <tr>
+                            <th scope="row" class="text-center"><%= item.salida %></th>
+                            <td><%= item.categoria %></td>
+                            <td>
+                                <!-- Verificamos si hay competidores (si los pasaste en el objeto) -->
+                                <% if (item.Competidor && item.Competidor.length > 0) { %>
+                                    <span class="badge bg-success"><%= item.Competidor.length %> Inscritos</span>
+                                <% } else { %>
+                                    <span class="badge bg-secondary">Sin inscritos</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <!-- Enlace dinámico al panel de jueceo usando el ID de Supabase -->
+                                <a href="/estadisticas/<%= item.id %>" class="btn btn-warning btn-sm">
+                                    Calificar / Editar
+                                </a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="4" class="text-center">No se encontraron categorías para este evento.</td>
+                    </tr>
+                <% } %>
+            </tbody>
             <tfoot>
                 <tr>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
+                    <th>Filtrar..</th>
+                    <th>Filtrar..</th>
+                    <th></th>
                     <td></td>
                 </tr>
             </tfoot>
-            <tbody>
-                <% if (arrayDinamicos.length > 0) { %>
-                    <% arrayDinamicos.forEach(eventosDinamicos => { %>
-                        <tr>
-                            <th scope="row"><%= eventosDinamicos.Salida %></th>
-                            <td><%= eventosDinamicos.Categoria %></td>
-                            <td><%= eventosDinamicos.Competidor[0].Nombre %></td>
-                            <td><a href="atletas/<%= eventosDinamicos.id %>" class="btn btn-warning btn-sm">Editar</a></td>
-                        </tr>
-                    <% }) %>
-                <% } %>
-            </tbody>
         </table>
     </div>
 
+    <script type="text/javascript">
+        $(document).ready(function () {
+            // Configuración de filtros en el footer
+            $('#mydatatable tfoot th').each(function () {
+                $(this).html('<input type="text" class="form-control form-control-sm" placeholder="Buscar..." />');
+            });
 
-  <script type="text/javascript">
-    $(document).ready(function () {
-        $('#mydatatable tfoot th').each(function () {
-            var title = $(this).text();
-            $(this).html('<input type="text" placeholder="Filtrar.." />');
+            var table = $('#mydatatable').DataTable({
+                "dom": 'Bfrtip',
+                "responsive": true,
+                "language": {
+                    "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json"
+                },
+                "order": [[0, "asc"]],
+                "buttons": ['csv', 'excel', 'pdf', 'print']
+            });
+
+            // Lógica de filtrado por columna
+            table.columns().every(function () {
+                var that = this;
+                $('input', this.footer()).on('keyup change', function () {
+                    if (that.search() !== this.value) {
+                        that.search(this.value).draw();
+                    }
+                });
+            });
         });
-
-        var table = $('#mydatatable').DataTable({
-            "dom": 'B<"float-left"i><"float-right"f>t<"float-left"l><"float-right"p><"clearfix">',
-            "responsive": false,
-            "language": {
-                "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json"
-            },
-            "order": [
-                [0, "desc"]
-            ],
-            "initComplete": function () {
-                this.api().columns().every(function () {
-                    var that = this;
-
-                    $('input', this.footer()).on('keyup change', function () {
-                        if (that.search() !== this.value) {
-                            that
-                                .search(this.value)
-                                .draw();
-                        }
-                    });
-                })
-            },
-            "buttons": ['csv', 'excel', 'pdf', 'print']
-        });
-    });
-
-     $(document).ready(function(){
-       
-       
-
-            var nombreEvento = $("#hdinam").val();
-            $("#inputEvento").val(nombreEvento);
-        
-    });
-
-
-  </script>
-
-        <!-- On tables
-<table class="table-primary">...</table>
-<table class="table-secondary">...</table>
-<table class="table-success">...</table>
-<table class="table-danger">...</table>
-<table class="table-warning">...</table>
-<table class="table-info">...</table>
-<table class="table-light">...</table>
-<table class="table-dark">...</table>
-
-On rows -->
-<!-- <tr class="table-primary">...</tr>
-<tr class="table-secondary">...</tr>
-<tr class="table-success">...</tr>
-<tr class="table-danger">...</tr>
-<tr class="table-warning">...</tr>
-<tr class="table-info">...</tr>
-<tr class="table-light">...</tr>
-<tr class="table-dark">...</tr> -->
-
-<!-- On cells (`td` or `th`) -->
-<!-- <tr>
-  <td class="table-primary">...</td>
-  <td class="table-secondary">...</td>
-  <td class="table-success">...</td>
-  <td class="table-danger">...</td>
-  <td class="table-warning">...</td>
-  <td class="table-info">...</td>
-  <td class="table-light">...</td>
-  <td class="table-dark">...</td>
-</tr> -->
-   
+    </script>
 </div>
 
 <%- include("template/footer") %>

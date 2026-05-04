@@ -1,6 +1,44 @@
-<%- include("template/cabecera", {tituloWeb: "Pagina de inicio"}) %>
+<%- include("template/cabecera", {tituloWeb: "Inicio - FDFF"}) %>
 
-    <h1 class="text-primary"></h1>
-    
+<div class="container mt-5">
+    <div class="p-5 mb-4 bg-light rounded-3 border border-primary">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold text-primary">Federación Dominicana de Fisiculturismo</h1>
+            <p class="col-md-8 fs-4">Sistema Central de Registro de Atletas, Inscripciones y Puntuación en Tiempo Real.</p>
+            <hr class="my-4">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                <a href="/atletas" class="btn btn-primary btn-lg px-4 me-md-2">Gestionar Atletas</a>
+                <a href="/inscripcion" class="btn btn-outline-secondary btn-lg px-4">Nueva Inscripción</a>
+            </div>
+        </div>
+    </div>
 
-    <%- include("template/footer") %>
+    <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+        <div class="feature col">
+            <div class="feature-icon bg-primary bg-gradient text-white p-3 rounded-3 mb-3" style="width: fit-content;">
+                <i class="fas fa-users fa-2x"></i>
+            </div>
+            <h2>Membresías</h2>
+            <p>Administra la base de datos completa de atletas, renovaciones y perfiles personales.</p>
+            <a href="/atletas" class="btn btn-link p-0 text-decoration-none">Ir a Atletas &raquo;</a>
+        </div>
+        <div class="feature col">
+            <div class="feature-icon bg-success bg-gradient text-white p-3 rounded-3 mb-3" style="width: fit-content;">
+                <i class="fas fa-trophy fa-2x"></i>
+            </div>
+            <h2>Competencias</h2>
+            <p>Configura nuevos eventos, modalidades y categorías de forma dinámica y segura.</p>
+            <a href="/categorias" class="btn btn-link p-0 text-decoration-none">Configurar Eventos &raquo;</a>
+        </div>
+        <div class="feature col">
+            <div class="feature-icon bg-warning bg-gradient text-dark p-3 rounded-3 mb-3" style="width: fit-content;">
+                <i class="fas fa-calculator fa-2x"></i>
+            </div>
+            <h2>Estadísticas</h2>
+            <p>Panel de jueces para el cálculo automático de puntuaciones y posiciones finales.</p>
+            <a href="/estadisticas" class="btn btn-link p-0 text-decoration-none">Ver Resultados &raquo;</a>
+        </div>
+    </div>
+</div>
+
+<%- include("template/footer") %>
