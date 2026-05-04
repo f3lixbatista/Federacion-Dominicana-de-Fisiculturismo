@@ -51,10 +51,10 @@
                 <input value="<%= atleta.nacimiento %>" type="date" class="form-control" name="nacimiento" required>
             </div>
 
-            <div class="col-md-3">
+             <!--<div class="col-md-3">
                 <label class="form-label">Edad</label>
                 <input value="<%= atleta.edad %>" type="number" class="form-control" name="edad" required>
-            </div>
+            </div>-->
 
             <div class="col-md-2">
                 <label class="form-label">Sexo</label>
@@ -78,10 +78,10 @@
                 <input value="<%= atleta.sector %>" type="text" class="form-control" name="sector" required>
             </div>
 
-            <div class="col-md-3">
+           <!--  <div class="col-md-3">
                 <label class="form-label">Ciudad</label>
                 <input value="<%= atleta.ciudad %>" type="text" class="form-control" name="ciudad" required>
-            </div>
+            </div> -->
 
             <div class="col-md-3">
                 <label class="form-label">Municipio</label>
@@ -107,6 +107,14 @@
                 <label class="form-label">Celular</label>
                 <input value="<%= atleta.celular %>" type="tel" class="form-control" name="celular">
             </div>
+
+            <div class="col-md-3 py-0 pt-0  mb-4">
+                        <label for="validationTooltip05" class="form-label">Telefono Residencial</label>
+                        <input value="<%= atleta.telfijo %>" type="tel" class="form-control" name="telfijo" id="validationTooltip05" required="true">
+                        <div class="invalid-tooltip">
+                            Telefono Alterno
+                        </div>
+                    </div>
 
             <div class="col-md-4">
                 <label class="form-label">Correo Electronico</label>

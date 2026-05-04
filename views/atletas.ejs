@@ -21,6 +21,7 @@
                     <th scope="col">Cedula</th>
                     <th scope="col">Pasaporte</th>
                     <th scope="col">Celular</th>
+                    <th scope="col">Telefono</th>
                     <th scope="col">Email</th>
                     <th scope="col">Instagram</th>
                     <th scope="col">Categoria</th>
@@ -30,12 +31,12 @@
                     <th scope="col">Pais</th>
                     <th scope="col">Provincia</th>
                     <th scope="col">Municipio</th>
-                    <th scope="col">Ciudad</th>
+                    <!-- <th scope="col">Ciudad</th> -->
                     <th scope="col">Sector</th>
                     <th scope="col">Calle</th>
                     <th scope="col">Postal</th>
                     <th scope="col">Nacimiento</th>
-                    <th scope="col">Edad</th>
+                     <!--  <th scope="col">Edad</th>-->
                     <th scope="col">Sexo</th>
                     <th scope="col">Peso</th>
                     <th scope="col">Estatura</th>
@@ -47,6 +48,38 @@
             
                 </tr>
             </thead>
+             <tfoot>
+                <tr>
+                    <td></td>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th class= "col col-md-8">Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                    <th>Filter..</th>
+                </tr>
+            </tfoot>
             <tbody>
                 <% if (arrayAtletas.length > 0) { %>
                     <% arrayAtletas.forEach(atleta => { %>
@@ -59,6 +92,7 @@
                             <td><%= atleta.cedula %></td>
                             <td><%= atleta.pasaporte %></td>
                             <td><%= atleta.celular %></td>
+                            <td><%= atleta.telfijo %></td>
                             <td><%= atleta.email %></td>
                             <td><%= atleta.instagram %></td>
                             <td><%= atleta.categoria %></td>
@@ -68,12 +102,12 @@
                             <td><%= atleta.pais %></td>
                             <td><%= atleta.provincia %></td>
                             <td><%= atleta.municipio %></td>
-                            <td><%= atleta.ciudad %></td>
+                            <!-- <td><%= atleta.ciudad %></td> -->
                             <td><%= atleta.sector %></td>
                             <td><%= atleta.calle %></td>
                             <td><%= atleta.postal %></td>                      
                             <td><%= atleta.nacimiento %></td>
-                            <td><%= atleta.edad %></td>
+                            <!-- <td><%= atleta.edad %></td>-->
                             <td><%= atleta.sexo %></td>
                             <td><%= atleta.peso %></td>
                             <td><%= atleta.estatura %></td>
@@ -99,6 +133,20 @@
                 "dom": 'B<"float-left"i><"float-right"f>t<"float-left"l><"float-right"p><"clearfix">',
                 "language": { "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json" },
                 "order": [[0, "desc"]],
+
+                "initComplete": function () {
+                    this.api().columns().every(function () {
+                        var that = this;
+    
+                        $('input', this.footer()).on('keyup change', function () {
+                            if (that.search() !== this.value) {
+                                that
+                                    .search(this.value)
+                                    .draw();
+                            }
+                        });
+                    })
+                },
                 "buttons": ['csv', 'excel', 'pdf', 'print']
             });
         });
