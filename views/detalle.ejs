@@ -28,133 +28,129 @@
 
             <div class="col-md-6">
                 <label class="form-label">Nombre(s) y Apellido(s)</label>
-                <input type="text" class="form-control" name="nombre" placeholder="Según documento" required>
+                <input value="<%= atleta.nombre %>" type="text" class="form-control" name="nombre" placeholder="Según documento" required>
             </div>
 
             <div class="col-md-3">
                 <label class="form-label">Cédula</label>
-                <input type="number" class="form-control" name="cedula" required>
+                <input value="<%= atleta.cedula %>" type="number" class="form-control" name="cedula" required>
             </div>
 
             <div class="col-md-3">
                 <label class="form-label">Pasaporte</label>
-                <input type="text" class="form-control" name="pasaporte">
+                <input value="<%= atleta.pasaporte %>" type="text" class="form-control" name="pasaporte">
             </div>
 
             <div class="col-md-3">
                 <label class="form-label">Nacionalidad</label>
-                <input type="text" value="Dominicana" class="form-control" name="nacionalidad" required>
+                <input value="<%= atleta.nacionalidad %>" type="text" value="Dominicana" class="form-control" name="nacionalidad" required>
             </div>
 
             <div class="col-md-3">
                 <label class="form-label">Fecha de Nacimiento</label>
-                <input type="date" class="form-control" name="nacimiento" required>
+                <input value="<%= atleta.nacimiento %>" type="date" class="form-control" name="nacimiento" required>
             </div>
 
             <div class="col-md-3">
                 <label class="form-label">Edad</label>
-                <input type="number" class="form-control" name="edad" required>
+                <input value="<%= atleta.edad %>" type="number" class="form-control" name="edad" required>
             </div>
 
             <div class="col-md-2">
                 <label class="form-label">Sexo</label>
-                <select class="form-control" name="sexo" required>
-                    <option value="" selected disabled>Elija...</option>
-                    <option value="F">Femenino (F)</option>
-                    <option value="M">Masculino (M)</option>
-                </select>
+                <input value="<%= atleta.sexo %>" type="text" class="form-control" name="sexo" required>
             </div>
 
             <div class="col-md-5">
                 <label class="form-label">Ocupación</label>
-                <input type="text" class="form-control" name="ocupacion">
+                <input value="<%= atleta.ocupacion %>" type="text" class="form-control" name="ocupacion">
             </div>
 
             <h6 class="position-relative mt-5 opacity-50">De la Residencia</h6>
             
             <div class="col-md-6">
                 <label class="form-label">Calle y Número</label>
-                <input type="text" class="form-control" name="calle" required>
+                <input value="<%= atleta.calle %>" type="text" class="form-control" name="calle" required>
             </div>
 
             <div class="col-md-3">
                 <label class="form-label">Sector/Barrio</label>
-                <input type="text" class="form-control" name="sector" required>
+                <input value="<%= atleta.sector %>" type="text" class="form-control" name="sector" required>
             </div>
 
             <div class="col-md-3">
                 <label class="form-label">Ciudad</label>
-                <input type="text" class="form-control" name="ciudad" required>
+                <input value="<%= atleta.ciudad %>" type="text" class="form-control" name="ciudad" required>
             </div>
 
             <div class="col-md-3">
                 <label class="form-label">Municipio</label>
-                <input type="text" class="form-control" name="municipio" required>
+                <input value="<%= atleta.municipio %>" type="text" class="form-control" name="municipio" required>
             </div>
 
             <div class="col-md-4">
                 <label class="form-label">Provincia</label>
-                <input type="text" class="form-control" name="provincia" required>
+                <input value="<%= atleta.provincia %>" type="text" class="form-control" name="provincia" required>
             </div>
 
             <div class="col-md-4">
                 <label class="form-label">País</label>
-                <input type="text" class="form-control" name="pais" value="Republica Dominicana" required>
+                <input value="<%= atleta.pais %>" type="text" class="form-control" name="pais" value="Republica Dominicana" required>
             </div>
 
             <div class="col-md-4">
                 <label class="form-label">Código Postal</label>
-                <input type="number" class="form-control" name="postal">
+                <input value="<%= atleta.postal %>" type="number" class="form-control" name="postal">
             </div>
 
             <div class="col-md-4">
                 <label class="form-label">Celular</label>
-                <input type="tel" class="form-control" name="celular">
+                <input value="<%= atleta.celular %>" type="tel" class="form-control" name="celular">
             </div>
 
             <div class="col-md-4">
                 <label class="form-label">Correo Electronico</label>
-                <input type="email" class="form-control" name="email">
+                <input value="<%= atleta.email %>" type="email" class="form-control" name="email">
             </div>
 
             <div class="col-md-4">
                 <label class="form-label">Instagram</label>
-                <input type="text" class="form-control" name="instagram">
+                <input value="<%= atleta.instagram %>" type="text" class="form-control" name="instagram">
             </div>
 
             <div class="col-md-4">
                 <label class="form-label">Categoria</label>
-                <input type="text" class="form-control" name="categoria" id="validationTooltip05" required>
+                <input value="<%= atleta.categoria %>" type="text" class="form-control" name="categoria" id="validationTooltip05" required>
             </div>
 
             <div class="col-md-4">
                 <label class="form-label">Estatura en Centimetros</label>
-                <input type="number" step="0.01" min="0" class="form-control" name="estatura" id="validationTooltip05" required>
+                <input value="<%= atleta.estatura %>" type="number" step="0.01" min="0" class="form-control" name="estatura" id="validationTooltip05" required>
             </div>
 
             <div class="col-md-4">
                 <label class="form-label">Peso en Kilos</label>
-                <input type="number" step="0.01" min="0" class="form-control" name="peso" id="validationTooltip05" required>
+                <input value="<%= atleta.peso %>" type="number" step="0.01" min="0" class="form-control" name="peso" id="validationTooltip05" required>
             </div>
 
             <div class="col-md-4">
                 <label class="form-label">Gimnasio</label>
-                <input type="text" class="form-control" name="gimnasio" id="validationTooltip05" required>
+                <input value="<%= atleta.gimnasio %>" type="text" class="form-control" name="gimnasio" id="validationTooltip05" required>
             </div>
 
             <div class="col-md-4">
                 <label class="form-label">Preparador</label>
-                <input type="text" class="form-control" name="preparador" id="validationTooltip05" required>
+                <input value="<%= atleta.preparador %>" type="text" class="form-control" name="preparador" id="validationTooltip05" required>
             </div>
 
             <div class="col-md-4">
                 <label class="form-label">Celular del Preparador</label>
-                <input type="tel" class="form-control" name="celular_preparador">
+                <input value="<%= atleta.celular_preparador %>" type="tel" class="form-control" name="celular_preparador">
             </div>
 
             <div class="col-md-4">
                 <label class="form-label">Email del Preparador</label>
-                <input type="email" class="form-control" name="email_preparador">
+                <input value="<%= atleta.email_preparador %>" type="email" class="form-control" name="email_preparador">
             </div>
 
                 <div class="col-12 mt-5 d-flex gap-2">
