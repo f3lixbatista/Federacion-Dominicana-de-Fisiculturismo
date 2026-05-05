@@ -31,9 +31,9 @@ router.post('/crear', async (req, res) => {
     try {
         const { error } = await supabase
             .from('atletas')
-            console.log(req.body)
+           
             .insert([req.body]); // Insertamos el objeto directamente
-                console.log(req.body)
+               
         if (error) throw error;
         res.redirect('/atletas');
     } catch (error) {
