@@ -14,7 +14,7 @@ const checkRole = (rolesPermitidos) => {
             .select('role')
             .eq('id', session.user.id)
             .single();
-
+                console.log("Rol detectado en el servidor:", profile.role);
         if (rolesPermitidos.includes(profile.role) || profile.role === 'admin') {
             next(); // Tiene permiso o es admin
         } else {
