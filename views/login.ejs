@@ -3,6 +3,7 @@
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
     <div class="card shadow-lg p-4" style="width: 100%; max-width: 400px; border-radius: 15px;">
         <div class="text-center mb-4">
+            <!-- Nota: Asegúrate de que el logo esté en /public/img/logo.png -->
             <img src="/img/logo.png" alt="FDFF Logo" style="width: 80px;" class="mb-2">
             <h2 class="fw-bold">Bienvenido</h2>
             <p class="text-muted">Accede al panel federativo</p>
@@ -41,19 +42,24 @@
     </div>
 </div>
 
-<!-- Cargar el cliente de Supabase desde CDN para el frontend -->
-<script src="https://jsdelivr.net"></script>
+<!-- CDN corregido: Usamos unpkg que es más directo para el navegador -->
+<script src="https://unpkg.com"></script>
+
 <script>
     // Inicializar Supabase en el Frontend
+    // Nota: Las variables vienen de tu archivo .env a través del render de Express
     const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
     const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
-    const supabase = supabasejs.createClient(supabaseUrl, supabaseKey);
+    
+    // El objeto global de la librería cargada por CDN es 'supabase'
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
     // 1. Login con Redes Sociales
     async function loginConRedSocial(provider) {
-        const { error } = await supabase.auth.signInWithOAuth({
+        const { error } = await _supabase.auth.signInWithOAuth({
             provider: provider,
             options: {
+                // Esto redirige al usuario a la ruta de callback que creamos
                 redirectTo: window.location.origin + '/auth/callback'
             }
         });
@@ -67,15 +73,15 @@
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
 
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password
+        const { data, error } = await _supabase.auth.signInWithPassword({
+            email: email,
+            password: password
         });
 
         if (error) {
             alert("Error al entrar: " + error.message);
         } else {
-            window.location.href = '/'; // Redirigir al inicio
+            window.location.href = '/'; 
         }
     });
 
@@ -86,9 +92,9 @@
         
         if(!email || !password) return alert("Completa los campos para registrarte");
 
-        const { error } = await supabase.auth.signUp({
-            email,
-            password
+        const { error } = await _supabase.auth.signUp({
+            email: email,
+            password: password
         });
 
         if (error) alert(error.message);
