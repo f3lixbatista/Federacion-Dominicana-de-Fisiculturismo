@@ -1,63 +1,49 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
-require('dotenv').config();
 const { checkRole } = require('./middlewares/auth');
-// supabaseClient.js
-
-console.log("URL de Supabase:", process.env.SUPABASE_URL); // Añade esta línea para ver qué imprime
-
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Configuración de Vistas y Estáticos
+// 1. Configuración de Vistas y Estáticos
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Middlewares para leer datos de formularios y JSON
+// 2. Middlewares para leer datos de formularios y JSON
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-
-
-// GENERAL (Noticias, Sociales, Inicio)
-app.use('/noticias', checkRole(['general']), require('./router/noticias'));
-
-// ATLETAS (Servicios e Inscripción Atletas)
-app.use('/inscripcion-atleta', checkRole(['atleta']), require('./router/InscripcionAtleta'));
-
-// JUECES (Sección Atletas y Jueces)
-app.use('/jueces', checkRole(['juez']), require('./router/jueces'));
-app.use('/atletas', checkRole(['juez']), require('./router/atletas'));
-
-// ESTADÍSTICO (Inscripción y Estadísticas)
-app.use('/estadisticas', checkRole(['estadistico']), require('./router/estadisticas'));
-
-// EJECUTIVO (Eventos y Categorías)
-app.use('/categorias', checkRole(['ejecutivo']), require('./router/categoria'));
+// --- RUTAS DE AUTENTICACIÓN ---
 
 app.get('/login', (req, res) => {
     res.render('login');
 });
 
-
-// --- RUTAS WEB ---
-// Nota: Deberás actualizar los archivos dentro de ./router para que usen Supabase en lugar de Mongoose
-app.use('/', require('./router/rutasBat'));
-app.use('/categorias', require('./router/Categoria'));
-app.use('/atletas', require('./router/Atletas'));
-app.use('/inscripcion', require('./router/Inscripcion'));
-app.use('/estadisticas', require('./router/Estadisticas'));
-
-// Ruta de Callback para Authentication
-router.get('/auth/callback', async (req, res) => {
-    // Supabase maneja el intercambio de tokens en el lado del cliente (frontend)
-    // Por lo tanto, esta ruta solo necesita renderizar una vista simple
-    // o redirigir al home mientras el script de Supabase termina el proceso.
+// Callback de Supabase Auth
+app.get('/auth/callback', (req, res) => {
     res.render('auth-callback'); 
 });
 
+// --- RUTAS PROTEGIDAS POR ROL ---
+// Usamos los nombres exactos de tus archivos en la carpeta /router
+
+// ATLETAS Y JUECES
+app.use('/atletas', checkRole(['juez', 'admin']), require('./router/Atletas'));
+
+// EVENTOS Y CATEGORÍAS
+app.use('/categorias', checkRole(['ejecutivo', 'admin']), require('./router/Categoria'));
+
+// ESTADÍSTICAS E INSCRIPCIÓN (Pesaje)
+app.use('/estadisticas', checkRole(['estadistico', 'admin']), require('./router/Estadisticas'));
+app.use('/inscripcion', checkRole(['estadistico', 'admin']), require('./router/Inscripcion'));
+
+// RUTAS GENERALES (Inicio, Noticias, Jueces, Social)
+// Estas se manejan dentro de rutasBat.js
+app.use('/', require('./router/rutasBat'));
+
+// --- MANEJO DE ERRORES ---
 
 // Middleware para manejar error 404
 app.use((req, res, next) => {
@@ -70,4 +56,5 @@ app.use((req, res, next) => {
 // Encendido del servidor
 app.listen(port, () => {
     console.log(`🚀 Servidor listo en: http://localhost:${port}`);
+    console.log("URL de Supabase configurada:", process.env.SUPABASE_URL);
 });

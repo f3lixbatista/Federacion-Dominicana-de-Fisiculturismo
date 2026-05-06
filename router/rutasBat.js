@@ -1,32 +1,34 @@
 const express = require('express');
 const router = express.Router();
+const { checkRole } = require('../middlewares/auth'); // Importamos el protector de roles
 
-// Ruta de Inicio
+// 1. INICIO (Abierto para todos los logueados)
 router.get('/', (req, res) => {
     res.render("index", { titulo: "BatWeb - Inicio" });
 });
   
-// Ruta de Servicios (Si tienes la vista servicios.ejs)
-router.get('/servicios', (req, res) => {
+// 2. SERVICIOS (Solo Atletas y Admin)
+router.get('/servicios', checkRole(['atleta', 'admin']), (req, res) => {
     res.render("servicios", { titulo: "Servicios BatWeb" });
 });
 
-// Ruta de Jueces
-router.get('/jueces', (req, res) => {
+// 3. JUECES - Vista informativa (Solo Jueces y Admin)
+router.get('/jueces', checkRole(['juez', 'admin']), (req, res) => {
     res.render('jueces', { titulo: "Comité de Jueces" });
 });
 
-// Ruta de Noticias
-router.get('/noticias', (req, res) => {
+// 4. NOTICIAS (Rol: General, Admin)
+router.get('/noticias', checkRole(['general', 'admin']), (req, res) => {
     res.render('noticias', { titulo: "Noticias FDFF" });
 });
 
-// Ruta Social (La que acabamos de optimizar)
-router.get('/social', (req, res) => {
+// 5. SOCIAL (Rol: General, Admin)
+router.get('/social', checkRole(['general', 'admin']), (req, res) => {
     res.render('social', { titulo: "Federados Social" });
 });
 
-router.get('/IscripcionAtleta', (req, res) => {
+// 6. INSCRIPCION ATLETA (Solo Atletas y Admin)
+router.get('/IscripcionAtleta', checkRole(['atleta', 'admin']), (req, res) => {
     res.render('IscripcionAtleta', { titulo: "Inscripcion de Atletas" });
 });
 
