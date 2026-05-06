@@ -44,31 +44,31 @@
 
 
 <!-- 1. Usamos una URL de CDN más específica y robusta -->
-<script src="https://jsdelivr.net"></script>
+<script src="https://unpkg.com"></script>
 
 <script>
-    // Usamos una variable global para el cliente
     let _supabase;
 
-    // 2. Inicialización segura
     function inicializarSupabase() {
         const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
         const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
 
-        // Intentamos detectar el objeto global de la librería
-        // En la versión UMD (CDN), el objeto suele estar en window.supabase
-        if (window.supabase && window.supabase.createClient) {
-            _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-            console.log("✅ Supabase inicializado correctamente");
+        // Intentamos detectar el objeto en diferentes variantes que usan los CDNs
+        const lib = window.supabase || window.supabasejs;
+
+        if (lib && lib.createClient) {
+            _supabase = lib.createClient(supabaseUrl, supabaseKey);
+            console.log("✅ Supabase cargado con éxito desde UNPKG");
         } else {
-            console.error("❌ Error: No se pudo cargar el objeto 'supabase' de la librería.");
+            console.error("❌ Error crítico: La librería no se descargó o el CDN está bloqueado.");
+            alert("Error de conexión: No se pudieron cargar los módulos de seguridad. Por favor, revisa tu conexión a internet o intenta con otro navegador.");
         }
     }
 
-    // 3. Login con Redes Sociales
     async function loginConRedSocial(provider) {
-        if (!_supabase) inicializarSupabase(); // Aseguramos que esté listo al hacer clic
-        
+        if (!_supabase) inicializarSupabase();
+        if (!_supabase) return; // Detener si falló la carga
+
         try {
             const { error } = await _supabase.auth.signInWithOAuth({
                 provider: provider,
@@ -82,9 +82,10 @@
         }
     }
 
-    // Esperar a que la página cargue para inicializar
-    window.onload = inicializarSupabase;
+    // Inicializar al cargar
+    window.addEventListener('load', inicializarSupabase);
 </script>
+
 
 
 
