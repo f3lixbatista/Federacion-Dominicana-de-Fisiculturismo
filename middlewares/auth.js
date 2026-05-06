@@ -25,7 +25,8 @@ const checkRole = (rolesPermitidos) => {
                 .select('role')
                 .eq('id', user.id)
                 .single();
-
+                    console.log("ID del usuario:", user.id);
+                    console.log("Perfil encontrado:", profile);
             if (profileError || !profile) {
                 console.log("⚠️ Usuario autenticado pero sin perfil en la tabla 'profiles'.");
                 return res.redirect('/login');
