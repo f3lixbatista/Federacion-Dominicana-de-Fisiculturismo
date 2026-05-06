@@ -42,49 +42,53 @@
     </div>
 </div>
 
-
-<!-- 1. Usamos una URL de CDN más específica y robusta -->
-<script src="https://unpkg.com"></script>
+<!-- 1. Cargamos la librería desde tu propia carpeta pública -->
+<script src="/js/supabase.js"></script>
 
 <script>
-    let _supabase;
+    // 2. Inicialización inmediata
+    const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
+    const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
 
-    function inicializarSupabase() {
-        const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
-        const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
+    // Usamos el objeto global 'supabase' que cargó el archivo local
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // Intentamos detectar el objeto en diferentes variantes que usan los CDNs
-        const lib = window.supabase || window.supabasejs;
-
-        if (lib && lib.createClient) {
-            _supabase = lib.createClient(supabaseUrl, supabaseKey);
-            console.log("✅ Supabase cargado con éxito desde UNPKG");
-        } else {
-            console.error("❌ Error crítico: La librería no se descargó o el CDN está bloqueado.");
-            alert("Error de conexión: No se pudieron cargar los módulos de seguridad. Por favor, revisa tu conexión a internet o intenta con otro navegador.");
-        }
-    }
-
+    // 3. Función de Login corregida
     async function loginConRedSocial(provider) {
-        if (!_supabase) inicializarSupabase();
-        if (!_supabase) return; // Detener si falló la carga
-
         try {
             const { error } = await _supabase.auth.signInWithOAuth({
                 provider: provider,
                 options: {
+                    // El callback debe ser la ruta que configuramos en Express
                     redirectTo: window.location.origin + '/auth/callback'
                 }
             });
             if (error) throw error;
         } catch (error) {
-            alert("Error: " + error.message);
+            console.error("Error en OAuth:", error.message);
+            alert("Hubo un problema al conectar con " + provider + ": " + error.message);
         }
     }
 
-    // Inicializar al cargar
-    window.addEventListener('load', inicializarSupabase);
+    // Opcional: Login con Email/Password si lo necesitas
+    const formLogin = document.getElementById('formLogin');
+    if (formLogin) {
+        formLogin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+
+            if (error) alert("Error: " + error.message);
+            else window.location.href = '/'; 
+        });
+    }
 </script>
+
+<%- include("template/footer") %>
+
+
 
 
 
