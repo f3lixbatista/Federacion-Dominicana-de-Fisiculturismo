@@ -3,42 +3,51 @@ const supabase = require('../supabaseClient');
 const checkRole = (rolesPermitidos) => {
     return async (req, res, next) => {
         try {
-            // 1. Intentar obtener la sesión
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            // 1. Intentar obtener el token de la cookie que creamos en el callback
+            const token = req.cookies['sb-access-token'];
             
-            if (sessionError || !session) {
-                console.log("No hay sesión activa en el servidor.");
+            if (!token) {
+                console.log("🚫 No hay token en la cookie. Redirigiendo al login...");
                 return res.redirect('/login');
             }
 
-            // 2. Consultar el rol del usuario
+            // 2. Validar el token con Supabase para identificar al usuario
+            const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+            
+            if (authError || !user) {
+                console.log("❌ Token inválido o sesión expirada.");
+                return res.redirect('/login');
+            }
+
+            // 3. Buscar el rol en la tabla 'profiles'
             const { data: profile, error: profileError } = await supabase
                 .from('profiles')
                 .select('role')
-                .eq('id', session.user.id)
+                .eq('id', user.id)
                 .single();
 
             if (profileError || !profile) {
-                console.log("Error al obtener el perfil o perfil inexistente.");
+                console.log("⚠️ Usuario autenticado pero sin perfil en la tabla 'profiles'.");
                 return res.redirect('/login');
             }
 
-            console.log("Rol detectado en el servidor:", profile.role);
+            console.log(`✅ Acceso concedido - Usuario: ${user.email} | Rol: ${profile.role}`);
 
-            // 3. Verificar permisos
+            // 4. Verificar si el rol tiene permiso o es admin
             if (rolesPermitidos.includes(profile.role) || profile.role === 'admin') {
-                return next(); // Importante el 'return' para no seguir ejecutando
+                return next();
             } else {
                 return res.status(403).render('404', { 
-                    titulo: "403 - Acceso Denegado", 
-                    descripcion: "Tu rol actual (" + profile.role + ") no tiene permiso aquí." 
+                    titulo: "Acceso Denegado", 
+                    descripcion: "Tu rango actual no permite ver esta sección." 
                 });
             }
         } catch (error) {
-            console.error("Error inesperado en el middleware:", error);
+            console.error("🔥 Error crítico en el Middleware:", error);
             res.redirect('/login');
         }
     };
 };
 
+// LA LÍNEA QUE FALTABA:
 module.exports = { checkRole };

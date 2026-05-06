@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const { checkRole } = require('./middlewares/auth');
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
 
 const app = express();
 const port = process.env.PORT || 3000;

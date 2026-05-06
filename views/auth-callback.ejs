@@ -10,33 +10,22 @@
 
 <!-- 1. Cargamos el archivo local (el mismo que usamos en login) -->
 <script src="/js/supabase.js"></script>
-
 <script>
-    (function() {
-        const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
-        const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
+    const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
+    const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // Inicializamos el cliente localmente
-        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-        // Esta función escucha cuando Supabase termina de validar el token de Google
-        _supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && session) {
-                console.log("✅ Sesión iniciada con éxito");
-                // Redirigimos al inicio de la aplicación
-                window.location.href = '/'; 
-            }
-        });
-
-        // Seguridad: Si en 8 segundos no ha redirigido, algo falló o el token expiró
-        setTimeout(() => {
-            if (window.location.pathname.includes('callback')) {
-                alert("La sesión tardó demasiado en responder. Volviendo al login.");
-                window.location.href = '/login';
-            }
-        }, 8000);
-    })();
+    _supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+            // Guardamos el token en una cookie para que el servidor lo vea
+            document.cookie = `sb-access-token=${session.access_token}; path=/; SameSite=Lax; max-age=${session.expires_in}`;
+            
+            console.log("✅ Token guardado en cookie. Redirigiendo...");
+            window.location.href = '/'; 
+        }
+    });
 </script>
+
 
 <%- include("template/footer") %>
 
