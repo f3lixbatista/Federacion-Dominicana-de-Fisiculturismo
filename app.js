@@ -22,20 +22,20 @@ app.use(express.json());
 
 
 // GENERAL (Noticias, Sociales, Inicio)
-app.use('/noticias', checkRole(['general']), require('./router/Noticias'));
+app.use('/noticias', checkRole(['general']), require('./router/noticias'));
 
 // ATLETAS (Servicios e Inscripción Atletas)
 app.use('/inscripcion-atleta', checkRole(['atleta']), require('./router/InscripcionAtleta'));
 
 // JUECES (Sección Atletas y Jueces)
-app.use('/jueces', checkRole(['juez']), require('./router/Jueces'));
-app.use('/atletas', checkRole(['juez']), require('./router/Atletas'));
+app.use('/jueces', checkRole(['juez']), require('./router/jueces'));
+app.use('/atletas', checkRole(['juez']), require('./router/atletas'));
 
 // ESTADÍSTICO (Inscripción y Estadísticas)
-app.use('/estadisticas', checkRole(['estadistico']), require('./router/Estadisticas'));
+app.use('/estadisticas', checkRole(['estadistico']), require('./router/estadisticas'));
 
 // EJECUTIVO (Eventos y Categorías)
-app.use('/categorias', checkRole(['ejecutivo']), require('./router/Categoria'));
+app.use('/categorias', checkRole(['ejecutivo']), require('./router/categoria'));
 
 app.get('/login', (req, res) => {
     res.render('login');

@@ -26,4 +26,8 @@ router.get('/social', (req, res) => {
     res.render('social', { titulo: "Federados Social" });
 });
 
+router.get('/IscripcionAtleta', (req, res) => {
+    res.render('IscripcionAtleta', { titulo: "Inscripcion de Atletas" });
+});
+
 module.exports = router;
