@@ -1,9 +1,9 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const { checkRole } = require('./middlewares/auth');
+
 const cookieParser = require('cookie-parser');
-app.use(cookieParser());
+const { checkRole } = require('./middlewares/auth');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -14,8 +14,16 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // 2. Middlewares para leer datos de formularios y JSON
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+
 
 // --- RUTAS DE AUTENTICACIÓN ---
 
