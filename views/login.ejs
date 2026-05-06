@@ -42,23 +42,33 @@
     </div>
 </div>
 
-<!-- CDN corregido: Usamos unpkg que es más directo para el navegador -->
-<script src="https://unpkg.com"></script>
+
+<!-- 1. Usamos una URL de CDN más específica y robusta -->
+<script src="https://jsdelivr.net"></script>
 
 <script>
-    // 1. PRIMERO inicializamos las variables globales
-    const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
-    const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
-    
-    // Creamos el cliente ANTES de que cualquier función lo use
-    // La librería de CDN se registra en el navegador como 'supabasejs' o 'supabase'
-// Usamos el objeto global para evitar el error de "not defined"
-const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    // Usamos una variable global para el cliente
+    let _supabase;
 
-   
+    // 2. Inicialización segura
+    function inicializarSupabase() {
+        const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
+        const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
 
-    // 2. DESPUÉS definimos las funciones
+        // Intentamos detectar el objeto global de la librería
+        // En la versión UMD (CDN), el objeto suele estar en window.supabase
+        if (window.supabase && window.supabase.createClient) {
+            _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+            console.log("✅ Supabase inicializado correctamente");
+        } else {
+            console.error("❌ Error: No se pudo cargar el objeto 'supabase' de la librería.");
+        }
+    }
+
+    // 3. Login con Redes Sociales
     async function loginConRedSocial(provider) {
+        if (!_supabase) inicializarSupabase(); // Aseguramos que esté listo al hacer clic
+        
         try {
             const { error } = await _supabase.auth.signInWithOAuth({
                 provider: provider,
@@ -72,24 +82,10 @@ const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
         }
     }
 
-    // El resto de tus funciones (registrarUsuario, etc.) van aquí abajo...
-    const formLogin = document.getElementById('formLogin');
-    if(formLogin) {
-        formLogin.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            const { data, error } = await _supabase.auth.signInWithPassword({
-                email,
-                password
-            });
-
-            if (error) alert(error.message);
-            else window.location.href = '/';
-        });
-    }
+    // Esperar a que la página cargue para inicializar
+    window.onload = inicializarSupabase;
 </script>
+
 
 
 <%- include("template/footer") %>
