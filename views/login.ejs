@@ -46,60 +46,46 @@
 <script src="https://unpkg.com"></script>
 
 <script>
-    // Inicializar Supabase en el Frontend
-    // Nota: Las variables vienen de tu archivo .env a través del render de Express
+    // 1. PRIMERO inicializamos las variables globales
     const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
     const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
     
-    // El objeto global de la librería cargada por CDN es 'supabase'
+    // Creamos el cliente ANTES de que cualquier función lo use
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    // 1. Login con Redes Sociales
+    // 2. DESPUÉS definimos las funciones
     async function loginConRedSocial(provider) {
-        const { error } = await _supabase.auth.signInWithOAuth({
-            provider: provider,
-            options: {
-                // Esto redirige al usuario a la ruta de callback que creamos
-                redirectTo: window.location.origin + '/auth/callback'
-            }
-        });
-        if (error) alert("Error: " + error.message);
+        try {
+            const { error } = await _supabase.auth.signInWithOAuth({
+                provider: provider,
+                options: {
+                    redirectTo: window.location.origin + '/auth/callback'
+                }
+            });
+            if (error) throw error;
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
     }
 
-    // 2. Login con Email/Password
+    // El resto de tus funciones (registrarUsuario, etc.) van aquí abajo...
     const formLogin = document.getElementById('formLogin');
-    formLogin.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+    if(formLogin) {
+        formLogin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-        const { data, error } = await _supabase.auth.signInWithPassword({
-            email: email,
-            password: password
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) alert(error.message);
+            else window.location.href = '/';
         });
-
-        if (error) {
-            alert("Error al entrar: " + error.message);
-        } else {
-            window.location.href = '/'; 
-        }
-    });
-
-    // 3. Registro de Usuario Nuevo
-    async function registrarUsuario() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        
-        if(!email || !password) return alert("Completa los campos para registrarte");
-
-        const { error } = await _supabase.auth.signUp({
-            email: email,
-            password: password
-        });
-
-        if (error) alert(error.message);
-        else alert("¡Revisa tu correo para confirmar tu cuenta!");
     }
 </script>
+
 
 <%- include("template/footer") %>
