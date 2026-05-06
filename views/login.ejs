@@ -3,13 +3,11 @@
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
     <div class="card shadow-lg p-4" style="width: 100%; max-width: 400px; border-radius: 15px;">
         <div class="text-center mb-4">
-            <!-- Nota: Asegúrate de que el logo esté en /public/img/logo.png -->
             <img src="/img/fdff3.jpg" alt="FDFF Logo" style="width: 80px;" class="mb-2">
             <h2 class="fw-bold">Bienvenido</h2>
             <p class="text-muted">Accede al panel federativo</p>
         </div>
 
-        <!-- Botones de Redes Sociales -->
         <div class="d-grid gap-2 mb-4">
             <button onclick="loginConRedSocial('google')" class="btn btn-outline-danger d-flex align-items-center justify-content-center py-2">
                 <i class="fab fa-google me-2"></i> Entrar con Google
@@ -24,7 +22,6 @@
             <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted small">o con tu email</span>
         </div>
 
-        <!-- Formulario de Email -->
         <form id="formLogin">
             <div class="mb-3">
                 <label class="form-label">Correo Electrónico</label>
@@ -42,24 +39,28 @@
     </div>
 </div>
 
-<!-- 1. Cargamos la librería desde tu propia carpeta pública -->
 <script src="/js/supabase.js"></script>
 
 <script>
-    // 2. Inicialización inmediata
     const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
     const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
 
-    // Usamos el objeto global 'supabase' que cargó el archivo local
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    // Inicialización con persistencia de sesión habilitada
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey, {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: 'supabase.auth.token',
+            storage: window.localStorage
+        }
+    });
 
-    // 3. Función de Login corregida
     async function loginConRedSocial(provider) {
         try {
             const { error } = await _supabase.auth.signInWithOAuth({
                 provider: provider,
                 options: {
-                    // El callback debe ser la ruta que configuramos en Express
                     redirectTo: window.location.origin + '/auth/callback'
                 }
             });
@@ -70,7 +71,6 @@
         }
     }
 
-    // Opcional: Login con Email/Password si lo necesitas
     const formLogin = document.getElementById('formLogin');
     if (formLogin) {
         formLogin.addEventListener('submit', async (e) => {
@@ -84,13 +84,16 @@
             else window.location.href = '/'; 
         });
     }
+
+    async function registrarUsuario() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        if(!email || !password) return alert("Completa los campos");
+
+        const { error } = await _supabase.auth.signUp({ email, password });
+        if (error) alert(error.message);
+        else alert("¡Revisa tu correo!");
+    }
 </script>
-
-<%- include("template/footer") %>
-
-
-
-
-
 
 <%- include("template/footer") %>
