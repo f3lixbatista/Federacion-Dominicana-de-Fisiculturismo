@@ -51,7 +51,11 @@
     const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
     
     // Creamos el cliente ANTES de que cualquier función lo use
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    // La librería de CDN se registra en el navegador como 'supabasejs' o 'supabase'
+// Usamos el objeto global para evitar el error de "not defined"
+const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+   
 
     // 2. DESPUÉS definimos las funciones
     async function loginConRedSocial(provider) {
