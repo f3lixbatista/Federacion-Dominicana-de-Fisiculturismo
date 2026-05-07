@@ -32,4 +32,11 @@ router.get('/IscripcionAtleta', checkRole(['atleta', 'admin']), (req, res) => {
     res.render('IscripcionAtleta', { titulo: "Inscripcion de Atletas" });
 });
 
+// router/rutasBat.js
+router.get('/logout', (req, res) => {
+    // Esta vista se encargará de limpiar el cliente y luego redirigir
+    res.render('logout', { titulo: "Cerrando Sesión..." });
+});
+
+
 module.exports = router;

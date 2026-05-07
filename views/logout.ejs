@@ -1,0 +1,26 @@
+<%- include("template/cabecera", {tituloWeb: "Saliendo..."}) %>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
+    const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function cerrarTodo() {
+        // 1. Cerrar sesión en Supabase
+        await _supabase.auth.signOut();
+
+        // 2. Limpiar la Cookie del servidor
+        document.cookie = "sb-access-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+        // 3. Limpiar LocalStorage
+        localStorage.clear();
+
+        // 4. Redirigir al login
+        window.location.href = '/login';
+    }
+
+    cerrarTodo();
+</script>
+
+<%- include("template/footer") %>

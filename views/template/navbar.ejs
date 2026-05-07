@@ -1,6 +1,4 @@
-
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-  <!-- <a class="navbar-brand ml-2" href="#">BatistaWeb</a> -->
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
@@ -8,49 +6,71 @@
   <div class="collapse navbar-collapse mx-4" id="navbarSupportedContent">
     <ul class="navbar-nav mr-auto">
       <li class="nav-item active">
-        <a class="nav-link" href="/"><strong>Inicio</strong><span class="sr-only"></span></a>
+        <a class="nav-link" href="/"><strong>Inicio</strong></a>
       </li>
       <li class="nav-item active">
-        <a class="nav-link" href="/servicios"><strong>Servicios</strong><span class="sr-only"></span></a>
+        <a class="nav-link" href="/servicios"><strong>Servicios</strong></a>
       </li>
       <li class="nav-item active">
-        <a class="nav-link" href="/"><strong>Social</strong><span class="sr-only"></span></a>
+        <a class="nav-link" href="/social"><strong>Social</strong></a>
       </li>
       <li class="nav-item active">
-        <a class="nav-link" href="/noticias"><strong>Noticias</strong><span class="sr-only"></span></a>
+        <a class="nav-link" href="/noticias"><strong>Noticias</strong></a>
       </li>
       <li class="nav-item active">
-        <a class="nav-link" href="/jueces"><strong>Jueces</strong><span class="sr-only"></span></a>
+        <a class="nav-link" href="/jueces"><strong>Jueces</strong></a>
       </li>
       <li class="nav-item active">
-        <a class="nav-link" href="/"><strong>Entrenadores</strong><span class="sr-only"></span></a>
+        <a class="nav-link" href="/entrenadores"><strong>Entrenadores</strong></a>
       </li>
       <li class="nav-item active">
-        <a class="nav-link" href="/atletas"><strong>Atletas</strong><span class="sr-only"></span></a>
+        <a class="nav-link" href="/atletas"><strong>Atletas</strong></a>
       </li>
       <li class="nav-item active">
-        <a class="nav-link" href="/categorias"><strong>Categorias</strong><span class="sr-only"></span></a>
+        <a class="nav-link" href="/categorias"><strong>Categorias</strong></a>
       </li>
       <li class="nav-item active">
-        <a class="nav-link" href="/categorias/nuevoEvento"><strong>Crear Evento</strong><span class="sr-only"></span></a>
+        <a class="nav-link" href="/categorias/nuevoEvento"><strong>Crear Evento</strong></a>
       </li>
-      <!-- <li class="nav-item">
-          <a class="nav-link" href="/serviciosfasdf">404</a>
-        </li> -->
-        <li class="nav-item active">
-          <a class="nav-link" href="/categorias/formDinamica"><strong>Buscar Evento</strong><span class="sr-only"></span></a>
-        </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="/inscripcion"><strong>Inscripcion</strong><span class="sr-only"></span></a>
-        </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="/estadisticas"><strong>Estadisticas</strong><span class="sr-only"></span></a>
-        </li>
-        
+      <li class="nav-item active">
+        <a class="nav-link" href="/categorias/formDinamica"><strong>Buscar Evento</strong></a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="/inscripcion"><strong>Inscripcion</strong></a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="/estadisticas"><strong>Estadisticas</strong></a>
+      </li>
+
+      <!-- BOTONES DE SESIÓN -->
+      <li class="nav-item active" id="btn-login">
+        <a class="nav-link text-info" href="/login"><strong>Entrar</strong></a>
+      </li>
+      <li class="nav-item active" id="btn-logout" style="display: none;">
+        <a class="nav-link text-danger" href="/logout"><strong>Salir</strong></a>
+      </li>
     </ul>
+    
     <form class="form-inline my-2 my-lg-0">
       <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
       <button class="btn btn-outline-success my-2 my-sm-0 mr-2" type="submit">Search</button>
     </form>
   </div>
 </nav>
+
+<script>
+  // Control visual del menú según la cookie de sesión
+  (function() {
+    const haySesion = document.cookie.includes('sb-access-token');
+    const loginBtn = document.getElementById('btn-login');
+    const logoutBtn = document.getElementById('btn-logout');
+
+    if (haySesion) {
+      loginBtn.style.display = 'none';
+      logoutBtn.style.display = 'block';
+    } else {
+      loginBtn.style.display = 'block';
+      logoutBtn.style.display = 'none';
+    }
+  })();
+</script>
