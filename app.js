@@ -25,6 +25,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 
+const supabase = require('./supabaseClient');
+
+app.use(async (req, res, next) => {
+    const token = req.cookies['sb-access-token'];
+    res.locals.user = null; // Por defecto no hay usuario
+
+    if (token) {
+        const { data: { user: authUser } } = await supabase.auth.getUser(token);
+        if (authUser) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role, full_name')
+                .eq('id', authUser.id)
+                .single();
+            res.locals.user = profile; // Guardamos el perfil (rol y nombre)
+        }
+    }
+    next();
+});
+
+
 // --- RUTAS DE AUTENTICACIÓN ---
 
 app.get('/login', (req, res) => {

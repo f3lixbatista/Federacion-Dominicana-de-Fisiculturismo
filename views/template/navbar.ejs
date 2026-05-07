@@ -3,74 +3,67 @@
     <span class="navbar-toggler-icon"></span>
   </button>
 
-  <div class="collapse navbar-collapse mx-4" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
+  <div class="collapse navbar-collapse mx-2" id="navbarSupportedContent">
+    <ul class="navbar-nav w-100 d-flex justify-content-between align-items-center">
+      
+      <!-- INICIO: Visible siempre -->
       <li class="nav-item active">
-        <a class="nav-link" href="/"><strong>Inicio</strong></a>
-      </li>
-      <li class="nav-item active">
-        <a class="nav-link" href="/servicios"><strong>Servicios</strong></a>
-      </li>
-      <li class="nav-item active">
-        <a class="nav-link" href="/social"><strong>Social</strong></a>
-      </li>
-      <li class="nav-item active">
-        <a class="nav-link" href="/noticias"><strong>Noticias</strong></a>
-      </li>
-      <li class="nav-item active">
-        <a class="nav-link" href="/jueces"><strong>Jueces</strong></a>
-      </li>
-      <li class="nav-item active">
-        <a class="nav-link" href="/entrenadores"><strong>Entrenadores</strong></a>
-      </li>
-      <li class="nav-item active">
-        <a class="nav-link" href="/atletas"><strong>Atletas</strong></a>
-      </li>
-      <li class="nav-item active">
-        <a class="nav-link" href="/categorias"><strong>Categorias</strong></a>
-      </li>
-      <li class="nav-item active">
-        <a class="nav-link" href="/categorias/nuevoEvento"><strong>Crear Evento</strong></a>
-      </li>
-      <li class="nav-item active">
-        <a class="nav-link" href="/categorias/formDinamica"><strong>Buscar Evento</strong></a>
-      </li>
-      <li class="nav-item active">
-        <a class="nav-link" href="/inscripcion"><strong>Inscripcion</strong></a>
-      </li>
-      <li class="nav-item active">
-        <a class="nav-link" href="/estadisticas"><strong>Estadisticas</strong></a>
+        <a class="navbar-brand py-0" href="/"><strong>Inicio</strong></a>
       </li>
 
-      <!-- BOTONES DE SESIÓN -->
-      <li class="nav-item active" id="btn-login">
-        <a class="nav-link text-info" href="/login"><strong>Entrar</strong></a>
-      </li>
-      <li class="nav-item active" id="btn-logout" style="display: none;">
-        <a class="nav-link text-danger" href="/logout"><strong>Salir</strong></a>
-      </li>
+      <% if (user) { %>
+        <!-- PÚBLICO / GENERAL (Logueados) -->
+        <li class="nav-item active"><a class="nav-link" href="/social"><strong>Social</strong></a></li>
+        <li class="nav-item active"><a class="nav-link" href="/noticias"><strong>Noticias</strong></a></li>
+
+        <!-- ATLETAS -->
+        <% if (user.role === 'atleta' || user.role === 'admin') { %>
+          <li class="nav-item active"><a class="nav-link" href="/servicios"><strong>Servicios</strong></a></li>
+          <li class="nav-item active"><a class="nav-link" href="/IscripcionAtleta"><strong>Mi Inscripción</strong></a></li>
+        <% } %>
+
+        <!-- JUECES -->
+        <% if (user.role === 'juez' || user.role === 'admin') { %>
+          <li class="nav-item active"><a class="nav-link" href="/jueces"><strong>Jueces</strong></a></li>
+          <li class="nav-item active"><a class="nav-link" href="/atletas"><strong>Atletas</strong></a></li>
+        <% } %>
+
+        <!-- EJECUTIVO (Configuración) -->
+        <% if (user.role === 'ejecutivo' || user.role === 'admin') { %>
+          <li class="nav-item active"><a class="nav-link" href="/categorias"><strong>Categorías</strong></a></li>
+          <li class="nav-item active"><a class="nav-link" href="/categorias/nuevoEvento"><strong>Crear Evento</strong></a></li>
+        <% } %>
+
+        <!-- ESTADÍSTICO / OPERATIVO -->
+        <% if (user.role === 'estadistico' || user.role === 'admin') { %>
+          <li class="nav-item active"><a class="nav-link" href="/inscripcion"><strong>Pesaje</strong></a></li>
+          <li class="nav-item active"><a class="nav-link" href="/estadisticas"><strong>Estadísticas</strong></a></li>
+        <% } %>
+
+        <!-- BUSCAR: Solo Admin o Ejecutivo -->
+        <% if (user.role === 'ejecutivo' || user.role === 'admin') { %>
+          <li class="nav-item active"><a class="nav-link" href="/categorias/formDinamica"><strong>Buscar</strong></a></li>
+        <% } %>
+
+        <!-- BOTÓN SALIR -->
+        <li class="nav-item active">
+          <a class="nav-link text-danger" href="/logout" title="Cerrar Sesión de <%= user.role %>">
+            <strong>Salir</strong> <small>(<%= user.role %>)</small>
+          </a>
+        </li>
+
+      <% } else { %>
+        <!-- SI NO HAY SESIÓN -->
+        <li class="nav-item active">
+          <a class="nav-link text-info" href="/login"><strong>Entrar / Registrarse</strong></a>
+        </li>
+      <% } %>
+
+      <!-- BUSCADOR -->
+      <form class="form-inline my-2 my-lg-0 d-none d-lg-flex">
+        <input class="form-control form-control-sm mr-sm-2" type="search" placeholder="Buscar..." aria-label="Search">
+        <button class="btn btn-outline-success btn-sm my-2 my-sm-0" type="submit">Go</button>
+      </form>
     </ul>
-    
-    <form class="form-inline my-2 my-lg-0">
-      <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-      <button class="btn btn-outline-success my-2 my-sm-0 mr-2" type="submit">Search</button>
-    </form>
   </div>
 </nav>
-
-<script>
-  // Control visual del menú según la cookie de sesión
-  (function() {
-    const haySesion = document.cookie.includes('sb-access-token');
-    const loginBtn = document.getElementById('btn-login');
-    const logoutBtn = document.getElementById('btn-logout');
-
-    if (haySesion) {
-      loginBtn.style.display = 'none';
-      logoutBtn.style.display = 'block';
-    } else {
-      loginBtn.style.display = 'block';
-      logoutBtn.style.display = 'none';
-    }
-  })();
-</script>
