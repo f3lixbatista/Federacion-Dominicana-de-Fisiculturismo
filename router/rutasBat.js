@@ -13,7 +13,7 @@ router.get('/servicios', checkRole(['atleta', 'admin']), (req, res) => {
 });
 
 // 3. JUECES - Vista informativa (Solo Jueces y Admin)
-router.get('/jueces', checkRole(['juez', 'admin']), (req, res) => {
+router.get('/jueces', checkRole(['general', 'juez', 'admin']), (req, res) => {
     res.render('jueces', { titulo: "Comité de Jueces" });
 });
 
