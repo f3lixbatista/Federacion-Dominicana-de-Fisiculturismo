@@ -57,6 +57,11 @@ app.get('/auth/callback', (req, res) => {
     res.render('auth-callback'); 
 });
 
+app.get('/reset-password', (req, res) => {
+    res.render('reset-password');
+});
+
+
 // --- RUTAS PROTEGIDAS POR ROL ---
 // Usamos los nombres exactos de tus archivos en la carpeta /router
 

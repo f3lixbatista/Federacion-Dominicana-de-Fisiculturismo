@@ -11,20 +11,35 @@
 <!-- 1. Cargamos el archivo local (el mismo que usamos en login) -->
 <script src="/js/supabase.js"></script>
 <script>
-    const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
-    const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    (function() {
+        const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
+        const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    _supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-            // Guardamos el token en una cookie para que el servidor lo vea
-            document.cookie = `sb-access-token=${session.access_token}; path=/; SameSite=Lax; max-age=${session.expires_in}`;
-            
-            console.log("✅ Token guardado en cookie. Redirigiendo...");
-            window.location.href = '/'; 
-        }
-    });
+        _supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log("Evento detectado:", event);
+
+            if (event === 'PASSWORD_RECOVERY') {
+                // 1. Si es recuperación, lo mandamos a una página especial
+                console.log("🔄 Redirigiendo a cambio de contraseña...");
+                window.location.href = '/reset-password'; 
+            } 
+            else if (event === 'SIGNED_IN' && session) {
+                // 2. Si es un login normal, guardamos la cookie y al home
+                document.cookie = `sb-access-token=${session.access_token}; path=/; SameSite=Lax; max-age=${session.expires_in}`;
+                window.location.href = '/'; 
+            }
+        });
+
+        // Seguridad: Si en 10 segundos no pasa nada, volver al login
+        setTimeout(() => {
+            if (window.location.pathname.includes('callback')) {
+                window.location.href = '/login';
+            }
+        }, 10000);
+    })();
 </script>
+
 
 
 <%- include("template/footer") %>
