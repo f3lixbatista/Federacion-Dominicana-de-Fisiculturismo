@@ -1,69 +1,52 @@
 <%- include("template/cabecera", {tituloWeb: "Iniciar Sesión - FDFF"}) %>
 
-<!-- 1. Cargamos FontAwesome directamente aquí por si la cabecera no lo tiene -->
-<link rel="stylesheet" href="https://cloudflare.com">
-
-<style>
-    /* Ajuste para que el ojo se vea centrado y profesional */
-    .input-group-text {
-        background-color: white !important;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .input-group-text:hover {
-        background-color: #f8f9fa !important;
-    }
-    .card { border-radius: 15px; }
-    .form-control:focus { box-shadow: none; border-color: #0d6efd; }
-</style>
-
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 85vh;">
-    <div class="card shadow-lg p-4" style="width: 100%; max-width: 380px;">
-        <div class="text-center mb-3">
-            <img src="/img/fdff3.jpg" alt="FDFF Logo" style="width: 70px;" class="mb-2">
-            <h3 class="fw-bold mb-0">Bienvenido</h3>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 85vh; padding: 10px;">
+    <div class="card shadow-lg p-3" style="width: 100%; max-width: 370px; border-radius: 15px; border: none;">
+        
+        <div class="text-center mb-2">
+            <img src="/img/fdff3.jpg" alt="FDFF Logo" style="width: 60px;" class="mb-1">
+            <h3 class="fw-bold mb-0" style="color: #333;">Bienvenido</h3>
             <p class="text-muted small">Panel Federativo FDFF</p>
         </div>
 
         <!-- Botones Redes Sociales -->
-        <div class="d-grid gap-2 mb-3">
-            <button onclick="loginConRedSocial('google')" class="btn btn-outline-danger btn-sm py-2">
-                <i class="fab fa-google me-2"></i> Google
+        <div class="d-grid gap-2 mb-2">
+            <button onclick="loginConRedSocial('google')" class="btn btn-outline-danger btn-sm py-2 d-flex align-items-center justify-content-center">
+                <span class="me-2">🌐</span> Google
             </button>
-            <button onclick="loginConRedSocial('facebook')" class="btn btn-outline-primary btn-sm py-2">
-                <i class="fab fa-facebook me-2"></i> Facebook
+            <button onclick="loginConRedSocial('facebook')" class="btn btn-outline-primary btn-sm py-2 d-flex align-items-center justify-content-center">
+                <span class="me-2">🔵</span> Facebook
             </button>
         </div>
 
-        <div class="position-relative mb-4">
+        <div class="position-relative mb-3">
             <hr class="my-2">
-            <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted small">o usa tu email</span>
+            <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted" style="font-size: 0.7rem;">o usa tu email</span>
         </div>
 
         <!-- Formulario Email -->
         <form id="formLogin">
-            <div class="mb-3">
-                <label class="form-label small fw-bold">Correo Electrónico</label>
-                <input type="email" id="email" class="form-control form-control-sm" placeholder="ejemplo@correo.com" required>
+            <div class="mb-2">
+                <label class="form-label small fw-bold mb-1">Correo Electrónico</label>
+                <input type="email" id="email" class="form-control form-control-sm" placeholder="correo@ejemplo.com" required>
             </div>
             
             <div class="mb-3">
                 <div class="d-flex justify-content-between">
-                    <label class="form-label small fw-bold">Contraseña</label>
-                    <a href="#" onclick="recuperarPassword()" class="text-decoration-none small" style="font-size: 0.75rem;">¿Olvidaste tu clave?</a>
+                    <label class="form-label small fw-bold mb-1">Contraseña</label>
+                    <a href="#" onclick="recuperarPassword()" class="text-decoration-none" style="font-size: 0.7rem; color: #0d6efd;">¿Olvidaste tu clave?</a>
                 </div>
-                <div class="input-group input-group-sm">
-                    <input type="password" id="password" class="form-control border-end-0" placeholder="••••••••" required>
-                    <!-- El contenedor del icono -->
-                    <span class="input-group-text border-start-0" id="btnVerPassword">
-                        <i class="fas fa-eye text-primary" id="iconoOjo"></i>
-                    </div>
+                <div class="input-group input-group-sm shadow-sm">
+                    <input type="password" id="password" class="form-control border-end-0" placeholder="••••••••" required style="border-radius: 8px 0 0 8px;">
+                    <button class="btn btn-outline-secondary border-start-0" type="button" id="btnVerPassword" style="border-radius: 0 8px 8px 0; background: white; border-color: #dee2e6;">
+                        <span id="iconoOjo" style="font-size: 1rem;">👁️</span>
+                    </button>
                 </div>
             </div>
 
-            <div class="d-grid gap-2 mt-4">
-                <button type="submit" class="btn btn-primary fw-bold py-2">Iniciar Sesión</button>
-                <button type="button" onclick="registrarUsuario()" class="btn btn-link btn-sm text-decoration-none text-muted">¿No tienes cuenta? Regístrate</button>
+            <div class="d-grid gap-2 mt-3">
+                <button type="submit" class="btn btn-primary btn-sm py-2 fw-bold" style="border-radius: 8px;">Iniciar Sesión</button>
+                <button type="button" onclick="registrarUsuario()" class="btn btn-link btn-sm text-decoration-none text-muted" style="font-size: 0.75rem;">¿No tienes cuenta? Regístrate</button>
             </div>
         </form>
     </div>
@@ -76,7 +59,7 @@
     const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    // --- Lógica del Ojito ---
+    // --- Lógica del Ojito (Emoji Nativo) ---
     const btnVerPassword = document.getElementById('btnVerPassword');
     const inputPassword = document.getElementById('password');
     const iconoOjo = document.getElementById('iconoOjo');
@@ -84,21 +67,21 @@
     btnVerPassword.addEventListener('click', () => {
         if (inputPassword.type === 'password') {
             inputPassword.type = 'text';
-            iconoOjo.className = 'fas fa-eye-slash text-danger'; // Cambia a ojo tachado y rojo
+            iconoOjo.innerText = '🙈';
         } else {
             inputPassword.type = 'password';
-            iconoOjo.className = 'fas fa-eye text-primary'; // Vuelve a ojo normal y azul
+            iconoOjo.innerText = '👁️';
         }
     });
 
-    // --- Funciones de Supabase ---
+    // --- Funciones de Autenticación ---
     async function recuperarPassword() {
         const email = document.getElementById('email').value;
         if (!email) return alert("Escribe tu email primero.");
         const { error } = await _supabase.auth.resetPasswordForEmail(email, {
             redirectTo: window.location.origin + '/auth/callback',
         });
-        alert(error ? error.message : "Correo de recuperación enviado.");
+        alert(error ? "Error: " + error.message : "Correo de recuperación enviado.");
     }
 
     async function loginConRedSocial(provider) {
@@ -112,9 +95,13 @@
         e.preventDefault();
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
+
         const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-        if (error) alert(error.message);
-        else {
+        
+        if (error) {
+            alert("Error: " + error.message);
+        } else {
+            // Guardamos cookie para el servidor
             document.cookie = `sb-access-token=${data.session.access_token}; path=/; SameSite=Lax; max-age=${data.session.expires_in}`;
             window.location.href = '/';
         }
@@ -123,8 +110,11 @@
     async function registrarUsuario() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
+        if(!email || !password) return alert("Completa los campos para el registro");
+
         const { error } = await _supabase.auth.signUp({ email, password });
-        alert(error ? error.message : "¡Revisa tu correo para confirmar!");
+        if (error) alert("Error: " + error.message);
+        else alert("¡Registro exitoso! Revisa tu email para confirmar tu cuenta.");
     }
 </script>
 
