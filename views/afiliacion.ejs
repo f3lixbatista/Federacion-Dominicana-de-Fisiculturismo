@@ -1,0 +1,236 @@
+<%- include("template/cabecera", {tituloWeb: "Auto-Afiliación FDFF"}) %>
+
+<div class="container ml-auto mr-auto caja pb-5">
+    <h1 id="titulo" class="mx-4 my-4">Solicitud de Membresía</h1>
+        
+    <div class="container border border-primary border-3 p-4 bg-white shadow-sm" style="border-radius: 15px;">
+        <form id="formMembresia" class="row g-3 needs-validation was-validated">
+
+            <h6 class="position-relative mt-5 opacity-25 fw-bold">DATOS DEL ATLETA</h6>
+            
+            <div class="col-md-3">
+                <label class="form-label small">ID-FDFF (Asignado en Pesaje)</label>
+                <input type="text" class="form-control bg-light" name="idfdff" readonly placeholder="Pendiente...">
+            </div>
+
+            <div class="col-md-6"></div> <!-- Espaciador -->
+
+            <div class="col-md-3">
+                <label class="form-label small">Fecha de Solicitud</label>
+                <input type="date" class="form-control" name="fecha_inscripcion" value="<%= new Date().toISOString().split('T')[0] %>" required>
+            </div>
+
+            <div class="col-md-6 mt-4">
+                <label class="form-label small">Nombre(s) y Apellido(s)</label>
+                <input type="text" class="form-control" name="nombre" placeholder="Según documento de identidad" required>
+            </div>
+
+            <div class="col-md-3 mt-4">
+                <label class="form-label small">Cédula</label>
+                <input type="text" class="form-control" name="cedula" required>
+            </div>
+
+            <div class="col-md-3 mt-4">
+                <label class="form-label small">Pasaporte</label>
+                <input type="text" class="form-control" name="pasaporte">
+            </div>
+
+            <div class="col-md-4 my-4">
+                <label class="form-label small">Nacionalidad</label>     
+                <input type="text" value="Dominicana" class="form-control" name="nacionalidad" required>
+            </div>
+
+            <div class="col-md-3 my-4">
+                <label class="form-label small">Fecha de Nacimiento</label>
+                <input type="date" class="form-control" name="nacimiento" required>
+            </div>
+
+             <div class="col-md-2 my-4">
+                <label class="form-label small">Sexo</label>
+                <select class="form-control" name="sexo" required>
+                    <option value="" selected disabled>Elija...</option>
+                    <option value="F">Femenino</option>
+                    <option value="M">Masculino</option>
+                </select>
+            </div>
+
+            <div class="col-md-3 my-4">
+                <label class="form-label small">Ocupación</label>
+                <input type="text" class="form-control" name="ocupacion" required>
+            </div>
+
+            <h6 class="position-relative mt-5 opacity-25 fw-bold">DIRECCIÓN DE RESIDENCIA</h6>
+            
+            <div class="col-md-6">
+                <label class="form-label small">Calle y Número</label>
+                <input type="text" class="form-control" name="calle" required>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small">Sector/Barrio</label>
+                <input type="text" class="form-control" name="sector" required>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small">Municipio/Distrito</label>
+                <input type="text" class="form-control" name="municipio" required>
+            </div>
+
+            <div class="col-md-4 my-4">
+                <label class="form-label small">Provincia/Estado</label>
+                <input type="text" class="form-control" name="provincia" required>
+            </div>
+
+            <div class="col-md-4 my-4">
+                <label class="form-label small">País</label>
+                <input type="text" class="form-control" name="pais" value="Republica Dominicana" required>
+            </div>
+
+            <div class="col-md-4 my-4">
+                <label class="form-label small">Código Postal</label>
+                <input type="text" class="form-control" name="postal">
+            </div>
+
+            <h6 class="position-relative mt-5 opacity-25 fw-bold">CONTACTOS</h6>
+
+             <div class="col-md-3 mb-4">
+                <label class="form-label small">Celular</label>
+                <input type="tel" class="form-control" name="celular" required>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <label class="form-label small">Teléfono Residencial</label>
+                <input type="tel" class="form-control" name="telfijo">
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <label class="form-label small">Email</label>
+                <input type="email" class="form-control" name="email" required>
+            </div>
+
+             <div class="col-md-3 mb-4">
+                <label class="form-label small">Instagram</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">@</span>
+                    <input type="text" class="form-control" name="instagram">
+                </div>
+            </div>
+
+            <h6 class="position-relative mt-5 opacity-25 fw-bold">DATOS DEPORTIVOS</h6>
+            
+            <div class="col-md-3 mb-4">
+                <label class="form-label small">Categoría Principal</label>
+                <input type="text" class="form-control" name="categoria" required>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <label class="form-label small">Estatura (cm)</label>
+                <input type="number" step="0.01" class="form-control" name="estatura" required>
+            </div>
+
+           <div class="col-md-3 mb-4">
+                <label class="form-label small">Peso (kg)</label>
+                <input type="number" step="0.01" class="form-control" name="peso" required>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <label class="form-label small">Gimnasio</label>
+                <input type="text" class="form-control" name="gimnasio" required>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <label class="form-label small">Preparador / Coach</label>
+                <input type="text" class="form-control" name="preparador" required>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <label class="form-label small">Celular del Preparador</label>
+                <input type="tel" class="form-control" name="celular_preparador">
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <label class="form-label small">Email del Preparador</label>
+                <input type="email" class="form-control" name="email_preparador">
+            </div>
+
+            <div class="col-12 mt-4 p-3 bg-light border rounded">
+                <p class="small text-muted mb-0">
+                    <strong>Certificación:</strong> Con el envío de este formulario certifico que no tengo antecedentes penales ni asuntos pendientes con la justicia dominicana e internacional. 
+                    <br><em>Cualquier cambio o modificación se realizará el día del pesaje oficial.</em>
+                </p>
+            </div>
+
+            <button type="submit" class="btn btn-danger btn-lg my-5 col-md-4 shadow" id="btnEnviar">
+                SOLICITAR AFILIACIÓN
+            </button> 
+
+        </form>
+    </div>
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+
+    document.getElementById('formMembresia').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnEnviar');
+        btn.disabled = true;
+        btn.innerText = 'Procesando...';
+
+        const { data: { user } } = await _supabase.auth.getUser();
+        const formData = new FormData(e.target);
+        
+        const profileData = {
+            atleta_id: user.id,
+            idfdff: formData.get('id_fdff'),
+            full_name: formData.get('nombre'),
+            cedula: formData.get('cedula'),
+            pasaporte: formData.get('pasaporte'),
+            nacionalidad: formData.get('nacionalidad'),
+            fecha_nacimiento: formData.get('nacimiento'),
+            sexo: formData.get('sexo'),
+            ocupacion: formData.get('ocupacion'),
+            calle: formData.get('calle'),
+            sector: formData.get('sector'),
+            municipio: formData.get('municipio'),
+            provincia: formData.get('provincia'),
+            pais: formData.get('pais'),
+            postal: formData.get('postal'),
+            celular: formData.get('celular'),
+            telfijo: formData.get('telfijo'),
+            instagram: formData.get('instagram'),
+            categoria_afiliacion: formData.get('categoria'),
+            estatura_inicial: formData.get('estatura'),
+            peso_inicial: formData.get('peso'),
+            gimnasio: formData.get('gimnasio'),
+            preparador: formData.get('preparador'),
+            celular_preparador: formData.get('celular_preparador'),
+            email_preparador: formData.get('email_preparador'),
+            estatus_afiliacion: 'pendiente'
+        };
+
+        const { error } = await _supabase.from('profiles').upsert(profileData);
+
+        if (error) {
+            alert("Error: " + error.message);
+            btn.disabled = false;
+            
+        } else {
+            alert("¡Solicitud enviada correctamente! Te esperamos el día del pesaje para oficializar tu membresía.");
+           
+            btn.innerText = 'SOLICITAR AFILIACIÓN';
+           
+            window.location.href = '/';
+        }
+    });
+
+         const printBtn = document.getElementById('print');
+    printBtn.addEventListener('click', function() {
+        window.print();
+    });
+
+
+</script>
+
+<%- include("template/footer") %>

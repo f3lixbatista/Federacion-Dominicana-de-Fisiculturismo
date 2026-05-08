@@ -1,5 +1,40 @@
 <%- include("template/cabecera", {tituloWeb: "Servicios FDFF"}) %>
 
+<!-- Sección de Afiliación Atletas -->
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-lg overflow-hidden" style="border-radius: 20px;">
+                <div class="row g-0">
+                    <div class="col-md-4 bg-primary d-flex align-items-center justify-content-center p-4">
+                        <i class="fas fa-user-plus fa-5x text-white"></i>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body p-4">
+                            <h3 class="fw-bold">Membresía FDFF</h3>
+                            <p class="text-muted">Únete a la Federación Dominicana de Fisiculturismo para participar en eventos oficiales, obtener tu ID internacional y rankearte.</p>
+                            
+                            <% if (user && user.role === 'general') { %>
+                                <a href="/afiliacion" class="btn btn-primary btn-lg fw-bold shadow-sm">
+                                    SOLICITAR AFILIACIÓN WEB
+                                </a>
+                                <p class="small text-muted mt-2 mb-0">* Proceso gratuito de solicitud previa al pesaje.</p>
+                            <% } else if (user && user.role === 'atleta') { %>
+                                <div class="badge bg-success fs-6 p-2">
+                                    <i class="fas fa-check-circle"></i> YA ERES ATLETA AFILIADO
+                                </div>
+                                <a href="/IscripcionAtleta" class="btn btn-outline-dark btn-sm ms-2">Ir a Inscripciones</a>
+                            <% } else { %>
+                                <a href="/login" class="btn btn-dark fw-bold">INICIA SESIÓN PARA AFILIARTE</a>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
     
 
     <%- include("template/footer") %>

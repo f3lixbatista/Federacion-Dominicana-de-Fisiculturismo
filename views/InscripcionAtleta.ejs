@@ -1,5 +1,105 @@
 <%- include("template/cabecera", {tituloWeb: "Servicios FDFF"}) %>
 
+<div class="container my-5">
+    <h1 class="fw-bold mb-4">Inscripción a Competencias</h1>
     
+    <% if (eventos.length > 0) { %>
+        <div class="accordion" id="accordionEventos">
+            <% eventos.forEach((evento, index) => { %>
+                <div class="accordion-item mb-3 shadow-sm">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= index %>">
+                            <div class="d-flex justify-content-between w-100 pe-3">
+                                <span><strong><%= evento.nombre %></strong></span>
+                                <small class="text-muted"><%= evento.fecha_inicio %></small>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="collapse<%= index %>" class="accordion-collapse collapse" data-bs-parent="#accordionEventos">
+                        <div class="accordion-body">
+                            <p class="text-muted small"><i class="fas fa-map-marker-alt"></i> <%= evento.lugar %></p>
+                            <h6>Selecciona tus categorías:</h6>
+                            <form class="formInscripcion">
+                                <input type="hidden" name="evento_id" value="<%= evento.id %>">
+                                
+                                <% evento.eventos_categorias.forEach(rel => { %>
+                                    <div class="form-check border-bottom py-2">
+                                        <input class="form-check-input" type="checkbox" name="cat_evento_id" value="<%= rel.id %>" id="cat<%= rel.id %>">
+                                        <label class="form-check-label" for="cat<%= rel.id %>">
+                                            <%= rel.categorias.nombre %>
+                                        </label>
+                                    </div>
+                                <% }) %>
+                                
+                                <button type="submit" class="btn btn-primary mt-3 btn-sm">Confirmar Inscripción</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    <% } else { %>
+        <div class="alert alert-info">No hay eventos abiertos para inscripción en este momento.</div>
+    <% } %>
+<div class="alert alert-info mt-4">
+    <h6 class="fw-bold"><i class="fas fa-info-circle"></i> Aviso Importante:</h6>
+    <p class="small mb-0">Esta selección es una <strong>intención de inscripción</strong>. El monto total de <strong>RD$ <span id="displayTotal">0</span></strong> y las categorías elegidas serán validadas, modificadas y oficializadas por el Juez Estadístico el día del pesaje.</p>
+</div>
+
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+
+    document.querySelectorAll('.formInscripcion').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const catEventoIds = formData.getAll('cat_evento_id');
+            
+            if (catEventoIds.length === 0) return alert("Selecciona al menos una categoría.");
+
+            // Obtenemos el ID del atleta logueado (desde la sesión de Supabase en el navegador)
+            const { data: { user } } = await _supabase.auth.getUser();
+
+            const inscripciones = catEventoIds.map(id => ({
+                atleta_id: user.id,
+                evento_cat_id: id,
+                estatus_pesaje: 'pendiente'
+            }));
+
+            const { error } = await _supabase.from('inscripciones').insert(inscripciones);
+
+            if (error) {
+                alert("Error: " + error.message);
+            } else {
+                alert("¡Inscripción realizada con éxito! Prepárate para el pesaje.");
+                window.location.reload();
+            }
+        });
+    });
+
+let totalAPagar = 0;
+
+function calcularTotal() {
+    const seleccionadas = document.querySelectorAll('input[name="cat_evento_id"]:checked');
+    if (seleccionadas.length === 0) {
+        totalAPagar = 0;
+    } else {
+        // Tomamos el costo de la primera y sumamos las adicionales
+        // Nota: Los costos deben venir embebidos en el checkbox o un data-attribute
+        let costo1ra = parseFloat(seleccionadas[0].dataset.costo1);
+        let costoExtra = 0;
+        
+        for (let i = 1; i < seleccionadas.length; i++) {
+            costoExtra += parseFloat(seleccionadas[i].dataset.costoExtra);
+        }
+        totalAPagar = costo1ra + costoExtra;
+    }
+    document.getElementById('displayTotal').innerText = `Total Estimado: RD$ ${totalAPagar}`;
+}
+
+    </script>
 
     <%- include("template/footer") %>

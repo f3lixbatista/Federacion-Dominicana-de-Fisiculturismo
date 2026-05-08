@@ -65,6 +65,10 @@ app.get('/reset-password', (req, res) => {
 // --- RUTAS PROTEGIDAS POR ROL ---
 // Usamos los nombres exactos de tus archivos en la carpeta /router
 
+app.get('/afiliacion', checkRole(['general', 'admin']), (req, res) => {
+    res.render('afiliacion');
+});
+
 // ATLETAS Y JUECES
 app.use('/atletas', checkRole(['juez', 'admin']), require('./router/Atletas'));
 
@@ -73,7 +77,7 @@ app.use('/categorias', checkRole(['ejecutivo', 'admin']), require('./router/Cate
 
 // ESTADÍSTICAS E INSCRIPCIÓN (Pesaje)
 app.use('/estadisticas', checkRole(['estadistico', 'admin']), require('./router/Estadisticas'));
-app.use('/inscripcion', checkRole(['estadistico', 'admin']), require('./router/Inscripcion'));
+app.use('/', require('./router/Inscripcion'));
 
 // RUTAS GENERALES (Inicio, Noticias, Jueces, Social)
 // Estas se manejan dentro de rutasBat.js

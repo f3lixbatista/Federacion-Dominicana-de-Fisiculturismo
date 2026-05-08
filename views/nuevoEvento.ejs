@@ -1,146 +1,188 @@
-<%- include("template/cabecera", {tituloWeb: "Configurar Evento"}) %>
+<%- include("template/cabecera", {tituloWeb: "Crear Evento - FDFF"}) %>
 
-<div class="container" style="margin-top: 2vh;">
-    <% if (error) { %>
-        <div class="alert alert-danger">
-            <%= mensaje %>
-            <a href="/inscripcion" class="btn btn-warning d-block mt-2">Volver a Inscripción</a>
+<div class="container" style="margin-top: -5vh;">
+    <form id="formEditar">
+        <% if (error) { %>
+            <p class="alert alert-danger"><%= mensaje %></p>
+            <a href="/categorias" class="btn btn-warning btn-block">Volver</a>
+        <% } %>
+        
+        <% if (!error) { %>
+            <label class="fs-1 fw-bold">Crear Nuevo Evento</label><br>
+            <input class="col-sm-8 form-control my-3 mb-4" type="text" placeholder="Nombre del Evento (Ej: Copa Independencia 2024)" name="NombreEvento" id="evento">
+            
+            <label class="my-4 fs-3 fw-bold">Seleccione las Categorías para este Evento</label>
+
+            <div class="mb-2 row">
+                <label for="buscar" class="fs-5 fw-bold col-sm-1 form-label mr-0 pr-0">Buscar:</label>
+                <div class="col-sm-3 ml-2 pl-0">
+                    <input type="text" placeholder="Filtrar categorías..." class="form-control" id="buscar">
+                </div>
+            </div>
+
+            <div class="container mt-2 col-12 bg-striped" id="allCategorias">
+                <!-- Encabezado de la Tabla -->
+                <div class="row" id="encabezado"> 
+                    <div class="col-9 my-2 m-0 form-check bg-primary pt-2 rounded-pill text-white">
+                        <label class="mx-4 form-check-label fs-4"><b>Categorías Disponibles</b></label> 
+                    </div> 
+                    <div class="col-1 my-2 m-0 form-check bg-primary pt-2 rounded-pill text-white text-center">
+                        <label class="small"><b>Edad</b></label> 
+                    </div> 
+                    <div class="col-1 my-2 m-0 form-check bg-primary pt-2 rounded-pill text-white text-center">
+                        <label class="small"><b>Peso</b></label> 
+                    </div> 
+                    <div class="col-1 my-2 m-0 form-check bg-primary pt-2 rounded-pill text-white text-center">
+                        <label class="small"><b>Estatura</b></label> 
+                    </div> 
+                </div>
+               <!--  <div class="alert alert-warning">
+    Datos recibidos: <%= JSON.stringify(arrayCategorias) %>
+</div> -->
+
+                <% if (arrayCategorias.length > 0) { %>
+                    <% arrayCategorias.forEach((categoria, index) => { %>
+                        <div class="row trcategoria"> 
+                            <div class="col-9 my-2 m-0 form-check fila pt-2 rounded-pill pl-1 shadow-sm" id="divCheck"> 
+                                <label class="ml-2 form-check-label lh-1 fs-5 col-11 p-0"><b><%= categoria.nombre %></b></label>                              
+                                <input value="<%= categoria.nombre %>" class="ml-1 checkCategoriaEvent form-check-input fs-4" name="Ready" type="checkbox">
+                                
+                                <!-- Inputs ocultos con la metadata de Supabase -->
+                                <input type="hidden" class="checkCategoriaEvent2" value="<%= categoria.modalidad %>">
+                                <input type="hidden" class="checkCategoriaEvent3" value="<%= categoria.sexo %>">
+                                <input type="hidden" class="checkCategoriaEvent4" value="<%= categoria.disciplina %>">
+                                <input type="hidden" class="checkCategoriaEvent5" value="<%= categoria.division %>">
+                                <input type="hidden" class="checkCategoriaEvent6" value="<%= categoria.edad_min %>">
+                                <input type="hidden" class="checkCategoriaEvent7" value="<%= categoria.edad_max %>">
+                            
+                                <input type="hidden" class="checkCategoriaEvent8" value="<%= categoria.peso_min %>">
+                                <input type="hidden" class="checkCategoriaEvent9" value="<%= categoria.peso_max %>">
+                                <input type="hidden" class="checkCategoriaEvent10" value="<%= categoria.estatura_min %>">
+                                <input type="hidden" class="checkCategoriaEvent11" value="<%= categoria.estatura_max %>">
+                            </div> 
+                            <div class="col-1 my-2 m-0 text-center pt-3 small border-bottom"><%= categoria.edad_min || 0 %>/<%= categoria.edad_max || 0 %></div> 
+                            <div class="col-1 my-2 m-0 text-center pt-3 small border-bottom"><%= categoria.peso_min || 0 %>/<%= categoria.peso_max || 0 %></div> 
+                            <div class="col-1 my-2 m-0 text-center pt-3 small border-bottom"><%= categoria.estatura_min || 0 %>/<%= categoria.estatura_max || 0 %></div> 
+                        </div>                   
+                    <% }) %>
+                    <% } else { %>
+                    <div class="alert alert-info">No hay categorías creadas. Crea una primero.</div>
+
+                <% } %>
+            </div>
+        <% } %> 
+
+        <div class="container w-50 text-center">
+            <a class="btn btn-outline-dark btn-sm my-4" href="/categorias/crearCategoria">+ Nueva Categoría</a>
         </div>
-    <% } %>
+    </form>
 
-    <% if (!error) { %>
-        <div class="card p-4 shadow-sm border-primary mb-5">
-            <label class="fs-1 fw-bold text-primary mb-3">Crear Evento</label>
-            
-            <input class="form-control form-control-lg mb-4 border-primary" 
-                   type="text" 
-                   placeholder="Nombre del Evento (Ej: Mr. Region Norte 2024)" 
-                   id="input_evento_maestro">
+    <hr>
+    <div class="container mt-4 mb-2"><h1>Confirmar Selección y Orden:</h1></div>
 
-            <div class="mb-4 row align-items-center">
-                <label for="buscar" class="fs-5 fw-bold col-auto">Buscar Categoría:</label>
-                <div class="col-sm-4">
-                    <input type="text" placeholder="Filtrar..." class="form-control" id="buscador_intern">
-                </div>
-            </div>
-
-            <!-- Listado de Categorías Disponibles -->
-            <div class="container mt-2 col-12 bg-white border rounded shadow-sm">
-                <div class="row bg-primary text-white p-2 fw-bold text-center rounded-top"> 
-                    <div class="col-9 text-start">Categorías Disponibles</div>
-                    <div class="col-1 small">Edad</div>
-                    <div class="col-1 small">Peso</div>
-                    <div class="col-1 small">Est.</div>
-                </div>
-                
-                <div class="overflow-auto" style="max-height: 350px;">
-                    <% if (arrayCategorias.length > 0) { %>
-                        <% arrayCategorias.forEach((categoria, index) => { %>
-                            <div class="row border-bottom p-2 align-items-center fila-categoria" data-nombre="<%= categoria.nombre.toLowerCase() %>"> 
-                                <div class="col-9 form-check">
-                                    <input class="form-check-input check-selector" 
-                                           type="checkbox" 
-                                           value="<%= categoria.nombre %>" 
-                                           id="cat_<%= index %>"
-                                           data-index="<%= index %>"
-                                           data-json='<%= JSON.stringify(categoria) %>'>
-                                    <label class="form-check-label fw-bold" for="cat_<%= index %>">
-                                        <%= categoria.nombre %>
-                                    </label>
-                                </div> 
-                                <div class="col-1 text-center small text-muted"><%= categoria.desde_edad %>/<%= categoria.hasta_edad %></div>
-                                <div class="col-1 text-center small text-muted"><%= categoria.desde_peso %>/<%= categoria.hasta_peso %></div>
-                                <div class="col-1 text-center small text-muted"><%= categoria.desde_estatura %>/<%= categoria.hasta_estatura %></div>
-                            </div>                   
-                        <% }) %>
-                    <% } %>
-                </div>
+    <form id="formEvento" method="post" action="/categorias/nuevoEvento">
+        <div class="row mb-3 align-items-center">
+            <label class="col-sm-2 fs-3">Evento:</label>
+            <div class="col-sm-10">
+                <input type="text" id="nombrenuevoevento" name="NombreEvento" class="border-0 fs-3 fw-bold col-10 bg-light p-2" readonly>
             </div>
         </div>
+        <p class="text-muted small">Asigne el número de orden de salida para cada categoría seleccionada:</p>
+        
+        <!-- Contenedores dinámicos para el JS -->
+        <div id="resultado" class="mb-2"></div>
+        <div id="resultado2" class="d-none"></div>
+        <div id="resultado3" class="d-none"></div>
+        <div id="resultado4" class="d-none"></div>
+        <div id="resultado5" class="d-none"></div>
+        <div id="resultado6" class="d-none"></div>
+        <div id="resultado7" class="d-none"></div>
+        <div id="resultado8" class="d-none"></div>
+        <div id="resultado9" class="d-none"></div>
+        <div id="resultado10" class="d-none"></div>
+        <div id="resultado11" class="d-none"></div>
 
-        <!-- FORMULARIO FINAL DE ENVÍO -->
-        <form id="formEventoFinal" action="/categorias/nuevoEvento" method="POST" class="card p-4 shadow border-success mb-5">
-            <div class="row mb-3 align-items-center">
-                <label class="col-sm-2 col-form-label fs-3">Evento:</label>
-                <div class="col-sm-10">
-                    <input type="text" id="nombre_evento_hidden" name="NombreEvento" class="border-0 fs-3 fw-bold text-primary bg-white w-100" readonly required>
-                </div>
-            </div>
-
-            <h4 class="mb-4 text-success fw-bold">Confirmar Selección y Orden de Salida:</h4>
-            
-            <!-- Contenedores donde se inyectan los inputs dinámicamente -->
-            <div id="resultado_principal" class="mb-4"></div>
-            
-            <!-- Contenedores ocultos para los metadatos -->
-            <div id="res_modalidad" class="d-none"></div>
-            <div id="res_genero" class="d-none"></div>
-            <div id="res_disciplina" class="d-none"></div>
-            <div id="res_division" class="d-none"></div>
-            <div id="res_edad_desde" class="d-none"></div>
-            <div id="res_edad_hasta" class="d-none"></div>
-            <div id="res_peso_desde" class="d-none"></div>
-            <div id="res_peso_hasta" class="d-none"></div>
-            <div id="res_estatura_desde" class="d-none"></div>
-            <div id="res_estatura_hasta" class="d-none"></div>
-
-            <button class="btn btn-success btn-lg w-100 mt-4 shadow" type="submit">
-                Registrar Evento y Categorías Seleccionadas
-            </button>
-        </form>
-    <% } %>
+        <div class="container w-50">
+            <button class="btn btn-primary btn-lg col-12 my-5 shadow" type="submit">CREAR EVENTO COMPLETO</button> 
+        </div>
+    </form>
 </div>
 
 <script>
-    // 1. Sincronizar el nombre del evento
-    const inputMaster = document.getElementById('input_evento_maestro');
-    const inputHidden = document.getElementById('nombre_evento_hidden');
-    inputMaster.addEventListener('input', () => { inputHidden.value = inputMaster.value; });
+// --- Sincronización del Nombre del Evento ---
+const evento = document.getElementById('evento');
+const nombrenuevoevento = document.getElementById('nombrenuevoevento');
 
-    // 2. Buscador de categorías
-    const buscador = document.getElementById('buscador_intern');
-    buscador.addEventListener('keyup', () => {
-        const term = buscador.value.toLowerCase();
-        document.querySelectorAll('.fila-categoria').forEach(fila => {
-            fila.style.display = fila.dataset.nombre.includes(term) ? 'flex' : 'none';
+evento.addEventListener('keyup', function() {
+    nombrenuevoevento.value = evento.value;
+});
+
+
+    const inputBuscar = document.getElementById("buscar");
+    const checks = document.querySelectorAll(".checkCategoriaEvent");
+    const filas = document.querySelectorAll(".trcategoria");
+    const eventoInput = document.getElementById("evento");
+    const displayEvento = document.getElementById("nombrenuevoevento");
+
+    // Sincronizar nombre del evento
+    eventoInput.addEventListener('keyup', () => {
+        displayEvento.value = eventoInput.value;
+    });
+
+    // Buscador
+    inputBuscar.addEventListener('keyup', function() {
+        let filtro = buscar.value.toLowerCase();
+        filas.forEach((fila, i) => {
+            let texto = checks[i].value.toLowerCase();
+            fila.style.display = texto.includes(filtro) ? "flex" : "none";
         });
     });
 
-    // 3. Lógica dinámica de selección
-    document.addEventListener('change', (e) => {
-        if (e.target.classList.contains('check-selector')) {
-            const index = e.target.dataset.index;
-            const cat = JSON.parse(e.target.dataset.json);
+    // Lógica de Selección y Clonación
+    checks.forEach((check, index) => {
+        check.addEventListener('change', function() {
+            const idBase = index;
             
-            if (e.target.checked) {
-                // Crear bloque visible de Orden de Salida
-                const blockHTML = `
-                    <div class="row align-items-center mb-2 bg-light p-2 rounded border" id="item_${index}">
-                        <div class="col-md-2">
-                            <input type="number" name="Salida" class="form-control text-center fw-bold border-primary" placeholder="Orden" required>
-                        </div>
-                        <div class="col-md-10">
-                            <input type="text" name="Categorias" value="${cat.nombre}" class="form-control-plaintext fw-bold" readonly>
-                        </div>
-                        <!-- Inputs ocultos para Supabase -->
-                        <input type="hidden" name="Modalidad" value="${cat.modalidad}" id="mod_${index}">
-                        <input type="hidden" name="Genero" value="${cat.genero}" id="gen_${index}">
-                        <input type="hidden" name="Disciplina" value="${cat.disciplina}" id="dis_${index}">
-                        <input type="hidden" name="Division" value="${cat.division}" id="div_${index}">
-                        <input type="hidden" name="DesdeEdad" value="${cat.desde_edad}" id="ed_${index}">
-                        <input type="hidden" name="HastaEdad" value="${cat.hasta_edad}" id="eh_${index}">
-                        <input type="hidden" name="DesdePeso" value="${cat.desde_peso}" id="pd_${index}">
-                        <input type="hidden" name="HastaPeso" value="${cat.hasta_peso}" id="ph_${index}">
-                        <input type="hidden" name="DesdeEstatura" value="${cat.desde_estatura}" id="std_${index}">
-                        <input type="hidden" name="HastaEstatura" value="${cat.hasta_estatura}" id="sth_${index}">
-                    </div>`;
-                document.getElementById('resultado_principal').insertAdjacentHTML('beforeend', blockHTML);
+            if (this.checked) {
+                // Crear inputs dinámicos
+                const wrapper = document.createElement('div');
+                wrapper.id = 'wrap' + idBase;
+                wrapper.className = "d-flex align-items-center mb-2";
+
+                const inpSalida = document.createElement('input');
+                inpSalida.name = 'Salida'; inpSalida.type = 'number';
+                inpSalida.className = 'form-control bg-info text-white fw-bold text-center mr-2';
+                inpSalida.style.width = '80px'; inpSalida.required = true;
+                inpSalida.placeholder = "0";
+
+                const inpCat = document.createElement('input');
+                inpCat.name = 'Categorias'; inpCat.type = 'text';
+                inpCat.className = 'form-control border-0 fw-bold';
+                inpCat.value = this.value; inpCat.readOnly = true;
+
+                wrapper.appendChild(inpSalida);
+                wrapper.appendChild(inpCat);
+                document.getElementById('resultado').appendChild(wrapper);
+
+                // Clonar metadata oculta
+                const campos = ['Modalidad', 'Genero', 'Disciplina', 'Division', 'DesdeEdad', 'HastaEdad', 'DesdePeso', 'HastaPeso', 'DesdeEstatura', 'HastaEstatura'];
+                campos.forEach((campo, i) => {
+                    const metaVal = document.querySelectorAll('.checkCategoriaEvent' + (i + 2))[index].value;
+                    const metaInp = document.createElement('input');
+                    metaInp.type = 'hidden'; metaInp.name = campo;
+                    metaInp.value = metaVal; metaInp.id = 'meta' + campo + idBase;
+                    document.getElementById('resultado' + (i + 2)).appendChild(metaInp);
+                });
+
             } else {
-                // Eliminar el bloque si se desmarca
-                const el = document.getElementById(`item_${index}`);
-                if (el) el.remove();
+                // Eliminar si se desmarca
+                document.getElementById('wrap' + idBase)?.remove();
+                const campos = ['Modalidad', 'Genero', 'Disciplina', 'Division', 'DesdeEdad', 'HastaEdad', 'DesdePeso', 'HastaPeso', 'DesdeEstatura', 'HastaEstatura'];
+                campos.forEach(campo => {
+                    document.getElementById('meta' + campo + idBase)?.remove();
+                });
             }
-        }
+        });
     });
 </script>
 

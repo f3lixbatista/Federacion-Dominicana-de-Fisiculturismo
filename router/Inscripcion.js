@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const supabase = require('../supabaseClient');
+const { checkRole } = require('../middlewares/auth');
 
 // 1. VISTA PRINCIPAL: Carga atletas y categorías CON sus competidores ya inscritos
 router.get('/', async (req, res) => {
@@ -97,6 +98,34 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// Ruta principal de inscripción
+router.get('InscripcionAtleta', checkRole(['atleta', 'admin']), async (req, res) => {
+    try {
+        // Traemos eventos y sus categorías vinculadas en una sola consulta (Join)
+        const { data: eventosConCategorias, error } = await supabase
+            .from('eventos')
+            .select(`
+                id,
+                nombre,
+                lugar,
+                fecha_inicio,
+                eventos_categorias (
+                    id,
+                    categoria_id,
+                    categorias (nombre, modalidad, disciplina, division)
+                )
+            `)
+            .eq('estado', 'inscripcion');
+
+        if (error) throw error;
+
+        res.render('inscripcionAtleta', { eventos: eventosConCategorias });
+    } catch (error) {
+        console.error("Error:", error.message);
+        res.render('inscripcionAtleta', { eventos: [] });
+    }
+});
+
 // 4. PROCESAR INSCRIPCIÓN INDIVIDUAL (Vía AJAX/Fetch desde detalleInscripcion)
 router.put('/:id', async (req, res) => {
     const body = req.body; // Viene del fetch de detalleInscripcion.ejs
@@ -122,5 +151,11 @@ router.put('/:id', async (req, res) => {
         res.json({ estado: false, mensaje: 'Error al inscribir' });
     }
 });
+
+// 2. Ruta para el ESTADÍSTICO (Para el módulo de Pesaje que haremos ahora)
+router.get('/pesaje', checkRole(['estadistico', 'admin', 'juez']), async (req, res) => {
+    // ... aquí irá la lógica del buscador de atletas para pesarlos ...
+    res.render('pesaje');
+    });
 
 module.exports = router;

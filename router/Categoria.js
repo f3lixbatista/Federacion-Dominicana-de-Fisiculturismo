@@ -1,13 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const supabase = require('../supabaseClient');
+const { checkRole } = require('../middlewares/auth');
 
-// 1. LISTAR CATEGORÍAS
-router.get('/', async (req, res) => {
+// 1. LISTAR CATEGORÍAS (Acceso: Ejecutivo y Admin)
+router.get('/', checkRole(['ejecutivo', 'admin']), async (req, res) => {
     try {
         const { data: arrayCategorias, error } = await supabase
             .from('categorias')
-            .select('*');
+            .select('*')
+            .order('modalidad', { ascending: true });
 
         if (error) throw error;
         
@@ -15,21 +17,23 @@ router.get('/', async (req, res) => {
             arrayCategorias: arrayCategorias
         });
     } catch (error) {
-        console.error(error);
+        console.error("Error al listar categorías:", error.message);
         res.render("categorias", { arrayCategorias: [] });
     }
 });
 
-// 2. VISTAS DE CREACIÓN
-router.get('/crearCategoria', (req, res) => {
-    res.render('crearCategoria');
+// 2. VISTA CREAR CATEGORÍA (Acceso: Ejecutivo y Admin)
+router.get('/crearCategoria', checkRole(['ejecutivo', 'admin']), (req, res) => {
+    res.render('crearCategoria'); // Ajustado a la subcarpeta categorias
 });
 
-router.get('/nuevoEvento', async (req, res) => {
+// 3. VISTA NUEVO EVENTO (Acceso: Ejecutivo y Admin)
+router.get('/nuevoEvento', checkRole(['ejecutivo', 'admin']), async (req, res) => {
     try {
         const { data: arrayCategoryDB, error } = await supabase
             .from('categorias')
-            .select('*');
+            .select('*')
+            .order('nombre', { ascending: true });
 
         if (error) throw error;
            
@@ -38,71 +42,69 @@ router.get('/nuevoEvento', async (req, res) => {
             error: false  
         });
     } catch (error) {
+        console.error("Error al cargar categorías para evento:", error.message);
         res.render('nuevoEvento', { 
             error: true,
-            mensaje: "Error al cargar categorías"
+            mensaje: "Error al cargar categorías",
+            arrayCategorias: []
         });
     }
 });
 
-// 3. PROCESAR NUEVA CATEGORÍA
-router.post('/crearCategoria', async (req, res) => {
-    try {
-        const { error } = await supabase
-            .from('categorias')
-            .insert([req.body]);
-
-        if (error) throw error;
-        res.redirect('/categorias');    
-    } catch (error) {
-        console.error(error);
-        res.redirect('/categorias');
-    }
-}); 
-
-// 4. PROCESAR NUEVO EVENTO (Múltiples categorías a la vez)
-router.post('/nuevoEvento', async (req, res) => {
-    const { 
-        Categorias, NombreEvento, Modalidad, Genero, 
-        Disciplina, Division, DesdeEdad, HastaEdad, 
-        DesdePeso, HastaPeso, DesdeEstatura, HastaEstatura 
-    } = req.body;
+// 4. PROCESAR NUEVO EVENTO (Estructura Relacional)
+router.post('/nuevoEvento', checkRole(['ejecutivo', 'admin']), async (req, res) => {
+    const { NombreEvento, Categorias, Salida } = req.body;
 
     try {
-        const listaEventos = [];
-
-        // Si Categorias es un array (varios seleccionados)
-        const total = Array.isArray(Categorias) ? Categorias.length : 1;
-
-        for (let x = 0; x < total; x++) {
-            listaEventos.push({
-                categoria: Array.isArray(Categorias) ? Categorias[x] : Categorias,
-                nombre: NombreEvento,
-                modalidad: Array.isArray(Modalidad) ? Modalidad[x] : Modalidad,
-                genero: Array.isArray(Genero) ? Genero[x] : Genero,
-                disciplina: Array.isArray(Disciplina) ? Disciplina[x] : Disciplina,
-                division: Array.isArray(Division) ? Division[x] : Division,
-                desde_edad: Array.isArray(DesdeEdad) ? DesdeEdad[x] : DesdeEdad,
-                hasta_edad: Array.isArray(HastaEdad) ? HastaEdad[x] : HastaEdad,
-                desde_peso: Array.isArray(DesdePeso) ? DesdePeso[x] : DesdePeso,
-                hasta_peso: Array.isArray(HastaPeso) ? HastaPeso[x] : HastaPeso,
-                desde_estatura: Array.isArray(DesdeEstatura) ? DesdeEstatura[x] : DesdeEstatura,
-                hasta_estatura: Array.isArray(HastaEstatura) ? HastaEstatura[x] : HastaEstatura,
-                salida: 0 // Valor inicial
-            });
-        }
-
-        const { error } = await supabase
+        // 1. Crear el Evento en la tabla 'eventos' y obtener su ID
+        const { data: eventoCreado, error: errorEv } = await supabase
             .from('eventos')
-            .insert(listaEventos);
+            .insert([{ nombre: NombreEvento }])
+            .select()
+            .single();
 
-        if (error) throw error;
+        if (errorEv) throw errorEv;
+
+        // 2. Obtener los IDs de las categorías seleccionadas desde la DB
+        const nombresCategorias = Array.isArray(Categorias) ? Categorias : [Categorias];
+        const { data: categoriasDB, error: errorCats } = await supabase
+            .from('categorias')
+            .select('id, nombre')
+            .in('nombre', nombresCategorias);
+
+        if (errorCats) throw errorCats;
+
+        // 3. Preparar los datos para la tabla intermedia 'eventos_categorias'
+        // Usamos el 'Salida' que viene del formulario para el orden
+        const ordenes = Array.isArray(Salida) ? Salida : [Salida];
+        
+        const vinculos = categoriasDB.map((cat, index) => {
+            // Buscamos el orden que el usuario escribió para esta categoría específica
+            // Si no hay orden, usamos el índice del bucle
+            const ordenSalida = ordenes[index] || (index + 1);
+            
+            return {
+                evento_id: eventoCreado.id,
+                categoria_id: cat.id,
+                orden_secuencia_categoria: parseInt(ordenSalida)
+            };
+        });
+
+        // 4. Insertar la lista masiva en 'eventos_categorias'
+        const { error: errorVinculo } = await supabase
+            .from('eventos_categorias')
+            .insert(vinculos);
+
+        if (errorVinculo) throw errorVinculo;
+
+        // Todo salió bien
         res.redirect('/categorias');
 
     } catch (error) {
-        console.error("Error al crear evento:", error.message);
-        res.status(500).send("Error al procesar el evento");
+        console.error("🔥 Error al procesar evento:", error.message);
+        res.status(500).send("Error al procesar el evento: " + error.message);
     }
 });
+
 
 module.exports = router;
