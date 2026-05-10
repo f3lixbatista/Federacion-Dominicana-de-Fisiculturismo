@@ -52,59 +52,46 @@ router.get('/nuevoEvento', checkRole(['ejecutivo', 'admin']), async (req, res) =
 });
 
 // 4. PROCESAR NUEVO EVENTO (Estructura Relacional)
-router.post('/nuevoEvento', checkRole(['ejecutivo', 'admin']), async (req, res) => {
-    const { NombreEvento, Categorias, Salida } = req.body;
+router.post('/nuevoEvento', checkRole(['admin', 'ejecutivo']), async (req, res) => {
+    const { NombreEvento, Lugar, Fecha, costo_primera, costo_adicional, CategoriasIds } = req.body;
 
     try {
-        // 1. Crear el Evento en la tabla 'eventos' y obtener su ID
-        const { data: eventoCreado, error: errorEv } = await supabase
+        // 1. Insertar el evento con los costos del formulario
+        const { data: evento, error: errEv } = await supabase
             .from('eventos')
-            .insert([{ nombre: NombreEvento }])
-            .select()
-            .single();
+            .insert([{ 
+                nombre: NombreEvento, 
+                lugar: Lugar, 
+                fecha_inicio: Fecha,
+                costo_primera_cat: parseFloat(costo_primera) || 0,
+                costo_adicional: parseFloat(costo_adicional) || 0,
+                estado: 'inscripcion'
+            }])
+            .select().single();
 
-        if (errorEv) throw errorEv;
+        if (errEv) throw errEv;
 
-        // 2. Obtener los IDs de las categorías seleccionadas desde la DB
-        const nombresCategorias = Array.isArray(Categorias) ? Categorias : [Categorias];
-        const { data: categoriasDB, error: errorCats } = await supabase
-            .from('categorias')
-            .select('id, nombre')
-            .in('nombre', nombresCategorias);
+        // 2. Vincular categorías (sin pedir orden al usuario)
+        const categoriasArray = Array.isArray(CategoriasIds) ? CategoriasIds : [CategoriasIds];
+        const vinculos = categoriasArray.map(catId => ({
+            evento_id: evento.id,
+            categoria_id: catId,
+            orden_secuencia_categoria: 0 // Se definirá en el módulo de MC
+        }));
 
-        if (errorCats) throw errorCats;
-
-        // 3. Preparar los datos para la tabla intermedia 'eventos_categorias'
-        // Usamos el 'Salida' que viene del formulario para el orden
-        const ordenes = Array.isArray(Salida) ? Salida : [Salida];
-        
-        const vinculos = categoriasDB.map((cat, index) => {
-            // Buscamos el orden que el usuario escribió para esta categoría específica
-            // Si no hay orden, usamos el índice del bucle
-            const ordenSalida = ordenes[index] || (index + 1);
-            
-            return {
-                evento_id: eventoCreado.id,
-                categoria_id: cat.id,
-                orden_secuencia_categoria: parseInt(ordenSalida)
-            };
-        });
-
-        // 4. Insertar la lista masiva en 'eventos_categorias'
-        const { error: errorVinculo } = await supabase
+        const { error: errVin } = await supabase
             .from('eventos_categorias')
             .insert(vinculos);
 
-        if (errorVinculo) throw errorVinculo;
+        if (errVin) throw errVin;
 
-        // Todo salió bien
         res.redirect('/categorias');
-
     } catch (error) {
-        console.error("🔥 Error al procesar evento:", error.message);
-        res.status(500).send("Error al procesar el evento: " + error.message);
+        console.error(error);
+        res.status(500).send("Error al crear evento: " + error.message);
     }
 });
+
 
 
 module.exports = router;

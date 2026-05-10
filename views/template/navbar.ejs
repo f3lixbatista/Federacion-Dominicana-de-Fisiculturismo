@@ -1,4 +1,9 @@
+
+
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+<% console.log("DEPURACIÓN NAVBAR - Usuario:", locals.user) %>
+  <pre class="text-white small">Rol detectado: <%= locals.user ? user.role : 'Nadie logueado' %></pre>
+
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
@@ -19,7 +24,7 @@
         <!-- ATLETAS -->
         <% if (user.role === 'atleta' || user.role === 'admin') { %>
           <li class="nav-item active"><a class="nav-link" href="/servicios"><strong>Servicios</strong></a></li>
-          <li class="nav-item active"><a class="nav-link" href="/InscripcionAtleta"><strong>Afiliacion</strong></a></li>
+          <li class="nav-item active"><a class="nav-link" href="/afiliacion"><strong>Afiliacion</strong></a></li>
         <% } %>
 
         <!-- JUECES -->
@@ -35,8 +40,8 @@
         <% } %>
 
         <!-- ESTADÍSTICO / OPERATIVO -->
-        <% if (user.role === 'estadistico' || user.role === 'admin') { %>
-          <li class="nav-item active"><a class="nav-link" href="/inscripcion"><strong>Pesaje</strong></a></li>
+        <% if (user.role === 'estadistico' || user.role === 'admin' || user.role === 'juez') { %>
+          <li class="nav-item active"><a class="nav-link" href="/inscripcion/pesaje"><strong>Pesaje</strong></a></li>
           <li class="nav-item active"><a class="nav-link" href="/estadisticas"><strong>Estadísticas</strong></a></li>
         <% } %>
 

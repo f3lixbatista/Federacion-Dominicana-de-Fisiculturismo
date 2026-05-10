@@ -13,40 +13,87 @@
             
             <label class="my-4 fs-3 fw-bold">Seleccione las Categorías para este Evento</label>
 
-            <div class="mb-2 row">
-                <label for="buscar" class="fs-5 fw-bold col-sm-1 form-label mr-0 pr-0">Buscar:</label>
-                <div class="col-sm-3 ml-2 pl-0">
-                    <input type="text" placeholder="Filtrar categorías..." class="form-control" id="buscar">
+            <div class="container col-12 ">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label for="buscar" class="fs-5 fw-bold col-sm-3 form-label mr-0 pr-0">Buscar:</label>
+                        <div class="col-5 ml-2 pl-0">
+                            <input type="text" placeholder="Filtrar categorías..." class="form-control" id="buscar">
+                        </div>
+                    </div>
+
+                    <div class="row col-3 me-4">                      
+                        <div class="row g-2 my-0 pt-0 p-0">
+                            <div class="p-0  my-0 col-9">
+                                <p class="position-absolute top-50 end-0 translate-middle-y small p-0 pe-1 pb-0 my-0"><small class="text-end align-middle fw-bold">Costo 1ra Categoría (RD$)</small></p>
+                            </div>   
+                            <div class="p-0 my-0 col-3">
+                                <input type="number" name="costo_primera" class="form-control col-12 border-primary position-absolute top-50 end-0 translate-middle-y small p-0 pb-0 my-0" required>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="row col-3">
+                        <div class="row g-2 my-0 pt-0 p-0">
+                            <div class="p-0 my-0 col-9">
+                                <p class="position-absolute top-50 end-0 translate-middle-y small me-1 p-0 pe-1 pb-0 my-0"><small class="text-end align-middle fw-bold">Costo Categorías Adicionales (RD$)</small></p>
+                            </div>
+                             <div class="p-0 my-0 col-3">
+                                <input type="number" name="costo_adicional" class="form-control col-12 border-primary position-absolute top-50 end-0 translate-middle-y small p-0 pb-0 height-2" required>  
+                            </div>
+                        </div>
+                    </div>
+                    
                 </div>
             </div>
+
 
             <div class="container mt-2 col-12 bg-striped" id="allCategorias">
                 <!-- Encabezado de la Tabla -->
                 <div class="row" id="encabezado"> 
-                    <div class="col-9 my-2 m-0 form-check bg-primary pt-2 rounded-pill text-white">
-                        <label class="mx-4 form-check-label fs-4"><b>Categorías Disponibles</b></label> 
+                    <div class="col-9 my-1 m-0 form-check bg-primary rounded-pill text-white">
+                        <label class="mx-0 my-0 fs-4"><b>Categorías Disponibles</b></label> 
                     </div> 
-                    <div class="col-1 my-2 m-0 form-check bg-primary pt-2 rounded-pill text-white text-center">
-                        <label class="small"><b>Edad</b></label> 
+                    <div class="col-1 my-2 form-check bg-primary rounded text-white position-relative border border-secondary rounded-pill">
+                        <label class="small position-absolute top-50 start-50 translate-middle"><b>Edad</b></label> 
                     </div> 
-                    <div class="col-1 my-2 m-0 form-check bg-primary pt-2 rounded-pill text-white text-center">
-                        <label class="small"><b>Peso</b></label> 
+                    <div class="col-1 my-2 form-check bg-primary rounded text-white position-relative border border-secondary rounded-pill">
+                        <label class="small position-absolute top-50 start-50 translate-middle"><b>Peso</b></label> 
                     </div> 
-                    <div class="col-1 my-2 m-0 form-check bg-primary pt-2 rounded-pill text-white text-center">
-                        <label class="small"><b>Estatura</b></label> 
+                    <div class="col-1 my-2 form-check bg-primary rounded text-white position-relative border border-secondary rounded-pill">
+                        <label class="small position-absolute top-50 start-50 translate-middle"><b>Estatura</b></label> 
                     </div> 
                 </div>
+
+             <!--        <div class="position-relative py-2 px-4 text-bg-secondary border border-secondary rounded-pill">
+  Marker <svg width="1em" height="1em" viewBox="0 0 16 16" class="position-absolute top-100 start-50 translate-middle mt-1" fill="var(--bs-secondary)" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>
+</div>
+ -->
+
                <!--  <div class="alert alert-warning">
     Datos recibidos: <%= JSON.stringify(arrayCategorias) %>
 </div> -->
 
+                
+
+
+
                 <% if (arrayCategorias.length > 0) { %>
                     <% arrayCategorias.forEach((categoria, index) => { %>
                         <div class="row trcategoria"> 
-                            <div class="col-9 my-2 m-0 form-check fila pt-2 rounded-pill pl-1 shadow-sm" id="divCheck"> 
-                                <label class="ml-2 form-check-label lh-1 fs-5 col-11 p-0"><b><%= categoria.nombre %></b></label>                              
-                                <input value="<%= categoria.nombre %>" class="ml-1 checkCategoriaEvent form-check-input fs-4" name="Ready" type="checkbox">
+                            <div class="col-9 my-2 m-0 form-check fila pt-2 rounded-pill pl-1 shadow-sm position-relative" id="divCheck"> 
                                 
+                                <div class="row col-12 g-2 position-relative">  
+                                    <div class="col-11">
+                                        <label class="ml-2 form-check-label lh-1 fs-5 col-12 p-0"><b><%= categoria.nombre %></b></label>                              
+                                    </div>
+
+                                    <div class="col-1 mb-3 position-relative">
+                                        <input value="<%= categoria.nombre %>" class="position-absolute top-50 end-0 translate-middle checkCategoriaEvent form-check-input fs-4" name="Ready" type="checkbox">
+                                    </div>
+                                </div>
+
                                 <!-- Inputs ocultos con la metadata de Supabase -->
                                 <input type="hidden" class="checkCategoriaEvent2" value="<%= categoria.modalidad %>">
                                 <input type="hidden" class="checkCategoriaEvent3" value="<%= categoria.sexo %>">
@@ -82,25 +129,25 @@
 
     <form id="formEvento" method="post" action="/categorias/nuevoEvento">
         <div class="row mb-3 align-items-center">
-            <label class="col-sm-2 fs-3">Evento:</label>
+            <label class="col-sm-2 fs-3 text-end p-0">Evento:</label>
             <div class="col-sm-10">
-                <input type="text" id="nombrenuevoevento" name="NombreEvento" class="border-0 fs-3 fw-bold col-10 bg-light p-2" readonly>
+                <input type="text" id="nombrenuevoevento" name="NombreEvento" class="border-0 fs-2 fw-bold col-10 bg-light p-2" readonly>
             </div>
         </div>
-        <p class="text-muted small">Asigne el número de orden de salida para cada categoría seleccionada:</p>
+       
         
         <!-- Contenedores dinámicos para el JS -->
-        <div id="resultado" class="mb-2"></div>
-        <div id="resultado2" class="d-none"></div>
-        <div id="resultado3" class="d-none"></div>
-        <div id="resultado4" class="d-none"></div>
-        <div id="resultado5" class="d-none"></div>
-        <div id="resultado6" class="d-none"></div>
-        <div id="resultado7" class="d-none"></div>
-        <div id="resultado8" class="d-none"></div>
-        <div id="resultado9" class="d-none"></div>
-        <div id="resultado10" class="d-none"></div>
-        <div id="resultado11" class="d-none"></div>
+        <div id="resultado" class="mb-5 col-10"></div>
+        <div id="resultado2" class="mb-5"></div>
+        <div id="resultado3" class="mb-5"></div>
+        <div id="resultado4" class="mb-5"></div>
+        <div id="resultado5" class="mb-5"></div>
+        <div id="resultado6" class="mb-5"></div>
+        <div id="resultado7" class="mb-5"></div>
+        <div id="resultado8" class="mb-5"></div>
+        <div id="resultado9" class="mb-5"></div>
+        <div id="resultado10" class="mb-5"></div>
+        <div id="resultado11" class="mb-5"></div>
 
         <div class="container w-50">
             <button class="btn btn-primary btn-lg col-12 my-5 shadow" type="submit">CREAR EVENTO COMPLETO</button> 
@@ -149,18 +196,18 @@ evento.addEventListener('keyup', function() {
                 wrapper.id = 'wrap' + idBase;
                 wrapper.className = "d-flex align-items-center mb-2";
 
-                const inpSalida = document.createElement('input');
+              /*   const inpSalida = document.createElement('input');
                 inpSalida.name = 'Salida'; inpSalida.type = 'number';
                 inpSalida.className = 'form-control bg-info text-white fw-bold text-center mr-2';
                 inpSalida.style.width = '80px'; inpSalida.required = true;
-                inpSalida.placeholder = "0";
+                inpSalida.placeholder = "0"; */
 
                 const inpCat = document.createElement('input');
                 inpCat.name = 'Categorias'; inpCat.type = 'text';
                 inpCat.className = 'form-control border-0 fw-bold';
                 inpCat.value = this.value; inpCat.readOnly = true;
 
-                wrapper.appendChild(inpSalida);
+                // wrapper.appendChild(inpSalida);
                 wrapper.appendChild(inpCat);
                 document.getElementById('resultado').appendChild(wrapper);
 

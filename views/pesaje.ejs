@@ -1,0 +1,187 @@
+<%- include("template/cabecera", {tituloWeb: "Panel de Pesaje"}) %>
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="fw-bold"><i class="fas fa-balance-scale"></i> Estación de Pesaje y Medición</h2>
+        <a href="/atletas/crear" class="btn btn-dark shadow-sm"><i class="fas fa-user-plus"></i> Afiliación Asistida</a>
+    </div>
+    
+    <!-- Buscador Rápido -->
+    <div class="row my-4">
+        <div class="col-md-6">
+            <input type="text" id="buscarAtleta" class="form-control form-control-lg shadow-sm" placeholder="Buscar por Nombre, Cédula o ID-FDFF...">
+        </div>
+    </div>
+
+    <!-- Tabla de Atletas -->
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-hover bg-white align-middle" id="tablaAtletas">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID-FDFF</th>
+                    <th>Nombre</th>
+                    <th>Cédula</th>
+                    <th class="text-center">Afiliación (ON/OFF)</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+  <!-- En la tabla de pesaje.ejs -->
+<tbody>
+    <% atletas.forEach(atleta => { 
+        // Lógica de resaltado: Solo si el estatus es 'deshabilitado' o 'pendiente'
+        const esInactivo = (atleta.estatus_afiliacion === 'deshabilitado' || atleta.estatus_afiliacion === 'pendiente');
+    %>
+    <tr class="<%= esInactivo ? 'table-danger' : '' %>">
+        <td><strong><%= atleta.idfdff || '---' %></strong></td>
+        <td>
+            <%= atleta.nombre %>
+            <% if(esInactivo) { %><br><small class="text-danger fw-bold"><i class="fas fa-lock"></i> REQUIERE VALIDACIÓN/PAGO</small><% } %>
+        </td>
+        <td><%= atleta.cedula %></td>
+        <td class="text-center">
+            <span class="badge <%= atleta.estatus_afiliacion === 'habilitado' ? 'bg-success' : 'bg-secondary' %>">
+                <%= atleta.estatus_afiliacion.toUpperCase() %>
+            </span>
+        </td>
+        <td>
+            <div class="btn-group">
+                <!-- Botón de Pesar: Bloqueado si no está habilitado -->
+                <button class="btn btn-primary btn-sm fw-bold" 
+                        onclick="abrirModalPesaje('<%= atleta.id %>', '<%= atleta.nombre %>')"
+                        <%= esInactivo ? 'disabled' : '' %>>
+                    PESAR
+                </button>
+                <!-- NUEVO: Botón para ir al detalle a habilitarlo -->
+                <a href="/inscripcion/<%= atleta.id %>" class="btn btn-warning btn-sm">
+                    <i class="fas fa-edit"></i>
+                </a>
+            </div>
+        </td>
+    </tr>
+    <% }) %>
+</tbody>
+
+        </table>
+    </div>
+</div>
+
+<!-- VENTANA FLOTANTE (MODAL) -->
+<div class="modal fade" id="modalPesaje" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Medición: <span id="nombreAtletaModal"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+           <form id="formGuardarPesaje">
+                <div class="modal-body p-4">
+                    <input type="hidden" id="atletaIdInput">
+                    <input type="hidden" id="juezIdLogueado" value="<%= juezLogueado.id %>">
+        
+                    <div class="text-center mb-3">
+                        <span class="badge bg-secondary">Juez de Turno: <%= juezLogueado.full_name %></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold">Peso (kg)</label>
+                            <input type="number" step="0.01" id="pesoActual" class="form-control form-control-lg text-center" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">Estatura (cm)</label>
+                            <input type="number" step="0.1" id="estaturaActual" class="form-control form-control-lg text-center" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success fw-bold">GUARDAR Y OFICIALIZAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    const modalElement = document.getElementById('modalPesaje');
+    const myModal = new bootstrap.Modal(modalElement);
+
+    // --- FUNCIÓN DEL SWITCH (AFILIACIÓN) ---
+async function actualizarAfiliacion(atletaId, estaActivo) {
+    // Validación de seguridad
+    if (!atletaId || atletaId === "") {
+        console.error("Error: ID de atleta no detectado");
+        return;
+    }
+
+    const nuevoEstatus = estaActivo ? 'habilitado' : 'deshabilitado';
+    // Para PostgreSQL, la fecha debe ir en formato YYYY-MM-DD o ser null
+    const fechaHoy = estaActivo ? new Date().toISOString().split('T')[0] : null;
+
+    // 1. Actualizamos SOLO los campos de estatus en la tabla 'atletas'
+    const { error: errAtleta } = await _supabase
+        .from('atletas')
+        .update({ 
+            estatus_afiliacion: nuevoEstatus,
+            fecha_ultima_renovacion: fechaHoy 
+        })
+        .eq('id', atletaId); // Verifica si en tu tabla es 'id' o 'atleta_id'
+
+    if (errAtleta) {
+        alert("Error al actualizar estatus: " + errAtleta.message);
+        console.log("Detalles del error:", errAtleta);
+        return;
+    }
+
+    // 2. Si activamos, subimos el nivel del usuario en 'profiles'
+    if (estaActivo) {
+        await _supabase
+            .from('profiles')
+            .update({ role: 'atleta' })
+            .eq('id', atletaId);
+    }
+
+    alert("Atleta " + (estaActivo ? 'Habilitado' : 'Deshabilitado') + " correctamente.");
+    window.location.reload();
+}
+
+
+    function abrirModalPesaje(id, nombre) {
+        document.getElementById('atletaIdInput').value = id;
+        document.getElementById('nombreAtletaModal').innerText = nombre;
+        myModal.show();
+    }
+
+    document.getElementById('buscarAtleta').addEventListener('keyup', function() {
+        let valor = this.value.toLowerCase();
+        let filas = document.querySelectorAll('#tablaAtletas tbody tr');
+        filas.forEach(fila => {
+            fila.style.display = fila.innerText.toLowerCase().includes(valor) ? '' : 'none';
+        });
+    });
+
+    document.getElementById('formGuardarPesaje').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const updates = {
+            
+            id: document.getElementById('atletaIdInput').value,
+            peso_confirmado: parseFloat(document.getElementById('pesoActual').value),
+            estatura_confirmada: parseFloat(document.getElementById('estaturaActual').value),
+            juez_id: document.getElementById('juezIdLogueado').value || "<%= user.id %>",
+            estatus_pesaje: 'aprobado'
+        };
+
+        const { error } = await _supabase.from('inscripciones').upsert(updates);
+
+        if (error) {
+            alert("Error al oficializar: " + error.message);
+        } else {
+            alert("Atleta Pesado y Oficializado.");
+            window.location.reload();
+        }
+    });
+</script>
+
+<%- include("template/footer") %>

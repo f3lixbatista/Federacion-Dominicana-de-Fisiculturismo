@@ -232,6 +232,32 @@
                         </div>
             </div>
 
+
+
+    <!-- Dentro de tu formulario de detalleInscripcion.ejs -->
+<div class="card border-primary mb-4 shadow-sm">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="fw-bold mb-0">Estatus de Membresía</h5>
+            <small class="text-muted">Active este switch para habilitar al atleta en la competencia actual.</small>
+        </div>
+        <div class="form-check form-switch border p-2 rounded bg-light">
+            <input class="form-check-input" type="checkbox" role="switch" id="switchAfiliacion" 
+                   style="width: 4em; height: 2em; cursor: pointer;"
+                   <%= atleta.estatus_afiliacion === 'habilitado' ? 'checked' : '' %>
+                   onchange="actualizarAfiliacionDetalle('<%= atleta.id %>', this.checked)">
+            <label class="form-check-label ms-2 fw-bold" for="switchAfiliacion" id="lblEstatus">
+                <%= atleta.estatus_afiliacion === 'habilitado' ? 'HABILITADO' : 'INACTIVO' %>
+            </label>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
             <div class="col-md-3 py-0 pt-0  mb-4">
                         <label for="validationTooltip05" class="form-label">Preparador</label>
                         <input value="<%= atleta.preparador %>" type="text" class="form-control" name="preparador" id="validationTooltip05" required="">
@@ -254,6 +280,10 @@
                         <div class="invalid-tooltip">
                             Correo Electronico de su Preparador
                         </div>
+
+    
+
+
             </div>
 
                 <!-- <div class="col-12 mt-5 d-flex gap-2">
@@ -267,6 +297,8 @@
                     >
                        Actualizar
                     </button> 
+
+
             </form>
         </div>
             <div class="d-grid gap-3 d-md-block">
@@ -282,6 +314,7 @@
              </button>
             </div>
 
+   
              <H4>
                 Firma de Atleta_______________________________________<span class="fs-6">Con esta firma certifico que no tengo antecedentes penales ni asuntos pendientes con la justici</span>
             </H4>
@@ -292,68 +325,129 @@
 
 <%- include("template/footer") %>
 
+<script src="/js/supabase.js"></script>
 <script>
-    // Lógica para ELIMINAR (DELETE)
+    // 1. INICIALIZACIÓN GLOBAL (Debe ir de primero)
+    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+
+    // 2. FUNCIÓN DEL SWITCH (Para Habilitar Atleta)
+    async function actualizarAfiliacionDetalle(atletaId, estaActivo) {
+    if (!atletaId) return alert("Error: ID de atleta no válido");
+
+    const nuevoEstatus = estaActivo ? 'habilitado' : 'deshabilitado';
+    // Habilitado hasta el 31 de dic del año actual
+    const fechaRenovacion = estaActivo ? new Date().getFullYear() + "-12-31" : null;
+
+    try {
+        // 1. Actualizamos al ATLETA (la fila que estamos viendo)
+        const { error: errAtleta } = await _supabase
+            .from('atletas')
+            .update({ 
+                estatus_afiliacion: nuevoEstatus,
+                fecha_ultima_renovacion: fechaRenovacion 
+            })
+            .eq('id', atletaId); // <--- IMPORTANTE: Usamos el ID del atleta de la fila
+
+        if (errAtleta) throw errAtleta;
+
+        // 2. Actualizamos el ROL del Atleta en la tabla PROFILES
+        // Solo si lo estamos habilitando, para que pueda entrar a su panel
+        if (estaActivo) {
+            const { error: errRol } = await _supabase
+                .from('profiles')
+                .update({ role: 'atleta' })
+                .eq('id', atletaId); // <--- IMPORTANTE: Cambiamos el rol AL ATLETA, no a ti
+            
+            if (errRol) console.error("No se pudo actualizar el rol, pero el estatus sí.");
+        }
+
+        // 3. Feedback visual sin recargar la página
+        const lbl = document.getElementById('lblEstatus');
+        if (lbl) {
+            lbl.innerText = estaActivo ? 'HABILITADO' : 'INACTIVO';
+            lbl.className = estaActivo ? 'form-check-label ms-2 fw-bold text-success' : 'form-check-label ms-2 fw-bold text-muted';
+        }
+        
+        console.log(`Atleta ${atletaId} actualizado a ${nuevoEstatus}`);
+
+    } catch (err) {
+        console.error("🔥 Error crítico:", err.message);
+        alert("No se pudo actualizar: " + err.message);
+        // Si falló, regresamos el switch a su estado anterior
+        document.getElementById('switchAfiliacion').checked = !estaActivo;
+    }
+}
+
+
+    // 3. Lógica para EDITAR (PUT)
+    formularioEditar.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const idAtleta = formularioEditar.dataset.id;
+    const formData = new FormData(formularioEditar);
+    const dataObject = Object.fromEntries(formData.entries());
+
+    // Mapeo de nombres para Supabase
+    if (dataObject.categoria) { dataObject.categoria_afiliacion = dataObject.categoria; delete dataObject.categoria; }
+    if (dataObject.estatura) { dataObject.estatura_inicial = dataObject.estatura; delete dataObject.estatura; }
+    if (dataObject.peso) { dataObject.peso_inicial = dataObject.peso; delete dataObject.peso; }
+
+    // Limpieza de campos que no van a la tabla 'atletas'
+    delete dataObject.role;
+    delete dataObject.email;
+    delete dataObject.switchAfiliacion;
+
+    try {
+        const res = await fetch(`/atletas/${idAtleta}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dataObject)
+        });
+
+        if (!res.ok) {
+            // Si da 403 o 500, lanzamos el error para verlo en consola
+            const texto = await res.text();
+            console.error("Error servidor:", texto);
+            throw new Error("Acceso denegado o error de servidor (403/500)");
+        }
+
+        const resData = await res.json();
+        if (resData.estado) {
+            alert('✅ Atleta actualizado');
+            window.location.href = '/atletas';
+        }
+    } catch (e) {
+        alert(e.message);
+    }
+});
+
+
+
+    // 4. Lógica para ELIMINAR (DELETE)
     const btnEliminar = document.querySelector('#btnEliminar');
     if(btnEliminar) {
         btnEliminar.addEventListener('click', async () => {
             const id = btnEliminar.dataset.id;
-            const confirmar = confirm('¿Estás seguro de eliminar este registro permanentemente?');
-            
-            if(confirmar) {
+            if(confirm('¿Estás seguro de eliminar este registro permanentemente?')) {
                 try {
                     const res = await fetch(`/atletas/${id}`, { method: 'DELETE' });
                     const resData = await res.json();
-                    
                     if(resData.estado) {
                         window.location.href = '/atletas';
                     } else {
                         alert('Error: ' + resData.mensaje);
                     }
                 } catch (e) {
-                    console.error("Error en el fetch de eliminación", e);
+                    console.error("Error en el eliminación", e);
                 }
             }
         });
     }
 
-    // Lógica para EDITAR (PUT)
-    const formularioEditar = document.querySelector('#formularioEditar');
-    if(formularioEditar) {
-        formularioEditar.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = formularioEditar.dataset.id;
-            
-            // Creamos un objeto con todos los campos del formulario automáticamente
-            const formData = new FormData(formularioEditar);
-            const dataObject = Object.fromEntries(formData.entries());
-
-            try {
-                const res = await fetch(`/atletas/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dataObject)
-                });
-                
-                const resData = await res.json();
-                
-                if(resData.estado) {
-                    alert('Atleta actualizado con éxito');
-                    window.location.href = '/atletas';
-                } else {
-                    alert('No se pudo actualizar: ' + resData.mensaje);
-                }
-            } catch (e) {
-                console.error("Error en el fetch de actualización", e);
-            }
-        });
-    }
-
-     const printBtn = document.getElementById('print');
-        
+    // 5. Lógica para IMPRIMIR
+    const printBtn = document.getElementById('print');
+    if(printBtn) {
         printBtn.addEventListener('click', function() {
-            print();
-            
+            window.print();
         });
-
+    }
 </script>

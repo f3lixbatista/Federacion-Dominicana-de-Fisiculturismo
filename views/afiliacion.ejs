@@ -170,67 +170,96 @@
 
 <script src="/js/supabase.js"></script>
 <script>
+    // 1. Inicialización de Supabase
     const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
 
-    document.getElementById('formMembresia').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btnEnviar');
-        btn.disabled = true;
-        btn.innerText = 'Procesando...';
+    // 2. Lógica para el SWITCH de activación (Para el Juez/Estadístico)
+    async function actualizarAfiliacionDetalle(atletaId, estaActivo) {
+        const nuevoEstatus = estaActivo ? 'habilitado' : 'deshabilitado';
+        const fechaRenovacion = estaActivo ? new Date().getFullYear() + "-12-31" : null;
 
-        const { data: { user } } = await _supabase.auth.getUser();
-        const formData = new FormData(e.target);
-        
-        const profileData = {
-            atleta_id: user.id,
-            idfdff: formData.get('id_fdff'),
-            full_name: formData.get('nombre'),
-            cedula: formData.get('cedula'),
-            pasaporte: formData.get('pasaporte'),
-            nacionalidad: formData.get('nacionalidad'),
-            fecha_nacimiento: formData.get('nacimiento'),
-            sexo: formData.get('sexo'),
-            ocupacion: formData.get('ocupacion'),
-            calle: formData.get('calle'),
-            sector: formData.get('sector'),
-            municipio: formData.get('municipio'),
-            provincia: formData.get('provincia'),
-            pais: formData.get('pais'),
-            postal: formData.get('postal'),
-            celular: formData.get('celular'),
-            telfijo: formData.get('telfijo'),
-            instagram: formData.get('instagram'),
-            categoria_afiliacion: formData.get('categoria'),
-            estatura_inicial: formData.get('estatura'),
-            peso_inicial: formData.get('peso'),
-            gimnasio: formData.get('gimnasio'),
-            preparador: formData.get('preparador'),
-            celular_preparador: formData.get('celular_preparador'),
-            email_preparador: formData.get('email_preparador'),
-            estatus_afiliacion: 'pendiente'
-        };
-
-        const { error } = await _supabase.from('profiles').upsert(profileData);
+        const { error } = await _supabase
+            .from('atletas')
+            .update({ 
+                estatus_afiliacion: nuevoEstatus,
+                fecha_ultima_renovacion: fechaRenovacion 
+            })
+            .eq('id', atletaId);
 
         if (error) {
-            alert("Error: " + error.message);
-            btn.disabled = false;
-            
+            alert("No se pudo actualizar: " + error.message);
         } else {
-            alert("¡Solicitud enviada correctamente! Te esperamos el día del pesaje para oficializar tu membresía.");
-           
-            btn.innerText = 'SOLICITAR AFILIACIÓN';
-           
-            window.location.href = '/';
+            if (estaActivo) await _supabase.from('profiles').update({ role: 'atleta' }).eq('id', atletaId);
+            alert("Estatus actualizado correctamente.");
+            window.location.reload();
         }
-    });
+    }
 
-         const printBtn = document.getElementById('print');
-    printBtn.addEventListener('click', function() {
-        window.print();
-    });
+    // 3. Lógica para ENVIAR EL FORMULARIO (Cuando el atleta solicita afiliación)
+    const formMembresia = document.getElementById('formMembresia');
+    if (formMembresia) {
+        formMembresia.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnEnviar');
+            if(btn) btn.disabled = true;
 
+            const { data: { user }, error: authError } = await _supabase.auth.getUser();
+            
+            if (!user) {
+                alert("Debes iniciar sesión para afiliarte.");
+                window.location.href = '/login';
+                return;
+            }
 
+            const formData = new FormData(e.target);
+            const profileData = {
+                id: user.id,
+                idfdff: formData.get('idfdff'), // Asegúrate que el input name sea 'idfdff'
+                nombre: formData.get('nombre'),
+                cedula: formData.get('cedula'),
+                pasaporte: formData.get('pasaporte'),
+                nacionalidad: formData.get('nacionalidad'),
+                fecha_nacimiento: formData.get('nacimiento'),
+                sexo: formData.get('sexo'),
+                ocupacion: formData.get('ocupacion'),
+                calle: formData.get('calle'),
+                sector: formData.get('sector'),
+                municipio: formData.get('municipio'),
+                provincia: formData.get('provincia'),
+                pais: formData.get('pais'),
+                postal: formData.get('postal'),
+                celular: formData.get('celular'),
+                telfijo: formData.get('telfijo'),
+                instagram: formData.get('instagram'),
+                categoria_afiliacion: formData.get('categoria'),
+                estatura_inicial: formData.get('estatura'),
+                peso_inicial: formData.get('peso'),
+                gimnasio: formData.get('gimnasio'),
+                preparador: formData.get('preparador'),
+                celular_preparador: formData.get('celular_preparador'),
+                email_preparador: formData.get('email_preparador'),
+                estatus_afiliacion: 'pendiente' // El atleta siempre inicia como pendiente
+            };
+
+            const { error } = await _supabase.from('atletas').upsert(profileData);
+
+            if (error) {
+                alert("Error al registrar: " + error.message);
+                if(btn) btn.disabled = false;
+            } else {
+                alert("¡Solicitud enviada correctamente!");
+                window.location.href = '/servicios';
+            }
+        });
+    }
+
+    // 4. Lógica para el botón IMPRIMIR
+    const printBtn = document.getElementById('print');
+    if (printBtn) {
+        printBtn.addEventListener('click', function() {
+            window.print();
+        });
+    }
 </script>
 
 <%- include("template/footer") %>

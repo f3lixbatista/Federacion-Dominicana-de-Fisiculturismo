@@ -6,40 +6,53 @@ const { checkRole } = require('../middlewares/auth');
 // 1. VISTA PRINCIPAL: Carga atletas y categorías CON sus competidores ya inscritos
 router.get('/', async (req, res) => {
     try {  
-        // Traemos eventos
+        // 1. Traemos la "Cartelera" del evento (Unión de Eventos + Categorías)
+        // Aquí es donde vive 'orden_secuencia_categoria'
         const { data: arrayCategorias, error: errCat } = await supabase
-            .from('eventos')
-            .select('*')
-            .order('salida', { ascending: true });
+            .from('eventos_categorias')
+            .select(`
+                id,
+                orden_secuencia_categoria,
+                evento_id,
+                eventos (nombre),
+                categorias (id, nombre, modalidad, disciplina, division)
+            `)
+            .order('orden_secuencia_categoria', { ascending: true });
 
-        // Traemos atletas para la tabla de arriba
+        // 2. Traemos atletas (Para el buscador del Estadístico)
         const { data: arrayAtletas, error: errAtl } = await supabase
             .from('atletas')
             .select('*');
 
-        // TRUCO PRO: Traemos todos los competidores ya inscritos para mostrarlos abajo
-        const { data: todosLosCompetidores } = await supabase
-            .from('competidores')
-            .select('*');
+        // 3. Traemos las INSCRIPCIONES (Antes llamadas competidores)
+        const { data: todasLasInscripciones, error: errIns } = await supabase
+            .from('inscripciones')
+            .select(`
+                *,
+                profiles (full_name) -- Traemos el nombre desde perfiles
+            `);
 
-        // Cruzamos los datos: metemos a cada competidor en su categoría correspondiente
+        if (errCat || errAtl || errIns) throw (errCat || errAtl || errIns);
+
+        // 4. Cruzamos los datos: Metemos a los atletas inscritos en su categoría
         if (arrayCategorias) {
-            arrayCategorias.forEach(cat => {
-                cat.Competidor = todosLosCompetidores.filter(c => c.id_evento === cat.id);
+            arrayCategorias.forEach(catRel => {
+                // Filtramos las inscripciones que coincidan con el ID de la relación evento_categoria
+                catRel.Competidor = todasLasInscripciones.filter(ins => ins.evento_cat_id === catRel.id);
             });
         }
-
-        if (errCat || errAtl) throw (errCat || errAtl);
 
         res.render("inscripcion", {
             arrayAtletas: arrayAtletas || [],
             arrayCategorias: arrayCategorias || []
         });
+
     } catch (error) {
-        console.error("Error al cargar inscripción:", error.message);
+        console.error("🔥 Error al cargar inscripción:", error.message);
         res.render("inscripcion", { arrayAtletas: [], arrayCategorias: [] });
     }
 });
+
 
 // 2. ASIGNAR NÚMEROS DE COMPETIDOR (La ruta que faltaba para el botón verde)
 router.post('/asignar-numeros', async (req, res) => {
@@ -71,32 +84,7 @@ router.post('/asignar-numeros', async (req, res) => {
     }
 });
 
-// 3. VISTA DETALLE PARA INSCRIBIR
-router.get('/:id', async (req, res) => {
-    const id = req.params.id;
-    try {     
-        const { data: arrayCategorias } = await supabase
-            .from('eventos')
-            .select('*')
-            .order('nombre', { ascending: true });
 
-        const { data: atleta, error } = await supabase
-            .from('atletas')
-            .select('*')
-            .eq('id', id)
-            .single();
-
-        if (error) throw error;
-        
-        res.render('detalleInscripcion', {
-            atleta: atleta,
-            arrayCategorias: arrayCategorias,
-            error: false           
-        });
-    } catch (error) {       
-        res.render('detalleInscripcion', { error: true, mensaje: "Atleta no encontrado" });
-    }
-});
 
 // Ruta principal de inscripción
 router.get('InscripcionAtleta', checkRole(['atleta', 'admin']), async (req, res) => {
@@ -154,8 +142,44 @@ router.put('/:id', async (req, res) => {
 
 // 2. Ruta para el ESTADÍSTICO (Para el módulo de Pesaje que haremos ahora)
 router.get('/pesaje', checkRole(['estadistico', 'admin', 'juez']), async (req, res) => {
-    // ... aquí irá la lógica del buscador de atletas para pesarlos ...
-    res.render('pesaje');
-    });
+    try {
+        const { data: atletas } = await supabase.from('atletas').select('*');
+        // Enviamos los datos del usuario logueado (que vienen del middleware de auth)
+        res.render('pesaje', { 
+            atletas: atletas || [],
+            juezLogueado: res.locals.user // Aquí va el perfil del que está usando la PC
+        });
+    } catch (error) {
+        res.render('pesaje', { atletas: [], error: error.message });
+    }
+});
+
+
+// 3. VISTA DETALLE PARA INSCRIBIR
+router.get('/:id', async (req, res) => {
+    const id = req.params.id;
+    try {     
+        const { data: arrayCategorias } = await supabase
+            .from('eventos')
+            .select('*')
+            .order('nombre', { ascending: true });
+
+        const { data: atleta, error } = await supabase
+            .from('atletas')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        
+        res.render('detalleInscripcion', {
+            atleta: atleta,
+            arrayCategorias: arrayCategorias,
+            error: false           
+        });
+    } catch (error) {       
+        res.render('detalleInscripcion', { error: true, mensaje: "Atleta no encontrado" });
+    }
+});
 
 module.exports = router;

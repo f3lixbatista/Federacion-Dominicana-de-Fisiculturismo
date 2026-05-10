@@ -60,10 +60,19 @@ router.get('/social', checkRole(['general', 'admin']), (req, res) => {
  */
 
 // router/rutasBat.js
-router.get('/logout', (req, res) => {
+/*  router.get('/logout', (req, res) => {
     // Esta vista se encargará de limpiar el cliente y luego redirigir
+    res.render('logout', { titulo: "Cerrando Sesión..." }); res.redirect('/login');
+});  */
+
+// router/rutasBat.js
+router.get('/logout', (req, res) => {
+    // 1. Limpiamos la cookie que guarda el token
+    res.clearCookie('supabase-token');
+    // 2. Redirigimos al login
     res.render('logout', { titulo: "Cerrando Sesión..." });
 });
+
 
 
 module.exports = router;
