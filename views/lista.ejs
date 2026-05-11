@@ -1,0 +1,43 @@
+<%- include("../template/cabecera", {tituloWeb: "Próximos Eventos"}) %>
+
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary">Calendario de Eventos FDFF</h1>
+        <p class="lead text-muted">Seleccione una competencia para ver detalles, inscribirse o ver resultados.</p>
+    </div>
+
+    <div class="row g-4">
+        <% if (eventos.length > 0) { %>
+            <% eventos.forEach(evento => { %>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow transition" style="border-radius: 15px; overflow: hidden;">
+                        <!-- Imagen representativa -->
+                        <div style="height: 200px; overflow: hidden;">
+                            <img src="<%= evento.banner_url || '/img/default-event.jpg' %>" class="img-fluid w-100 h-100" style="object-fit: cover;">
+                        </div>
+                        
+                        <div class="card-body p-4">
+                            <span class="badge mb-2 <%= evento.estado === 'finalizado' ? 'bg-secondary' : 'bg-success' %>">
+                                <%= evento.estado.toUpperCase() %>
+                            </span>
+                            <h4 class="card-title fw-bold"><%= evento.nombre %></h4>
+                            <p class="card-text text-muted small">
+                                <i class="fas fa-map-marker-alt me-1"></i> <%= evento.lugar %><br>
+                                <i class="fas fa-calendar-alt me-1"></i> <%= evento.fecha_inicio %>
+                            </p>
+                            <a href="/eventos/<%= evento.id %>" class="btn btn-primary w-100 fw-bold mt-3">
+                                Entrar al Evento <i class="fas fa-chevron-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="col-12 text-center py-5">
+                <h3 class="text-muted">No hay eventos programados en este momento.</h3>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<%- include("../template/footer") %>

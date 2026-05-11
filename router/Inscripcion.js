@@ -4,54 +4,54 @@ const supabase = require('../supabaseClient');
 const { checkRole } = require('../middlewares/auth');
 
 // 1. VISTA PRINCIPAL: Carga atletas y categorías CON sus competidores ya inscritos
+// router/Inscripcion.js
+
 router.get('/', async (req, res) => {
-    try {  
-        // 1. Traemos la "Cartelera" del evento (Unión de Eventos + Categorías)
-        // Aquí es donde vive 'orden_secuencia_categoria'
-        const { data: arrayCategorias, error: errCat } = await supabase
-            .from('eventos_categorias')
-            .select(`
-                id,
-                orden_secuencia_categoria,
-                evento_id,
-                eventos (nombre),
-                categorias (id, nombre, modalidad, disciplina, division)
-            `)
-            .order('orden_secuencia_categoria', { ascending: true });
+    try {
+        // 1. Buscamos el evento que esté activo (en fase de inscripcion o pesaje)
+        const { data: evento, error: errEv } = await supabase
+            .from('eventos')
+            .select('*')
+            .or('estado.eq.inscripcion,estado.eq.pesaje')
+            .limit(1)
+            .single();
 
-        // 2. Traemos atletas (Para el buscador del Estadístico)
-        const { data: arrayAtletas, error: errAtl } = await supabase
+        // 2. Traemos los atletas habilitados
+        const { data: arrayAtletas } = await supabase
             .from('atletas')
-            .select('*');
+            .select('*')
+            .eq('estatus_afiliacion', 'habilitado');
 
-        // 3. Traemos las INSCRIPCIONES (Antes llamadas competidores)
-        const { data: todasLasInscripciones, error: errIns } = await supabase
-            .from('inscripciones')
-            .select(`
-                *,
-                profiles (full_name) -- Traemos el nombre desde perfiles
-            `);
-
-        if (errCat || errAtl || errIns) throw (errCat || errAtl || errIns);
-
-        // 4. Cruzamos los datos: Metemos a los atletas inscritos en su categoría
-        if (arrayCategorias) {
-            arrayCategorias.forEach(catRel => {
-                // Filtramos las inscripciones que coincidan con el ID de la relación evento_categoria
-                catRel.Competidor = todasLasInscripciones.filter(ins => ins.evento_cat_id === catRel.id);
-            });
+        // 3. Traemos las categorías vinculadas a ese evento
+        let arrayCategorias = [];
+        if (evento) {
+            const { data: cats, error } = await supabase
+                .from('eventos_categorias')
+                .select(`
+                    id,
+                    categorias!inner (id, nombre, modalidad, sexo, division) 
+                `) 
+                .eq('evento_id', evento.id);
+            arrayCategorias = cats || [];
         }
 
+        // 4. PASO CLAVE: Enviamos todo a la vista
         res.render("inscripcion", {
+            eventoActual: evento || { nombre: "Sin evento activo", estado: "cerrado", id: null },
             arrayAtletas: arrayAtletas || [],
             arrayCategorias: arrayCategorias || []
         });
 
     } catch (error) {
-        console.error("🔥 Error al cargar inscripción:", error.message);
-        res.render("inscripcion", { arrayAtletas: [], arrayCategorias: [] });
+        console.error("Error al cargar inscripción:", error.message);
+        res.render("inscripcion", { 
+            eventoActual: { nombre: "Error", estado: "cerrado" }, 
+            arrayAtletas: [], 
+            arrayCategorias: [] 
+        });
     }
 });
+
 
 
 // 2. ASIGNAR NÚMEROS DE COMPETIDOR (La ruta que faltaba para el botón verde)

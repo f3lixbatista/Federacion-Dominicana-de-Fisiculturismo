@@ -1,108 +1,239 @@
-<%- include("template/cabecera", {tituloWeb: "Panel de Inscripción"}) %>
+<%- include("template/cabecera", {tituloWeb: "Inscripción y Pesaje"}) %>
 
-<!-- SECCIÓN 1: Seleccionar Atleta para Inscribir -->
-<div class="container divGeneral border border-1 border-dark p-2 col-10" style="min-height: 41vh;">
-    <div class="table-responsive col-12 mt-0 pt-0">     
-        <h1 class="my-3">Inscripción a Evento</h1>
-       
-        <table class="records_list table table-striped table-bordered border-dark table-hover" id="mydatatable">
-            <thead>
-                <tr class="table-blue text-white"> 
-                    <th scope="col" class="bg-primary">Cédula</th>
-                    <th scope="col" class="bg-primary">Nombre</th>  
-                    <th scope="col" class="bg-primary">IDFDFF</th>
-                    <th scope="col" class="bg-primary">Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (arrayAtletas.length > 0) { %>
-                    <% arrayAtletas.forEach(atleta => { %>
-                        <tr>
-                            <td class="col-sm-3"><%= atleta.cedula %></td>
-                            <td class="col-sm-8 fs-4"><%= atleta.nombre %></td>
-                            <th class="col-sm-2" scope="row"><%= atleta.idfdff %></th>
-                            <!-- Cambio: atleta.id (Supabase) -->
-                            <td><a href="inscripcion/<%= atleta.id %>" class="btn btn-warning btn-sm">Inscribir</a></td>
-                        </tr>
-                    <% }) %>
-                <% } %>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- SECCIÓN 2: Listado de Competidores por Categoría (Para asignar Números) -->
-<div class="imprInsc container table-responsive col-10 mx-auto mt-5 pt-0">     
-    <div class="text-center mb-4">
-        <h1 class="fw-bold text-dark">Listado de Competidores Inscritos</h1>
-        <p class="text-muted">Asigne los números de competidor y guarde los cambios</p>
-    </div>
-
-    <form action="/inscripcion/asignar-numeros" method="POST">
-        <div id="mitabla">
-            <% if (arrayCategorias.length > 0) { %>
-                <% arrayCategorias.forEach(categoria => { %>
-
-                <table class="table table-bordered border-dark border-3 mb-5">
-                    <thead>
-                        <tr class="table-dark">
-                            <th class="text-center" style="width: 10%;"><%= categoria.salida %></th> 
-                            <th colspan="4" class="fs-4 text-center"><%= categoria.categoria %> - <%= categoria.nombre %></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="fw-bold bg-light text-center">
-                            <td style="width: 15%;">No. Competidor</td>
-                            <td>Atleta</td>
-                            <td>Edad</td>
-                            <td>Peso</td>
-                            <td>Estatura</td>
-                        </tr>
-                        
-                        <!-- Supabase: Los competidores vienen como array dentro de la categoria -->
-                        <% if (categoria.Competidor && categoria.Competidor.length > 0) { %>
-                            <% categoria.Competidor.forEach(comp => { %>
-                                <tr class="align-middle">
-                                    <td class="p-0">
-                                        <input name="Numero" value="<%= comp.numero_competidor %>" 
-                                               class="form-control text-center border-0 fw-bold" 
-                                               type="number" placeholder="---">
-                                        
-                                        <!-- Inputs ocultos para procesar el POST masivo -->
-                                        <input type="hidden" name="IdCompetidor" value="<%= comp.id %>">
-                                        <input type="hidden" name="IdCat" value="<%= categoria.id %>">
-                                    </td>
-                                    <td class="fs-5 fw-bold"><%= comp.nombre %></td>
-                                    <td class="text-center"><%= comp.edad || '--' %></td>
-                                    <td class="text-center"><%= comp.peso_real || '--' %> kg</td>
-                                    <td class="text-center"><%= comp.estatura_real || '--' %> cm</td>
-                                </tr>
-                            <% }) %>
-                        <% } else { %>
-                            <tr><td colspan="5" class="text-center text-muted">Sin competidores aún</td></tr>
-                        <% } %>
-                    </tbody>
-                </table>
-
-                <% }) %>
+<div class="container my-5">
+    <!-- PANEL DE CONTROL: CIERRE DE INSCRIPCIONES WEB -->
+    <div class="card border-danger mb-5 shadow-sm">
+        <div class="card-body d-flex justify-content-between align-items-center bg-light">
+            <div>
+                <h4 class="fw-bold mb-0 text-danger"><i class="fas fa-lock"></i> Fase de Evento: <%= eventoActual.nombre %></h4>
+                <p class="small text-muted mb-0">Estado actual: <strong><%= eventoActual.estado.toUpperCase() %></strong></p>
+            </div>
+            <% if (eventoActual.estado === 'inscripcion') { %>
+                <button class="btn btn-danger btn-lg fw-bold" onclick="cerrarInscripcionesWeb('<%= eventoActual.id %>')">
+                    CERRAR INSCRIPCIONES WEB
+                </button>
+            <% } else { %>
+                <span class="badge bg-dark p-3 fs-6">INSCRIPCIONES WEB CERRADAS</span>
             <% } %>
         </div>
+    </div>
 
-        <button id="btnInscripcion" class="btn btn-success btn-lg w-100 mb-5" type="submit">
-            Guardar Números de Competidor
-        </button>
-    </form>
+    <!-- SECCIÓN 1: BUSCADOR DE ATLETAS (ESTACIÓN DE REGISTRO) -->
+    <div class="container divGeneral border border-1 border-dark p-4 col-12 shadow-sm bg-white" style="border-radius: 15px;">
+        <h2 class="mb-4 fw-bold text-primary border-bottom pb-2">Estación de Inscripción Asistida</h2>
+        <div class="table-responsive">     
+            <table class="table table-striped table-bordered border-dark table-hover" id="mydatatable">
+                <thead>
+                    <tr class="table-dark text-white"> 
+                        <th scope="col" class="text-white">Cédula</th>
+                        <th scope="col" class="text-white">Nombre del Atleta</th>  
+                        <th scope="col" class="text-white">ID-FDFF</th>
+                        <th scope="col" class="text-white">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% arrayAtletas.forEach(atleta => { %>
+                        <tr>
+                            <td><%= atleta.cedula %></td>
+                            <td class="fw-bold fs-5"><%= atleta.nombre %></td>
+                            <td><%= atleta.idfdff || 'Sin ID' %></td>
+                            <td>
+                                <button class="btn btn-warning btn-sm fw-bold px-3" 
+                                        onclick="abrirModalInscripcion('<%= atleta.id %>', '<%= atleta.nombre %>', '<%= atleta.sexo %>')">
+                                    <i class="fas fa-edit"></i> Inscribir
+                                </button>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- BOTÓN HACIA LA SIGUIENTE ETAPA -->
+    <div class="text-center mt-5 pt-3">
+        <a href="/preparacion-evento" class="btn btn-outline-dark btn-lg px-5 fw-bold shadow-sm">
+            IR A PREPARACIÓN DE EVENTO <i class="fas fa-chevron-right ms-2"></i>
+        </a>
+    </div>
 </div>
 
-<script type="text/javascript">
+<!-- VENTANA FLOTANTE (MODAL): SELECCIÓN DINÁMICA DE CATEGORÍAS -->
+<div class="modal fade" id="modalInscripcion" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header bg-primary text-white py-3">
+                <h5 class="modal-title fw-bold"><i class="fas fa-clipboard-list me-2"></i> Selección para: <span id="spanNombreAtleta"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-warning small mb-3">
+                    <i class="fas fa-exclamation-triangle"></i> Al elegir una categoría, el sistema bloqueará automáticamente las modalidades no afines.
+                </div>
+                
+                <form id="formInscripcionAsistida">
+                    <input type="hidden" id="atletaIdIns">
+                    
+                    <div id="listaCategoriasAfines" class="list-group shadow-sm">
+                        <!-- Se inyecta vía JavaScript -->
+                    </div>
+
+                    <!-- RESUMEN DE COBRO -->
+                    <div class="mt-4 p-4 bg-light rounded-4 d-flex justify-content-between align-items-center border border-2 border-success">
+                        <div>
+                            <h5 class="mb-0 fw-bold">Monto Total a Pagar</h5>
+                            <small class="text-muted" id="detallePrecios"></small>
+                        </div>
+                        <h3 class="mb-0 fw-bold text-success" id="totalMonto">RD$ 0.00</h3>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light py-3">
+                <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-lg fw-bold px-4" onclick="guardarInscripcionOficial()">
+                    OFICIALIZAR Y GUARDAR
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+    // 1. Inicialización de Supabase
+    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    
+    // 2. Variables del Servidor (Protegidas para evitar errores de sintaxis JS)
+    const categoriasDelEvento = JSON.parse('<%- JSON.stringify(arrayCategorias || []) %>');
+    const costos = { 
+        primera: Number("<%= eventoActual.costo_primera_cat || 0 %>"), 
+        adicional: Number("<%= eventoActual.costo_adicional || 0 %>") 
+    };
+
+    // 3. Inicialización del Modal
+    let myModal;
+    document.addEventListener('DOMContentLoaded', () => {
+        const modalEl = document.getElementById('modalInscripcion');
+        if (modalEl) myModal = new bootstrap.Modal(modalEl);
+    });
+
+    function abrirModalInscripcion(id, nombre, sexo) {
+        document.getElementById('atletaIdIns').value = id;
+        document.getElementById('spanNombreAtleta').innerText = nombre;
+        document.getElementById('detallePrecios').innerText = `1ra Cat: RD$ ${costos.primera.toLocaleString()} | Adic: RD$ ${costos.adicional.toLocaleString()}`;
+        
+        renderizarCategorias(sexo);
+        if (myModal) myModal.show();
+    }
+
+    function renderizarCategorias(sexoAtleta) {
+        const contenedor = document.getElementById('listaCategoriasAfines');
+        if (!contenedor) return;
+        contenedor.innerHTML = '';
+
+        // Filtrado por Sexo con protección contra nulos
+        const filtradas = categoriasDelEvento.filter(rel => {
+            const sexoCat = rel.categorias?.sexo || 'Unisex';
+            return sexoCat === sexoAtleta || sexoCat === 'Unisex';
+        });
+
+        if (filtradas.length === 0) {
+            contenedor.innerHTML = '<div class="alert alert-warning">No hay categorías disponibles.</div>';
+            return;
+        }
+
+        filtradas.forEach(rel => {
+            const item = `
+                <div class="list-group-item d-flex justify-content-between align-items-center cat-item py-3" 
+                     data-modalidad="${rel.categorias?.modalidad || ''}" id="item-${rel.id}">
+                    <div class="form-check w-100 cursor-pointer">
+                        <input class="form-check-input check-cat me-3" type="checkbox" 
+                               value="${rel.id}" id="check-${rel.id}" onchange="validarAfinidad(this)">
+                        <label class="form-check-label w-100" for="check-${rel.id}">
+                            <span class="fw-bold d-block">${rel.categorias?.nombre || 'S/N'}</span>
+                            <span class="small text-muted">${rel.categorias?.modalidad || ''} | ${rel.categorias?.division || ''}</span>
+                        </label>
+                    </div>
+                </div>`;
+            contenedor.insertAdjacentHTML('beforeend', item);
+        });
+        calcularCobro();
+    }
+
+    function validarAfinidad(checkbox) {
+        const checksSeleccionados = document.querySelectorAll('.check-cat:checked');
+        const todosLosItems = document.querySelectorAll('.cat-item');
+        
+        if (checksSeleccionados.length > 0) {
+            const modalidadElegida = checksSeleccionados[0].closest('.cat-item').dataset.modalidad;
+            
+            todosLosItems.forEach(item => {
+                const cb = item.querySelector('.check-cat');
+                if (item.dataset.modalidad !== modalidadElegida) {
+                    cb.disabled = true;
+                    item.classList.add('opacity-50', 'bg-light');
+                }
+            });
+        } else {
+            todosLosItems.forEach(item => {
+                const cb = item.querySelector('.check-cat');
+                cb.disabled = false;
+                item.classList.remove('opacity-50', 'bg-light');
+            });
+        }
+        calcularCobro();
+    }
+
+    function calcularCobro() {
+        const cantidad = document.querySelectorAll('.check-cat:checked').length;
+        let total = 0;
+        if (cantidad > 0) {
+            total = costos.primera + ((cantidad - 1) * costos.adicional);
+        }
+        document.getElementById('totalMonto').innerText = `RD$ ${total.toLocaleString()}`;
+    }
+
+    async function guardarInscripcionOficial() {
+        const atletaId = document.getElementById('atletaIdIns').value;
+        const categoriasElegidas = Array.from(document.querySelectorAll('.check-cat:checked')).map(cb => cb.value);
+
+        if (categoriasElegidas.length === 0) return alert("Seleccione al menos una categoría.");
+
+        try {
+            const { data: { user } } = await _supabase.auth.getUser();
+            const inscripciones = categoriasElegidas.map(catRelId => ({
+                atleta_id: atletaId,
+                evento_cat_id: catRelId,
+                id_evento: "<%= eventoActual?.id %>",
+                juez_id: user.id,
+                estatus_pesaje: 'aprobado'
+            }));
+
+            const { error } = await _supabase.from('competidores').insert(inscripciones);
+            if (error) throw error;
+
+            alert("¡Inscripción oficializada!");
+            location.reload();
+        } catch (err) {
+            alert("Error: " + err.message);
+        }
+    }
+
+    async function cerrarInscripcionesWeb(eventoId) {
+        if (!confirm("¿Cerrar autoinscripciones web?")) return;
+        const { error } = await _supabase.from('eventos').update({ estado: 'pesaje' }).eq('id', eventoId);
+        if (error) alert(error.message);
+        else location.reload();
+    }
+
     $(document).ready(function () {
-        // Inicialización de DataTable para la tabla de atletas (arriba)
-        var table = $('#mydatatable').DataTable({
+        $('#mydatatable').DataTable({
             "dom": 'Bfrtip',
-            "language": { "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json" },
+            "language": { "url": "https://datatables.net" },
             "buttons": ['excel', 'pdf']
         });
     });
 </script>
+
 
 <%- include("template/footer") %>

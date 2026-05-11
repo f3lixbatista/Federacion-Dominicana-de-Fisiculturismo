@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../supabaseClient');
 const { checkRole } = require('../middlewares/auth');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() }); // Guardamos en memoria para subir a Supabase
+
+
 
 // 1. LISTAR CATEGORÍAS (Acceso: Ejecutivo y Admin)
 router.get('/', checkRole(['ejecutivo', 'admin']), async (req, res) => {
@@ -52,20 +56,50 @@ router.get('/nuevoEvento', checkRole(['ejecutivo', 'admin']), async (req, res) =
 });
 
 // 4. PROCESAR NUEVO EVENTO (Estructura Relacional)
-router.post('/nuevoEvento', checkRole(['admin', 'ejecutivo']), async (req, res) => {
-    const { NombreEvento, Lugar, Fecha, costo_primera, costo_adicional, CategoriasIds } = req.body;
+router.post('/nuevoEvento', upload.single('banner'), async (req, res) => {
+   
 
     try {
-        // 1. Insertar el evento con los costos del formulario
+         const { NombreEvento, Lugar, fecha_pesaje, lugar_pesaje, direccion_pesaje, direccion, Fecha, costo_primera, costo_adicional, CategoriasIds } = req.body;
+        let publicUrl = '';
+
+         if (req.file) {
+            const file = req.file;
+            const fileExt = file.originalname.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+            const filePath = `banners/${fileName}`;
+            const { data, error: uploadError } = await supabase.storage
+                .from('eventos-banners')
+                .upload(filePath, file.buffer, {
+                    contentType: file.mimetype,
+                    upsert: true
+                });
+
+            if (uploadError) throw uploadError;
+
+            // Obtener la URL pública
+            const { data: urlData } = supabase.storage
+                .from('eventos-banners')
+                .getPublicUrl(filePath);
+            
+            publicUrl = urlData.publicUrl;
+        }
+
+         // 1. Insertar el evento con los costos del formulario
         const { data: evento, error: errEv } = await supabase
             .from('eventos')
             .insert([{ 
                 nombre: NombreEvento, 
                 lugar: Lugar, 
+                direccion: direccion,
                 fecha_inicio: Fecha,
+                banner_url: publicUrl,
                 costo_primera_cat: parseFloat(costo_primera) || 0,
                 costo_adicional: parseFloat(costo_adicional) || 0,
-                estado: 'inscripcion'
+                estado: 'inscripcion',
+                fecha_pesaje: fecha_pesaje,
+                direccion_pesaje: direccion_pesaje,
+                lugar_pesaje: lugar_pesaje
             }])
             .select().single();
 
@@ -76,7 +110,7 @@ router.post('/nuevoEvento', checkRole(['admin', 'ejecutivo']), async (req, res) 
         const vinculos = categoriasArray.map(catId => ({
             evento_id: evento.id,
             categoria_id: catId,
-            orden_secuencia_categoria: 0 // Se definirá en el módulo de MC
+            orden_secuencia_categoria: 0
         }));
 
         const { error: errVin } = await supabase

@@ -8,13 +8,79 @@
         <% } %>
         
         <% if (!error) { %>
+
+
             <label class="fs-1 fw-bold">Crear Nuevo Evento</label><br>
-            <input class="col-sm-8 form-control my-3 mb-4" type="text" placeholder="Nombre del Evento (Ej: Copa Independencia 2024)" name="NombreEvento" id="evento">
+           
+            <div class="container col-12 pt-2">
+                <div class="row g-4">
+
+                    <div class="col-5">
+                        <label for="evento" class="fs-4 fw-bold col-sm-7 form-label mr-0 pr-0">Nombre del Evento:</label>
+                        <div class="col-10 ml-2 pl-0"> <!-- Nombre evento  -->
+                            <input class="form-control" type="text" placeholder="Nombre del Evento (Ej: Copa Independencia 2024)" name="NombreEvento" id="evento">
+                        </div>
+                    </div>
+
+                    <div class="col-2">
+                        <label for="fech" class="fs-5 fw-bold col-sm-12 form-label mr-0 pr-0">Fecha:</label>
+                        <div class="col-12 ml-2 pl-0"> <!-- Fecha evento  -->
+                            <input class="col-sm-10 form-control" type="date" placeholder="Fecha" name="Fecha" id="fech">
+                        </div>
+                    </div>
+
+                    <div class="col-2">
+                        <label for="fech" class="fs-5 fw-bold col-sm-12 form-label mr-0 pr-0">Lugar:</label>
+                        <div class="col-12 ml-2 pl-0"> <!-- Lugar evento  -->
+                            <input class="col-sm-10 form-control" type="text" placeholder="Lugar del Evento" name="Lugar" id="lug">
+                        </div>
+                    </div>
+
+                    <div class="col-3">
+                        <label for="fech" class="fs-5 fw-bold col-sm-12 form-label mr-0 pr-0">Direccion:</label>
+                        <div class="col-12 ml-2 pl-0"> <!-- Direccion de evento  -->
+                            <input class="col-sm-12 form-control" type="text" placeholder="Direccion de Evento" name="direccion" id="fech">
+                        </div>
+                    </div>
             
-            <label class="my-4 fs-3 fw-bold">Seleccione las Categorías para este Evento</label>
+                </div>
+            </div>
+
+
+            <div class="container col-12 mb-0 pt-5">
+                <div class="row g-3">
+
+                    <div class="col-3">
+                        <label for="event" class="fs-5 fw-bold col-sm-10 form-label mr-0 pr-0">Fecha de Pesaje:</label>
+                        <div class="col-10 ml-2 pl-0"> <!-- Fecha Pesaje  -->
+                            <input class="form-control" type="date" placeholder="Fecha" name="fecha_pesaje" id="event">
+                        </div>
+                    </div>
+
+                    <div class="col-3">
+                        <label for="fech" class="fs-5 fw-bold col-sm-12 form-label mr-0 pr-0">Lugar de Pesaje:</label>
+                        <div class="col-12 ml-2 pl-0"> <!-- Lugar Pesaje  -->
+                            <input class="col-sm-10 form-control" type="text" placeholder="Lugar" name="lugar_pesaje" id="fech">
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <label for="fech" class="fs-5 fw-bold col-sm-12 form-label mr-0 pr-0">Direccion de Pesaje:</label>
+                        <div class="col-12 ml-2 pl-0"> <!-- direccion pesaje  -->
+                            <input class="col-sm-7 form-control" type="text" placeholder="Direccion" name="direccion_pesaje" id="lug">
+                        </div>
+                    </div>
+
+                
+                </div>
+            </div>
+            
+            
+            <label class="fs-3 pb-0 mb-0 mt-5 fw-bold">Seleccione las Categorías para este Evento</label>
 
             <div class="container col-12 ">
                 <div class="row g-2">
+
                     <div class="col-6">
                         <label for="buscar" class="fs-5 fw-bold col-sm-3 form-label mr-0 pr-0">Buscar:</label>
                         <div class="col-5 ml-2 pl-0">
