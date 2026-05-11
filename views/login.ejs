@@ -25,30 +25,37 @@
         </div>
 
         <!-- Formulario Email -->
-        <form id="formLogin">
-            <div class="mb-2">
-                <label class="form-label small fw-bold mb-1">Correo Electrónico</label>
-                <input type="email" id="email" class="form-control form-control-sm" placeholder="correo@ejemplo.com" required>
-            </div>
-            
-            <div class="mb-3">
-                <div class="d-flex justify-content-between">
-                    <label class="form-label small fw-bold mb-1">Contraseña</label>
-                    <a href="#" onclick="recuperarPassword()" class="text-decoration-none" style="font-size: 0.7rem; color: #0d6efd;">¿Olvidaste tu clave?</a>
-                </div>
-                <div class="input-group input-group-sm shadow-sm">
-                    <input type="password" id="password" class="form-control border-end-0" placeholder="••••••••" required style="border-radius: 8px 0 0 8px;">
-                    <button class="btn btn-outline-secondary border-start-0" type="button" id="btnVerPassword" style="border-radius: 0 8px 8px 0; background: white; border-color: #dee2e6;">
-                        <span id="iconoOjo" style="font-size: 1rem;">👁️</span>
-                    </button>
-                </div>
-            </div>
+       <!-- Cambia el id="formLogin" por action="/login" method="POST" -->
+<form action="/login" method="POST">
+    <div class="mb-2">
+        <label class="form-label small fw-bold mb-1">Correo Electrónico</label>
+        <!-- IMPORTANTE: Agrega name="email" -->
+        <input type="email" name="email" id="email" class="form-control form-control-sm" placeholder="correo@ejemplo.com" required>
+    </div>
+    
+    <div class="mb-3">
+        <div class="d-flex justify-content-between">
+            <label class="form-label small fw-bold mb-1">Contraseña</label>
+            <a href="#" onclick="recuperarPassword()" class="text-decoration-none" style="font-size: 0.7rem; color: #0d6efd;">¿Olvidaste tu clave?</a>
+        </div>
+        <div class="input-group input-group-sm shadow-sm">
+            <!-- IMPORTANTE: Agrega name="password" -->
+            <input type="password" name="password" id="password" class="form-control border-end-0" placeholder="••••••••" required style="border-radius: 8px 0 0 8px;">
+            <button class="btn btn-outline-secondary border-start-0" type="button" id="btnVerPassword" style="border-radius: 0 8px 8px 0; background: white; border-color: #dee2e6;">
+                <span id="iconoOjo" style="font-size: 1rem;">👁️</span>
+            </button>
+        </div>
+    </div>
 
-            <div class="d-grid gap-2 mt-3">
-                <button type="submit" class="btn btn-primary btn-sm py-2 fw-bold" style="border-radius: 8px;">Iniciar Sesión</button>
-                <button type="button" onclick="registrarUsuario()" class="btn btn-link btn-sm text-decoration-none text-muted" style="font-size: 0.75rem;">¿No tienes cuenta? Regístrate</button>
-            </div>
-        </form>
+    <div class="d-grid gap-2 mt-3">
+        <button type="submit" class="btn btn-primary btn-sm py-2 fw-bold" style="border-radius: 8px;">Iniciar Sesión</button>
+        <button type="button" onclick="registrarUsuario()" class="btn btn-link btn-sm text-decoration-none text-muted" style="font-size: 0.75rem;">¿No tienes cuenta? Regístrate</button>
+    </div>
+</form>
+
+<!-- BORRA O COMENTA el listener de 'formLogin' en el script de abajo, 
+ya que ahora el POST lo maneja el servidor -->
+
     </div>
 </div>
 
@@ -91,7 +98,7 @@
         });
     }
 
-    document.getElementById('formLogin').addEventListener('submit', async (e) => {
+   /*  document.getElementById('formLogin').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
@@ -105,7 +112,7 @@
             document.cookie = `sb-access-token=${data.session.access_token}; path=/; SameSite=Lax; max-age=${data.session.expires_in}`;
             window.location.href = '/';
         }
-    });
+    }); */
 
     async function registrarUsuario() {
         const email = document.getElementById('email').value;

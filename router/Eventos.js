@@ -4,7 +4,7 @@ const { checkRole } = require('../middlewares/auth'); // Tu middleware de protec
 const supabase = require('../supabaseClient');
 
 // A. LISTADO GLOBAL: Lo que ve todo el mundo al entrar
-router.get('/', async (req, res) => {
+routerEventos.get('/', async (req, res) => {
     try {
         const { data: eventos, error } = await supabase
             .from('eventos')
@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
 });
 
 // B. DASHBOARD DEL EVENTO: La página única para cada competencia
-router.get('/:id', async (req, res) => {
+routerEventos.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const { data: evento, error } = await supabase

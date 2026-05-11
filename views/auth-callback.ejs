@@ -1,46 +1,35 @@
-<%- include("template/cabecera", {tituloWeb: "Finalizando Autenticación"}) %>
+<%- include("template/cabecera", {tituloWeb: "Sincronizando..."}) %>
 
-<div class="container text-center mt-5">
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Cargando...</span>
-    </div>
-    <h2 class="mt-3">Procesando inicio de sesión...</h2>
-    <p class="text-muted">Por favor, no cierres esta ventana.</p>
+<div class="container text-center my-5" style="min-height: 70vh;">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+    <h2 class="mt-4 fw-bold">Sincronizando con el Servidor...</h2>
+    <p class="text-muted">Estableciendo credenciales de acceso seguro.</p>
 </div>
 
-<!-- 1. Cargamos el archivo local (el mismo que usamos en login) -->
-<script src="/js/supabase.js"></script>
 <script>
     (function() {
-        const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
-        const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
-        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // 1. Extraer el token del HASH (#) de la URL que recibiste
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        const expiresIn = params.get('expires_in');
 
-        _supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log("Evento detectado:", event);
+        if (accessToken) {
+            // 2. CREAR LA COOKIE (Usamos el nombre que el servidor ya reconoce)
+            const nombreCookie = "sb-access-token";
+            document.cookie = `${nombreCookie}=${accessToken}; path=/; SameSite=Lax; max-age=${expiresIn || 3600}`;
 
-            if (event === 'PASSWORD_RECOVERY') {
-                // 1. Si es recuperación, lo mandamos a una página especial
-                console.log("🔄 Redirigiendo a cambio de contraseña...");
-                window.location.href = '/reset-password'; 
-            } 
-            else if (event === 'SIGNED_IN' && session) {
-                // 2. Si es un login normal, guardamos la cookie y al home
-                document.cookie = `sb-access-token=${session.access_token}; path=/; SameSite=Lax; max-age=${session.expires_in}`;
-                window.location.href = '/'; 
-            }
-        });
+            console.log("✅ Cookie inyectada. Saltando al Dashboard...");
 
-        // Seguridad: Si en 10 segundos no pasa nada, volver al login
-        setTimeout(() => {
-            if (window.location.pathname.includes('callback')) {
-                window.location.href = '/login';
-            }
-        }, 10000);
+            // 3. RETARDO CRÍTICO: 1 segundo para que el navegador asiente la cookie
+            // antes de que el servidor reciba la siguiente petición.
+            setTimeout(() => {
+                window.location.replace('/eventos'); 
+            }, 1000);
+        } else {
+            console.error("No se detectó token en la URL.");
+            window.location.href = '/login';
+        }
     })();
 </script>
-
-
-
 <%- include("template/footer") %>
-
