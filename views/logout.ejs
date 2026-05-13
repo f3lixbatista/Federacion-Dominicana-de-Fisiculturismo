@@ -11,7 +11,7 @@
         await _supabase.auth.signOut();
 
         // 2. Limpiar la Cookie del servidor
-        document.cookie = "sb-access-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "supabase-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
         // 3. Limpiar LocalStorage
         localStorage.clear();

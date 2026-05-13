@@ -109,7 +109,7 @@ ya que ahora el POST lo maneja el servidor -->
             alert("Error: " + error.message);
         } else {
             // Guardamos cookie para el servidor
-            document.cookie = `sb-access-token=${data.session.access_token}; path=/; SameSite=Lax; max-age=${data.session.expires_in}`;
+            document.cookie = `supabase-token=${data.session.access_token}; path=/; SameSite=Lax; max-age=${data.session.expires_in}`;
             window.location.href = '/';
         }
     }); */

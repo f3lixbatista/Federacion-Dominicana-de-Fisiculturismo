@@ -1,54 +1,60 @@
-const supabase = require('../supabaseClient');
+const { getAuthenticatedUser, getTokenFromRequest } = require('../services/authService');
 
-const checkRole = (rolesPermitidos) => {
-    return async (req, res, next) => {
+const attachUser = async (req, res, next) => {
+    res.locals.user = null;
+
+    if (req.url.startsWith('/auth/callback')) {
+        return next();
+    }
+
+    const token = getTokenFromRequest(req);
+
+    if (token) {
         try {
-            // 1. Intentar obtener el token de la cookie que creamos en el callback
-            const token = req.cookies['sb-access-token'];
-            
-            if (!token) {
-                console.log("🚫 No hay token en la cookie. Redirigiendo al login...");
-                return res.redirect('/login');
-            }
-
-            // 2. Validar el token con Supabase para identificar al usuario
-            const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-            
-            if (authError || !user) {
-                console.log("❌ Token inválido o sesión expirada.");
-                return res.redirect('/login');
-            }
-
-            // 3. Buscar el rol en la tabla 'profiles'
-            const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .single();
-                    console.log("ID del usuario:", user.id);
-                    console.log("Perfil encontrado:", profile);
-            if (profileError || !profile) {
-                console.log("⚠️ Usuario autenticado pero sin perfil en la tabla 'profiles'.");
-                return res.redirect('/login');
-            }
-
-            console.log(`✅ Acceso concedido - Usuario: ${user.email} | Rol: ${profile.role}`);
-
-            // 4. Verificar si el rol tiene permiso o es admin
-            if (rolesPermitidos.includes(profile.role) || profile.role === 'admin') {
-                return next();
-            } else {
-                return res.status(403).render('404', { 
-                    titulo: "Acceso Denegado", 
-                    descripcion: "Tu rango actual no permite ver esta sección." 
-                });
+            const user = await getAuthenticatedUser(req);
+            if (user) {
+                res.locals.user = user;
             }
         } catch (error) {
-            console.error("🔥 Error crítico en el Middleware:", error);
-            res.redirect('/login');
+            console.error('⚠️ Error en procesamiento de sesión:', error.message || error);
         }
+    }
+
+    if (!req.url.includes('.')) {
+        const status = res.locals.user ? `${res.locals.user.nombre} (${res.locals.user.role})` : 'Invitado';
+        console.log(`🌐 [${req.method}] ${req.url} - Usuario: ${status}`);
+    }
+
+    next();
+};
+
+const requireAuth = (req, res, next) => {
+    if (!res.locals.user) {
+        return res.redirect('/login');
+    }
+    next();
+};
+
+const checkRole = (allowedRoles = []) => {
+    return (req, res, next) => {
+        if (!res.locals.user) {
+            return res.redirect('/login');
+        }
+
+        const role = res.locals.user.role;
+        if (allowedRoles.includes(role) || role === 'admin') {
+            return next();
+        }
+
+        return res.status(403).render('404', {
+            titulo: 'Acceso Denegado',
+            descripcion: 'Tu rango actual no permite ver esta sección.'
+        });
     };
 };
 
-// LA LÍNEA QUE FALTABA:
-module.exports = { checkRole };
+module.exports = {
+    attachUser,
+    requireAuth,
+    checkRole
+};

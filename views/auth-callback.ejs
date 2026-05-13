@@ -16,7 +16,7 @@
 
         if (accessToken) {
             // 2. CREAR LA COOKIE (Usamos el nombre que el servidor ya reconoce)
-            const nombreCookie = "sb-access-token";
+            const nombreCookie = "supabase-token";
             document.cookie = `${nombreCookie}=${accessToken}; path=/; SameSite=Lax; max-age=${expiresIn || 3600}`;
 
             console.log("✅ Cookie inyectada. Saltando al Dashboard...");
