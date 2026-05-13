@@ -156,11 +156,45 @@ const detalleInscripcion = async (req, res) => {
     }
 };
 
+const guardarInscripcionAsistida = async (req, res) => {
+    const { atleta_id, id_evento, categoriasElegidas } = req.body;
+    const juez_id = res.locals.user?.id;
+
+    if (!atleta_id || !id_evento || !categoriasElegidas || categoriasElegidas.length === 0) {
+        return res.status(400).json({ estado: false, mensaje: 'Datos incompletos para la inscripción.' });
+    }
+
+    try {
+        const categoriasArray = Array.isArray(categoriasElegidas) ? categoriasElegidas : [categoriasElegidas];
+
+        const registrosCompetidores = categoriasArray.map(eventoCatId => ({
+            atleta_id,
+            evento_cat_id: eventoCatId,
+            id_evento,
+            juez_id,
+            estatus_pesaje: 'aprobado',
+            salida: 0
+        }));
+
+        const { error: errComp } = await supabase
+            .from('competidores')
+            .insert(registrosCompetidores);
+
+        if (errComp) throw errComp;
+
+        res.json({ estado: true, mensaje: '¡Inscripción oficializada y categorías registradas con éxito!' });
+    } catch (error) {
+        console.error('🔥 Error en Inscripción Asistida:', error.message);
+        res.status(500).json({ estado: false, mensaje: error.message });
+    }
+};
+
 module.exports = {
     inscripcionPage,
     asignarNumeros,
     inscripcionAtletaPage,
     crearCompetidor,
     pesajePage,
-    detalleInscripcion
+    detalleInscripcion,
+    guardarInscripcionAsistida
 };

@@ -52,7 +52,7 @@
 
     <!-- BOTÓN HACIA LA SIGUIENTE ETAPA -->
     <div class="text-center mt-5 pt-3">
-        <a href="/preparacion-evento" class="btn btn-outline-dark btn-lg px-5 fw-bold shadow-sm">
+        <a href="/eventos/<%= eventoActual.id %>/preparacion" class="btn btn-outline-dark btn-lg px-5 fw-bold shadow-sm">
             IR A PREPARACIÓN DE EVENTO <i class="fas fa-chevron-right ms-2"></i>
         </a>
     </div>
@@ -164,58 +164,78 @@
         const checksSeleccionados = document.querySelectorAll('.check-cat:checked');
         const todosLosItems = document.querySelectorAll('.cat-item');
         
+        // REGLA 1: Primero evaluamos y bloqueamos afinidades
         if (checksSeleccionados.length > 0) {
-            const modalidadElegida = checksSeleccionados[0].closest('.cat-item').dataset.modalidad;
+            // Buscamos la modalidad del primer elemento que se seleccionó
+            const primeraCatSeleccionada = checksSeleccionados[0].closest('.cat-item');
+            const modalidadElegida = primeraCatSeleccionada.dataset.modalidad;
             
             todosLosItems.forEach(item => {
                 const cb = item.querySelector('.check-cat');
+                // Si la modalidad es diferente a la seleccionada originalmente, bloqueamos
                 if (item.dataset.modalidad !== modalidadElegida) {
                     cb.disabled = true;
                     item.classList.add('opacity-50', 'bg-light');
                 }
             });
         } else {
+            // Si desmarcan todas las casillas, liberamos el formulario completo
             todosLosItems.forEach(item => {
                 const cb = item.querySelector('.check-cat');
                 cb.disabled = false;
                 item.classList.remove('opacity-50', 'bg-light');
             });
         }
+
+        // REGLA 2: Luego de bloquear, el sistema calcula el cobro basado en los sobrevivientes
         calcularCobro();
     }
 
     function calcularCobro() {
         const cantidad = document.querySelectorAll('.check-cat:checked').length;
         let total = 0;
+        
         if (cantidad > 0) {
+            // Costos definidos a nivel de evento
             total = costos.primera + ((cantidad - 1) * costos.adicional);
         }
-        document.getElementById('totalMonto').innerText = `RD$ ${total.toLocaleString()}`;
+        
+        document.getElementById('totalMonto').innerText = `RD$ ${total.toLocaleString('es-DO')}`;
     }
 
     async function guardarInscripcionOficial() {
         const atletaId = document.getElementById('atletaIdIns').value;
+        // Captura los valores de los checkboxes seleccionados (los IDs de eventos_categorias)
         const categoriasElegidas = Array.from(document.querySelectorAll('.check-cat:checked')).map(cb => cb.value);
 
-        if (categoriasElegidas.length === 0) return alert("Seleccione al menos una categoría.");
+        if (categoriasElegidas.length === 0) {
+            return alert("Debe seleccionar al menos una categoría para oficializar.");
+        }
 
         try {
-            const { data: { user } } = await _supabase.auth.getUser();
-            const inscripciones = categoriasElegidas.map(catRelId => ({
-                atleta_id: atletaId,
-                evento_cat_id: catRelId,
-                id_evento: "<%= eventoActual?.id %>",
-                juez_id: user.id,
-                estatus_pesaje: 'aprobado'
-            }));
+            // Hacemos la petición POST al servidor que creamos en el Paso 1
+            const respuesta = await fetch('/inscripcion/guardar-asistida', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    atleta_id: atletaId,
+                    id_evento: "<%= eventoActual?.id %>", // Variable global con el ID del evento de la URL
+                    categoriasElegidas: categoriasElegidas
+                })
+            });
 
-            const { error } = await _supabase.from('competidores').insert(inscripciones);
-            if (error) throw error;
+            const resultado = await respuesta.json();
 
-            alert("¡Inscripción oficializada!");
-            location.reload();
-        } catch (err) {
-            alert("Error: " + err.message);
+            if (resultado.estado) {
+                alert('✅ ' + resultado.mensaje);
+                myModal.hide();
+                window.location.reload(); // Recargamos para actualizar las tablas
+            } else {
+                alert('❌ Error: ' + resultado.mensaje);
+            }
+        } catch (error) {
+            console.error("Error en envío:", error);
+            alert("Hubo un problema de conexión con el servidor.");
         }
     }
 

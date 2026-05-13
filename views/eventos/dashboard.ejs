@@ -28,6 +28,51 @@
                 </div>
             </div>
 
+            <% if (evento.estado === 'en_progreso' || evento.estado === 'finalizado') { %>
+                <div class="card border-0 shadow-sm p-4 mt-4">
+                    <h4 class="fw-bold text-dark mb-3"><i class="fas fa-users text-primary"></i> Listados Oficiales de Competidores</h4>
+                    <p class="text-muted small">Consulta el orden de salida y dorsales oficiales asignados para este evento.</p>
+                    
+                    <div class="accordion" id="accordionListados">
+                        <% if (locals.listadoPublico && listadoPublico.length > 0) { %>
+                            <% listadoPublico.forEach((cat, idx) => { %>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<%= cat.id %>">
+                                            En tarima [<%= cat.orden %>] — <%= cat.nombre %> (<%= cat.total %> Atletas)
+                                        </button>
+                                    </h2>
+                                    <div id="collapse-<%= cat.id %>" class="accordion-collapse collapse" data-bs-parent="#accordionListados">
+                                        <div class="accordion-body p-0">
+                                            <table class="table table-striped table-sm text-center mb-0 small">
+                                                <thead class="table-dark">
+                                                    <tr>
+                                                        <th>Dorsal</th>
+                                                        <th class="text-start ps-3">Atleta</th>
+                                                        <th>Team</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% cat.atletas.forEach(atleta => { %>
+                                                        <tr>
+                                                            <td class="fw-bold text-primary fs-5"><%= atleta.dorsal %></td>
+                                                            <td class="text-start ps-3 fw-bold"><%= atleta.nombre %></td>
+                                                            <td><%= atleta.team %></td>
+                                                        </tr>
+                                                    <% }) %>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <p class="text-muted italic small text-center p-3">Los listados están siendo procesados por la mesa técnica.</p>
+                        <% } %>
+                    </div>
+                </div>
+            <% } %>
+
             <!-- RESULTADOS (PUBLICO GENERAL) -->
             <% if(evento.estado === 'finalizado') { %>
                 <div class="alert alert-success d-flex justify-content-between align-items-center p-4">
@@ -81,10 +126,10 @@
                         <% if (['admin', 'estadistico', 'ejecutivo'].includes(user.role)) { %>
                             <div class="border-top pt-3 mt-2">
                                 <p class="small fw-bold text-muted mb-2">GESTIÓN ADMINISTRATIVA</p>
-                                <a href="/preparacion-evento/<%= evento.id %>" class="btn btn-warning w-100 mb-2 fw-bold">
+                                <a href="/eventos/preparacion-evento/<%= evento.id %>" class="btn btn-warning w-100 mb-2 fw-bold">
                                     <i class="fas fa-user-plus"></i> PREPARACIÓN DE EVENTO
                                 </a>
-                                <a href= "/inscripcion?evento=<%= evento.id %>" class="btn btn-outline-warning text-dark w-100">
+                                <a href="/eventos/<%= evento.id %>/monitor-mc" class="btn btn-outline-warning text-dark w-100">
                                     <i class="fas fa-tasks"></i> PROGRAMA DE COMPETENCIA
                                 </a>
                             </div>

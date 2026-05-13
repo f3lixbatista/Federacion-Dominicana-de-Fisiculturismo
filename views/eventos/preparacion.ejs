@@ -1,0 +1,267 @@
+<%- include("../template/cabecera", {tituloWeb: "Preparación de Evento"}) %>
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold text-dark"><i class="fas fa-cogs text-primary"></i> Preparación de Evento</h1>
+            <p class="text-muted mb-0">Gestione el cuórum, fusiones y defina el Orden de Salida oficial.</p>
+        </div>
+        <a href="/eventos/<%= eventoId %>" class="btn btn-outline-secondary fw-bold">
+            <i class="fas fa-arrow-left"></i> Volver al Panel
+        </a>
+    </div>
+
+    <!-- FORMULARIO MAESTRO DE LOGÍSTICA -->
+    <form id="formOficializarEvento">
+        <input type="hidden" id="idEvento" value="<%= eventoId %>">
+
+        <!-- Se integra dentro del form de preparacion.ejs -->
+        <div class="card p-4 shadow-sm mb-4 border-2">
+            <h4 class="fw-bold text-dark mb-3"><i class="fas fa-microphone text-danger"></i> Construcción del Programa del Evento</h4>
+            <p class="text-muted small">Intercale los bloques de protocolo entre las categorías del evento para armar el show:</p>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="d-grid gap-2 border p-3 rounded bg-white">
+                        <button type="button" class="btn btn-outline-dark text-start btn-sm" onclick="agregarBloqueMC('Protocolo', 'Oración de Inicio')">🎙️ Oración de Inicio</button>
+                        <button type="button" class="btn btn-outline-dark text-start btn-sm" onclick="agregarBloqueMC('Protocolo', 'Himno Nacional')">🎙️ Himno Nacional</button>
+                        <button type="button" class="btn btn-outline-dark text-start btn-sm" onclick="agregarBloqueMC('Protocolo', 'Palabras de Bienvenida')">🎙️ Palabras de Bienvenida</button>
+                        <button type="button" class="btn btn-outline-warning text-dark text-start btn-sm fw-bold" onclick="agregarBloqueMC('Premiación', 'Ceremonia de Premiación')">🏆 Premiación</button>
+                        <button type="button" class="btn btn-outline-danger text-start btn-sm" onclick="agregarBloqueMC('Receso', 'Receso de 10 minutos')">⏱️ Receso de 10 minutos</button>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <!-- Lista ordenable -->
+                    <div id="contenedorGuionMC" class="list-group gap-2 border p-3 rounded bg-white" style="min-height: 200px;">
+                        <!-- Las categorías abiertas se pueden auto-inyectar aquí vía JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <% arrayCategorias.forEach((catRel, index) => { %>
+            <div class="card mb-4 shadow-sm border-2 cat-container-box" id="card-<%= catRel.id %>"
+                 data-modalidad="<%= catRel.categorias.modalidad %>"
+                 data-sexo="<%= catRel.categorias.sexo %>"
+                 data-disciplina="<%= catRel.categorias.disciplina %>"
+                 data-division="<%= catRel.categorias.division %>">
+                
+                <div class="card-header bg-light p-3 d-flex justify-content-between align-items-center">
+                    <!-- ORDEN DE SALIDA -->
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="fw-bold text-secondary small">ORDEN:</label>
+                        <input type="number" name="orden_salida" value="<%= catRel.orden_secuencia_categoria || (index + 1) %>" 
+                               class="form-control form-control-sm text-center fw-bold border-primary input-orden" style="width: 70px;" required>
+                        <h5 class="mb-0 ms-3 fw-bold text-dark"><%= catRel.categorias.nombre %></h5>
+                    </div>
+
+                    <!-- ACCIONES DE ESTADO (SELECT) -->
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge bg-secondary px-2 py-1">Atletas: <%= catRel.total_atletas %></span>
+                        <input type="hidden" name="evento_cat_id" value="<%= catRel.id %>">
+                        <select name="estatus_categoria" class="form-select form-select-sm fw-bold border-secondary select-estatus-cat" 
+                                onchange="evaluarEstadoCategoria('<%= catRel.id %>', this.value)">
+                            <option value="abierta activa" <%= catRel.estatus_logistica === 'abierta activa' ? 'selected' : '' %>>Abierta Activa</option>
+                            <option value="fusionada" <%= catRel.estatus_logistica === 'fusionada' ? 'selected' : '' %>>Fusionar</option>
+                            <option value="abierta exhibicion" <%= catRel.estatus_logistica === 'abierta exhibicion' ? 'selected' : '' %>>Abierta Exhibición</option>
+                            <option value="exhibicion" <%= catRel.estatus_logistica === 'exhibicion' ? 'selected' : '' %>>Exhibición</option>
+                            <option value="cerrada" <%= catRel.estatus_logistica === 'cerrada' ? 'selected' : '' %>>Cerrada / Cancelada</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- LISTADO INTERNO DE ATLETAS -->
+                <div class="card-body p-0 container-tabla-atletas">
+                    <table class="table table-sm table-hover mb-0 text-center align-middle">
+                        <thead class="table-light small text-secondary">
+                            <tr>
+                                <th class="text-start ps-4">Atleta</th>
+                                <th>Cédula</th>
+                                <th>Team / Coach</th>
+                                <th>Mediciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if(catRel.atletas && catRel.atletas.length > 0) { %>
+                                <% catRel.atletas.forEach(atleta => { %>
+                                    <tr>
+                                        <td class="text-start ps-4 fw-bold"><%= atleta.nombre %></td>
+                                        <td><%= atleta.cedula %></td>
+                                        <td><%= atleta.gimnasio || '--' %></td>
+                                        <td class="small text-muted">P: <%= atleta.peso %>kg | E: <%= atleta.estatura %>cm</td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr><td colspan="4" class="text-center py-3 text-muted italic">No hay atletas oficializados en esta categoría</td></tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <% }) %>
+
+        <!-- BOTÓN DE CIERRE -->
+        <div class="card p-4 border-primary bg-light shadow-sm text-center mb-5">
+            <h4 class="fw-bold text-primary mb-2"><i class="fas fa-lock"></i> Sello y Cierre de Logística</h4>
+            <p class="text-muted small">Al presionar el botón se reordenará el evento, se ejecutarán las fusiones y el sistema asignará el <b>Dorsal Automático Correlativo</b> a los atletas aptos.</p>
+            <button type="button" onclick="procesarOficializacion()" class="btn btn-primary btn-lg fw-bold px-5 py-3 shadow">
+                OFICIALIZAR LISTADOS Y GENERAR DORSALES
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- MODAL FLOTANTE: FUSIÓN DE CATEGORÍAS AFINES -->
+<div class="modal fade" id="modalFusion" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 15px;">
+            <div class="modal-header bg-warning text-dark py-3">
+                <h5 class="modal-title fw-bold"><i class="fas fa-random me-2"></i> Fusionar Categoría</h5>
+                <button type="button" class="btn-close" onclick="cancelarFusion()"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted small">Selecciona la categoría destino. El sistema solo muestra categorías que comparten **Modalidad, Sexo, Disciplina y División** reglamentaria.</p>
+                <input type="hidden" id="idCatOrigen">
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-secondary">Categorías Destino Compatibles:</label>
+                    <select id="selectCatDestino" class="form-select form-select-lg border-warning">
+                        <!-- Se llena dinámicamente -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-secondary btn-sm fw-bold" onclick="cancelarFusion()">Cancelar</button>
+                <button type="button" class="btn btn-warning btn-sm fw-bold" onclick="confirmarFusion()">APLICAR FUSIÓN</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Guardamos en memoria el estado real de fusiones ejecutadas en la interfaz
+    let mapaFusiones = {}; 
+    const modalFusionObj = new bootstrap.Modal(document.getElementById('modalFusion'));
+
+    function evaluarEstadoCategoria(catRelId, valor) {
+        if (valor === 'fusionada') {
+            document.getElementById('idCatOrigen').value = catRelId;
+            const origenCard = document.getElementById(`card-${catRelId}`);
+            
+            // Extraer metadatos del contenedor HTML para cumplir la regla estricta de la FDFF
+            const mod = origenCard.dataset.modalidad;
+            const sex = origenCard.dataset.sexo;
+            const disc = origenCard.dataset.disciplina;
+            const div = origenCard.dataset.division;
+
+            const selectDestino = document.getElementById('selectCatDestino');
+            selectDestino.innerHTML = '<option value="" disabled selected>Seleccione destino...</option>';
+
+            // Filtrar en tiempo real buscando coincidencias afines exactas
+            const todasLasCards = document.querySelectorAll('.cat-container-box');
+            let encontradas = 0;
+
+            todasLasCards.forEach(card => {
+                const id = card.id.replace('card-', '');
+                if (id !== catRelId && 
+                    card.dataset.modalidad === mod && 
+                    card.dataset.sexo === sex && 
+                    card.dataset.disciplina === disc && 
+                    card.dataset.division === div) {
+                    
+                    const nombre = card.querySelector('h5').innerText;
+                    selectDestino.innerHTML += `<option value="${id}">${nombre}</option>`;
+                    encontradas++;
+                }
+            });
+
+            if (encontradas === 0) {
+                alert("No existen categorías compatibles en el evento para ejecutar esta fusión reglamentaria.");
+                document.getElementById(`card-${catRelId}`).querySelector('.select-estatus-cat').value = 'abierta activa';
+                return;
+            }
+
+            modalFusionObj.show();
+        } else {
+            // Si cambian a otro estado, limpiamos cualquier rastro de fusión previa
+            delete mapaFusiones[catRelId];
+            document.getElementById(`card-${catRelId}`).style.border = 'initial';
+        }
+    }
+
+    function confirmarFusion() {
+        const origen = document.getElementById('idCatOrigen').value;
+        const destino = document.getElementById('selectCatDestino').value;
+
+        if (!destino) return alert("Debe seleccionar una categoría destino.");
+
+        mapaFusiones[origen] = destino;
+        
+        // Marcaje visual de la interfaz
+        const cardOrigen = document.getElementById(`card-${origen}`);
+        cardOrigen.style.border = '2px dashed #ffc107';
+        
+        modalFusionObj.hide();
+    }
+
+    function cancelarFusion() {
+        const origen = document.getElementById('idCatOrigen').value;
+        document.getElementById(`card-${origen}`).querySelector('.select-estatus-cat').value = 'abierta activa';
+        modalFusionObj.hide();
+    }
+
+    async function procesarOficializacion() {
+        if (!confirm("¿Confirma cerrar la fase logística? Esto recalculará listados y asignará números correlativos.")) return;
+
+        const idEvento = document.getElementById('idEvento').value;
+        const bloques = document.querySelectorAll('.cat-container-box');
+        let dataLogistica = [];
+
+        bloques.forEach(b => {
+            const id = b.id.replace('card-', '');
+            dataLogistica.push({
+                evento_cat_id: id,
+                orden: parseInt(b.querySelector('.input-orden').value) || 0,
+                estatus: b.querySelector('.select-estatus-cat').value,
+                fusion_destino_id: mapaFusiones[id] || null
+            });
+        });
+
+        try {
+            const res = await fetch('/eventos/preparacion/oficializar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ eventoId: idEvento, logistica: dataLogistica })
+            });
+
+            const result = await res.json();
+            if (result.estado) {
+                alert("¡Fase completada! Dorsales generados y listados publicados en cartelera web.");
+                window.location.href = `/eventos/${idEvento}`;
+            } else {
+                alert("Error: " + result.mensaje);
+            }
+        } catch (e) {
+            alert("Error de conexión con el servidor backend.");
+        }
+    }
+
+    function agregarBloqueMC(tipo, nombre) {
+        const contenedor = document.getElementById('contenedorGuionMC');
+        if (!contenedor) return;
+
+        const item = document.createElement('div');
+        item.className = 'list-group-item d-flex justify-content-between align-items-center py-3 border rounded';
+        item.innerHTML = `
+            <div>
+                <div class="fw-bold">${nombre}</div>
+                <div class="small text-muted">${tipo}</div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.list-group-item').remove()">Eliminar</button>
+        `;
+
+        contenedor.appendChild(item);
+        contenedor.scrollTop = contenedor.scrollHeight;
+    }
+</script>
+
+<%- include("../template/footer") %>
