@@ -45,7 +45,7 @@
                     
                     <% if (locals.user) { %>
                         <!-- ROL ATLETA / ADMIN -->
-                        <% if (['admin', 'atleta', 'general'].includes(user.role) && evento.estado === 'inscripcion') { %>
+                        <% if (['admin', 'atleta'].includes(user.role) && evento.estado === 'inscripcion') { %>
                             <a href="/inscripcion/IscripcionAtleta?evento=<%= evento.id %>" class="btn btn-primary btn-lg fw-bold">
                                 <i class="fas fa-edit"></i> SELECCIÓN WEB
                             </a>
@@ -67,12 +67,25 @@
                         <!-- ROL ADMIN / ESTADISTICO / EJECUTIVO -->
                         <% if (['admin', 'estadistico', 'ejecutivo'].includes(user.role)) { %>
                             <div class="border-top pt-3 mt-2">
-                                <p class="small fw-bold text-muted mb-2">GESTIÓN ADMINISTRATIVA</p>
-                                <a href="/inscripcion?evento=<%= evento.id %>" class="btn btn-warning w-100 mb-2 fw-bold">
+                                <p class="small fw-bold text-muted mb-2">PERSONAL ESTADÍSTICO</p>
+                                <a href="/inscripcion?evento=<%= evento.id %>" class="btn btn-danger w-100 mb-2 fw-bold text-dark">
                                     <i class="fas fa-user-plus"></i> INSCRIPCIÓN ASISTIDA
                                 </a>
-                                <a href="/preparacion-evento/<%= evento.id %>" class="btn btn-outline-warning text-dark w-100 fw-bold">
-                                    <i class="fas fa-tasks"></i> PREPARACIÓN DE EVENTO
+                                 <a href="/votacion?evento=<%= evento.id %>" class="btn btn-outline-danger w-100 text-dark">
+                                    <i class="fas fa-clipboard-check"></i> MODULO ESTADÍSTICO
+                                </a>
+                            </div>
+                        <% } %>
+
+                         <!-- ROL ADMIN / ESTADISTICO / EJECUTIVO -->
+                        <% if (['admin', 'estadistico', 'ejecutivo'].includes(user.role)) { %>
+                            <div class="border-top pt-3 mt-2">
+                                <p class="small fw-bold text-muted mb-2">GESTIÓN ADMINISTRATIVA</p>
+                                <a href="/preparacion-evento/<%= evento.id %>" class="btn btn-warning w-100 mb-2 fw-bold">
+                                    <i class="fas fa-user-plus"></i> PREPARACIÓN DE EVENTO
+                                </a>
+                                <a href= "/inscripcion?evento=<%= evento.id %>" class="btn btn-outline-warning text-dark w-100">
+                                    <i class="fas fa-tasks"></i> PROGRAMA DE COMPETENCIA
                                 </a>
                             </div>
                         <% } %>

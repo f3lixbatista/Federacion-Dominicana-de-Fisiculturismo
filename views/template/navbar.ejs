@@ -1,9 +1,9 @@
 
 
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-<% console.log("DEPURACIÓN NAVBAR - Usuario:", locals.user) %>
+<!-- <% console.log("DEPURACIÓN NAVBAR - Usuario:", locals.user) %>
   <pre class="text-white small">Rol detectado: <%= locals.user ? user.role : 'Nadie logueado' %></pre>
-
+  -->
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
@@ -49,19 +49,19 @@
 
         <!-- ESTADÍSTICO / OPERATIVO -->
         <% if (user.role === 'estadistico' || user.role === 'admin' || user.role === 'juez') { %>
-          <li class="nav-item active"><a class="nav-link" href="/inscripcion/pesaje"><strong>Pesaje</strong></a></li>
+          <!-- <li class="nav-item active"><a class="nav-link" href="/inscripcion/pesaje"><strong>Pesaje</strong></a></li> -->
           <li class="nav-item active"><a class="nav-link" href="/estadisticas"><strong>Estadísticas</strong></a></li>
         <% } %>
 
-        <!-- BUSCAR: Solo Admin o Ejecutivo -->
+     <!--    <!-- BUSCAR: Solo Admin o Ejecutivo 
         <% if (user.role === 'ejecutivo' || user.role === 'admin') { %>
           <li class="nav-item active"><a class="nav-link" href="/categorias/formDinamica"><strong>Buscar</strong></a></li>
-        <% } %>
+        <% } %> -->
 
         <!-- BOTÓN SALIR -->
         <li class="nav-item active">
           <a class="nav-link text-danger" href="/logout" title="Cerrar Sesión de <%= user.role %>">
-            <strong>Salir</strong> <small>(<%= user.role %>)</small>
+            <strong>Salir</strong><!--  <small>(<%= user.role %>)</small> -->
           </a>
         </li>
 
