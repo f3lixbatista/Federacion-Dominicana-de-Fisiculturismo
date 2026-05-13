@@ -116,9 +116,12 @@
                                 <a href="/inscripcion?evento=<%= evento.id %>" class="btn btn-danger w-100 mb-2 fw-bold text-dark">
                                     <i class="fas fa-user-plus"></i> INSCRIPCIÓN ASISTIDA
                                 </a>
-                                 <a href="/votacion?evento=<%= evento.id %>" class="btn btn-outline-danger w-100 text-dark">
+                                 <a href="/votacion?evento=<%= evento.id %>" class="btn btn-outline-danger w-100 text-dark mb-2">
                                     <i class="fas fa-clipboard-check"></i> MODULO ESTADÍSTICO
                                 </a>
+                                <button class="btn btn-dark fw-bold w-100 mb-2" onclick="abrirConfiguracionPaneles()">
+                                    <i class="fas fa-users-cog text-warning"></i> CONFIGURAR PANELES DE JUECES
+                                </button>
                             </div>
                         <% } %>
 
@@ -147,5 +150,161 @@
         </div>
     </div>
 </div>
+
+<!-- MODAL: GESTIÓN DE PANELES Y SILLAS -->
+<div class="modal fade" id="modalPanelesJueces" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header bg-dark text-white py-3">
+                <h5 class="modal-title fw-bold"><i class="fas fa-gavel text-warning"></i> Configuración de Paneles de Jueces</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- FORMULARIO 1: CREAR NUEVO PANEL -->
+                <div class="bg-light p-3 rounded mb-4 border">
+                    <h6 class="fw-bold text-secondary mb-2">Crear o Añadir Nuevo Panel</h6>
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Número de Panel</label>
+                            <input type="number" id="numPanelNuevo" class="form-control form-control-sm" placeholder="Ej: 1" min="1">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold">Cantidad de Jueces en Mesa</label>
+                            <select id="cantJuecesNuevo" class="form-select form-select-sm">
+                                <option value="5">5 Jueces (Mínimo Oficial)</option>
+                                <option value="7">7 Jueces (Campeonatos Nacionales)</option>
+                                <option value="9">9 Jueces (Copas Internacionales)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" onclick="crearPanelEstructura()" class="btn btn-primary btn-sm w-100 fw-bold">Crear Panel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SELECTOR DE VISUALIZACIÓN / INTERRUPTOR DE PANEL ACTIVO -->
+                <div class="mb-3 d-flex align-items-center gap-2">
+                    <label class="fw-bold text-dark mb-0">PANEL DE JUECES A ASIGNAR / TRABAJAR:</label>
+                    <select id="selectPanelTrabajo" class="form-select form-select-sm border-primary fw-bold text-primary" style="width: 180px;" onchange="cargarSillasDelPanel(this.value)">
+                        <!-- Se llena vía JS -->
+                    </select>
+                </div>
+
+                <!-- CONTENEDOR DINÁMICO DE SILLAS -->
+                <div id="contenedorSillasMesa" class="row g-2 mt-2">
+                    <!-- Se inyectan las sillas (Silla 1, Silla 2...) según la cantidad de jueces configurada -->
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-secondary btn-sm fw-bold" data-bs-dismiss="modal">Cerrar Ventana</button>
+                <button type="button" class="btn btn-success btn-sm fw-bold px-4" onclick="guardarAsignacionSillas()">GUARDAR CONFIGURACIÓN</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    const modalPaneles = new bootstrap.Modal(document.getElementById('modalPanelesJueces'));
+    let listaJuecesFDFF = []; // Arreglo de jueces traídos de profiles para los selectores
+    const idEventoActual = <%= evento.id %>;
+
+    async function abrirConfiguracionPaneles() {
+        // 1. Traer todos los usuarios con rol 'juez' de la tabla profiles
+        const { data: profiles } = await _supabase.from('profiles').select('id, nombre').eq('role', 'juez');
+        listaJuecesFDFF = profiles || [];
+
+        // 2. Traer los paneles ya creados para este evento
+        await actualizarSelectorPaneles();
+        modalPaneles.show();
+    }
+
+    async function actualizarSelectorPaneles() {
+        const { data: paneles } = await _supabase.from('paneles_jueces').select('*').eq('id_evento', idEventoActual).order('numero_panel');
+        const select = document.getElementById('selectPanelTrabajo');
+        select.innerHTML = '<option value="" disabled selected>Seleccione panel...</option>';
+        
+        paneles.forEach(p => {
+            select.innerHTML += `<option value="${p.id}" data-cant="${p.cantidad_jueces}">Panel N° ${p.numero_panel} (${p.cantidad_jueces} Jueces)</option>`;
+        });
+    }
+
+    async function crearPanelEstructura() {
+        const num = document.getElementById('numPanelNuevo').value;
+        const cant = document.getElementById('cantJuecesNuevo').value;
+        if(!num) return alert("Escriba el número del panel.");
+
+        const { error } = await _supabase.from('paneles_jueces').insert({
+            id_evento: idEventoActual,
+            numero_panel: parseInt(num),
+            cantidad_jueces: parseInt(cant)
+        });
+
+        if(error) alert(error.message);
+        else {
+            alert("Panel creado.");
+            await actualizarSelectorPaneles();
+        }
+    }
+
+    async function cargarSillasDelPanel(panelId) {
+        const select = document.getElementById('selectPanelTrabajo');
+        const cantSillas = parseInt(select.options[select.selectedIndex].dataset.cant);
+        const contenedor = document.getElementById('contenedorSillasMesa');
+        contenedor.innerHTML = '';
+
+        // Buscar si ya hay jueces sentados en este panel
+        const { data: asignaciones } = await _supabase.from('panel_sillas_jueces').select('*').eq('panel_id', panelId);
+        const mapaSillas = {};
+        asignaciones?.forEach(a => mapaSillas[a.numero_silla] = a.juez_id);
+
+        for (let i = 1; i <= cantSillas; i++) {
+            let opcionesJueces = `<option value="">-- Silla Vacía / Digitalizada Manual --</option>`;
+            listaJuecesFDFF.forEach(j => {
+                const seleccionado = mapaSillas[i] === j.id ? 'selected' : '';
+                opcionesJueces += `<option value="${j.id}" ${seleccionado}>${j.nombre}</option>`;
+            });
+
+            const htmlSilla = `
+                <div class="col-md-6 mb-2">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-dark text-white fw-bold" style="width: 80px;">Silla ${i}</span>
+                        <select class="form-select selector-juez-silla" data-silla="${i}">
+                            ${opcionesJueces}
+                        </select>
+                    </div>
+                </div>`;
+            contenedor.insertAdjacentHTML('beforeend', htmlSilla);
+        }
+    }
+
+    async function guardarAsignacionSillas() {
+        const panelId = document.getElementById('selectPanelTrabajo').value;
+        if(!panelId) return alert("Seleccione un panel de trabajo.");
+
+        const selectores = document.querySelectorAll('.selector-juez-silla');
+        let inserts = [];
+
+        selectores.forEach(sel => {
+            if(sel.value) {
+                inserts.push({
+                    panel_id: panelId,
+                    juez_id: sel.value,
+                    numero_silla: parseInt(sel.dataset.silla)
+                });
+            }
+        });
+
+        // Borramos la asignación vieja del panel para meter la nueva limpia
+        await _supabase.from('panel_sillas_jueces').delete().eq('panel_id', panelId);
+        
+        if(inserts.length > 0) {
+            const { error } = await _supabase.from('panel_sillas_jueces').insert(inserts);
+            if(error) alert(error.message);
+            else alert("¡Mesa de jueces configurada y guardada con éxito!");
+        }
+    }
+</script>
 
 <%- include("../template/footer") %>

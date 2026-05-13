@@ -1,0 +1,289 @@
+<%- include("../template/cabecera", {tituloWeb: "Mesa de Cómputo Estadístico"}) %>
+
+<div class="container-fluid my-5 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold text-dark"><i class="fas fa-calculator text-success"></i> Panel de Cómputo Estadístico</h1>
+            <p class="text-muted mb-0">Monitoree las boletas, digite votos físicos y calcule los resultados oficiales.</p>
+        </div>
+        <input type="hidden" id="idEvento" value="<%= eventoId %>">
+        <input type="hidden" id="idCatRel" value="<%= catRelId %>">
+    </div>
+
+    <!-- SELECTOR DE FASE DE COMPETENCIA Y PANEL DE JUECES -->
+    <div class="card p-3 mb-4 bg-light shadow-sm">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <label class="fw-bold text-secondary mb-0">FASE DE EVALUACIÓN:</label>
+            <select id="selectFase" class="form-select border-success fw-bold" style="width: 250px;" onchange="recargarMesaComputo()">
+                <option value="semifinal">Semifinales (Eliminatorias)</option>
+                <option value="final" selected>Finales (Top 6 / Pódium)</option>
+                <option value="absoluto">Absoluto (Overall)</option>
+            </select>
+            <h4 class="mb-0 ms-auto fw-bold text-primary">Categoría: <%= categoriaNombre %></h4>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <label class="fw-bold text-secondary mb-0">PANEL DE JUECES CONFIRMADOS:</label>
+            <select id="selectPanelTrabajo" class="form-select border-warning fw-bold" style="width: 280px;">
+                <option value="" disabled selected>Seleccione panel de jueces...</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- TABLA MAESTRA ESTADÍSTICA (MATRIZ DE VOTOS) -->
+    <div class="card shadow-sm border-0 overflow-hidden mb-4" style="border-radius: 15px;">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle text-center mb-0" id="tablaMatrizVotos">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 8%;">Dorsal</th>
+                        <th class="text-start ps-3" style="width: 25%;">Atleta</th>
+                        <!-- Columnas dinámicas para los Jueces (1 al 7 o más) -->
+                        <% jueces.forEach((juez, idx) => { %>
+                            <th>Juez <%= idx + 1 %><br><span class="small opacity-50"><%= juez.nombre.split(' ')[0] %></span></th>
+                        <% }) %>
+                        <th class="table-danger text-dark fw-bold">Subtotal</th>
+                        <th class="table-success text-dark fw-bold">Limpio</th>
+                        <th class="table-primary text-dark fw-bold">Lugar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% atletas.forEach(atleta => { %>
+                        <tr class="fila-atleta-voto" data-atleta-id="<%= atleta.id %>">
+                            <td class="fw-bold fs-4 text-primary bg-light bg-opacity-50"><%= atleta.dorsal %></td>
+                            <td class="text-start ps-3 fw-bold"><%= atleta.nombre %></td>
+                            
+                            <!-- Inputs de votación por juez (Web o Digitación Asistida) -->
+                            <% jueces.forEach(juez => { %>
+                                <td class="p-1">
+                                    <input type="number" 
+                                           class="form-control text-center fw-bold input-voto-juez"
+                                           data-juez-id="<%= juez.id %>"
+                                           data-atleta-id="<%= atleta.id %>"
+                                           value="<%= mapaVotos[atleta.id] && mapaVotos[atleta.id][juez.id] ? mapaVotos[atleta.id][juez.id] : '' %>"
+                                           min="1" max="<%= atletas.length %>" placeholder="-">
+                                </td>
+                            <% }) %>
+
+                            <!-- Columnas calculadas dinámicamente -->
+                            <td class="fw-bold text-muted cell-subtotal">--</td>
+                            <td class="fw-bold text-danger fs-5 cell-limpio">--</td>
+                            <td class="fw-bold text-success fs-4 cell-posicion">--</td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ACCIONES DE TRANSMISIÓN -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <button onclick="ejecutarAlgoritmoEstadistico()" class="btn btn-success btn-lg w-100 fw-bold py-3 shadow">
+                <i class="fas fa-calculator me-2"></i> COMPU-ESTADÍSTICA (CALCULAR LUGARES)
+            </button>
+        </div>
+        <div class="col-md-4">
+            <button onclick="inyectarResultadosAlMC()" id="btnEnviarMC" class="btn btn-danger btn-lg w-100 fw-bold py-3 shadow" disabled>
+                <i class="fas fa-broadcast-tower me-2"></i> ENVIAR RESULTADOS AL MC
+            </button>
+        </div>
+        <div class="col-md-4">
+            <button onclick="transmitirJuecesAlMicofono()" class="btn btn-warning btn-lg w-100 fw-bold py-3 shadow text-dark">
+                <i class="fas fa-gavel me-2"></i> TRANSMITIR JUECES AL MC
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    let resultadosCalculados = null;
+    const idEventoActual = <%= evento.id %>;
+
+    function recargarMesaComputo() {
+        const fase = document.getElementById('selectFase').value;
+        const idCatRel = document.getElementById('idCatRel').value;
+        window.location.href = `?fase=${fase}`;
+    }
+
+    // ALGORITMO ESTADÍSTICO FDFF (Eliminación de extremos y jerarquía de puestos)
+    function ejecutarAlgoritmoEstadistico() {
+        const filas = document.querySelectorAll('.fila-atleta-voto');
+        let tablaPosiciones = [];
+
+        filas.forEach(fila => {
+            const atletaId = fila.dataset.atletaId;
+            const inputs = fila.querySelectorAll('.input-voto-juez');
+            let votos = [];
+
+            inputs.forEach(input => {
+                if (input.value) votos.push(parseInt(input.value));
+            });
+
+            if (votos.length === 0) return;
+
+            // 1. Calcular Subtotal
+            const subtotal = votos.reduce((a, b) => a + b, 0);
+            fila.querySelector('.cell-subtotal').innerText = subtotal;
+
+            // 2. REGLA FDFF: Si hay 5 o más jueces, eliminamos el más alto y el más bajo
+            let votosLimpios = [...votos];
+            if (votos.length >= 5) {
+                votosLimpios.sort((a, b) => a - b);
+                votosLimpios.pop(); // Elimina el más alto
+                votosLimpios.shift(); // Elimina el más bajo
+            }
+
+            const puntajeLimpio = votosLimpios.reduce((a, b) => a + b, 0);
+            fila.querySelector('.cell-limpio').innerText = puntajeLimpio;
+
+            tablaPosiciones.push({
+                atletaId: atletaId,
+                dorsal: fila.querySelector('td').innerText,
+                nombre: fila.querySelector('.text-start').innerText,
+                puntos: puntajeLimpio,
+                votosOriginales: votos // Guardamos por si hay empates técnicos
+            });
+        });
+
+        // 3. ORDENAR GANADORES (A menor puntuación, mejor lugar)
+        tablaPosiciones.sort((a, b) => {
+            if (a.puntos !== b.puntos) {
+                return a.puntos - b.puntos;
+            }
+            // CRITERIO DE DESEMPATE: El que tenga más votos preferenciales de primer lugar
+            const unosA = a.votosOriginales.filter(v => v === 1).length;
+            const unosB = b.votosOriginales.filter(v => v === 1).length;
+            return unosB - unosA; 
+        });
+
+        // 4. Asignar e imprimir los lugares en la interfaz
+        tablaPosiciones.forEach((pos, index) => {
+            const lugar = index + 1;
+            const fila = document.querySelector(`.fila-atleta-voto[data-atleta-id="${pos.atletaId}"]`);
+            fila.querySelector('.cell-posicion').innerText = `${lugar}°`;
+            pos.lugar = lugar; // Inyectamos el lugar al objeto
+        });
+
+        resultadosCalculados = tablaPosiciones;
+        document.getElementById('btnEnviarMC').disabled = false; // Habilitamos el envío a tarima
+        alert("¡Cómputo completado con éxito! Extremos eliminados automáticamente.");
+    }
+
+    // ENVIAR EN TIEMPO REAL AL TELEPRONTER DEL MC
+    async function inyectarResultadosAlMC() {
+        if (!resultadosCalculados) return;
+
+        const idEvento = document.getElementById('idEvento').value;
+        const faseText = document.getElementById('selectFase').options[document.getElementById('selectFase').selectedIndex].text;
+
+        // Estructuramos el paquete de datos para la tarima
+        const paqueteMC = {
+            categoria_nombre: "<%= categoriaNombre %>",
+            fase_competencia: faseText,
+            atletas: resultadosCalculados.map(r => ({ dorsal: r.dorsal, nombre: r.nombre, lugar: r.lugar }))
+        };
+
+        // Hacemos el UPDATE en Supabase. El Realtime se encargará de pitar en la tablet del MC
+        const { error } = await _supabase
+            .from('eventos')
+            .update({ resultados_en_vivo: paqueteMC })
+            .eq('id', idEvento);
+
+        if (error) {
+            alert("Error al transmitir: " + error.message);
+        } else {
+            alert("¡Resultados inyectados en la pantalla del Maestro de Ceremonias exitosamente!");
+        }
+    }
+
+    // GUARDAR VOTOS AUTOMÁTICAMENTE CUANDO EL ESTADÍSTICO LOS DIGITE (Vía Asistida)
+    document.querySelectorAll('.input-voto-juez').forEach(input => {
+        input.addEventListener('change', async (e) => {
+            const idEvento = document.getElementById('idEvento').value;
+            const idCatRel = document.getElementById('idCatRel').value;
+            const fase = document.getElementById('selectFase').value;
+            
+            const juezId = e.target.dataset.juezId;
+            const atletaId = e.target.dataset.atletaId;
+            const valor = parseInt(e.target.value);
+
+            if (!valor) return;
+
+            // Guardamos o actualizamos directamente en Supabase (upsert)
+            await _supabase.from('votaciones_jueces').upsert({
+                id_evento: idEvento,
+                evento_cat_id: idCatRel,
+                juez_id: juezId,
+                atleta_id: atletaId,
+                posicion_asignada: valor,
+                fase_competencia: fase
+            }, { onConflict: 'evento_cat_id,juez_id,atleta_id,fase_competencia' });
+        });
+    });
+
+    // CARGAR PANELES DISPONIBLES AL INICIAR LA PÁGINA
+    async function cargarPanelesDisponibles() {
+        const { data: paneles, error } = await _supabase
+            .from('paneles_jueces')
+            .select('id, numero_panel, cantidad_jueces')
+            .eq('id_evento', idEventoActual)
+            .order('numero_panel', { ascending: true });
+
+        if (error) {
+            console.error('Error cargando paneles:', error.message);
+            return;
+        }
+
+        const selectPanel = document.getElementById('selectPanelTrabajo');
+        selectPanel.innerHTML = '<option value="" disabled selected>Seleccione panel de jueces...</option>';
+
+        if (paneles && paneles.length > 0) {
+            paneles.forEach(panel => {
+                const option = document.createElement('option');
+                option.value = panel.id;
+                option.textContent = `Panel N° ${panel.numero_panel} (${panel.cantidad_jueces} Jueces)`;
+                selectPanel.appendChild(option);
+            });
+        } else {
+            selectPanel.innerHTML += '<option value="" disabled>No hay paneles configurados</option>';
+        }
+    }
+
+    // TRANSMITIR JUECES CONFIRMADOS AL MC EN TIEMPO REAL
+    async function transmitirJuecesAlMicofono() {
+        const panelId = document.getElementById('selectPanelTrabajo').value;
+        const idEvento = document.getElementById('idEvento').value;
+
+        if (!panelId) {
+            alert('⚠️ Debe seleccionar un panel de jueces antes de transmitir.');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/eventos/${idEvento}/inyectar-jueces-mc`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ panelId: panelId })
+            });
+
+            const result = await res.json();
+            if (result.estado) {
+                alert('✅ ' + result.mensaje);
+            } else {
+                alert('❌ Error: ' + result.mensaje);
+            }
+        } catch (e) {
+            console.error('Error de conexión:', e);
+            alert('❌ Error de conexión con el servidor. Intente nuevamente.');
+        }
+    }
+
+    // Cargar paneles al inicializar la página
+    window.addEventListener('DOMContentLoaded', () => {
+        cargarPanelesDisponibles();
+    });
+</script>
+
+<%- include("../template/footer") %>

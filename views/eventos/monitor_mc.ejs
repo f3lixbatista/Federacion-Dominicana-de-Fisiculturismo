@@ -4,6 +4,51 @@
     <div class="row g-4">
         <!-- COLUMNA IZQUIERDA: EL PROGRAMA DE COMPETENCIA (CON CHECKS) -->
         <div class="col-lg-7">
+            <!-- Se integra en views/eventos/monitor_mc.ejs encima de la lista del programa -->
+            <div class="card border-0 shadow-sm p-3 mb-4 bg-light" style="border-radius: 12px; border-left: 5px solid #ffc107 !important;">
+                <div class="d-flex justify-content-between align-items-center cursor-pointer" data-bs-toggle="collapse" data-bs-target="#boxPresentacionJueces">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-gavel text-warning me-2"></i> Protocolo: Presentación de Jueces</h5>
+                    <i class="fas fa-chevron-down text-muted"></i>
+                </div>
+                
+                <div class="collapse mt-3" id="boxPresentacionJueces">
+                    <div class="row">
+                        <!-- PANEL 1: MESA PRINCIPAL OFICIAL -->
+                        <div class="col-md-6 border-end border-2 border-white">
+                            <h6 class="fw-bold text-primary small text-uppercase mb-2"><i class="fas fa-star"></i> Jurado Panel N° 1 (Principal)</h6>
+                            <ul class="list-group list-group-flush bg-transparent small font-monospace">
+                                <% if (panelPrincipal && panelPrincipal.length > 0) { %>
+                                    <% panelPrincipal.forEach(juez => { %>
+                                        <li class="list-group-item bg-transparent px-0 py-1 text-dark border-0">
+                                            <span class="badge bg-dark me-2">Silla <%= juez.silla %></span><strong><%= juez.nombre %></strong>
+                                        </li>
+                                    <% }) %>
+                                <% } else { %>
+                                    <li class="text-muted italic py-1">Mesa principal sin configurar</li>
+                                <% } %>
+                            </ul>
+                        </div>
+
+                        <!-- JUECES ALTERNOS / RELEVO -->
+                        <div class="col-md-6">
+                            <h6 class="fw-bold text-danger small text-uppercase mb-2"><i class="fas fa-sync"></i> Jueces Alternos y de Relevo</h6>
+                            <p class="text-muted mb-2" style="font-size: 0.75rem;">Jueces activos asignados a los demás paneles del evento:</p>
+                            <div class="d-flex flex-wrap gap-1">
+                                <% if (juecesRelevo && juecesRelevo.length > 0) { %>
+                                    <% juecesRelevo.forEach(nombreJuez => { %>
+                                        <span class="badge bg-white text-dark border border-secondary p-2 shadow-sm font-monospace" style="font-size: 0.75rem;">
+                                            <i class="fas fa-user text-muted me-1"></i> <%= nombreJuez %>
+                                        </span>
+                                    <% }) %>
+                                <% } else { %>
+                                    <span class="text-muted italic small">No hay jueces en paneles secundarios</span>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="card border-0 shadow p-4 bg-white" style="border-radius: 15px;">
                 <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
                     <div>
@@ -96,21 +141,52 @@
         if (data && data.resultados_en_vivo && Object.keys(data.resultados_en_vivo).length > 0) {
             document.getElementById('txtEsperando').classList.add('d-none');
             const res = data.resultados_en_vivo;
+            const contenedorPantalla = document.getElementById('pantallaResultadosMC');
             
-            let htmlResultados = `
-                <div class="card bg-secondary bg-opacity-25 border-warning p-3 mb-3">
-                    <h5 class="fw-bold text-warning border-bottom pb-1 mb-2"><i class="fas fa-trophy"></i> ${res.categoria_nombre}</h5>
-                    <h6 class="text-uppercase fw-bold text-info fs-6">${res.fase_competencia}</h6>
-                    <ol class="fs-4 fw-bold mt-3 text-white">
-            `;
+            // ESCENARIO A: El Estadístico inyectó la presentación de Jueces en caliente
+            if (res.tipo_alerta === 'presentacion_jueces') {
+                let htmlJueces = `
+                    <div class="card bg-secondary bg-opacity-25 border-warning p-3 mb-3">
+                        <h5 class="fw-bold text-warning border-bottom pb-2 mb-2"><i class="fas fa-gavel"></i> Panel Oficial N° ${res.panel_numero}</h5>
+                        <p class="small text-muted mb-3">Jueces confirmados en mesa técnica:</p>
+                        <ul class="list-group list-group-flush bg-transparent text-white small font-monospace mb-3">
+                `;
 
-            (res.atletas || []).forEach(atleta => {
-                htmlResultados += `<li class="mb-2">Dorsal [${atleta.dorsal}] — ${atleta.nombre}</li>`;
-            });
+                res.jueces_mesa.forEach(j => {
+                    htmlJueces += `<li class="list-group-item bg-transparent px-0 py-1 text-white border-0"><span class="badge bg-warning text-dark me-2">Silla ${j.silla}</span> <strong>${j.nombre}</strong></li>`;
+                });
 
-            htmlResultados += `</ol></div>`;
-            document.getElementById('pantallaResultadosMC').innerHTML = htmlResultados;
+                htmlJueces += `</ul><h6 class="fw-bold text-danger small text-uppercase mb-2"><i class="fas fa-sync"></i> Jueces Alternos / Relevo:</h6><div class="d-flex flex-wrap gap-2">`;
+                
+                if (res.jueces_relevo && res.jueces_relevo.length > 0) {
+                    res.jueces_relevo.forEach(r => {
+                        htmlJueces += `<span class="badge bg-dark text-white border border-secondary p-2 font-monospace" style="font-size: 0.75rem;"><i class="fas fa-user me-1"></i> ${r}</span>`;
+                    });
+                } else {
+                    htmlJueces += `<span class="text-muted italic small">No hay jueces en paneles secundarios</span>`;
+                }
+
+                htmlJueces += `</div></div>`;
+                contenedorPantalla.innerHTML = htmlJueces;
+
+            // ESCENARIO B: El Estadístico inyectó resultados de competencia (Top de atletas)
+            } else if (res.categoria_nombre && res.atletas) {
+                let htmlResultados = `
+                    <div class="card bg-secondary bg-opacity-25 border-success p-3 mb-3">
+                        <h5 class="fw-bold text-success border-bottom pb-1 mb-2"><i class="fas fa-trophy"></i> ${res.categoria_nombre}</h5>
+                        <h6 class="text-uppercase fw-bold text-info fs-6">${res.fase_competencia}</h6>
+                        <ol class="fs-4 fw-bold mt-3 text-white">
+                `;
+
+                (res.atletas || []).forEach(atleta => {
+                    htmlResultados += `<li class="mb-2">Dorsal [${atleta.dorsal}] — ${atleta.nombre}</li>`;
+                });
+
+                htmlResultados += `</ol></div>`;
+                contenedorPantalla.innerHTML = htmlResultados;
+            }
             
+            // Sonido de alerta en tiempo real (Bing notification)
             const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-notification-bing-615.mp3');
             audio.play().catch(() => {});
         }

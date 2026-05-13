@@ -1,0 +1,120 @@
+<%- include("../template/cabecera", {tituloWeb: "Boleta de Votación Oficial"}) %>
+
+<div class="container my-4" style="max-width: 600px;">
+    <!-- INFORMACIÓN FIJA DE LA BOLETA -->
+    <div class="card bg-dark text-white p-3 mb-4 border-0 shadow" style="border-radius: 12px;">
+        <div class="d-flex justify-content-between align-items-center small opacity-75">
+            <span>FDFF — CONTROL OFICIAL</span>
+            <span class="fw-bold">FASE: <%= fase.toUpperCase() %></span>
+        </div>
+        <h4 class="fw-bold text-warning my-2 text-center"><%= categoriaNombre %></h4>
+        <div class="border-top border-secondary pt-2 mt-1 row text-center small">
+            <div class="col-6"><strong>Panel N°:</strong> <%= infoPanel.numero_panel %></div>
+            <div class="col-6"><strong>Tu Asiento:</strong> Silla <%= infoPanel.numero_silla %></div>
+        </div>
+    </div>
+
+    <!-- CUERPO DE LA BOLETA (IDÉNTICO A LA FÍSICA) -->
+    <form id="formBoletaDigital">
+        <input type="hidden" id="idPanel" value="<%= infoPanel.panel_id %>">
+        <input type="hidden" id="idSilla" value="<%= infoPanel.numero_silla %>">
+
+        <div class="card shadow-sm border-0 overflow-hidden mb-4" style="border-radius: 12px;">
+            <table class="table align-middle text-center table-striped mb-0">
+                <thead class="table-secondary small fw-bold">
+                    <tr>
+                        <th style="width: 25%;">Dorsal</th>
+                        <th class="text-start">Nombre Competidor</th>
+                        <th style="width: 35%;">Puesto / Lugar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% atletas.forEach(atleta => { %>
+                        <tr class="fila-boleta-voto">
+                            <!-- Input oculto para rastrear el ID del competidor -->
+                            <input type="hidden" class="input-atleta-id" value="<%= atleta.id %>">
+                            
+                            <td class="fw-bold fs-4 text-primary bg-light"><%= atleta.dorsal %></td>
+                            <td class="text-start fw-bold text-dark"><%= atleta.nombre %></td>
+                            <td class="p-2">
+                                <!-- Select dinámico de posiciones -->
+                                <select class="form-select form-select-lg fw-bold border-primary select-lugar-boleta text-center" 
+                                        onchange="verificarDuplicidadPuestos(this)" required style="font-size: 1.2rem;">
+                                    <option value="">--</option>
+                                    <% atletas.forEach((_, idx) => { %>
+                                        <option value="<%= idx + 1 %>"><%= idx + 1 %>° Lugar</option>
+                                    <% }) %>
+                                </select>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- BOTÓN ENVIAR BOLETA -->
+        <button type="button" onclick="enviarBoletaOficial()" class="btn btn-primary btn-lg w-100 fw-bold shadow py-3" style="border-radius: 10px;">
+            <i class="fas fa-paper-plane me-2"></i> FIRMAR Y ENVIAR BOLETA DIGITAL
+        </button>
+    </form>
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+
+    // Función interactiva para impedir puestos duplicados en la boleta
+    function verificarDuplicidadPuestos(selectActual) {
+        const todosLosSelects = document.querySelectorAll('.select-lugar-boleta');
+        let valoresMarcados = [];
+
+// Limpiamos alertas visuales previas
+        todosLosSelects.forEach(s => s.classList.remove('is-invalid', 'border-danger'));
+
+        todosLosSelects.forEach(s => {
+            if (s.value) {
+                if (valoresMarcados.includes(s.value)) {
+                    alert(`¡Error reglamentario! Ya has asignado el puesto ${s.value}° a otro competidor. Cada atleta debe tener un lugar único.`);
+                    selectActual.value = ""; // Resetea la casilla en conflicto
+                } else {
+                    valoresMarcados.push(s.value);
+                }
+            }
+        });
+    }
+
+    async function enviarBoletaOficial() {
+        const form = document.getElementById('formBoletaDigital');
+        if(!form.checkValidity()) return alert("Debe asignar un puesto/lugar a cada atleta del listado antes de enviar.");
+
+        if(!confirm("¿Confirma enviar su veredicto? Una vez firmada la boleta digital no podrá modificarse.")) return;
+
+        const panelId = document.getElementById('idPanel').value;
+        const filas = document.querySelectorAll('.fila-boleta-voto');
+        let registrosVotos = [];
+
+        filas.forEach(fila => {
+            registrosVotos.push({
+                id_evento: "<%= eventoId %>",
+                evento_cat_id: "<%= catRelId %>",
+                panel_id: panelId,
+                juez_id: "<%= user.id %>", // El ID del juez logueado en la tablet
+                atleta_id: fila.querySelector('.input-atleta-id').value,
+                posicion_asignada: parseInt(fila.querySelector('.select-lugar-boleta').value),
+                fase_competencia: "<%= fase %>"
+            });
+        });
+
+        // Guardado masivo directo en la tabla unificada de votaciones
+        const { error } = await _supabase.from('votaciones_jueces').insert(registrosVotos);
+
+        if(error) {
+            alert("Error al transmitir boleta: " + error.message);
+        } else {
+            alert("¡Boleta digital enviada y firmada exitosamente en la mesa de control!");
+            window.location.href = '/eventos'; // Lo saca de la boleta tras votar
+        }
+    }
+</script>
+
+<%- include("../template/footer") %>
