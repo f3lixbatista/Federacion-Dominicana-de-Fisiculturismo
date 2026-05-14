@@ -1,0 +1,38 @@
+<%- include('template/header') %>
+<main class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Registrar Preparador / Coach</h5>
+                </div>
+                <div class="card-body">
+                    <% if (error) { %>
+                        <div class="alert alert-danger"><%= error %></div>
+                    <% } %>
+                    <% if (query && query.success) { %>
+                        <div class="alert alert-success">Preparador registrado correctamente.</div>
+                    <% } %>
+
+                    <form method="POST" action="/preparadores/registrar">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre completo</label>
+                            <input name="nombre_completo" value="<%= nombre_completo || '' %>" type="text" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cédula / Identificación</label>
+                            <input name="cedula" value="<%= cedula || '' %>" type="text" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Gimnasio donde labora</label>
+                            <input name="gimnasio" value="<%= gimnasio || '' %>" type="text" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Preparador</button>
+                        <a href="/afiliacion" class="btn btn-secondary ms-2">Volver a Afiliación</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<%- include('template/footer') %>

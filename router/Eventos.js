@@ -142,7 +142,72 @@ routerEventos.get('/:id/monitor-mc', async (req, res) => {
 });
 
 routerEventos.get('/:id/preparacion', checkRole(['ejecutivo', 'admin']), eventosController.prepararEventoPage);
-routerEventos.post('/preparacion/oficializar', checkRole(['ejecutivo', 'admin']), eventosController.oficializarPreparacion);
+routerEventos.post('/preparacion/oficializar', checkRole(['ejecutivo', 'admin']), async (req, res) => {
+    const { eventoId } = req.body;
+
+    try {
+        // 1. Iniciamos el contador global del evento
+        let contadorDorsal = 1;
+
+        // 2. Traemos las categorías aprobadas en el orden de salida que puso el Estadístico
+        const { data: categoriasOrdenadas, error: errCat } = await supabase
+            .from('eventos_categorias')
+            .select('id, orden_secuencia_categoria')
+            .eq('evento_id', eventoId)
+            .in('estatus_logistica', ['abierta activa', 'abierta exhibicion', 'exhibicion'])
+            .order('orden_secuencia_categoria', { ascending: true });
+
+        if (errCat) throw errCat;
+
+        // 3. Recorremos categoría por categoría
+        for (const cat of categoriasOrdenadas) {
+            
+            // Buscamos los atletas inscritos en ESTA categoría específica
+            const { data: inscritos, error: errInsc } = await supabase
+                .from('competidores')
+                .select('id')
+                .eq('evento_cat_id', cat.id)
+                .eq('id_evento', eventoId)
+                .order('created_at', { ascending: true }); // Orden por inscripción dentro de la cat.
+
+            if (errInsc) {
+                console.error(`Error obteniendo inscritos para categoría ${cat.id}:`, errInsc);
+                continue;
+            }
+
+            if (inscritos && inscritos.length > 0) {
+                for (const registro of inscritos) {
+                    
+                    // ASIGNACIÓN ÚNICA: Cada fila de 'competidores' recibe su propio número
+                    const { error: errDorsal } = await supabase
+                        .from('competidores')
+                        .update({ numero_atleta: contadorDorsal })
+                        .eq('id', registro.id);
+
+                    if (errDorsal) {
+                        console.error(`Error asignando dorsal ${contadorDorsal} a competidor ${registro.id}:`, errDorsal);
+                    }
+
+                    // Incrementamos para el SIGUIENTE, sea el mismo atleta o no
+                    contadorDorsal++;
+                }
+            }
+        }
+
+        // 4. Una vez asignados los dorsales, procedemos con la oficialización original
+        // (Aquí podrías llamar al controlador original o implementar la lógica adicional)
+        
+        res.json({ 
+            estado: true, 
+            mensaje: "¡Oficialización completada! Dorsales asignados correlativamente.",
+            totalDorsales: contadorDorsal - 1 
+        });
+
+    } catch (error) {
+        console.error("🔥 Error en oficialización:", error.message);
+        res.status(500).json({ estado: false, mensaje: error.message });
+    }
+});
 
 // RUTA PARA MESA DE CÓMPUTO ESTADÍSTICO
 routerEventos.get('/:id/computo/:catId', checkRole(['estadistico', 'admin']), async (req, res) => {
@@ -402,6 +467,63 @@ routerEventos.get('/:id/votacion', checkRole(['admin', 'juez']), async (req, res
     } catch (error) {
         console.error("🔥 Error crítico en el enrutamiento de la boleta:", error.message);
         res.status(500).send("Error de conexión al cargar la boleta digital oficial.");
+    }
+});
+
+// RUTA PARA REPORTE OFICIAL DEL EVENTO
+routerEventos.get('/:id/reporte-oficial', checkRole(['admin', 'estadistico', 'juez']), async (req, res) => {
+    const { id: eventoId } = req.params;
+
+    try {
+        // 1. Obtener info del evento para saber el estado
+        const { data: evento } = await supabase
+            .from('eventos')
+            .select('*')
+            .eq('id', eventoId)
+            .single();
+
+        if (!evento) return res.redirect('/eventos');
+
+        // 2. Traer las categorías activas con sus competidores ordenados
+        const { data: relaciones } = await supabase
+            .from('eventos_categorias')
+            .select(`
+                id,
+                orden_secuencia_categoria,
+                categorias ( nombre, modalidad ),
+                competidores (
+                    id,
+                    numero_atleta,
+                    posicion_final,
+                    atletas ( nombre, provincia, gimnasio, peso, estatura )
+                )
+            `)
+            .eq('evento_id', eventoId)
+            .neq('estatus_logistica', 'cerrada')
+            .order('orden_secuencia_categoria', { ascending: true });
+
+        // 3. Estructurar datos para la vista
+        const reporteData = (relaciones || []).map(rel => {
+            // Ordenamos atletas según la fase: por Dorsal o por Posición
+            let atletas = rel.competidores || [];
+            if (evento.estado === 'finalizado') {
+                atletas.sort((a, b) => (a.posicion_final || 99) - (b.posicion_final || 99));
+            } else {
+                atletas.sort((a, b) => (a.numero_atleta || 0) - (b.numero_atleta || 0));
+            }
+
+            return {
+                nombreCat: rel.categorias?.nombre || 'Categoría',
+                modalidad: rel.categorias?.modalidad || '',
+                atletas: atletas
+            };
+        });
+
+        res.render('eventos/reporte_oficial', { evento, reporteData });
+
+    } catch (error) {
+        console.error('Error en reporte oficial:', error.message);
+        res.redirect('/eventos');
     }
 });
 

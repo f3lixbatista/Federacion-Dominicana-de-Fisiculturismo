@@ -1,0 +1,119 @@
+<%- include("../template/cabecera", {tituloWeb: "Reporte Oficial FDFF"}) %>
+
+<style>
+    @media print {
+        .no-print, .btn, .navbar, footer { display: none !important; }
+        .container { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        body { background: white !important; }
+        .card { border: none !important; shadow: none !important; }
+        .page-break { page-break-after: always; }
+    }
+    .table-reporte th { background-color: #f8f9fa !important; color: black !important; border: 1px solid #000 !important; }
+    .table-reporte td { border: 1px solid #000 !important; }
+    .table-reporte { font-size: 0.9rem; }
+    h3, h4, h5 { margin: 0; }
+</style>
+
+<div class="container my-5">
+    <!-- PANEL DE ACCIONES (NO SE IMPRIME) -->
+    <div class="no-print d-flex justify-content-between mb-4">
+        <a href="/eventos/<%= evento.id %>" class="btn btn-outline-dark fw-bold">
+            <i class="fas fa-arrow-left"></i> Volver al Panel
+        </a>
+        <button onclick="window.print()" class="btn btn-danger btn-lg fw-bold shadow">
+            <i class="fas fa-print me-2"></i> IMPRIMIR REPORTE OFICIAL
+        </button>
+    </div>
+
+    <!-- ENCABEZADO OFICIAL -->
+    <div class="text-center mb-4">
+        <% if (evento.logo_url) { %>
+            <img src="<%= evento.logo_url %>" style="width: 80px;" class="mb-2">
+        <% } else { %>
+            <img src="/img/logo-fdff.png" style="width: 80px;" class="mb-2">
+        <% } %>
+        <h3 class="fw-bold mb-1">FEDERACIÓN DOMINICANA DE FISICOCULTURISMO Y FITNESS (FDFF)</h3>
+        <p class="text-muted mb-1 small">Afiliada a la IFBB - International Federation of Bodybuilding & Fitness</p>
+        <hr class="border-dark opacity-100 my-2">
+        <h4 class="fw-bold mb-1"><%= evento.nombre %></h4>
+        <h5 class="text-uppercase small">
+            <%= evento.estado === 'finalizado' ? 'Reporte Oficial de Posiciones Finales' : 'Listado Oficial de Salida de Competidores' %>
+        </h5>
+    </div>
+
+    <!-- CUERPO DE CATEGORÍAS -->
+    <% if (reporteData && reporteData.length > 0) { %>
+        <% reporteData.forEach((bloque, index) => { %>
+            <div class="mb-4 <%= (index > 0 && index % 2 === 0) ? 'page-break' : '' %>">
+                <div class="bg-dark text-white p-2 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">CATEGORÍA: <%= bloque.nombreCat %></span>
+                    <span class="small"><%= bloque.modalidad %></span>
+                </div>
+                
+                <table class="table table-sm table-reporte align-middle text-center mb-0">
+                    <thead>
+                        <tr class="small fw-bold">
+                            <th style="width: 8%;">No.</th>
+                            <th class="text-start ps-3">Nombre del Atleta</th>
+                            <th>Ciudad / País</th>
+                            <th>Team / Gimnasio</th>
+                            <!-- COLUMNA DINÁMICA SEGÚN FASE -->
+                            <th style="width: 15%;" class="bg-light">
+                                <%= evento.estado === 'finalizado' ? 'POSICIÓN' : 'PESO / TALLA' %>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (bloque.atletas && bloque.atletas.length > 0) { %>
+                            <% bloque.atletas.forEach(comp => { %>
+                                <tr>
+                                    <td class="fw-bold fs-5"><%= comp.numero_atleta || '---' %></td>
+                                    <td class="text-start ps-3 fw-bold"><%= comp.atletas?.nombre || 'N/A' %></td>
+                                    <td><%= comp.atletas?.provincia || '---' %></td>
+                                    <td><%= comp.atletas?.gimnasio || 'Independiente' %></td>
+                                    <td class="fw-bold">
+                                        <% if (evento.estado === 'finalizado') { %>
+                                            <span class="fs-5 text-primary"><%= comp.posicion_final || '---' %>° Lugar</span>
+                                        <% } else { %>
+                                            <small><%= comp.atletas?.peso %>kg / <%= comp.atletas?.estatura %>cm</small>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="5" class="py-3 text-muted">No se registraron competidores en esta categoría.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        <% }) %>
+    <% } else { %>
+        <div class="alert alert-info text-center">
+            <h5>No hay categorías disponibles</h5>
+            <p>El evento aún no tiene competidores registrados o todas las categorías están cerradas.</p>
+        </div>
+    <% } %>
+
+    <!-- PIE DE FIRMAS (SOLO PARA EL REPORTE FINAL) -->
+    <div class="row mt-5 pt-4 text-center">
+        <div class="col-4">
+            <div class="border-top border-dark pt-2 mx-3">
+                <small class="fw-bold">Juez Estadístico</small>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="border-top border-dark pt-2 mx-3">
+                <small class="fw-bold">Presidente del Comité</small>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="border-top border-dark pt-2 mx-3">
+                <small class="fw-bold">Secretaría General</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include("../template/footer") %>

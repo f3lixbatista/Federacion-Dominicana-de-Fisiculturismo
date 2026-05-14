@@ -138,9 +138,18 @@
                 <input type="text" class="form-control" name="gimnasio" required>
             </div>
 
-            <div class="col-md-3 mb-4">
-                <label class="form-label small">Preparador / Coach</label>
-                <input type="text" class="form-control" name="preparador" required>
+            <div class="col-md-6 mb-4">
+                <label class="form-label small">Team / Preparador Oficial</label>
+                <select name="preparador_id" id="selectPreparadorAfiliacion" class="form-select border-primary select2">
+                    <option value="">-- Atleta Independiente --</option>
+                    <% (arrayPreparadores || []).forEach(prep => { %>
+                        <option value="<%= prep.id %>"><%= prep.nombre_completo %> (<%= prep.gimnasio_labora %>)</option>
+                    <% }) %>
+                </select>
+                <div class="mt-2">
+                    <small class="text-muted d-block mb-2">Si su preparador no aparece, regístrelo primero en el módulo de Preparadores.</small>
+                    <a href="/preparadores/registrar" class="btn btn-sm btn-outline-primary">Registrar nuevo preparador</a>
+                </div>
             </div>
 
             <div class="col-md-3 mb-4">
@@ -148,7 +157,7 @@
                 <input type="tel" class="form-control" name="celular_preparador">
             </div>
 
-            <div class="col-md-6 mb-4">
+            <div class="col-md-3 mb-4">
                 <label class="form-label small">Email del Preparador</label>
                 <input type="email" class="form-control" name="email_preparador">
             </div>
@@ -212,30 +221,36 @@
             }
 
             const formData = new FormData(e.target);
-            const profileData = {
-                id: user.id,
-                idfdff: formData.get('idfdff'), // Asegúrate que el input name sea 'idfdff'
-                nombre: formData.get('nombre'),
-                cedula: formData.get('cedula'),
-                pasaporte: formData.get('pasaporte'),
-                nacionalidad: formData.get('nacionalidad'),
-                fecha_nacimiento: formData.get('nacimiento'),
-                sexo: formData.get('sexo'),
-                ocupacion: formData.get('ocupacion'),
-                calle: formData.get('calle'),
-                sector: formData.get('sector'),
-                municipio: formData.get('municipio'),
-                provincia: formData.get('provincia'),
-                pais: formData.get('pais'),
-                postal: formData.get('postal'),
-                celular: formData.get('celular'),
-                telfijo: formData.get('telfijo'),
-                instagram: formData.get('instagram'),
-                categoria_afiliacion: formData.get('categoria'),
-                estatura_inicial: formData.get('estatura'),
-                peso_inicial: formData.get('peso'),
-                gimnasio: formData.get('gimnasio'),
-                preparador: formData.get('preparador'),
+const selectedPreparadorId = formData.get('preparador_id');
+                const preparadorTexto = selectedPreparadorId
+                    ? document.querySelector('#selectPreparadorAfiliacion option:checked').textContent
+                    : '';
+
+                const profileData = {
+                    id: user.id,
+                    idfdff: formData.get('idfdff'), // Asegúrate que el input name sea 'idfdff'
+                    nombre: formData.get('nombre'),
+                    cedula: formData.get('cedula'),
+                    pasaporte: formData.get('pasaporte'),
+                    nacionalidad: formData.get('nacionalidad'),
+                    fecha_nacimiento: formData.get('nacimiento'),
+                    sexo: formData.get('sexo'),
+                    ocupacion: formData.get('ocupacion'),
+                    calle: formData.get('calle'),
+                    sector: formData.get('sector'),
+                    municipio: formData.get('municipio'),
+                    provincia: formData.get('provincia'),
+                    pais: formData.get('pais'),
+                    postal: formData.get('postal'),
+                    celular: formData.get('celular'),
+                    telfijo: formData.get('telfijo'),
+                    instagram: formData.get('instagram'),
+                    categoria_afiliacion: formData.get('categoria'),
+                    estatura_inicial: formData.get('estatura'),
+                    peso_inicial: formData.get('peso'),
+                    gimnasio: formData.get('gimnasio'),
+                    preparador_id: selectedPreparadorId || null,
+                    preparador: preparadorTexto,
                 celular_preparador: formData.get('celular_preparador'),
                 email_preparador: formData.get('email_preparador'),
                 estatus_afiliacion: 'pendiente' // El atleta siempre inicia como pendiente

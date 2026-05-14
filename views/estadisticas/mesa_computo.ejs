@@ -1,0 +1,165 @@
+<%- include("../template/cabecera", {tituloWeb: "Mesa de Cómputo"}) %>
+
+<div class="container-fluid my-4">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+            <h4 class="mb-0 fw-bold">MESA TÉCNICA: <%= categoria.categorias.nombre %></h4>
+            <span class="badge bg-primary fs-6">Fase: Finales</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle text-center" id="tablaVotacion">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Dorsal</th>
+                            <th class="text-start">Nombre Atleta</th>
+                            <% jueces.forEach(j => { %>
+                                <th>Juez <%= j.numero_silla %><br><small class="text-muted"><%= j.profiles.nombre %></small></th>
+                            <% }) %>
+                            <th class="table-info">Subtotal</th>
+                            <th class="table-warning">Limpio</th>
+                            <th class="table-success">Lugar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% atletas.forEach(atleta => { %>
+                            <tr class="fila-atleta" data-id="<%= atleta.atleta_id %>">
+                                <td class="fw-bold fs-5"><%= atleta.numero_atleta %></td>
+                                <td class="text-start fw-bold"><%= atleta.atletas.nombre %></td>
+
+                                <% jueces.forEach(j => {
+                                    const voto = votos.find(v => v.atleta_id === atleta.atleta_id && v.juez_id === j.profiles.id);
+                                %>
+                                    <td class="voto-casilla" data-juez="<%= j.profiles.id %>">
+                                        <input type="number" class="form-control text-center fw-bold input-voto"
+                                               value="<%= voto ? voto.posicion_asignada : '' %>"
+                                               onchange="actualizarVotoManual(this, '<%= j.profiles.id %>', '<%= atleta.atleta_id %>')">
+                                    </td>
+                                <% }) %>
+
+                                <td class="fw-bold cell-subtotal">--</td>
+                                <td class="fw-bold cell-limpio text-danger fs-5">--</td>
+                                <td class="fw-bold cell-posicion text-success fs-4">--</td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <button onclick="calcularResultados()" class="btn btn-primary btn-lg w-100 fw-bold shadow">
+                        <i class="fas fa-calculator me-2"></i> EJECUTAR ALGORITMO (ELIMINAR EXTREMOS)
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button onclick="oficializarCategoria()" id="btnOficializar" class="btn btn-danger btn-lg w-100 fw-bold shadow" disabled>
+                        <i class="fas fa-save me-2"></i> OFICIALIZAR Y PUBLICAR RESULTADOS
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+
+function actualizarVotoManual(input, juezId, atletaId) {
+    const valor = parseInt(input.value);
+    if (isNaN(valor) || valor < 1) return;
+
+    // Actualizar en Supabase
+    _supabase.from('votaciones_jueces').upsert({
+        evento_cat_id: "<%= categoria.id %>",
+        juez_id: juezId,
+        atleta_id: atletaId,
+        posicion_asignada: valor,
+        fase_competencia: 'final'
+    }, { onConflict: 'evento_cat_id,juez_id,atleta_id,fase_competencia' });
+}
+
+function calcularResultados() {
+    const filas = document.querySelectorAll('.fila-atleta');
+    let listaParaRanking = [];
+
+    filas.forEach(fila => {
+        const inputs = fila.querySelectorAll('.input-voto');
+        let votos = Array.from(inputs).map(i => parseInt(i.value)).filter(v => !isNaN(v));
+
+        if (votos.length === 0) return;
+
+        // 1. Subtotal
+        const subtotal = votos.reduce((a, b) => a + b, 0);
+        fila.querySelector('.cell-subtotal').innerText = subtotal;
+
+        // 2. REGLA FDFF: Eliminar el más alto y el más bajo si hay >= 5 jueces
+        let votosLimpios = [...votos];
+        if (votos.length >= 5) {
+            votosLimpios.sort((a, b) => a - b);
+            votosLimpios.pop(); // Quita el peor (el número más alto)
+            votosLimpios.shift(); // Quita el mejor (el número más bajo)
+        }
+
+        const limpio = votosLimpios.reduce((a, b) => a + b, 0);
+        fila.querySelector('.cell-limpio').innerText = limpio;
+
+        listaParaRanking.push({
+            id: fila.dataset.id,
+            puntos: limpio
+        });
+    });
+
+    // 3. Ranking (A menor puntuación, mejor lugar)
+    listaParaRanking.sort((a, b) => a.puntos - b.puntos);
+
+    listaParaRanking.forEach((item, index) => {
+        const fila = document.querySelector(`.fila-atleta[data-id="${item.id}"]`);
+        fila.querySelector('.cell-posicion').innerText = (index + 1) + "°";
+    });
+
+    document.getElementById('btnOficializar').disabled = false;
+    alert("Cálculo completado. Revise los lugares antes de oficializar.");
+}
+
+async function oficializarCategoria() {
+    if (!confirm("¿Seguro que desea oficializar? Esto publicará los resultados y ya no podrán editarse los votos.")) return;
+
+    const filas = document.querySelectorAll('.fila-atleta');
+    let datosAEnviar = [];
+
+    filas.forEach(fila => {
+        const posicionTxt = fila.querySelector('.cell-posicion').innerText;
+        datosAEnviar.push({
+            atleta_id: fila.dataset.id,
+            posicion: parseInt(posicionTxt), // Quita el símbolo °
+            puntos: parseInt(fila.querySelector('.cell-limpio').innerText)
+        });
+    });
+
+    try {
+        const response = await fetch('/estadisticas/oficializar-categoria', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                eventoCatId: "<%= categoria.id %>",
+                resultados: datosAEnviar
+            })
+        });
+
+        const data = await response.json();
+        if (data.estado) {
+            alert("✅ " + data.mensaje);
+            // Redirigir al reporte para ver cómo quedó
+            window.location.href = "/eventos/<%= categoria.evento_id %>/reporte-oficial";
+        } else {
+            alert("❌ Error: " + data.mensaje);
+        }
+    } catch (err) {
+        alert("Error de conexión con el servidor");
+    }
+}
+</script>
+
+<%- include("../template/footer") %>

@@ -14,6 +14,11 @@ const inscripcionPage = async (req, res) => {
             .select('*')
             .eq('estatus_afiliacion', 'habilitado');
 
+        const { data: arrayPreparadores } = await supabase
+            .from('preparadores')
+            .select('id, nombre_completo, gimnasio_labora')
+            .order('nombre_completo', { ascending: true });
+
         let arrayCategorias = [];
         if (evento) {
             const { data: cats, error } = await supabase
@@ -30,7 +35,8 @@ const inscripcionPage = async (req, res) => {
         res.render('inscripcion', {
             eventoActual: evento || { nombre: 'Sin evento activo', estado: 'cerrado', id: null },
             arrayAtletas: arrayAtletas || [],
-            arrayCategorias
+            arrayCategorias,
+            arrayPreparadores: arrayPreparadores || []
         });
     } catch (error) {
         console.error('Error al cargar inscripción:', error.message);
@@ -157,7 +163,7 @@ const detalleInscripcion = async (req, res) => {
 };
 
 const guardarInscripcionAsistida = async (req, res) => {
-    const { atleta_id, id_evento, categoriasElegidas } = req.body;
+    const { atleta_id, id_evento, categoriasElegidas, preparador_id } = req.body;
     const juez_id = res.locals.user?.id;
 
     if (!atleta_id || !id_evento || !categoriasElegidas || categoriasElegidas.length === 0) {
@@ -181,6 +187,17 @@ const guardarInscripcionAsistida = async (req, res) => {
             .insert(registrosCompetidores);
 
         if (errComp) throw errComp;
+
+        if (preparador_id) {
+            const { error: errPrep } = await supabase
+                .from('atletas')
+                .update({ preparador_id })
+                .eq('id', atleta_id);
+
+            if (errPrep) {
+                console.error('Error actualizando preparador del atleta:', errPrep.message);
+            }
+        }
 
         res.json({ estado: true, mensaje: '¡Inscripción oficializada y categorías registradas con éxito!' });
     } catch (error) {

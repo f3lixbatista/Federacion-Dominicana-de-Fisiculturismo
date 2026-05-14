@@ -39,7 +39,7 @@
                             <td><%= atleta.idfdff || 'Sin ID' %></td>
                             <td>
                                 <button class="btn btn-warning btn-sm fw-bold px-3" 
-                                        onclick="abrirModalInscripcion('<%= atleta.id %>', '<%= atleta.nombre %>', '<%= atleta.sexo %>')">
+                                        onclick="abrirModalInscripcion('<%= atleta.id %>', '<%= atleta.nombre %>', '<%= atleta.sexo %>', '<%= atleta.fecha_nacimiento %>', '<%= atleta.estatura %>', '<%= atleta.peso %>', '<%= atleta.cedula %>')">
                                     <i class="fas fa-edit"></i> Inscribir
                                 </button>
                             </td>
@@ -73,6 +73,17 @@
                 
                 <form id="formInscripcionAsistida">
                     <input type="hidden" id="atletaIdIns">
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Team / Preparador Oficial</label>
+                        <select name="preparador_id" id="selectPreparador" class="form-select border-primary select2">
+                            <option value="">-- Atleta Independiente --</option>
+                            <% (arrayPreparadores || []).forEach(prep => { %>
+                                <option value="<%= prep.id %>"><%= prep.nombre_completo %> (<%= prep.gimnasio_labora %>)</option>
+                            <% }) %>
+                        </select>
+                        <small class="text-muted">Si su preparador no aparece, debe registrarse primero en el módulo de Preparadores.</small>
+                    </div>
                     
                     <div id="listaCategoriasAfines" class="list-group shadow-sm">
                         <!-- Se inyecta vía JavaScript -->
@@ -85,6 +96,47 @@
                             <small class="text-muted" id="detallePrecios"></small>
                         </div>
                         <h3 class="mb-0 fw-bold text-success" id="totalMonto">RD$ 0.00</h3>
+                    </div>
+
+                    <!-- DOCUMENTO DE DESCARGO Y CONSENTIMIENTO - FDFF -->
+                    <div class="card bg-light border-dark mb-3 mt-4">
+                        <div class="card-header bg-dark text-white fw-bold small text-center">
+                            DOCUMENTO DE DESCARGO Y CONSENTIMIENTO - FDFF
+                        </div>
+                        <div class="card-body p-4 bg-white" style="max-height: 350px; overflow-y: auto; font-size: 0.85rem; line-height: 1.4;">
+                            <p class="text-center fw-bold text-uppercase mb-3">Convenio de participación - FDFF / IFBB</p>
+                            
+                            <p>Para poder participar como competidor en este evento, afirmo que entiendo y estoy de acuerdo con la constitución y las reglas de la IFBB/FDFF, el código de ética y las reglas antidopajes. Entiendo y concuerdo con las siguientes condiciones:</p>
+                            
+                            <ol class="ps-3">
+                                <li class="mb-2"><strong>Voluntariedad:</strong> Participo de manera totalmente voluntaria y acepto todas las partes de este documento.</li>
+                                <li class="mb-2"><strong>Descargo de Responsabilidad:</strong> Exonero a la federación, organizadores, jueces, patrocinadores y staff de cualquier reclamación por daños personales, muerte, pérdida de propiedad o gastos durante mi participación.</li>
+                                <li class="mb-2"><strong>Salud y Gastos Médicos:</strong> Confirmo buen estado de salud física y mental. Cualquier daño médico es mi responsabilidad, incluyendo el pago de asistencia médica, liberando a la federación de cobertura económica.</li>
+                                <li class="mb-2"><strong>No Coacción:</strong> Afirmo que nadie me obligó a participar.</li>
+                                <li class="mb-2"><strong>Reglas y Dopaje:</strong> Acepto ser sometido a pruebas de dopaje sin previo aviso si participo en eventos no avalados, costeando yo mismo dicha prueba.</li>
+                                <li class="mb-2"><strong>Derechos de Imagen:</strong> Autorizo el uso de fotos y videos capturados durante el evento para fines de la federación sin requerir pago por derechos.</li>
+                                <li class="mb-2"><strong>Mayoría de Edad:</strong> Confirmo ser mayor de edad y haber leído y entendido este convenio.</li>
+                            </ol>
+
+                            <div class="bg-light p-2 border rounded mt-3">
+                                <p class="mb-1"><strong>Datos del Firmante:</strong></p>
+                                <div class="row">
+                                    <div class="col-6">Atleta: <span id="signNombre" class="fw-bold"></span></div>
+                                    <div class="col-6">Cédula: <span id="signCedula" class="fw-bold"></span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-warning bg-opacity-10 border-top d-flex justify-content-between align-items-center">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input border-dark" type="checkbox" id="checkDescargo" style="width: 1.4rem; height: 1.4rem;">
+                                <label class="form-check-label fw-bold ms-2 mt-1" for="checkDescargo" style="cursor: pointer;">
+                                    EL ATLETA ACEPTA Y FIRMA ESTE CONVENIO DIGITALMENTE
+                                </label>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-dark fw-bold" onclick="imprimirDescargoFisico()">
+                                <i class="fas fa-print me-1"></i> Imprimir Copia Física
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -117,13 +169,34 @@
         if (modalEl) myModal = new bootstrap.Modal(modalEl);
     });
 
-    function abrirModalInscripcion(id, nombre, sexo) {
+function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso, cedula) {
+        // TRADUCCIÓN DE LA LÓGICA VBA [Páginas 22-26]
+        if (!nombre) return alert("Falta Nombre");
+        if (!sexo) return alert("Falta Sexo");
+        if (!fechaNac) return alert("Falta Fecha Nacimiento");
+        
+        // Validamos el formato de sexo como lo hacía el Excel
+        const sexoNormalizado = sexo.toLowerCase();
+        if (sexoNormalizado !== 'm' && sexoNormalizado !== 'f') {
+            return alert("Sexo Incorrecto");
+        }
+
+        if (!estatura || estatura <= 0) return alert("Falta estatura");
+        if (sexoNormalizado === 'm' && (!peso || peso <= 0)) return alert("Falta Peso");
+
+        // Si pasa las validaciones del "Viejo Código", procedemos
         document.getElementById('atletaIdIns').value = id;
         document.getElementById('spanNombreAtleta').innerText = nombre;
-        document.getElementById('detallePrecios').innerText = `1ra Cat: RD$ ${costos.primera.toLocaleString()} | Adic: RD$ ${costos.adicional.toLocaleString()}`;
+        document.getElementById('signNombre').innerText = nombre;
+        document.getElementById('signCedula').innerText = cedula || 'Sin especificar';
+        document.getElementById('checkDescargo').checked = false; // Reset del checkbox para cada atleta
         
-        renderizarCategorias(sexo);
-        if (myModal) myModal.show();
+        // Inyectamos el costo desde el evento actual
+        document.getElementById('detallePrecios').innerText = 
+            `1ra Cat: RD$ ${costos.primera.toLocaleString()} | Adic: RD$ ${costos.adicional.toLocaleString()}`;
+        
+        renderizarCategorias(sexoNormalizado); // Aquí aplicaremos el bloqueo de afinidad
+        myModal.show();
     }
 
     function renderizarCategorias(sexoAtleta) {
@@ -160,35 +233,73 @@
         calcularCobro();
     }
 
+    // 1. EL CEREBRO DE REGLAS (Los 7 grupos oficiales de la FDFF)
+    const GRUPOS_AFINIDAD = {
+        "Bikini": ["Bikini", "Womans Fitmodel", "Fit Pairs", "Woman's Artistic Fitness"],
+        "Wellness": ["Wellness", "Woman's Fit Model", "Woman's Acrobatic Fitness"],
+        "Bodyfitness": ["Bodyfitness"],
+        "Woman's Physique": ["Woman's Physique"],
+        "Men's Physique": ["Men's Physique", "Mens Fitmodel", "Fit Pair"], // No incluimos "Clasico" aquí para evitar choque con el Grupo 7
+        "Muscular Men's Physique": ["Muscular Men's Physique"],
+        "Culturismo": ["Fisiculturismo", "Culturismo", "Classic Physique", "Game's Classic"] 
+        // Nota: He agrupado "Fisiculturismo" y "Culturismo" como sinónimos técnicos
+    };
+
+    // 2. FUNCIÓN DE BLOQUEO DINÁMICO MEJORADA
     function validarAfinidad(checkbox) {
-        const checksSeleccionados = document.querySelectorAll('.check-cat:checked');
-        const todosLosItems = document.querySelectorAll('.cat-item');
+        const todosLosChecks = document.querySelectorAll('.check-cat');
+        const marcados = document.querySelectorAll('.check-cat:checked');
         
-        // REGLA 1: Primero evaluamos y bloqueamos afinidades
-        if (checksSeleccionados.length > 0) {
-            // Buscamos la modalidad del primer elemento que se seleccionó
-            const primeraCatSeleccionada = checksSeleccionados[0].closest('.cat-item');
-            const modalidadElegida = primeraCatSeleccionada.dataset.modalidad;
+        if (marcados.length > 0) {
+            // 1. Identificamos el grupo de la PRIMERA categoría que se marcó
+            const nombrePrimeraCat = marcados[0].closest('.cat-item').querySelector('.fw-bold').innerText;
             
-            todosLosItems.forEach(item => {
-                const cb = item.querySelector('.check-cat');
-                // Si la modalidad es diferente a la seleccionada originalmente, bloqueamos
-                if (item.dataset.modalidad !== modalidadElegida) {
+            let grupoActivoKey = null;
+            
+            // Buscamos a qué "familia" pertenece según las palabras clave
+            for (const familia in GRUPOS_AFINIDAD) {
+                const coincidencias = GRUPOS_AFINIDAD[familia];
+                if (coincidencias.some(palabra => nombrePrimeraCat.toLowerCase().includes(palabra.toLowerCase()))) {
+                    grupoActivoKey = familia;
+                    break;
+                }
+            }
+
+            const permitidos = grupoActivoKey ? GRUPOS_AFINIDAD[grupoActivoKey] : [nombrePrimeraCat];
+
+            // 2. EJECUTAMOS EL BLOQUEO
+            todosLosChecks.forEach(cb => {
+                const item = cb.closest('.cat-item');
+                const nombreItem = item.querySelector('.fw-bold').innerText;
+
+                // REGLA: Si el nombre del item no contiene ninguna de las palabras permitidas del grupo
+                const esValida = permitidos.some(p => nombreItem.toLowerCase().includes(p.toLowerCase()));
+                
+                if (!esValida && !cb.checked) {
                     cb.disabled = true;
                     item.classList.add('opacity-50', 'bg-light');
+                } else {
+                    cb.disabled = false;
+                    item.classList.remove('opacity-50', 'bg-light');
                 }
             });
         } else {
-            // Si desmarcan todas las casillas, liberamos el formulario completo
-            todosLosItems.forEach(item => {
-                const cb = item.querySelector('.check-cat');
+            // RESET: Si desmarcan todo, habilitamos todas las opciones
+            todosLosChecks.forEach(cb => {
                 cb.disabled = false;
-                item.classList.remove('opacity-50', 'bg-light');
+                cb.closest('.cat-item').classList.remove('opacity-50', 'bg-light');
             });
         }
-
-        // REGLA 2: Luego de bloquear, el sistema calcula el cobro basado en los sobrevivientes
         calcularCobro();
+    }
+
+    function liberarFormulario() {
+        const todosLosItems = document.querySelectorAll('.cat-item');
+        todosLosItems.forEach(item => {
+            const cb = item.querySelector('.check-cat');
+            cb.disabled = false;
+            item.classList.remove('opacity-50', 'bg-light');
+        });
     }
 
     function calcularCobro() {
@@ -205,6 +316,13 @@
 
     async function guardarInscripcionOficial() {
         const atletaId = document.getElementById('atletaIdIns').value;
+        const firmado = document.getElementById('checkDescargo').checked;
+        const preparadorId = document.getElementById('selectPreparador')?.value || null;
+        
+        if (!firmado) {
+            return alert("❌ ¡ATENCIÓN!\n\nNo se puede oficializar la inscripción sin la aceptación de la Hoja de Descargo.\n\nPor favor, lea y acepte las políticas FDFF para continuar.");
+        }
+
         // Captura los valores de los checkboxes seleccionados (los IDs de eventos_categorias)
         const categoriasElegidas = Array.from(document.querySelectorAll('.check-cat:checked')).map(cb => cb.value);
 
@@ -220,14 +338,34 @@
                 body: JSON.stringify({
                     atleta_id: atletaId,
                     id_evento: "<%= eventoActual?.id %>", // Variable global con el ID del evento de la URL
-                    categoriasElegidas: categoriasElegidas
+                    categoriasElegidas: categoriasElegidas,
+                    preparador_id: preparadorId
                 })
             });
 
             const resultado = await respuesta.json();
 
             if (resultado.estado) {
-                alert('✅ ' + resultado.mensaje);
+                // Capturamos la información del juez/estadístico actual (si está disponible)
+                const sesionActual = await _supabase.auth.getSession();
+                const juezId = sesionActual?.data?.session?.user?.id || null;
+                
+                // Al guardar, actualizamos la tabla atletas con información completa de firma
+                const { error: updateError } = await _supabase.from('atletas')
+                    .update({ 
+                        descargo_firmado: true,
+                        fecha_firma_descargo: new Date().toISOString(),
+                        juez_firma_id: juezId
+                    })
+                    .eq('id', atletaId);
+                
+                if (updateError) {
+                    console.error('Error actualizando descargo:', updateError);
+                    alert('⚠️ Inscripción guardada pero hubo un error registrando la firma digital.');
+                } else {
+                    alert('✅ ' + resultado.mensaje + '\n📝 Firma digital registrada en timestamp.');
+                }
+                
                 myModal.hide();
                 window.location.reload(); // Recargamos para actualizar las tablas
             } else {
@@ -239,6 +377,126 @@
         }
     }
 
+    function imprimirDescargoFisico() {
+        const nombreAtleta = document.getElementById('signNombre').innerText || 'Nombre del Atleta';
+        const cedulaAtleta = document.getElementById('signCedula').innerText || 'Cédula/Pasaporte';
+        const categoriasMarc = Array.from(document.querySelectorAll('.check-cat:checked'))
+            .map(cb => cb.closest('.cat-item').querySelector('.fw-bold').innerText)
+            .join(', ') || 'Categoría';
+        const fechaActual = new Date().toLocaleDateString('es-DO');
+        
+        const printWindow = window.open('', '_blank');
+        const content = `
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <title>Descargo FDFF - ${nombreAtleta}</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        padding: 40px;
+                        line-height: 1.6;
+                        max-width: 800px;
+                        margin: 0 auto;
+                    }
+                    .header {
+                        text-align: center;
+                        border-bottom: 3px solid #000;
+                        padding-bottom: 15px;
+                        margin-bottom: 20px;
+                    }
+                    .header h2 { margin: 5px 0; font-size: 18px; }
+                    .header p { margin: 3px 0; font-size: 12px; }
+                    .content {
+                        font-size: 13px;
+                        margin: 20px 0;
+                    }
+                    .content ol li {
+                        margin-bottom: 10px;
+                        text-align: justify;
+                    }
+                    .datos-box {
+                        border: 2px solid #000;
+                        padding: 15px;
+                        margin: 20px 0;
+                        font-size: 12px;
+                    }
+                    .datos-box p { margin: 8px 0; }
+                    .firma-section {
+                        margin-top: 30px;
+                        text-align: center;
+                    }
+                    .firma-linea {
+                        display: inline-block;
+                        width: 40%;
+                        margin: 0 5%;
+                        text-align: center;
+                    }
+                    .firma-linea hr { margin: 40px 0 5px 0; }
+                    .firma-linea p { margin: 5px 0; font-size: 11px; }
+                    @media print {
+                        body { padding: 20px; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>FEDERACIÓN DOMINICANA DE FISICULTURISMO Y FITNESS</h2>
+                    <h3>DOCUMENTO DE DESCARGO Y CONSENTIMIENTO</h3>
+                    <p><strong>Evento:</strong> <%= eventoActual.nombre %></p>
+                    <p><strong>Fecha:</strong> ${fechaActual}</p>
+                </div>
+
+                <div class="content">
+                    <p><strong>CONVENIO DE PARTICIPACIÓN - FDFF / IFBB</strong></p>
+                    <p style="text-align: justify;">Para poder participar como competidor en este evento, afirmo que entiendo y estoy de acuerdo con la constitución y las reglas de la IFBB/FDFF, el código de ética y las reglas antidopajes. Entiendo y concuerdo con las siguientes condiciones:</p>
+                    
+                    <ol>
+                        <li><strong>Voluntariedad:</strong> Participo de manera totalmente voluntaria y acepto todas las partes de este documento.</li>
+                        <li><strong>Descargo de Responsabilidad:</strong> Exonero a la federación, organizadores, jueces, patrocinadores y staff de cualquier reclamación por daños personales, muerte, pérdida de propiedad o gastos durante mi participación.</li>
+                        <li><strong>Salud y Gastos Médicos:</strong> Confirmo buen estado de salud física y mental. Cualquier daño médico es mi responsabilidad, incluyendo el pago de asistencia médica, liberando a la federación de cobertura económica.</li>
+                        <li><strong>No Coacción:</strong> Afirmo que nadie me obligó a participar.</li>
+                        <li><strong>Reglas y Dopaje:</strong> Acepto ser sometido a pruebas de dopaje sin previo aviso si participo en eventos no avalados, costeando yo mismo dicha prueba.</li>
+                        <li><strong>Derechos de Imagen:</strong> Autorizo el uso de fotos y videos capturados durante el evento para fines de la federación sin requerir pago por derechos.</li>
+                        <li><strong>Mayoría de Edad:</strong> Confirmo ser mayor de edad y haber leído y entendido este convenio.</li>
+                    </ol>
+                </div>
+
+                <div class="datos-box">
+                    <p><strong>DATOS DEL COMPETIDOR:</strong></p>
+                    <p>Nombre: <strong>${nombreAtleta}</strong></p>
+                    <p>Cédula/Pasaporte: <strong>${cedulaAtleta}</strong></p>
+                    <p>Categoría: <strong>${categoriasMarc}</strong></p>
+                    <p>Fecha de Registro: <strong>${fechaActual}</strong></p>
+                </div>
+
+                <div class="firma-section">
+                    <p><strong>FIRMAS DE ACEPTACIÓN</strong></p>
+                    <div class="firma-linea">
+                        <hr>
+                        <p>Firma del Atleta</p>
+                    </div>
+                    <div class="firma-linea">
+                        <hr>
+                        <p>Juez/Estadístico FDFF</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        printWindow.document.write(content);
+        printWindow.document.close();
+        
+        // Esperar a que el contenido se cargue antes de imprimir
+        printWindow.onload = function() {
+            printWindow.focus();
+            printWindow.print();
+        };
+    }
+
+    
     async function cerrarInscripcionesWeb(eventoId) {
         if (!confirm("¿Cerrar autoinscripciones web?")) return;
         const { error } = await _supabase.from('eventos').update({ estado: 'pesaje' }).eq('id', eventoId);
@@ -254,6 +512,5 @@
         });
     });
 </script>
-
 
 <%- include("template/footer") %>

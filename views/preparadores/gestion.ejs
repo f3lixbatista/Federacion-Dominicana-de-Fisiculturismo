@@ -1,0 +1,84 @@
+<%- include('../template/cabecera', { tituloWeb: 'Gestión de Preparadores' }) %>
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold"><i class="fas fa-user-tie text-primary"></i> Gestión de Preparadores</h1>
+        <div class="badge bg-dark p-2">Total: <%= preparadores.length %></div>
+    </div>
+
+    <div class="card shadow-sm border-0" style="border-radius: 15px;">
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="tablaPrep">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nombre Completo</th>
+                            <th>Cédula/Pass</th>
+                            <th>Gimnasio / Team</th>
+                            <th>Estatus</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% preparadores.forEach(prep => { %>
+                            <tr>
+                                <td>
+                                    <div class="fw-bold"><%= prep.nombre_completo %></div>
+                                    <div class="small text-muted"><%= prep.email %></div>
+                                </td>
+                                <td><%= prep.cedula %></td>
+                                <td><span class="badge bg-outline-secondary text-dark border"><%= prep.gimnasio_labora || 'N/A' %></span></td>
+                                <td>
+                                    <span class="badge <%= prep.estatus_afiliacion === 'habilitado' ? 'bg-success' : 'bg-warning text-dark' %>">
+                                        <%= (prep.estatus_afiliacion || 'pendiente').toUpperCase() %>
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <% if (prep.estatus_afiliacion === 'pendiente') { %>
+                                        <button class="btn btn-primary btn-sm fw-bold" onclick="habilitarPreparador('<%= prep.id %>')">
+                                            <i class="fas fa-check"></i> HABILITAR
+                                        </button>
+                                    <% } else { %>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="alert('Funcionalidad de suspensión en desarrollo')">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function habilitarPreparador(id) {
+    if (!confirm('¿Desea habilitar a este preparador oficialmente?')) return;
+
+    try {
+        const res = await fetch(`/preparadores/habilitar/${id}`, { method: 'POST' });
+        const data = await res.json();
+
+        if (data.estado) {
+            alert(data.mensaje);
+            location.reload();
+        } else {
+            alert('Error: ' + data.mensaje);
+        }
+    } catch (err) {
+        alert('Error de red: ' + err.message);
+    }
+}
+
+if (window.jQuery && $.fn.DataTable) {
+    $(document).ready(function() {
+        $('#tablaPrep').DataTable({
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' }
+        });
+    });
+}
+</script>
+
+<%- include('../template/footer') %>
