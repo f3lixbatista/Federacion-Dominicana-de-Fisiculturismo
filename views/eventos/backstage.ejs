@@ -1,0 +1,93 @@
+<%- include("../template/cabecera", {tituloWeb: "Panel Backstage - FDFF"}) %>
+
+<div class="container-fluid my-4 px-4">
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 15px;">
+                <h4 class="fw-bold mb-3 text-dark border-bottom pb-2">
+                    <i class="fas fa-list-ol text-primary"></i> Programa del Evento
+                </h4>
+                <div class="list-group list-group-flush overflow-auto" style="max-height: 75vh;">
+                    <% (evento.cronograma_mc || []).forEach((bloque) => { %>
+                        <div class="list-group-item py-3">
+                            <span class="badge <%= bloque.tipo === 'Categoría' ? 'bg-primary' : 'bg-secondary' %> mb-1">
+                                <%= bloque.tipo %>
+                            </span>
+                            <h6 class="mb-0 fw-bold <%= bloque.tipo === 'Categoría' ? 'text-dark' : 'text-muted' %>">
+                                <%= bloque.nombre %>
+                            </h6>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg p-4 bg-dark text-white" style="border-radius: 15px; min-height: 80vh;">
+                <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-3 mb-4">
+                    <h2 class="fw-bold mb-0 text-warning">
+                        <i class="fas fa-running me-2"></i> LLAMADO A TARIMA
+                    </h2>
+                    <div id="statusLive" class="badge bg-danger animate-pulse">EN VIVO</div>
+                </div>
+
+                <div id="contenedorClasificados">
+                    <div class="text-center py-5 opacity-50" id="msgEspera">
+                        <i class="fas fa-broadcast-tower display-1 mb-4"></i>
+                        <h3>Esperando lista de clasificados...</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    const idEvento = "<%= evento.id %>";
+
+    async function actualizarBackstage() {
+        const { data } = await _supabase.from('eventos').select('orden_backstage').eq('id', idEvento).single();
+
+        if (data?.orden_backstage?.atletas?.length > 0) {
+            const backstage = data.orden_backstage;
+            document.getElementById('msgEspera').classList.add('d-none');
+            
+            let html = `
+                <div class="alert alert-info py-2 fw-bold text-center text-uppercase fs-4">
+                    FASE: ${backstage.fase} - CLASIFICADOS
+                </div>
+                <div class="row g-3 mt-2">
+            `;
+
+            backstage.atletas.sort((a,b) => a.dorsal - b.dorsal).forEach(atleta => {
+                html += `
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card bg-secondary bg-opacity-25 border-light p-3 h-100">
+                            <div class="d-flex align-items-center">
+                                <div class="badge bg-warning text-dark fs-2 me-3" style="min-width: 70px;">
+                                    ${atleta.dorsal}
+                                </div>
+                                <div class="fw-bold fs-5">${atleta.nombre}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            document.getElementById('contenedorClasificados').innerHTML = html;
+            new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3').play().catch(() => {});
+        }
+    }
+
+    _supabase.channel('backstage-live').on('postgres_changes', { 
+        event: 'UPDATE', schema: 'public', table: 'eventos', filter: `id=eq.${idEvento}` 
+    }, () => {
+        actualizarBackstage();
+    }).subscribe();
+
+    actualizarBackstage();
+</script>
+<%- include("../template/footer") %>

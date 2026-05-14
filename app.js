@@ -29,6 +29,6 @@ app.use('/', require('./router/rutasBat'));
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(port, () => {
-    console.log(`🚀 Servidor FDFF activo en: http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+    console.log(`🚀 Servidor FDFF activo en el puerto: ${port}`);
 });

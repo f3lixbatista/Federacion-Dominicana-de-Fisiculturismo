@@ -96,22 +96,46 @@
         </div>
     <% } %>
 
-    <!-- PIE DE FIRMAS (SOLO PARA EL REPORTE FINAL) -->
-    <div class="row mt-5 pt-4 text-center">
+    <% if (evento.estado === 'finalizado' && locals.rankingTeams && rankingTeams.length > 0) { %>
+        <div class="container mt-5 page-break">
+            <h3 class="text-center fw-bold bg-dark text-white p-2">RESULTADOS FINALES POR EQUIPOS (TEAMS)</h3>
+            <table class="table table-bordered border-dark text-center">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>POSICIÓN</th>
+                        <th>NOMBRE DEL TEAM / GIMNASIO</th>
+                        <th>PUNTUACIÓN TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% rankingTeams.forEach((team, i) => { %>
+                        <tr>
+                            <td class="fw-bold"><%= i+1 %>° LUGAR</td>
+                            <td class="fw-bold text-primary"><%= team.nombre %></td>
+                            <td class="fs-4"><%= team.puntos %> pts</td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } %>
+
+    <!-- BLOQUE DE FIRMAS PROTOCOLARIAS -->
+    <div class="row mt-5 pt-5 text-center">
         <div class="col-4">
-            <div class="border-top border-dark pt-2 mx-3">
-                <small class="fw-bold">Juez Estadístico</small>
-            </div>
+            <hr class="border-dark mx-4">
+            <h6 class="fw-bold">Tony Peña R.</h6>
+            <small>Presidente FDFF</small>
         </div>
         <div class="col-4">
-            <div class="border-top border-dark pt-2 mx-3">
-                <small class="fw-bold">Presidente del Comité</small>
-            </div>
+            <hr class="border-dark mx-4">
+            <h6 class="fw-bold">Comisión de Jueces</h6>
+            <small>Juez Principal</small>
         </div>
         <div class="col-4">
-            <div class="border-top border-dark pt-2 mx-3">
-                <small class="fw-bold">Secretaría General</small>
-            </div>
+            <hr class="border-dark mx-4">
+            <h6 class="fw-bold">Mesa Técnica</h6>
+            <small>Estadístico Oficial</small>
         </div>
     </div>
 </div>

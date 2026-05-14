@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { checkRole } = require('../middlewares/auth');
+const { checkRole, requireAuth } = require('../middlewares/auth');
 const supabase = require('../supabaseClient');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
+const atletasController = require('../controllers/atletasController');
 
 router.get('/', (req, res) => {
     res.render('index', { titulo: 'BatWeb - Inicio' });
@@ -72,5 +75,10 @@ router.get('/noticias', checkRole(['general', 'admin']), (req, res) => {
 router.get('/social', checkRole(['general', 'admin']), (req, res) => {
     res.render('social', { titulo: 'Federados Social' });
 });
+
+router.get('/mi-perfil', requireAuth, atletasController.verPerfilPropio);
+router.post('/mi-perfil/actualizar-team', requireAuth, atletasController.actualizarTeamPropio);
+router.post('/mi-perfil/subir-foto', requireAuth, upload.single('imagen'), atletasController.subirPublicacion);
+router.post('/mi-perfil/comentar', requireAuth, atletasController.comentarPublicacion);
 
 module.exports = router;

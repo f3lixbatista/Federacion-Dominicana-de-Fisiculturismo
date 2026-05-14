@@ -1,0 +1,218 @@
+<%- include("../template/cabecera", {tituloWeb: "Mi Perfil de Atleta"}) %>
+
+<div class="container my-5">
+    <div class="row g-4">
+        <!-- COLUMNA IZQUIERDA: CARNET DIGITAL Y AFILIACIÓN -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm text-center p-4 bg-white mb-4" style="border-radius: 15px;">
+                <div class="mx-auto bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-user-run display-6"></i>
+                </div>
+                <h4 class="fw-bold mb-1"><%= atleta.nombre || user.nombre %></h4>
+                <p class="text-muted small mb-3"><%= user.email %></p>
+                
+                <!-- ESTADO DE AFILIACIÓN -->
+                <div class="p-2 rounded mb-3 <%= atleta.estatus_afiliacion === 'habilitado' ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger' %>">
+                    <span class="small fw-bold text-uppercase">Membresía FDFF</span>
+                    <h5 class="fw-bold mb-0 mt-1">
+                        <i class="fas <%= atleta.estatus_afiliacion === 'habilitado' ? 'fa-check-circle' : 'fa-times-circle' %>"></i>
+                        <%= atleta.estatus_afiliacion ? atleta.estatus_afiliacion.toUpperCase() : 'PENDIENTE' %>
+                    </h5>
+                </div>
+                
+                <div class="text-start small text-muted border-top pt-3">
+                    <p class="mb-1"><strong>Cédula:</strong> <%= atleta.cedula || '--' %></p>
+                    <p class="mb-1"><strong>Sexo:</strong> <%= atleta.sexo || '--' %></p>
+                    <p class="mb-0"><strong>Última Renovación:</strong> <%= atleta.fecha_ultima_renovacion || 'No registrada' %></p>
+                </div>
+            </div>
+
+            <!-- GESTIÓN DE PREPARADOR / TEAM -->
+            <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 15px;">
+                <h5 class="fw-bold mb-3 text-dark"><i class="fas fa-user-tie text-secondary me-2"></i> Mi Preparador / Team</h5>
+                <form id="formActualizarTeam">
+                    <div class="mb-3">
+                        <select id="selectPrepPerfil" class="form-select border-primary font-monospace small">
+                            <option value="">-- Atleta Independiente --</option>
+                            <% preparadores.forEach(prep => { %>
+                                <option value="<%= prep.id %>" <%= atleta.preparador_id === prep.id ? 'selected' : '' %>>
+                                    <%= prep.nombre_completo %> (<%= prep.gimnasio_labora %>)
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <button type="button" onclick="modificarTeamAtleta()" class="btn btn-primary btn-sm w-100 fw-bold shadow-sm">
+                        ACTUALIZAR MI COACH
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: HISTORIAL DE COMPETENCIA FDFF -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 15px; min-height: 550px;">
+                <h3 class="fw-bold text-dark mb-4 border-bottom pb-2"><i class="fas fa-history text-primary"></i> Mi Historial de Competencias</h3>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle text-center small">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-start">Evento / Competencia</th>
+                                <th>Categoría Evaluada</th>
+                                <th>Dorsal</th>
+                                <th>Pódium Final</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (historial && historial.length > 0) { %>
+                                <% historial.forEach(row => { %>
+                                    <tr>
+                                        <td class="text-start">
+                                            <div class="fw-bold text-dark"><%= row.eventos?.nombre %></div>
+                                            <div class="text-muted" style="font-size:0.75rem;"><%= row.eventos?.fecha_inicio %></div>
+                                        </td>
+                                        <td class="fw-bold"><%= row.eventos_categorias?.categorias?.nombre %></td>
+                                        <td>
+                                            <span class="badge bg-secondary p-2 fs-6"><%= row.numero_atleta || '---' %></span>
+                                        </td>
+                                        <td class="fw-bold fs-5">
+                                            <% if (row.eventos?.estado === 'finalizado') { %>
+                                                <div class="d-flex flex-column align-items-center">
+                                                    <span class="<%= row.posicion_final <= 3 ? 'text-warning' : 'text-success' %>">
+                                                        <%= row.posicion_final %>° Lugar
+                                                    </span>
+                                                    <a href="/eventos/atleta/<%= atleta.id %>/evento/<%= row.eventos.id %>/diploma" 
+                                                       target="_blank" class="btn btn-outline-danger btn-sm mt-1" style="font-size: 0.7rem;">
+                                                        <i class="fas fa-certificate"></i> DIPLOMA
+                                                    </a>
+                                                </div>
+                                            <% } else { %>
+                                                <span class="text-muted font-monospace" style="font-size:0.8rem;">En progreso...</span>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted italic">
+                                        <i class="fas fa-award display-6 text-light mb-3 d-block"></i>
+                                        Aún no registras participaciones oficiales en eventos FDFF.
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECCIÓN SOCIAL: MURO DEL ATLETA -->
+            <div class="card border-0 shadow-sm p-4 bg-white mt-4" style="border-radius: 15px;">
+                <h3 class="fw-bold text-dark mb-4 border-bottom pb-2">
+                    <i class="fas fa-camera-retro text-primary"></i> Mi Galería y Muro
+                </h3>
+                
+                <!-- Formulario de Subida -->
+                <div class="bg-light p-3 rounded mb-4">
+                    <form action="/mi-perfil/subir-foto" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Subir nueva foto al muro</label>
+                            <input type="file" name="imagen" class="form-control form-control-sm" accept="image/*" required>
+                        </div>
+                        <div class="mb-3">
+                            <textarea name="descripcion" class="form-control form-control-sm" placeholder="¿Qué estás entrenando hoy?" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm fw-bold">PUBLICAR</button>
+                    </form>
+                </div>
+
+                <!-- Feed de Publicaciones -->
+                <div class="row g-3">
+                    <% if (publicaciones && publicaciones.length > 0) { %>
+                        <% publicaciones.forEach(post => { %>
+                            <div class="col-md-6">
+                                <div class="card border shadow-sm h-100">
+                                    <img src="<%= post.imagen_url %>" class="card-img-top" style="height: 200px; object-fit: cover;">
+                                    <div class="card-body p-2">
+                                        <p class="small mb-1 text-dark"><%= post.descripcion %></p>
+                                        <hr class="my-1">
+                                        
+                                        <!-- Comentarios -->
+                                        <div class="comentarios-box mb-2" style="max-height: 120px; overflow-y: auto;">
+                                            <% if (post.publicacion_comentarios && post.publicacion_comentarios.length > 0) { %>
+                                                <% post.publicacion_comentarios.forEach(c => { %>
+                                                    <div class="small bg-light p-1 mb-1 rounded border-start border-primary border-3">
+                                                        <strong class="text-primary"><%= c.profiles?.nombre || 'Usuario' %>:</strong> <%= c.comentario %>
+                                                    </div>
+                                                <% }) %>
+                                            <% } %>
+                                        </div>
+                                        
+                                        <!-- Input Comentar -->
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" class="form-control input-comentario-<%= post.id %>" placeholder="Escribe un comentario...">
+                                            <button class="btn btn-outline-primary" type="button" onclick="enviarComentario('<%= post.id %>')">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div class="col-12 text-center py-4 text-muted">
+                            <p>Aún no has compartido fotos en tu muro.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function modificarTeamAtleta() {
+    const prepId = document.getElementById('selectPrepPerfil').value;
+
+    try {
+        const res = await fetch('/mi-perfil/actualizar-team', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ preparador_id: prepId })
+        });
+
+        const data = await res.json();
+        if (data.estado) {
+            alert("✅ " + data.mensaje);
+            window.location.reload();
+        } else {
+            alert("❌ Error: " + data.mensaje);
+        }
+    } catch (e) {
+        alert("Error de red al actualizar el team.");
+    }
+}
+
+async function enviarComentario(postId) {
+    const input = document.querySelector(`.input-comentario-${postId}`);
+    const comentario = input.value;
+    if (!comentario) return;
+
+    try {
+        const res = await fetch('/mi-perfil/comentar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ publicacion_id: postId, comentario })
+        });
+        const data = await res.json();
+        if (data.estado) {
+            window.location.reload();
+        } else {
+            alert("Error: " + data.mensaje);
+        }
+    } catch (e) {
+        alert("Error al enviar el comentario.");
+    }
+}
+</script>
+
+<%- include("../template/footer") %>

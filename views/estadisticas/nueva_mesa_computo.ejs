@@ -1,0 +1,182 @@
+<%- include("../template/cabecera", {tituloWeb: "Mesa de Cómputo Avanzada"}) %>
+
+<div class="container-fluid my-4 px-4">
+    <div class="card bg-dark text-white p-3 mb-4 shadow border-0">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold mb-0">ORDEN #<%= catRel.orden_secuencia_categoria %>: <%= catRel.categorias.nombre %></h2>
+                <span class="badge bg-warning text-dark fw-bold text-uppercase">
+                    FASE ACTUAL: <%= faseTrabajo.replace('_', ' ') %>
+                </span>
+            </div>
+            <div class="text-end">
+                <p class="small mb-0 text-muted">Panel de Jueces Activo: 1</p>
+                <h4 class="mb-0 text-info">Inscritos: <%= competidores.length %> Atletas</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-lg border-0 overflow-hidden" style="border-radius: 15px;">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle text-center mb-0" id="matrizVotos">
+                <thead class="table-secondary small fw-bold">
+                    <tr>
+                        <th style="width: 50px;">Num.</th>
+                        <th class="text-start ps-3">Nombre Atleta</th>
+                        <% jueces.forEach((j, i) => { %>
+                            <th>Juez <%= i+1 %><br><span class="small opacity-50"><%= j.profiles.nombre.split(' ')[0] %></span></th>
+                        <% }) %>
+                        
+                        <% if(faseTrabajo === 'final_r2') { %>
+                            <th class="table-primary text-primary">R1</th>
+                        <% } %>
+
+                        <th class="table-dark">TOTAL</th>
+                        <th class="table-success">LUGAR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% competidores.forEach(comp => { %>
+                        <tr class="fila-atleta" data-id="<%= comp.atleta_id %>">
+                            <td class="fw-bold fs-5 bg-light"><%= comp.numero_atleta %></td>
+                            <td class="text-start ps-3 fw-bold"><%= comp.atletas.nombre %></td>
+                            
+                            <% jueces.forEach(j => { 
+                                const v = votos.find(v => v.atleta_id === comp.atleta_id && v.juez_id === j.profiles.id);
+                            %>
+                                <td class="p-1">
+                                    <input type="number" class="form-control text-center fw-bold input-voto" 
+                                           value="<%= v ? v.posicion_asignada : '' %>"
+                                           data-juez="<%= j.profiles.id %>">
+                                </td>
+                            <% }) %>
+
+                            <% if(faseTrabajo === 'final_r2') { %>
+                                <td class="fw-bold text-primary bg-primary bg-opacity-10"><%= comp.puntos_final_r1 || 0 %></td>
+                            <% } %>
+
+                            <td class="fw-bold fs-5 cell-total">--</td>
+                            <td class="fw-bold fs-4 text-success cell-posicion">--</td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row mt-4 g-3">
+        <div class="col-md-3">
+            <button onclick="calcularFase()" class="btn btn-primary w-100 fw-bold py-3">
+                <i class="fas fa-calculator me-2"></i> CALCULAR LUGARES
+            </button>
+        </div>
+        <div class="col-md-3">
+            <button onclick="enviarABackstage()" class="btn btn-dark w-100 fw-bold py-3">
+                <i class="fas fa-user-shield me-2"></i> MANDAR A BACKSTAGE
+            </button>
+        </div>
+        <div class="col-md-3">
+            <button onclick="oficializarYPasar()" class="btn btn-success w-100 fw-bold py-3">
+                <i class="fas fa-forward me-2"></i> OFICIALIZAR Y SIG. FASE
+            </button>
+        </div>
+        <div class="col-md-3">
+            <button onclick="enviarPremiacionMC()" class="btn btn-danger w-100 fw-bold py-3" id="btnMC" disabled>
+                <i class="fas fa-microphone me-2"></i> CEREMONIA PREMIACIÓN
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    const idEvento = "<%= catRel.evento_id %>";
+
+    function calcularFase() {
+        const fase = '<%= faseTrabajo %>';
+        const filas = document.querySelectorAll('.fila-atleta');
+        let tablaParaRanking = [];
+
+        filas.forEach(fila => {
+            const inputs = fila.querySelectorAll('.input-voto');
+            let votos = Array.from(inputs).map(i => parseInt(i.value)).filter(v => !isNaN(v));
+
+            if (votos.length === 0) return;
+
+            let votosLimpios = [...votos];
+            if (votos.length >= 5) {
+                votosLimpios.sort((a, b) => a - b);
+                votosLimpios.pop();
+                votosLimpios.shift();
+            }
+
+            let totalFase = votosLimpios.reduce((a, b) => a + b, 0);
+
+            if (fase === 'final_r2') {
+                const r1Index = votos.length + 2;
+                const r1 = parseInt(fila.cells[r1Index].innerText);
+                totalFase += r1;
+            }
+
+            fila.querySelector('.cell-total').innerText = totalFase;
+            tablaParaRanking.push({ id: fila.dataset.id, puntos: totalFase });
+        });
+
+        tablaParaRanking.sort((a, b) => a.puntos - b.puntos);
+        tablaParaRanking.forEach((item, index) => {
+            const fila = document.querySelector(`.fila-atleta[data-id="${item.id}"]`);
+            fila.querySelector('.cell-posicion').innerText = (index + 1) + "°";
+        });
+
+        if (fase.includes('final')) document.getElementById('btnMC').disabled = false;
+    }
+
+    async function enviarABackstage() {
+        const fase = '<%= faseTrabajo %>';
+        const filas = document.querySelectorAll('.fila-atleta');
+        let clasificados = [];
+        const limite = fase === 'eliminatoria' ? 15 : 6;
+
+        filas.forEach(f => {
+            const posicionCell = f.querySelector('.cell-posicion').innerText;
+            if (posicionCell && posicionCell !== '--') {
+                const pos = parseInt(posicionCell);
+                if (pos <= limite) {
+                    clasificados.push({
+                        dorsal: f.cells[0].innerText,
+                        nombre: f.cells[1].innerText
+                    });
+                }
+            }
+        });
+
+        if (clasificados.length === 0) return alert("Primero debe Calcular Lugares.");
+
+        const { error } = await _supabase
+            .from('eventos')
+            .update({ 
+                orden_backstage: { 
+                    fase: fase.toUpperCase(), 
+                    atletas: clasificados 
+                } 
+            })
+            .eq('id', idEvento);
+
+        if(!error) alert("¡Lista enviada a Backstage exitosamente!");
+        else alert("Error al enviar: " + error.message);
+    }
+
+    async function enviarPremiacionMC() {
+        const filas = Array.from(document.querySelectorAll('.fila-atleta'));
+        const podio = filas.map(f => ({ 
+            dorsal: f.cells[0].innerText, 
+            nombre: f.cells[1].innerText,
+            posicion: parseInt(f.querySelector('.cell-posicion').innerText)
+        })).sort((a, b) => b.posicion - a.posicion);
+
+        await _supabase.from('eventos').update({ resultados_en_vivo: { tipo: 'premiacion', podio } }).eq('id', idEvento);
+        alert("Resultados de premiación enviados al MC.");
+    }
+</script>
+<%- include("../template/footer") %>
