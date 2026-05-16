@@ -157,7 +157,8 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    window._supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_ANON_KEY %>");
+    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_ANON_KEY %>");
+    window._supabase = _supabase;
 
     async function modificarTeamAtleta() {
         const prepId = document.getElementById('selectPrepPerfil').value;
