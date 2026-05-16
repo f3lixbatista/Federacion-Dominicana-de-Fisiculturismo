@@ -111,20 +111,6 @@
                     <i class="fas fa-camera-retro text-primary"></i> Mi Galería y Muro
                 </h3>
                 
-                <!-- Formulario de Subida -->
-                <div class="bg-light p-3 rounded mb-4">
-                    <form action="/mi-perfil/subir-foto" method="POST" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Subir nueva foto al muro</label>
-                            <input type="file" name="imagen" class="form-control form-control-sm" accept="image/*" required>
-                        </div>
-                        <div class="mb-3">
-                            <textarea name="descripcion" class="form-control form-control-sm" placeholder="¿Qué estás entrenando hoy?" rows="2"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-sm fw-bold">PUBLICAR</button>
-                    </form>
-                </div>
-
                 <!-- Feed de Publicaciones -->
                 <div class="row g-3">
                     <% if (publicaciones && publicaciones.length > 0) { %>
@@ -169,50 +155,28 @@
     </div>
 </div>
 
+<script src="/js/supabase.js"></script>
 <script>
-async function modificarTeamAtleta() {
-    const prepId = document.getElementById('selectPrepPerfil').value;
+    window._supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_ANON_KEY %>");
 
-    try {
-        const res = await fetch('/mi-perfil/actualizar-team', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ preparador_id: prepId })
-        });
-
-        const data = await res.json();
-        if (data.estado) {
-            alert("✅ " + data.mensaje);
-            window.location.reload();
-        } else {
-            alert("❌ Error: " + data.mensaje);
+    async function modificarTeamAtleta() {
+        const prepId = document.getElementById('selectPrepPerfil').value;
+        try {
+            const res = await fetch('/atletas/perfil/actualizar-team', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ preparador_id: prepId })
+            });
+            const data = await res.json();
+            if (data.estado) {
+                alert("✅ " + data.mensaje);
+                window.location.reload();
+            } else {
+                alert("❌ Error: " + data.mensaje);
+            }
+        } catch (e) {
+            alert("Error de red al actualizar el team.");
         }
-    } catch (e) {
-        alert("Error de red al actualizar el team.");
     }
-}
-
-async function enviarComentario(postId) {
-    const input = document.querySelector(`.input-comentario-${postId}`);
-    const comentario = input.value;
-    if (!comentario) return;
-
-    try {
-        const res = await fetch('/mi-perfil/comentar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ publicacion_id: postId, comentario })
-        });
-        const data = await res.json();
-        if (data.estado) {
-            window.location.reload();
-        } else {
-            alert("Error: " + data.mensaje);
-        }
-    } catch (e) {
-        alert("Error al enviar el comentario.");
-    }
-}
 </script>
-
 <%- include("../template/footer") %>

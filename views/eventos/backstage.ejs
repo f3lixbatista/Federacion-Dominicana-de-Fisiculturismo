@@ -44,7 +44,7 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    window._supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_ANON_KEY %>");
     const idEvento = "<%= evento.id %>";
 
     async function actualizarBackstage() {

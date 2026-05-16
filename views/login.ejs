@@ -62,9 +62,7 @@ ya que ahora el POST lo maneja el servidor -->
 <script src="/js/supabase.js"></script>
 
 <script>
-    const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
-    const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    window._supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_ANON_KEY %>");
 
     // --- Lógica del Ojito (Emoji Nativo) ---
     const btnVerPassword = document.getElementById('btnVerPassword');

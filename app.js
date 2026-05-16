@@ -20,7 +20,7 @@ app.use(attachUser);
 app.use('/', require('./router/auth'));
 app.use('/eventos', require('./router/Eventos'));
 app.use('/inscripcion', require('./router/Inscripcion'));
-app.use('/atletas', checkRole(['juez', 'admin']), require('./router/Atletas'));
+app.use('/atletas', require('./router/Atletas'));
 app.use('/categorias', checkRole(['ejecutivo', 'admin']), require('./router/Categoria'));
 app.use('/estadisticas', checkRole(['estadistico', 'admin']), require('./router/Estadisticas'));
 app.use('/preparadores', require('./router/Preparadores'));

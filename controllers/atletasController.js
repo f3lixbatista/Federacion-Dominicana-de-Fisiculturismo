@@ -216,7 +216,7 @@ const verPerfilPropio = async (req, res) => {
             .eq('atleta_id', usuarioId)
             .order('created_at', { ascending: false });
 
-        res.render('atletas/perfil', {
+        res.render('atleta_vistas/perfil', {
             atleta: atleta || {},
             preparadores: preparadores || [],
             historial: historial || [],
@@ -279,7 +279,7 @@ const subirPublicacion = async (req, res) => {
 
         if (dbError) throw dbError;
 
-        res.redirect('/mi-perfil');
+        res.redirect('/atletas/perfil');
     } catch (error) {
         console.error("🔥 Error subiendo publicación:", error.message);
         res.status(500).send("Error al subir la publicación: " + error.message);
