@@ -97,7 +97,13 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    window._supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+    // Inicialización Robusta
+    const _url = "<%= SUPABASE_URL || '' %>";
+    const _key = "<%= SUPABASE_ANON_KEY || '' %>";
+    const _supabase = window._supabase = (_url && _key) ? supabase.createClient(_url, _key) : null;
+
+    if (!_supabase) console.error("⚠️ Error: Cliente Supabase no inicializado. Verifique su archivo .env en localhost.");
+
     let resultadosCalculados = null;
     const idEventoActual = "<%= eventoId %>"; // Corregido para usar eventoId pasado por el controlador
 
@@ -175,14 +181,15 @@
 
     // ENVIAR EN TIEMPO REAL AL TELEPRONTER DEL MC
     async function inyectarResultadosAlMC() {
-        if (!resultadosCalculados) return;
+        if (!resultadosCalculados) return alert("Debe calcular los lugares primero.");
+        if (!_supabase) return alert("Cliente Supabase no disponible.");
 
         const idEvento = document.getElementById('idEvento').value;
         const faseText = document.getElementById('selectFase').options[document.getElementById('selectFase').selectedIndex].text;
 
         // Estructuramos el paquete de datos para la tarima
         const paqueteMC = {
-            categoria_nombre: "<%= categoriaNombre %>",
+            categoria_nombre: `<%= categoriaNombre %>`, // Usamos backticks para evitar errores con comillas simples
             fase_competencia: faseText,
             atletas: resultadosCalculados.map(r => ({ dorsal: r.dorsal, nombre: r.nombre, lugar: r.lugar }))
         };
@@ -212,6 +219,7 @@
             const valor = parseInt(e.target.value);
 
             if (!valor) return;
+            if (!_supabase) return console.error("Upsert fallido: Supabase no inicializado.");
 
             // Guardamos o actualizamos directamente en Supabase (upsert)
             await _supabase.from('votaciones_jueces').upsert({

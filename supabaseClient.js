@@ -1,6 +1,5 @@
 // supabaseClient.js
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
 
 // Usamos SERVICE_ROLE_KEY para que el servidor tenga permisos totales
 const supabase = createClient(
@@ -9,8 +8,3 @@ const supabase = createClient(
 );
 
 module.exports = supabase;
-
-
-
-
-

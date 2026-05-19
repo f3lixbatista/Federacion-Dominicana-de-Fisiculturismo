@@ -36,12 +36,12 @@
                         <tr class="fila-categoria">
                             <!-- CAMBIO: variables en minúsculas segun Supabase -->
                             <td class="fs-4 border border-2 border-dark nombre-cat"><%= categoria.nombre %></td>
-                            <td class="fs-5 border border-2 border-dark"><%= categoria.desde_edad %></td>
-                            <td class="fs-5 border border-2 border-dark"><%= categoria.hasta_edad %></td>
-                            <td class="fs-5 border border-2 border-dark"><%= categoria.desde_peso %></td>
-                            <td class="fs-5 border border-2 border-dark"><%= categoria.hasta_peso %></td>
-                            <td class="fs-5 border border-2 border-dark"><%= categoria.desde_estatura %></td>
-                            <td class="fs-5 border border-2 border-dark"><%= categoria.hasta_estatura %></td>
+                            <td class="fs-5 border border-2 border-dark"><%= categoria.edad_min %></td>
+                            <td class="fs-5 border border-2 border-dark"><%= categoria.edad_max %></td>
+                            <td class="fs-5 border border-2 border-dark"><%= categoria.peso_min %></td>
+                            <td class="fs-5 border border-2 border-dark"><%= categoria.peso_max %></td>
+                            <td class="fs-5 border border-2 border-dark"><%= categoria.estatura_min %></td>
+                            <td class="fs-5 border border-2 border-dark"><%= categoria.estatura_max %></td>
                         </tr>
                     <% }) %>
                 <% } %>

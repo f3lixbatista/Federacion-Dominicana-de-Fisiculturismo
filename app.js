@@ -1,4 +1,4 @@
-require('dotenv').config();
+const envResult = require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -7,6 +7,26 @@ const { notFound, errorHandler } = require('./middlewares/errorHandler');
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Validación preventiva de Variables de Entorno
+const variablesRequeridas = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY'];
+let faltanVariables = false;
+
+if (envResult.error) {
+    console.error(`\x1b[31m%s\x1b[0m`, `❌ ERROR AL CARGAR .ENV:`, envResult.error.message);
+}
+
+variablesRequeridas.forEach(v => {
+    if (!process.env[v] || process.env[v].trim() === "") {
+        console.error(`\x1b[31m%s\x1b[0m`, `❌ ERROR CRÍTICO: La variable ${v} está ausente o vacía.`);
+        faltanVariables = true;
+    }
+});
+
+if (faltanVariables) {
+    console.error(`\x1b[33m%s\x1b[0m`, `⚠️ El servidor no puede iniciar sin estas variables. Abortando...`);
+    process.exit(1);
+}
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));

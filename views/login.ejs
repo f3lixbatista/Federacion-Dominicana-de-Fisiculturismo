@@ -160,11 +160,14 @@
 
 <script>
 
-  // Usamos las variables inyectadas por app.js
+  // Recuperamos las variables inyectadas por app.js
   const supabaseUrl = "<%= SUPABASE_URL %>";
   const supabaseKey = "<%= SUPABASE_ANON_KEY %>";
-  window._supabase = supabase.createClient(supabaseUrl, supabaseKey);
-  const _supabase = window._supabase;
+  
+  // Inicialización global: evita el crash si las variables están vacías
+  const _supabase = window._supabase = (supabaseUrl && supabaseKey) 
+    ? supabase.createClient(supabaseUrl, supabaseKey) 
+    : null;
 
   // Ojito
   const btnVerPassword = document.getElementById('btnVerPassword');
@@ -184,6 +187,8 @@
   // Login con email/contraseña
   async function loginUsuario(event) {
     event.preventDefault();
+
+    if (!_supabase) return alert("Error: Configuración de Supabase no encontrada. Revise las variables de entorno en el servidor.");
 
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -206,6 +211,8 @@
     const email = document.getElementById('email').value;
     if (!email) return alert("Escribe tu email primero.");
 
+    if (!_supabase) return alert("Error: Cliente Supabase no inicializado.");
+
     const { error } = await _supabase.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin + '/auth/callback'
     });
@@ -220,6 +227,8 @@
 
   // Login social
   async function loginConRedSocial(provider) {
+    if (!_supabase) return alert("Error: Cliente Supabase no inicializado.");
+
     const { error } = await _supabase.auth.signInWithOAuth({
       provider,
       options: {
