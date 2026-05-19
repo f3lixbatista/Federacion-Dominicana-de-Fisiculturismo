@@ -15,6 +15,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
+
+// Inyección global de variables para el cliente (EJS)
+app.use((req, res, next) => {
+    res.locals.SUPABASE_URL = process.env.SUPABASE_URL;
+    res.locals.SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+    next();
+});
+
 app.use(attachUser);
 
 app.use('/', require('./router/auth'));

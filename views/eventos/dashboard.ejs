@@ -205,10 +205,10 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    window._supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
     const modalPaneles = new bootstrap.Modal(document.getElementById('modalPanelesJueces'));
     let listaJuecesFDFF = []; // Arreglo de jueces traídos de profiles para los selectores
-    const idEventoActual = <%= evento.id %>;
+    const idEventoActual = "<%= evento.id %>";
 
     async function abrirConfiguracionPaneles() {
         // 1. Traer todos los usuarios con rol 'juez' de la tabla profiles

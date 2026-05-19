@@ -424,7 +424,10 @@ const verDashboardEvento = async (req, res) => {
             for (const cat of (cats || [])) {
                 const { data: comps } = await supabase.from('competidores').select('numero_atleta, nombre, gimnasio').eq('evento_cat_id', cat.id).order('numero_atleta', { ascending: true });
                 listadoPublico.push({
+                    id: cat.id,
                     nombre: cat.categorias?.nombre,
+                    orden: cat.orden_secuencia_categoria,
+                    total: (comps || []).length,
                     atletas: (comps || []).map(a => ({ dorsal: a.numero_atleta, nombre: a.nombre, team: a.gimnasio }))
                 });
             }

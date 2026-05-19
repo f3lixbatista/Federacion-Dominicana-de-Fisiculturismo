@@ -90,8 +90,9 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    window._supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_ANON_KEY %>");
+    window._supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
     const idEvento = "<%= catRel.evento_id %>";
+    const catRelId = "<%= catRel.id %>";
 
     function calcularFase() {
         const fase = '<%= faseTrabajo %>';
@@ -114,8 +115,8 @@
             let totalFase = votosLimpios.reduce((a, b) => a + b, 0);
 
             if (fase === 'final_r2') {
-                const r1Index = votos.length + 2;
-                const r1 = parseInt(fila.cells[r1Index].innerText);
+                const r1Index = fila.cells.length - 3; // El total está en -2, R1 en -3
+                const r1 = parseInt(fila.cells[r1Index].innerText) || 0;
                 totalFase += r1;
             }
 
@@ -165,6 +166,28 @@
 
         if(!error) alert("¡Lista enviada a Backstage exitosamente!");
         else alert("Error al enviar: " + error.message);
+    }
+
+    async function oficializarYPasar() {
+        calcularFase();
+        const filas = document.querySelectorAll('.fila-atleta');
+        const resultados = Array.from(filas).map(f => ({
+            atleta_id: f.dataset.id,
+            puntos: parseInt(f.querySelector('.cell-total').innerText),
+            posicion: parseInt(f.querySelector('.cell-posicion').innerText)
+        }));
+
+        try {
+            const response = await fetch('/estadisticas/oficializar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ eventoCatId: catRelId, resultados })
+            });
+            const data = await response.json();
+            alert(data.mensaje);
+        } catch (err) {
+            alert("Error al oficializar la categoría.");
+        }
     }
 
     async function enviarPremiacionMC() {

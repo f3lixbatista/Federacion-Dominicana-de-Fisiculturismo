@@ -76,9 +76,4 @@ router.get('/social', checkRole(['general', 'admin']), (req, res) => {
     res.render('social', { titulo: 'Federados Social' });
 });
 
-router.get('/mi-perfil', requireAuth, atletasController.verPerfilPropio);
-router.post('/mi-perfil/actualizar-team', requireAuth, atletasController.actualizarTeamPropio);
-router.post('/mi-perfil/subir-foto', requireAuth, upload.single('imagen'), atletasController.subirPublicacion);
-router.post('/mi-perfil/comentar', requireAuth, atletasController.comentarPublicacion);
-
 module.exports = router;

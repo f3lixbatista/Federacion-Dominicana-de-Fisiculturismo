@@ -97,14 +97,16 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    window._supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
     let resultadosCalculados = null;
-    const idEventoActual = <%= evento.id %>;
+    const idEventoActual = "<%= eventoId %>"; // Corregido para usar eventoId pasado por el controlador
 
     function recargarMesaComputo() {
         const fase = document.getElementById('selectFase').value;
+        const idEvento = document.getElementById('idEvento').value;
         const idCatRel = document.getElementById('idCatRel').value;
-        window.location.href = `?fase=${fase}`;
+        // Reconstruir la URL completa para la recarga
+        window.location.href = `/eventos/${idEvento}/computo/${idCatRel}?fase=${fase}`;
     }
 
     // ALGORITMO ESTADÍSTICO FDFF (Eliminación de extremos y jerarquía de puestos)

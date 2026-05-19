@@ -1,6 +1,6 @@
 <%- include("template/cabecera", {tituloWeb: "Iniciar Sesión - FDFF"}) %>
 
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 85vh; padding: 10px;">
+<!-- <div class="container d-flex justify-content-center align-items-center" style="min-height: 85vh; padding: 10px;">
     <div class="card shadow-lg p-3" style="width: 100%; max-width: 370px; border-radius: 15px; border: none;">
         
         <div class="text-center mb-2">
@@ -9,7 +9,7 @@
             <p class="text-muted small">Panel Federativo FDFF</p>
         </div>
 
-        <!-- Botones Redes Sociales -->
+      
         <div class="d-grid gap-2 mb-2">
             <button onclick="loginConRedSocial('google')" class="btn btn-outline-danger btn-sm py-2 d-flex align-items-center justify-content-center">
                 <span class="me-2">🌐</span> Google
@@ -24,12 +24,11 @@
             <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted" style="font-size: 0.7rem;">o usa tu email</span>
         </div>
 
-        <!-- Formulario Email -->
-       <!-- Cambia el id="formLogin" por action="/login" method="POST" -->
+      
 <form action="/login" method="POST">
     <div class="mb-2">
         <label class="form-label small fw-bold mb-1">Correo Electrónico</label>
-        <!-- IMPORTANTE: Agrega name="email" -->
+       
         <input type="email" name="email" id="email" class="form-control form-control-sm" placeholder="correo@ejemplo.com" required>
     </div>
     
@@ -39,7 +38,7 @@
             <a href="#" onclick="recuperarPassword()" class="text-decoration-none" style="font-size: 0.7rem; color: #0d6efd;">¿Olvidaste tu clave?</a>
         </div>
         <div class="input-group input-group-sm shadow-sm">
-            <!-- IMPORTANTE: Agrega name="password" -->
+            
             <input type="password" name="password" id="password" class="form-control border-end-0" placeholder="••••••••" required style="border-radius: 8px 0 0 8px;">
             <button class="btn btn-outline-secondary border-start-0" type="button" id="btnVerPassword" style="border-radius: 0 8px 8px 0; background: white; border-color: #dee2e6;">
                 <span id="iconoOjo" style="font-size: 1rem;">👁️</span>
@@ -53,8 +52,6 @@
     </div>
 </form>
 
-<!-- BORRA O COMENTA el listener de 'formLogin' en el script de abajo, 
-ya que ahora el POST lo maneja el servidor -->
 
     </div>
 </div>
@@ -97,21 +94,6 @@ ya que ahora el POST lo maneja el servidor -->
         });
     }
 
-   /*  document.getElementById('formLogin').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-
-        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-        
-        if (error) {
-            alert("Error: " + error.message);
-        } else {
-            // Guardamos cookie para el servidor
-            document.cookie = `supabase-token=${data.session.access_token}; path=/; SameSite=Lax; max-age=${data.session.expires_in}`;
-            window.location.href = '/';
-        }
-    }); */
 
     async function registrarUsuario() {
         const email = document.getElementById('email').value;
@@ -122,6 +104,135 @@ ya que ahora el POST lo maneja el servidor -->
         if (error) alert("Error: " + error.message);
         else alert("¡Registro exitoso! Revisa tu email para confirmar tu cuenta.");
     }
+</script> -->
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 85vh; padding: 10px;">
+  <div class="card shadow-lg p-3" style="width: 100%; max-width: 370px; border-radius: 15px; border: none;">
+    
+    <div class="text-center mb-2">
+      <img src="/img/fdff3.jpg" alt="FDFF Logo" style="width: 60px;" class="mb-1">
+      <h3 class="fw-bold mb-0" style="color: #333;">Bienvenido</h3>
+      <p class="text-muted small">Panel Federativo FDFF</p>
+    </div>
+
+    <!-- Botones Redes Sociales -->
+    <div class="d-grid gap-2 mb-2">
+      <button onclick="loginConRedSocial('google')" class="btn btn-outline-danger btn-sm py-2 d-flex align-items-center justify-content-center">
+        <span class="me-2">🌐</span> Google
+      </button>
+      <button onclick="loginConRedSocial('facebook')" class="btn btn-outline-primary btn-sm py-2 d-flex align-items-center justify-content-center">
+        <span class="me-2">🌐</span> Facebook
+      </button>
+    </div>
+
+    <hr>
+
+    <!-- Login tradicional -->
+    <form onsubmit="loginUsuario(event)">
+      <div class="mb-2">
+        <label for="email" class="form-label small">Email</label>
+        <input type="email" id="email" class="form-control form-control-sm" required>
+      </div>
+
+      <div class="mb-2">
+        <label for="password" class="form-label small">Contraseña</label>
+        <div class="input-group">
+          <input type="password" id="password" class="form-control form-control-sm" required>
+          <button type="button" id="btnVerPassword" class="btn btn-outline-secondary btn-sm">
+            <span id="iconoOjo">👁️</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-success btn-sm">Iniciar sesión</button>
+        <button type="button" class="btn btn-link btn-sm text-decoration-none" onclick="recuperarPassword()">
+          ¿Olvidaste tu contraseña?
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script src="/js/supabase.js"></script>
+
+
+<script>
+
+  // Usamos las variables inyectadas por app.js
+  const supabaseUrl = "<%= SUPABASE_URL %>";
+  const supabaseKey = "<%= SUPABASE_ANON_KEY %>";
+  window._supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  const _supabase = window._supabase;
+
+  // Ojito
+  const btnVerPassword = document.getElementById('btnVerPassword');
+  const inputPassword = document.getElementById('password');
+  const iconoOjo = document.getElementById('iconoOjo');
+
+  btnVerPassword.addEventListener('click', () => {
+    if (inputPassword.type === 'password') {
+      inputPassword.type = 'text';
+      iconoOjo.innerText = '🙈';
+    } else {
+      inputPassword.type = 'password';
+      iconoOjo.innerText = '👁️';
+    }
+  });
+
+  // Login con email/contraseña
+  async function loginUsuario(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    const { error } = await _supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      console.error(error);
+      alert(error.message);
+    } else {
+      window.location.href = '/';
+    }
+  }
+
+  // Recuperar contraseña
+  async function recuperarPassword() {
+    const email = document.getElementById('email').value;
+    if (!email) return alert("Escribe tu email primero.");
+
+    const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/auth/callback'
+    });
+
+    if (error) {
+      console.error(error);
+      alert(error.message);
+    } else {
+      alert("Revisa tu correo para restablecer tu contraseña.");
+    }
+  }
+
+  // Login social
+  async function loginConRedSocial(provider) {
+    const { error } = await _supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin + '/auth/callback'
+      }
+    });
+
+    if (error) {
+      console.error(error);
+      alert(error.message);
+    }
+  }
 </script>
+
 
 <%- include("template/footer") %>
