@@ -27,13 +27,13 @@
     <form onsubmit="loginUsuario(event)">
       <div class="mb-2">
         <label for="email" class="form-label small">Email</label>
-        <input type="email" id="email" class="form-control form-control-sm" required>
+        <input type="email" name="email" id="email" class="form-control form-control-sm" required autocomplete="username">
       </div>
 
       <div class="mb-2">
         <label for="password" class="form-label small">Contraseña</label>
         <div class="input-group">
-          <input type="password" id="password" class="form-control form-control-sm" required>
+          <input type="password" name="password" id="password" class="form-control form-control-sm" required autocomplete="current-password">
           <button type="button" id="btnVerPassword" class="btn btn-outline-secondary btn-sm">
             <span id="iconoOjo">👁️</span>
           </button>

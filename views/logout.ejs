@@ -2,22 +2,25 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    const supabaseUrl = "<%= process.env.SUPABASE_URL %>";
-    const supabaseKey = "<%= process.env.SUPABASE_KEY %>";
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
 
     async function cerrarTodo() {
-        // 1. Cerrar sesión en Supabase
-        await _supabase.auth.signOut();
+        try {
+            // 1. Cerrar sesión en Supabase
+            await _supabase.auth.signOut();
 
-        // 2. Limpiar la Cookie del servidor
-        document.cookie = "supabase-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            // 2. Notificar al servidor para limpiar la cookie httpOnly
+            await fetch('/clear-session', { method: 'POST' });
 
-        // 3. Limpiar LocalStorage
-        localStorage.clear();
+            // 3. Limpiar LocalStorage
+            localStorage.clear();
+            sessionStorage.clear();
 
-        // 4. Redirigir al login
-        window.location.href = '/login';
+            // 4. Redirigir al login
+            window.location.replace('/login'); 
+        } catch (error) {
+            window.location.replace('/login');
+        }
     }
 
     cerrarTodo();

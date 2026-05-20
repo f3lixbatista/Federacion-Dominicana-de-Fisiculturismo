@@ -45,6 +45,17 @@ app.use((req, res, next) => {
 
 app.use(attachUser);
 
+app.get('/logout', (req, res) => {
+    // 1. Borramos todas las posibles cookies de sesión
+    res.clearCookie('sb-access-token', { path: '/' });
+    res.clearCookie('sb-baovskiienrnihoyufig-auth-token', { path: '/' });
+    
+    console.log("🚪 Sesión cerrada correctamente");
+
+    // 2. Redirigimos al login de inmediato
+    res.redirect('/login');
+});
+
 app.use('/', require('./router/auth'));
 app.use('/eventos', require('./router/Eventos'));
 app.use('/inscripcion', require('./router/Inscripcion'));
