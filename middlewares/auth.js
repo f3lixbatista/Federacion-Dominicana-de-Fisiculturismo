@@ -7,7 +7,8 @@ const attachUser = async (req, res, next) => {
         return next();
     }
 
-    const token = getTokenFromRequest(req);
+    // Intentar obtener el token de la cookie primero, luego de los headers
+    const token = req.cookies['sb-access-token'] || getTokenFromRequest(req);
 
     if (token) {
         try {

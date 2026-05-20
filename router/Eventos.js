@@ -4,10 +4,10 @@ const { checkRole } = require('../middlewares/auth');
 const eventosController = require('../controllers/eventosController');
 
 // A. LISTADO GLOBAL: Lo que ve todo el mundo al entrar
-routerEventos.get('/', eventosController.listarEventos);
+routerEventos.get('/', checkRole(['admin', 'estadistico', 'ejecutivo', 'preparador', 'atleta', 'juez', 'general', 'mc', 'backstage']), eventosController.listarEventos);
 
 // B. DASHBOARD DEL EVENTO: La página única para cada competencia
-routerEventos.get('/:id', eventosController.verDashboardEvento);
+routerEventos.get('/:id', checkRole(['admin', 'estadistico', 'ejecutivo', 'preparador', 'atleta', 'juez', 'general', 'mc', 'backstage']), eventosController.verDashboardEvento);
 
 // RUTA DE PREPARACIÓN DE EVENTO (alias compatible con la estructura anterior)
 routerEventos.get('/preparacion-evento/:id', checkRole(['admin', 'estadistico']), eventosController.prepararEventoPage);

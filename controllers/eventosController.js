@@ -307,7 +307,7 @@ const inyectarJuecesMC = async (req, res) => {
 
 const verBoletaJuez = async (req, res) => {
     const { id: eventoId } = req.params;
-    const juezId = req.user?.id;
+    const juezId = res.locals.user?.id;
     const { fase = 'final' } = req.query;
 
     try {
@@ -347,7 +347,7 @@ const verBoletaJuez = async (req, res) => {
             fase,
             infoPanel: { panel_id: asiento.panel_id, numero_panel: asiento.paneles_jueces.numero_panel, numero_silla: asiento.numero_silla },
             atletas: (competidores || []).map(c => ({ id: c.atletas.id, dorsal: c.numero_atleta || '---', nombre: c.atletas.nombre })),
-            user: req.user
+            user: res.locals.user
         });
     } catch (error) {
         res.status(500).send("Error de conexión.");

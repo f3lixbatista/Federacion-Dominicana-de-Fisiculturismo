@@ -1,25 +1,11 @@
 const express = require('express');
 const routerAuth = express.Router();
 
-// Ruta para mostrar la vista de Login (si no existe en otro lado)
-routerAuth.get('/login', (req, res) => {
-    res.render('login');
-});
-
-// Vista para procesar el callback de Supabase (Google, Recovery, etc)
-routerAuth.get('/auth/callback', (req, res) => {
-    res.render('callback');
-});
-
-// Vista para resetear contraseña (protegida por el middleware en el cliente)
-routerAuth.get('/reset-password', (req, res) => {
-    res.render('reset-password');
-});
-
-// Ruta para guardar la sesión en una cookie segura
+// Ruta para guardar la sesión en una cookie
 routerAuth.post('/set-session', (req, res) => {
     const { session } = req.body;
     if (session) {
+        // Guardamos el access_token en una cookie segura
         res.cookie('sb-access-token', session.access_token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
