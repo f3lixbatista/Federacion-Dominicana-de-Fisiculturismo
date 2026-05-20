@@ -1,4 +1,4 @@
-const supabase = require('../supabaseClient');
+const { supabase, supabaseAdmin } = require('../supabaseClient');
 
 const SESSION_COOKIE_NAME = process.env.SUPABASE_SESSION_COOKIE_NAME || 'supabase-token';
 
@@ -15,7 +15,7 @@ const normalizeCookieToken = (cookieValue) => {
         }
     }
     return cookieValue;
-};
+}; 
 
 const getTokenFromRequest = (req) => {
     if (!req || !req.cookies) return null;
@@ -25,13 +25,17 @@ const getTokenFromRequest = (req) => {
 
 const getUserProfileFromId = async (userId) => {
     if (!userId) return null;
-    const { data: profile, error } = await supabase
+    // Usamos supabaseAdmin para evitar la recursión infinita en las políticas RLS de la tabla 'profiles'
+    const { data: profile, error } = await supabaseAdmin
         .from('profiles')
         .select('role, nombre, email')
         .eq('id', userId)
         .single();
 
-    if (error) return null;
+    if (error) {
+        console.error('Error al obtener perfil con Admin Client:', error.message);
+        return null;
+    }
     return profile;
 };
 

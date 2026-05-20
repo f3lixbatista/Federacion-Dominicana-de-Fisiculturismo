@@ -1,4 +1,4 @@
-const supabase = require('../supabaseClient');
+const { supabase, supabaseAdmin } = require('../supabaseClient');
 
 const listarEventos = async (req, res) => {
     try {
@@ -18,7 +18,7 @@ const prepararEventoPage = async (req, res) => {
     const eventoId = req.params.id;
 
     try {
-        const { data: evento, error: eventoError } = await supabase
+        const { data: evento, error: eventoError } = await supabaseAdmin
             .from('eventos')
             .select('id, nombre, estado')
             .eq('id', eventoId)
@@ -28,7 +28,7 @@ const prepararEventoPage = async (req, res) => {
             throw eventoError || new Error('Evento no encontrado');
         }
 
-        const { data: relaciones, error: errRel } = await supabase
+        const { data: relaciones, error: errRel } = await supabaseAdmin
             .from('eventos_categorias')
             .select(`
                 id,
@@ -52,7 +52,7 @@ const prepararEventoPage = async (req, res) => {
         
         const relIds = (relaciones || []).map(r => r.id);
         
-        const { data: allCompetidores, error: errComps } = await supabase
+        const { data: allCompetidores, error: errComps } = await supabaseAdmin
             .from('competidores')
             .select(`
                 id,
@@ -120,7 +120,7 @@ const oficializarPreparacion = async (req, res) => {
     try {
         // 1. Procesar fusiones y actualizaciones de estado en la tabla 'eventos_categorias'
         for (const item of logistica) {
-            await supabase
+            await supabaseAdmin
                 .from('eventos_categorias')
                 .update({
                     orden_secuencia_categoria: item.orden,
@@ -129,7 +129,7 @@ const oficializarPreparacion = async (req, res) => {
                 })
                 .eq('id', item.evento_cat_id);
 
-            if (item.estatus === 'fusionada' && item.fusion_destino_id) {
+            if (item.estatus === 'fusionada' && item.fusion_destino_id) { // Asegúrate de que esto sea correcto
                 await supabase
                     .from('competidores')
                     .update({ evento_cat_id: item.fusion_destino_id })
@@ -139,7 +139,7 @@ const oficializarPreparacion = async (req, res) => {
         }
 
         // 2. Dorsaleo correlativo automático
-        const { data: categoriasOrdenadas, error: categoriasError } = await supabase
+        const { data: categoriasOrdenadas, error: categoriasError } = await supabaseAdmin
             .from('eventos_categorias')
             .select('id')
             .eq('evento_id', eventoId)
@@ -152,7 +152,7 @@ const oficializarPreparacion = async (req, res) => {
 
         let contadorDorsal = 1;
         for (const cat of categoriasOrdenadas || []) {
-            const { data: competidores, error: competidoresError } = await supabase
+            const { data: competidores, error: competidoresError } = await supabaseAdmin
                 .from('competidores')
                 .select('id')
                 .eq('evento_cat_id', cat.id)
@@ -165,7 +165,7 @@ const oficializarPreparacion = async (req, res) => {
 
             if (competidores && competidores.length > 0) {
                 for (const comp of competidores) {
-                    await supabase
+                    await supabaseAdmin
                         .from('competidores')
                         .update({ numero_atleta: contadorDorsal })
                         .eq('id', comp.id);
@@ -175,7 +175,7 @@ const oficializarPreparacion = async (req, res) => {
         }
 
         // 3. Cambiar el estado general del evento para habilitar fases en vivo
-        await supabase
+        await supabaseAdmin
             .from('eventos')
             .update({ estado: 'en_progreso' })
             .eq('id', eventoId);
@@ -190,15 +190,15 @@ const oficializarPreparacion = async (req, res) => {
 const verMonitorMC = async (req, res) => {
     const { id } = req.params;
     try {
-        const { data: evento, error: errEv } = await supabase
+        const { data: evento, error: errEv } = await supabaseAdmin
             .from('eventos')
             .select('id, nombre, cronograma_mc')
             .eq('id', id)
             .single();
 
         if (errEv || !evento) return res.redirect('/eventos');
-
-        const { data: todasLasSillas, error: errSillas } = await supabase
+        
+        const { data: todasLasSillas, error: errSillas } = await supabaseAdmin
             .from('panel_sillas_jueces')
             .select(`
                 numero_silla,
@@ -216,7 +216,7 @@ const verMonitorMC = async (req, res) => {
                 id: s.profiles?.id
             }));
 
-        const idsJuecesPanel1 = sillasPanel1.map(j => j.id);
+        const idsJuecesPanel1 = sillasPanel1.map(j => j.id); // Esto es para evitar duplicados en jueces de relevo
         const setJuecesAlternos = new Set();
         (todasLasSillas || []).forEach(s => {
             if (s.paneles_jueces && s.paneles_jueces.numero_panel > 1 && s.profiles) {
@@ -240,9 +240,9 @@ const verMesaComputo = async (req, res) => {
     const { id, catId } = req.params;
     const { fase = 'final' } = req.query;
     try {
-        const { data: evento } = await supabase.from('eventos').select('id, nombre').eq('id', id).single();
-        const { data: catRel } = await supabase.from('eventos_categorias').select('id, categorias(nombre)').eq('id', catId).single();
-        const { data: jueces } = await supabase.from('jueces_eventos').select('jueces(id, nombre)').eq('evento_id', id);
+        const { data: evento } = await supabaseAdmin.from('eventos').select('id, nombre').eq('id', id).single();
+        const { data: catRel } = await supabaseAdmin.from('eventos_categorias').select('id, categorias(nombre)').eq('id', catId).single();
+        const { data: jueces } = await supabaseAdmin.from('jueces_eventos').select('jueces(id, nombre)').eq('evento_id', id);
         const { data: atletas } = await supabase.from('competidores').select('id, numero_atleta, nombre').eq('evento_cat_id', catId).order('numero_atleta', { ascending: true });
         const { data: votos } = await supabase.from('votaciones_jueces').select('juez_id, atleta_id, posicion_asignada').eq('id_evento', id).eq('evento_cat_id', catId).eq('fase_competencia', fase);
 
@@ -267,14 +267,14 @@ const inyectarJuecesMC = async (req, res) => {
     const { id } = req.params;
     const { panelId } = req.body;
     try {
-        const { data: sillasPanel } = await supabase
+        const { data: sillasPanel } = await supabaseAdmin
             .from('panel_sillas_jueces')
             .select(`numero_silla, paneles_jueces!inner(id, numero_panel), profiles(id, nombre)`)
             .eq('panel_id', panelId);
 
-        const { data: todosJuecesEvento } = await supabase
+        const { data: todosJuecesEvento } = await supabaseAdmin
             .from('paneles_jueces')
-            .select(`id, numero_panel, panel_sillas_jueces(profiles(id, nombre))`)
+            .select(`id, numero_panel, panel_sillas_jueces(profiles(id, nombre))`) // Usar supabaseAdmin para evitar RLS en profiles
             .eq('id_evento', id);
 
         const listaPanelActivo = (sillasPanel || []).sort((a, b) => a.numero_silla - b.numero_silla).map(s => ({
@@ -298,7 +298,7 @@ const inyectarJuecesMC = async (req, res) => {
             jueces_relevo: [...new Set(juecesRelevo)]
         };
 
-        await supabase.from('eventos').update({ resultados_en_vivo: paqueteJuecesMC }).eq('id', id);
+        await supabaseAdmin.from('eventos').update({ resultados_en_vivo: paqueteJuecesMC }).eq('id', id);
         res.json({ estado: true, mensaje: "Jueces inyectados." });
     } catch (error) {
         res.status(500).json({ estado: false, mensaje: error.message });
@@ -357,8 +357,8 @@ const verBoletaJuez = async (req, res) => {
 const verReporteOficial = async (req, res) => {
     const { id: eventoId } = req.params;
     try {
-        const { data: evento } = await supabase.from('eventos').select('*').eq('id', eventoId).single();
-        const { data: relaciones } = await supabase
+        const { data: evento } = await supabaseAdmin.from('eventos').select('*').eq('id', eventoId).single();
+        const { data: relaciones } = await supabaseAdmin
             .from('eventos_categorias')
             .select(`
                 id,
@@ -379,7 +379,7 @@ const verReporteOficial = async (req, res) => {
         });
 
         // Cálculo de Ranking de Equipos (Teams)
-        const { data: participaciones } = await supabase
+        const { data: participaciones } = await supabaseAdmin
             .from('competidores')
             .select('posicion_final, es_ganador_absoluto, atletas(preparadores(nombre_completo))')
             .eq('id_evento', eventoId)

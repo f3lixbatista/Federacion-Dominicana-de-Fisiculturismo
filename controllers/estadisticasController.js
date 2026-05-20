@@ -1,9 +1,9 @@
-const supabase = require('../supabaseClient');
+const { supabaseAdmin } = require('../supabaseClient');
 const votingService = require('../services/votingService');
 
 const listarEstadisticas = async (req, res) => {
     try {  
-        const { data: arrCategorias, error } = await supabase
+        const { data: arrCategorias, error } = await supabaseAdmin
             .from('eventos')
             .select('*')
             .order('salida', { ascending: true });
@@ -20,7 +20,7 @@ const listarEstadisticas = async (req, res) => {
 const verCalculosEvento = async (req, res) => {
     const id = req.params.id;
     try {     
-        const { data: datosEvento, error: errEvento } = await supabase
+        const { data: datosEvento, error: errEvento } = await supabaseAdmin
             .from('eventos')
             .select('*')
             .eq('id', id)
@@ -28,7 +28,7 @@ const verCalculosEvento = async (req, res) => {
 
         if (errEvento) throw errEvento;
 
-        const { data: competidores } = await supabase
+        const { data: competidores } = await supabaseAdmin
             .from('competidores')
             .select('*')
             .eq('id_evento', id);
@@ -49,7 +49,7 @@ const calcularPosiciones = async (req, res) => {
     const { fase = 'final' } = req.body;
 
     try {
-        const { data: votos, error: votosError } = await supabase
+        const { data: votos, error: votosError } = await supabaseAdmin
             .from('votaciones_jueces')
             .select('atleta_id, posicion_asignada')
             .eq('id_evento', id)
@@ -69,7 +69,7 @@ const calcularPosiciones = async (req, res) => {
         const atletasIds = resultados.map(r => r.atleta_id);
         
         // Obtener nombres de atletas y sus dorsales para esta categoría específica
-        const { data: competidoresData, error: competidoresError } = await supabase
+        const { data: competidoresData, error: competidoresError } = await supabaseAdmin
             .from('competidores')
             .select(`
                 atleta_id,
@@ -114,7 +114,7 @@ const verMesaComputo = async (req, res) => {
     const { eventoCatId } = req.params;
     const { fase = 'auto' } = req.query; // eliminatoria, semifinal, final_r1, final_r2
     try {
-        const { data: categoriaRel, error: errCat } = await supabase
+        const { data: categoriaRel, error: errCat } = await supabaseAdmin
             .from('eventos_categorias')
             .select('*, categorias(nombre)')
             .eq('id', eventoCatId)
@@ -122,7 +122,7 @@ const verMesaComputo = async (req, res) => {
 
         if (errCat) throw errCat;
 
-        const { data: atletas } = await supabase
+        const { data: atletas } = await supabaseAdmin
             .from('competidores')
             .select('atleta_id, numero_atleta, atletas(nombre)')
             .eq('evento_cat_id', eventoCatId)
@@ -137,13 +137,13 @@ const verMesaComputo = async (req, res) => {
             else faseTrabajo = 'final_r1';
         }
 
-        const { data: jueces } = await supabase
+        const { data: jueces } = await supabaseAdmin
             .from('panel_sillas_jueces')
             .select('numero_silla, profiles(nombre, id), paneles_jueces!inner(id_evento)')
             .eq('paneles_jueces.id_evento', categoriaRel.evento_id)
             .order('numero_silla', { ascending: true });
 
-        const { data: votosEmitidos } = await supabase
+        const { data: votosEmitidos } = await supabaseAdmin
             .from('votaciones_jueces')
             .select('*')
             .eq('evento_cat_id', eventoCatId)
@@ -166,7 +166,7 @@ const oficializarCategoria = async (req, res) => {
     try {
         const updates = resultados.map(resAtleta => 
             // El Juez Estadístico envía la posición final (sea la sugerida o la manual)
-            supabase
+            supabaseAdmin
                 .from('competidores')
                 .update({ 
                     posicion_final: resAtleta.posicion, 
@@ -201,7 +201,7 @@ function prepararPremiacion(resultados) {
 const verGestionAbsolutos = async (req, res) => {
     const { idEvento } = req.params;
     try {
-        const { data: campeones, error } = await supabase
+        const { data: campeones, error } = await supabaseAdmin
             .from('competidores')
             .select(`
                 id,
@@ -234,7 +234,7 @@ const verGestionAbsolutos = async (req, res) => {
 const verMesaComputoAbsoluto = async (req, res) => {
     const { evento, disciplina } = req.query;
     try {
-        const { data: competidores } = await supabase
+        const { data: competidores } = await supabaseAdmin
             .from('competidores')
             .select('*, atletas(nombre), eventos_categorias(id, categorias(nombre, disciplina))')
             .eq('id_evento', evento)
@@ -243,7 +243,7 @@ const verMesaComputoAbsoluto = async (req, res) => {
         // Filtrar manualmente por la disciplina de la categoría
         const filtrados = (competidores || []).filter(c => c.eventos_categorias?.categorias?.disciplina === disciplina);
 
-        const { data: jueces } = await supabase
+        const { data: jueces } = await supabaseAdmin
             .from('panel_sillas_jueces')
             .select('numero_silla, profiles(nombre, id), paneles_jueces!inner(id_evento)')
             .eq('paneles_jueces.id_evento', evento)
@@ -264,14 +264,14 @@ const verMesaComputoAbsoluto = async (req, res) => {
 const oficializarAbsoluto = async (req, res) => {
     const { atletaGanadorId, idEvento, resultados } = req.body;
     try {
-        await supabase
+        await supabaseAdmin
             .from('competidores')
             .update({ es_ganador_absoluto: true })
             .eq('atleta_id', atletaGanadorId)
             .eq('id_evento', idEvento);
 
         const updates = (resultados || []).map(resAtleta => 
-            supabase.from('competidores').update({ puntos_totales: resAtleta.puntos }).eq('atleta_id', resAtleta.atleta_id).eq('id_evento', idEvento)
+            supabaseAdmin.from('competidores').update({ puntos_totales: resAtleta.puntos }).eq('atleta_id', resAtleta.atleta_id).eq('id_evento', idEvento)
         );
         await Promise.all(updates);
 
@@ -284,7 +284,7 @@ const oficializarAbsoluto = async (req, res) => {
 const imprimirBoletas = async (req, res) => {
     const { idEvento } = req.params;
     try {
-        const { data: categorias, error } = await supabase
+        const { data: categorias, error } = await supabaseAdmin
             .from('eventos_categorias')
             .select('id, categorias(nombre, modalidad), competidores(numero_atleta, atletas(nombre))')
             .eq('evento_id', idEvento)

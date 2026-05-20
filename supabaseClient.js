@@ -1,14 +1,12 @@
 // supabaseClient.js
 const { createClient } = require('@supabase/supabase-js');
-const WebSocket = require('ws');
 
-// Usamos SERVICE_ROLE_KEY para que el servidor tenga permisos totales
+// Cliente estándar (sujeto a RLS)
 const supabase = createClient(
     process.env.SUPABASE_URL, 
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    process.env.SUPABASE_ANON_KEY,
     {
         realtime: {
-            websocket: WebSocket,
             params: {
                 eventsPerSecond: 10
             }
@@ -16,4 +14,13 @@ const supabase = createClient(
     }
 );
 
-module.exports = supabase;
+// Cliente Administrativo (ignora RLS)
+const supabaseAdmin = createClient(
+    process.env.SUPABASE_URL, 
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+module.exports = {
+    supabase,
+    supabaseAdmin
+};
