@@ -20,9 +20,17 @@
                                 <i class="fas fa-map-marker-alt"></i> <%= evento.lugar %><br>
                                 <i class="fas fa-calendar"></i> <%= evento.fecha_inicio %>
                             </p>
-                            <a href="/eventos/<%= evento.id %>" class="btn btn-primary w-100 fw-bold">
-                                Entrar al Evento <i class="fas fa-arrow-right ms-1"></i>
-                            </a>
+                            <div class="d-grid gap-2">
+                                <a href="/eventos/<%= evento.id %>" class="btn btn-primary fw-bold">
+                                    Entrar al Evento <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                                
+                                <% if (['en_progreso', 'finalizado'].includes(evento.estado)) { %>
+                                    <a href="/eventos/<%= evento.id %>/reporte-oficial" class="btn btn-outline-dark btn-sm fw-bold">
+                                        <i class="fas fa-list-ol me-1"></i> Ver Resultados
+                                    </a>
+                                <% } %>
+                            </div>
                         </div>
                     </div>
                 </div>

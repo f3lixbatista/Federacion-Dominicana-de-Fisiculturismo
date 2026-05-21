@@ -1,8 +1,8 @@
-const supabase = require('../supabaseClient');
+const { supabase } = require('../supabaseClient');
 const { getSessionCookieName } = require('../services/authService');
 
 const loginPage = (req, res) => {
-    res.render('login', { error: null });
+    res.render('vistas_auth/login', { error: null });
 };
 
 const login = async (req, res) => {
@@ -27,15 +27,15 @@ const login = async (req, res) => {
         });
 
         console.log(`✅ Login exitoso para: ${email}`);
-        return res.redirect('/eventos');
+        return res.redirect('/eventos/competencias');
     } catch (error) {
         console.error('❌ Error de login:', error?.message || error);
-        return res.render('login', { error: 'Correo o contraseña incorrectos' });
+        return res.render('vistas_auth/login', { error: 'Correo o contraseña incorrectos' });
     }
 };
 
 const authCallback = (req, res) => {
-    res.render('auth-callback', { user: null });
+    res.render('vistas_auth/auth-callback', { user: null });
 };
 
 const logout = (req, res) => {

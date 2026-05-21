@@ -8,7 +8,7 @@ const listarEventos = async (req, res) => {
             .order('fecha_inicio', { ascending: false });
 
         if (error) throw error;
-        res.render('eventos/lista', { eventos });
+        res.render('eventos/competencias', { eventos });
     } catch (error) {
         res.status(500).send('Error al cargar eventos: ' + error.message);
     }

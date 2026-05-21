@@ -1,30 +1,36 @@
 const express = require('express');
 const routerAuth = express.Router();
+const { getSessionCookieName } = require('../services/authService');
 
 // Ruta para mostrar la vista de Login (si no existe en otro lado)
 routerAuth.get('/login', (req, res) => {
-    res.render('login');
+    res.render('vistas_auth/login');
 });
 
 // Vista para procesar el callback de Supabase (Google, Recovery, etc)
 routerAuth.get('/auth/callback', (req, res) => {
-    res.render('callback');
+    res.render('vistas_auth/callback');
 });
 
 // Vista para resetear contraseña (protegida por el middleware en el cliente)
 routerAuth.get('/reset-password', (req, res) => {
-    res.render('reset-password');
+    res.render('vistas_auth/reset-password');
 });
 
 // Ruta para guardar la sesión en una cookie segura
 routerAuth.post('/set-session', (req, res) => {
     const { session } = req.body;
+    const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/'
+    };
+
     if (session) {
-        res.cookie('sb-access-token', session.access_token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: session.expires_in * 1000
+        res.cookie('sb-access-token', session.access_token, { 
+            ...cookieOptions, 
+            maxAge: (session.expires_in || 3600) * 1000 
         });
     }
     res.sendStatus(200);
@@ -32,7 +38,17 @@ routerAuth.post('/set-session', (req, res) => {
 
 // Ruta para limpiar la sesión (Logout)
 routerAuth.post('/clear-session', (req, res) => {
-    res.clearCookie('sb-access-token');
+    const cookieOptions = {
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+    };
+
+    res.clearCookie('sb-access-token', cookieOptions);
+    res.clearCookie('sb-refresh-token', cookieOptions);
+    const extraCookie = getSessionCookieName();
+    if (extraCookie) res.clearCookie(extraCookie, cookieOptions);
+    
     res.sendStatus(200);
 });
 

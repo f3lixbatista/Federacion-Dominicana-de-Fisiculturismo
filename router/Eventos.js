@@ -4,7 +4,11 @@ const { checkRole } = require('../middlewares/auth');
 const eventosController = require('../controllers/eventosController');
 
 // A. LISTADO GLOBAL: Lo que ve todo el mundo al entrar
-routerEventos.get('/', checkRole(['admin', 'estadistico', 'ejecutivo', 'preparador', 'atleta', 'juez', 'general', 'mc', 'backstage']), eventosController.listarEventos);
+routerEventos.get('/competencias', checkRole(['admin', 'estadistico', 'ejecutivo', 'preparador', 'atleta', 'juez', 'general', 'mc', 'backstage']), eventosController.listarEventos);
+
+routerEventos.get('/', (req, res) => {
+    res.redirect('/eventos/competencias');
+});
 
 // B. DASHBOARD DEL EVENTO: La página única para cada competencia
 routerEventos.get('/:id', checkRole(['admin', 'estadistico', 'ejecutivo', 'preparador', 'atleta', 'juez', 'general', 'mc', 'backstage']), eventosController.verDashboardEvento);

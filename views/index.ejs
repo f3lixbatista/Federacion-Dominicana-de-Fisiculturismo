@@ -1,42 +1,63 @@
 <%- include("template/cabecera", {tituloWeb: "Inicio - FDFF"}) %>
 
-<div class="container mt-5">
-    <div class="p-5 mb-4 bg-light rounded-3 border border-primary">
-        <div class="container-fluid py-5">
-            <h1 class="display-5 fw-bold text-primary">Federación Dominicana de Fisiculturismo</h1>
-            <p class="col-md-8 fs-4">Sistema Central de Registro de Atletas, Inscripciones y Puntuación en Tiempo Real.</p>
-            <hr class="my-4">
-            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
-                <a href="/atletas" class="btn btn-primary btn-lg px-4 me-md-2">Gestionar Atletas</a>
-                <a href="/inscripcion" class="btn btn-outline-secondary btn-lg px-4">Nueva Inscripción</a>
-            </div>
+<div class="container mt-0 pt-0">
+    <div class="p-0 mb-0 bg-light rounded-1 border border-primary">
+        <div class="container-fluid text-center py-1">
+            <p class="col-md-12 fs-4">Sistema Central de Registro de Atletas, Inscripciones y Puntuación en Tiempo Real.</p>
+            <hr class="my-0">
+            <p class="mute">Bienvenido al portal oficial de la FDFF. Explora nuestros servicios y únete a nuestra comunidad fitness.</p>
         </div>
     </div>
 
-    <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
-        <div class="feature col">
-            <div class="feature-icon bg-primary bg-gradient text-white p-3 rounded-3 mb-3" style="width: fit-content;">
-                <i class="fas fa-users fa-2x"></i>
-            </div>
-            <h2>Membresías</h2>
-            <p>Administra la base de datos completa de atletas, renovaciones y perfiles personales.</p>
-            <a href="/atletas" class="btn btn-link p-0 text-decoration-none">Ir a Atletas &raquo;</a>
-        </div>
+    <div class="row g-4 py-2 row-cols-1 row-cols-md-2 row-cols-lg-3 justify-content-center">
+        <!-- 1. Afiliación -->
         <div class="feature col">
             <div class="feature-icon bg-success bg-gradient text-white p-3 rounded-3 mb-3" style="width: fit-content;">
+                <i class="fas fa-user-plus fa-2x"></i>
+            </div>
+            <h2>Afiliación</h2>
+            <p>Forma parte de la federación. Consulta los preparadores habilitados y regístrate para obtener tu membresía oficial.</p>
+            <a href="/afiliacion" class="btn btn-primary">Afiliarse Ahora &raquo;</a>
+        </div>
+
+        <!-- 2. Competencias -->
+        <div class="feature col">
+            <div class="feature-icon bg-warning bg-gradient text-dark p-3 rounded-3 mb-3" style="width: fit-content;">
                 <i class="fas fa-trophy fa-2x"></i>
             </div>
             <h2>Competencias</h2>
-            <p>Configura nuevos eventos, modalidades y categorías de forma dinámica y segura.</p>
-            <a href="/categorias" class="btn btn-link p-0 text-decoration-none">Configurar Eventos &raquo;</a>
+            <p>Mantente al tanto de los próximos eventos, calendarios de pesaje y resultados en vivo de nuestras competencias.</p>
+            <a href="/eventos/competencias" class="btn btn-primary">Ver Calendario &raquo;</a>
         </div>
+
+        <!-- 3. Servicios -->
         <div class="feature col">
-            <div class="feature-icon bg-warning bg-gradient text-dark p-3 rounded-3 mb-3" style="width: fit-content;">
-                <i class="fas fa-calculator fa-2x"></i>
+            <div class="feature-icon bg-info bg-gradient text-white p-3 rounded-3 mb-3" style="width: fit-content;">
+                <i class="fas fa-dumbbell fa-2x"></i>
             </div>
-            <h2>Estadísticas</h2>
-            <p>Panel de jueces para el cálculo automático de puntuaciones y posiciones finales.</p>
-            <a href="/estadisticas" class="btn btn-link p-0 text-decoration-none">Ver Resultados &raquo;</a>
+            <h2>Servicios</h2>
+            <p>Conoce los beneficios de estar federado, desde asesorías técnicas hasta acceso a seminarios exclusivos.</p>
+            <a href="/servicios" class="btn btn-outline-primary">Nuestros Servicios &raquo;</a>
+        </div>
+
+        <!-- 4. Noticias -->
+        <div class="feature col">
+            <div class="feature-icon bg-primary bg-gradient text-white p-3 rounded-3 mb-3" style="width: fit-content;">
+                <i class="fas fa-newspaper fa-2x"></i>
+            </div>
+            <h2>Noticias</h2>
+            <p>Las últimas novedades del fisiculturismo dominicano, eventos internacionales y comunicados oficiales.</p>
+            <a href="/noticias" class="btn btn-outline-primary">Leer Más &raquo;</a>
+        </div>
+
+        <!-- 5. Jueces -->
+        <div class="feature col">
+            <div class="feature-icon bg-secondary bg-gradient text-white p-3 rounded-3 mb-3" style="width: fit-content;">
+                <i class="fas fa-gavel fa-2x"></i>
+            </div>
+            <h2>Comité de Jueces</h2>
+            <p>Información sobre nuestro cuerpo de jueces calificados y reglamentación oficial de juzgamiento.</p>
+            <a href="/jueces" class="btn btn-outline-primary">Ver Comité &raquo;</a>
         </div>
     </div>
 </div>

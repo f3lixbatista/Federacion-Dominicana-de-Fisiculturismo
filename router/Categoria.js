@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const supabase = require('../supabaseClient');
+const { supabase } = require('../supabaseClient');
 const { checkRole } = require('../middlewares/auth');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() }); // Guardamos en memoria para subir a Supabase

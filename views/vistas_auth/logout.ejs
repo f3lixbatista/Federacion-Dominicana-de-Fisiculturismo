@@ -1,0 +1,41 @@
+<%- include("../template/cabecera", {tituloWeb: "Saliendo..."}) %>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+
+    async function cerrarTodo() {
+        try {
+            // 1. Intentar cerrar sesión en Supabase (sin bloquear el resto si falla)
+            try {
+                await _supabase.auth.signOut();
+            } catch (e) {
+                console.error("Supabase signOut error:", e);
+            }
+
+            // 2. Notificar al servidor para limpiar la cookie httpOnly
+            await fetch('/clear-session', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            // 3. Limpieza profunda de almacenamiento local
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Borrar cookies de cliente (no httpOnly) por si acaso
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+
+            // 4. Redirigir al login
+            window.location.replace('/login'); 
+        } catch (error) {
+            window.location.replace('/login');
+        }
+    }
+
+    cerrarTodo();
+</script>
+
+<%- include("../template/footer") %>

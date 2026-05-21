@@ -1,4 +1,4 @@
-const supabase = require('../supabaseClient');
+const { supabase, supabaseAdmin } = require('../supabaseClient');
 
 const listarAtletas = async (req, res) => {
     try {
@@ -51,7 +51,7 @@ const crearAtleta = async (req, res) => {
     } = req.body;
 
     try {
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
             email,
             password,
             email_confirm: true

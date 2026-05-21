@@ -1,20 +1,10 @@
-const { supabaseAdmin } = require('../supabaseClient');
+const { supabase, supabaseAdmin } = require('../supabaseClient'); // Se mantiene esta importación para consistencia, aunque solo se use supabaseAdmin aquí.
 const votingService = require('../services/votingService');
 
 const listarEstadisticas = async (req, res) => {
-    try {  
-        const { data: arrCategorias, error } = await supabaseAdmin
-            .from('eventos')
-            .select('*')
-            .order('salida', { ascending: true });
-
-        if (error) throw error;
-        
-        res.render('estadisticas', { arrCategorias });
-    } catch (error) {
-        console.error("Error en estadísticas:", error.message);
-        res.render('estadisticas', { arrCategorias: [] });
-    }
+    // Redirigimos a eventos ya que la gestión ahora es por evento individual
+    // y se accede a través del Dashboard de cada competencia.
+    res.redirect('/eventos/competencias');
 };
 
 const verCalculosEvento = async (req, res) => {

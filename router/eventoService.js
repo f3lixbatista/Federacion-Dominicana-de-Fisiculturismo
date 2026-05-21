@@ -1,4 +1,4 @@
-const supabase = require('../supabaseClient');
+const { supabase } = require('../supabaseClient');
 
 const getListadoPublico = async (eventoId) => {
     const { data: categoriasPublicas, error: catError } = await supabase

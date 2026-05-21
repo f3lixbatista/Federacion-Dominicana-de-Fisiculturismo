@@ -69,7 +69,7 @@
         }
 
         .table-striped tbody tr:nth-of-type(2n+2) {
-        background-color: rgba(124, 102, 248);
+        background-color: rgb(157, 140, 255);
         
         }
 
@@ -200,6 +200,28 @@
             #campoSenior, #campoEdad, #campoEstatura, #campoPeso, #campoDivision {
                 display: none;
             }
+
+        /* --- Estilos personalizados para el Navbar --- */
+        .navbar .nav-link, .navbar .navbar-brand {
+            transition: all 0.3s ease-in-out !important; 
+            color: #ffffff !important; /* Forzamos blanco para todos por defecto */
+        }
+
+        /* Efecto de iluminación al pasar el mouse (hover) - Brillo más potente */
+        .navbar .nav-link:hover, .navbar .navbar-brand:hover {
+            color: #ffffff !important;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 1), 
+                         0 0 30px rgba(255, 255, 255, 0.8), 
+                         0 0 45px rgba(255, 255, 255, 0.4) !important;
+            opacity: 1 !important;
+        }
+
+        /* Estado activo: Gris tímido (Solo cuando NO se está pasando el mouse) */
+        .navbar .nav-item.active .nav-link:not(:hover),
+        .navbar .nav-item.active .navbar-brand:not(:hover) {
+            color: #adb5bd !important; 
+            text-shadow: none !important;
+        }
 
         @media print {
             .navbar, #titulo, button, script, hr, a, .divGralDetIns {

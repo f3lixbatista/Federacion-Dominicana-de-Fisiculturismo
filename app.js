@@ -4,6 +4,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const { attachUser, checkRole } = require('./middlewares/auth');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
+const { supabaseAdmin } = require('./supabaseClient');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -46,14 +47,9 @@ app.use((req, res, next) => {
 app.use(attachUser);
 
 app.get('/logout', (req, res) => {
-    // 1. Borramos todas las posibles cookies de sesión
-    res.clearCookie('sb-access-token', { path: '/' });
-    res.clearCookie('sb-baovskiienrnihoyufig-auth-token', { path: '/' });
-    
-    console.log("🚪 Sesión cerrada correctamente");
-
-    // 2. Redirigimos al login de inmediato
-    res.redirect('/login');
+    // Renderizamos la vista de logout para que el cliente de Supabase 
+    // también cierre sesión y limpie el LocalStorage.
+    res.render('vistas_auth/logout');
 });
 
 app.use('/', require('./router/auth'));
@@ -68,6 +64,15 @@ app.use('/', require('./router/rutasBat'));
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, '0.0.0.0', async () => {
     console.log(`🚀 Servidor FDFF activo en el puerto: ${port}`);
+    
+    // Prueba de conexión a Supabase
+    try {
+        const { data, error } = await supabaseAdmin.from('eventos').select('count', { count: 'exact', head: true });
+        if (error) throw error;
+        console.log('✅ Conexión exitosa a Supabase: Tabla "eventos" accesible.');
+    } catch (err) {
+        console.error('❌ ERROR DE CONEXIÓN A SUPABASE:', err.message);
+    }
 });

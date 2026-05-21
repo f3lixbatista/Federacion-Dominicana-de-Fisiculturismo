@@ -1,4 +1,4 @@
-const supabase = require('../supabaseClient');
+const { supabase } = require('../supabaseClient');
 
 const inscripcionPage = async (req, res) => {
     try {
@@ -32,7 +32,7 @@ const inscripcionPage = async (req, res) => {
             if (error) throw error;
         }
 
-        res.render('inscripcion', {
+        res.render('eventos/inscripcion', {
             eventoActual: evento || { nombre: 'Sin evento activo', estado: 'cerrado', id: null },
             arrayAtletas: arrayAtletas || [],
             arrayCategorias,
@@ -40,7 +40,7 @@ const inscripcionPage = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al cargar inscripción:', error.message);
-        res.render('inscripcion', {
+        res.render('eventos/inscripcion', {
             eventoActual: { nombre: 'Error', estado: 'cerrado' },
             arrayAtletas: [],
             arrayCategorias: []
@@ -93,10 +93,10 @@ const inscripcionAtletaPage = async (req, res) => {
 
         if (error) throw error;
 
-        res.render('inscripcionAtleta', { eventos: eventosConCategorias || [] });
+        res.render('eventos/InscripcionAtleta', { eventos: eventosConCategorias || [] });
     } catch (error) {
         console.error('Error en InscripcionAtleta:', error.message);
-        res.render('inscripcionAtleta', { eventos: [] });
+        res.render('eventos/InscripcionAtleta', { eventos: [] });
     }
 };
 
@@ -125,13 +125,17 @@ const crearCompetidor = async (req, res) => {
 const pesajePage = async (req, res) => {
     try {
         const { data: atletas } = await supabase.from('atletas').select('*');
-        res.render('pesaje', {
+        res.render('eventos/pesaje', {
             atletas: atletas || [],
             juezLogueado: res.locals.user
         });
     } catch (error) {
         console.error('Error en pesaje:', error.message);
-        res.render('pesaje', { atletas: [], error: error.message });
+        res.render('eventos/pesaje', { 
+            atletas: [], 
+            error: error.message,
+            juezLogueado: res.locals.user 
+        });
     }
 };
 

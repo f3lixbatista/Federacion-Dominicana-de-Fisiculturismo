@@ -1,4 +1,4 @@
-<%- include("template/cabecera", {tituloWeb: "Panel de Pesaje"}) %>
+<%- include("../template/cabecera", {tituloWeb: "Panel de Pesaje"}) %>
 
 <div class="container my-5">
     <div class="d-flex justify-content-between align-items-center">
@@ -76,10 +76,10 @@
            <form id="formGuardarPesaje">
                 <div class="modal-body p-4">
                     <input type="hidden" id="atletaIdInput">
-                    <input type="hidden" id="juezIdLogueado" value="<%= juezLogueado.id %>">
+                    <input type="hidden" id="juezIdLogueado" value="<%= juezLogueado ? juezLogueado.id : '' %>">
         
                     <div class="text-center mb-3">
-                        <span class="badge bg-secondary">Juez de Turno: <%= juezLogueado.full_name %></span>
+                        <span class="badge bg-secondary">Juez de Turno: <%= juezLogueado ? juezLogueado.nombre : 'No identificado' %></span>
                     </div>
 
                     <div class="row g-3">
@@ -104,7 +104,7 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
     const modalElement = document.getElementById('modalPesaje');
     const myModal = new bootstrap.Modal(modalElement);
 
@@ -169,7 +169,7 @@ async function actualizarAfiliacion(atletaId, estaActivo) {
             id: document.getElementById('atletaIdInput').value,
             peso_confirmado: parseFloat(document.getElementById('pesoActual').value),
             estatura_confirmada: parseFloat(document.getElementById('estaturaActual').value),
-            juez_id: document.getElementById('juezIdLogueado').value || "<%= user.id %>",
+            juez_id: document.getElementById('juezIdLogueado').value || "<%= locals.user ? user.id : '' %>",
             estatus_pesaje: 'aprobado'
         };
 
@@ -184,4 +184,4 @@ async function actualizarAfiliacion(atletaId, estaActivo) {
     });
 </script>
 
-<%- include("template/footer") %>
+<%- include("../template/footer") %>
