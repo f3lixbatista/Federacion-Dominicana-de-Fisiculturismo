@@ -61,6 +61,9 @@
                             <th style="width: 15%;" class="bg-light">
                                 <%= evento.estado === 'finalizado' ? 'POSICIÓN' : 'PESO / TALLA' %>
                             </th>
+                            <% if (locals.user && ['admin', 'estadistico', 'ejecutivo'].includes(user.role) && evento.estado === 'finalizado') { %>
+                                <th style="width: 12%;">DOCUMENTACIÓN</th>
+                            <% } %>
                         </tr>
                     </thead>
                     <tbody>
@@ -78,11 +81,20 @@
                                             <small><%= comp.atletas?.peso %>kg / <%= comp.atletas?.estatura %>cm</small>
                                         <% } %>
                                     </td>
+                                    <% if (locals.user && ['admin', 'estadistico', 'ejecutivo'].includes(user.role) && evento.estado === 'finalizado') { %>
+                                        <td class="text-center">
+                                            <button onclick="verCertificado('<%= comp.id %>')" class="btn btn-sm btn-outline-dark">
+                                                <i class="fas fa-certificate"></i> Visualizar
+                                            </button>
+                                        </td>
+                                    <% } %>
                                 </tr>
                             <% }) %>
                         <% } else { %>
                             <tr>
-                                <td colspan="5" class="py-3 text-muted">No se registraron competidores en esta categoría.</td>
+                                <td colspan="<%= (locals.user && ['admin', 'estadistico', 'ejecutivo'].includes(user.role) && evento.estado === 'finalizado') ? 6 : 5 %>" class="py-3 text-muted">
+                                    No se registraron competidores en esta categoría.
+                                </td>
                             </tr>
                         <% } %>
                     </tbody>
@@ -139,5 +151,12 @@
         </div>
     </div>
 </div>
+
+<script>
+    function verCertificado(competidorId) {
+        // Abre el certificado en una pestaña nueva para revisión del Staff
+        window.open(`/estadisticas/certificado-preview/${competidorId}`, '_blank');
+    }
+</script>
 
 <%- include("../template/footer") %>

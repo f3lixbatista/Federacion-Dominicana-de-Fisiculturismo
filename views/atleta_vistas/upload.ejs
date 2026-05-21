@@ -1,0 +1,207 @@
+<%- include("../template/cabecera", {tituloWeb: "Carga de Fotos Oficiales"}) %>
+
+<div class="container my-5">
+    <div class="card shadow-lg border-0 p-4" style="border-radius: 20px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-dark mb-0"><i class="fas fa-camera-retro text-primary"></i> Fotografía Oficial FDFF</h2>
+            <span class="badge bg-dark p-2">Rol: Fotógrafo Oficial</span>
+        </div>
+        
+        <div class="row g-3 bg-light p-3 rounded mb-4">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">1. Seleccionar Evento</label>
+                <select id="selectEvento" class="form-select border-primary" onchange="cargarAtletasDelEvento(this.value)">
+                    <option value="">-- Seleccione Competencia --</option>
+                    <% eventosActivos.forEach(ev => { %>
+                        <option value="<%= ev.id %>"><%= ev.nombre %></option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">2. Buscar Atleta</label>
+                <select id="selectAtleta" class="form-select border-primary" disabled onchange="verificarDisponibilidad(this.value)">
+                    <option value="">Primero elija un evento...</option>
+                </select>
+                <div id="infoCupo" class="mt-1 small"></div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- ZONA DE CARGA: MURO SOCIAL (Feed) -->
+            <div class="col-md-7">
+                <div id="zonaCarga" class="d-none border-dashed p-5 text-center rounded bg-white h-100" style="border: 2px dashed #ccc;">
+                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                    <h5 class="fw-bold">Fotos Muro Social</h5>
+                    <p class="text-muted small">Optimización automática a 1080px (Máx 5)</p>
+                    
+                    <input type="file" id="fotosInput" class="form-control mb-3" accept="image/*" multiple>
+                    
+                    <button onclick="procesarSubida()" id="btnSubir" class="btn btn-primary btn-lg w-100 fw-bold shadow">
+                        PUBLICAR EN EL MURO
+                    </button>
+
+                    <div id="loader" class="d-none mt-3">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 fw-bold" id="statusMsg">Subiendo...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ZONA DE CARGA: FOTO ATLÉTICA (LED SCREEN) -->
+            <div class="col-md-5">
+                <div id="zonaAtletica" class="d-none border-dashed p-5 text-center rounded bg-white h-100" style="border: 2px dashed #ffc107;">
+                    <i class="fas fa-user-shield fa-3x text-warning mb-3"></i>
+                    <h5 class="fw-bold">Foto Oficial (LED)</h5>
+                    <p class="text-muted small">Subir PNG transparente (Efectos pantalla)</p>
+                    
+                    <input type="file" id="inputFotoAtletica" class="form-control mb-3" accept="image/png">
+                    
+                    <button onclick="subirFotoAtletica(document.getElementById('selectAtleta').value)" id="btnSubirAtletica" class="btn btn-warning btn-lg w-100 fw-bold shadow">
+                        CARGAR PARA LED
+                    </button>
+
+                    <div id="loaderAtletica" class="d-none mt-3">
+                        <div class="spinner-border text-warning" role="status"></div>
+                        <p class="mt-2 fw-bold">Actualizando pantalla...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // Inicialización de Supabase con las variables que inyectamos en app.js
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+    let limiteActual = 0;
+
+    // A. Cargar atletas que realmente compitieron en ese evento
+    async function cargarAtletasDelEvento(eventoId) {
+        if(!eventoId) return;
+        const selectAtleta = document.getElementById('selectAtleta');
+        
+        const { data, error } = await _supabase
+            .from('competidores')
+            .select('atleta_id, atletas(nombre), numero_atleta')
+            .eq('id_evento', eventoId);
+
+        selectAtleta.innerHTML = '<option value="">-- Seleccione al Atleta --</option>';
+        if (data) {
+            data.forEach(c => {
+                selectAtleta.innerHTML += `<option value="${c.atleta_id}">${c.atletas.nombre} (Dorsal: ${c.numero_atleta})</option>`;
+            });
+        }
+        selectAtleta.disabled = false;
+    }
+
+    // B. Verificar cuántas fotos de las 5 permitidas quedan
+    async function verificarDisponibilidad(atletaId) {
+        const eventoId = document.getElementById('selectEvento').value;
+        const info = document.getElementById('infoCupo');
+        
+        const { count } = await _supabase
+            .from('publicaciones_muro')
+            .select('*', { count: 'exact', head: true })
+            .eq('atleta_id', atletaId)
+            .eq('evento_id', eventoId);
+        
+        limiteActual = 5 - (count || 0);
+
+        if (limiteActual <= 0) {
+            info.innerHTML = "❌ Cupo agotado (5/5). El atleta ya tiene sus fotos oficiales.";
+            info.className = "text-danger fw-bold";
+            document.getElementById('zonaCarga').classList.add('d-none');
+            document.getElementById('zonaAtletica').classList.remove('d-none');
+        } else {
+            info.innerHTML = `✅ Puedes subir ${limiteActual} fotos adicionales para este evento.`;
+            info.className = "text-success fw-bold";
+            document.getElementById('zonaCarga').classList.remove('d-none');
+            document.getElementById('zonaAtletica').classList.remove('d-none');
+        }
+    }
+
+    // C. El Cerebro: Compresión + Subida
+    async function procesarSubida() {
+        const input = document.getElementById('fotosInput');
+        const eventoId = document.getElementById('selectEvento').value;
+        const atletaId = document.getElementById('selectAtleta').value;
+
+        if (input.files.length === 0) return alert("Selecciona archivos.");
+        if (input.files.length > limiteActual) return alert(`Solo puedes subir ${limiteActual} fotos.`);
+
+        document.getElementById('loader').classList.remove('d-none');
+        document.getElementById('btnSubir').disabled = true;
+
+        for (const file of input.files) {
+            try {
+                const optimizedBlob = await optimizarImagen(file, 1080, 1080);
+                const filePath = `muro/${atletaId}/${Date.now()}_${file.name}`;
+                const { error: sErr } = await _supabase.storage.from('muro_social').upload(filePath, optimizedBlob);
+                if (sErr) throw sErr;
+
+                const { data: urlData } = _supabase.storage.from('muro_social').getPublicUrl(filePath);
+                await _supabase.from('publicaciones_muro').insert({
+                    atleta_id: atletaId,
+                    evento_id: eventoId,
+                    foto_url: urlData.publicUrl,
+                    fecha_expiracion: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+                });
+            } catch (err) { console.error("Fallo en una foto:", err); }
+        }
+        alert("¡Fotos publicadas con éxito!");
+        location.reload();
+    }
+
+    function optimizarImagen(file, maxWidth, maxHeight) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let { width, height } = img;
+                    if (width > height) { if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } }
+                    else { if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; } }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8);
+                };
+            };
+        });
+    }
+
+    // Función para subir la Foto Atlética (Uso en panel del fotógrafo)
+    async function subirFotoAtletica(atletaId) {
+        const file = document.getElementById('inputFotoAtletica').files[0];
+        if (!file) return alert("Seleccione la foto oficial.");
+        const idEvento = document.getElementById('selectEvento').value;
+
+        document.getElementById('loaderAtletica').classList.remove('d-none');
+        const filePath = `${atletaId}/atletica.png`;
+
+        const { data, error } = await _supabase.storage
+            .from('fotos_atleticas')
+            .upload(filePath, file, { upsert: true });
+
+        document.getElementById('loaderAtletica').classList.add('d-none');
+
+        if (!error) {
+            const { data: { publicUrl } } = _supabase.storage.from('fotos_atleticas').getPublicUrl(filePath);
+            // Guardamos en la tabla competidores para el evento actual
+            await _supabase.from('competidores')
+                .update({ foto_atletica_url: publicUrl })
+                .eq('atleta_id', atletaId)
+                .eq('id_evento', idEvento);
+            alert("Foto Atlética cargada para pantallas LED.");
+        } else {
+            alert("Error al subir Foto Atlética: " + error.message);
+        }
+    }
+</script>
+
+<%- include("../template/footer") %>

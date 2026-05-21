@@ -2,6 +2,7 @@ const express = require('express');
 const routerEventos = express.Router();
 const { checkRole } = require('../middlewares/auth');
 const eventosController = require('../controllers/eventosController');
+const atletasController = require('../controllers/atletasController');
 
 // A. LISTADO GLOBAL: Lo que ve todo el mundo al entrar
 routerEventos.get('/competencias', checkRole(['admin', 'estadistico', 'ejecutivo', 'preparador', 'atleta', 'juez', 'general', 'mc', 'backstage']), eventosController.listarEventos);
@@ -10,8 +11,19 @@ routerEventos.get('/', (req, res) => {
     res.redirect('/eventos/competencias');
 });
 
+// C. HISTÓRICO Y RESULTADOS PÚBLICOS (Sin protección de rol para acceso general)
+routerEventos.get('/historico', eventosController.verHistorico);
+
+routerEventos.get('/:id/resultados-publicos', eventosController.verResultadosPublicos);
+
 // B. DASHBOARD DEL EVENTO: La página única para cada competencia
 routerEventos.get('/:id', checkRole(['admin', 'estadistico', 'ejecutivo', 'preparador', 'atleta', 'juez', 'general', 'mc', 'backstage']), eventosController.verDashboardEvento);
+
+// C. CENTRO DE MANDO: Dashboard administrativo centralizado
+routerEventos.get('/:id/centro-mando', checkRole(['admin', 'estadistico', 'ejecutivo']), eventosController.verCentroMando);
+
+// RUTA DE BROADCAST: Pantalla LED de entrada
+routerEventos.get('/:idEvento/entrada/:idAtleta', checkRole(['admin', 'estadistico', 'mc']), atletasController.verEntradaAtleta);
 
 // RUTA DE PREPARACIÓN DE EVENTO (alias compatible con la estructura anterior)
 routerEventos.get('/preparacion-evento/:id', checkRole(['admin', 'estadistico']), eventosController.prepararEventoPage);
@@ -37,6 +49,12 @@ routerEventos.get('/:id/reporte-oficial', checkRole(['admin', 'estadistico', 'ju
 
 // RUTA PARA DIPLOMA DIGITAL
 routerEventos.get('/atleta/:idAtleta/evento/:idEvento/diploma', eventosController.verDiplomaAtleta);
+
+// RUTA PÚBLICA DE VALIDACIÓN DE LOGRO (ESCANEO DE QR)
+routerEventos.get('/validar-logro/:idCompetidor', eventosController.validarLogroPublico);
+
+// RUTA PARA CERTIFICADO OFICIAL (DISEÑO LANDSCAPE)
+routerEventos.get('/atleta/:idAtleta/evento/:idEvento/certificado-oficial', checkRole(['admin', 'atleta', 'estadistico']), eventosController.verCertificadoOficial);
 
 // RUTA PARA PANEL BACKSTAGE
 routerEventos.get('/:id/backstage', checkRole(['admin', 'backstage', 'estadistico']), eventosController.verBackstage);

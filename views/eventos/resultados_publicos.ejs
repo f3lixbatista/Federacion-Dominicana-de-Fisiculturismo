@@ -1,0 +1,58 @@
+<%- include("../template/cabecera", {tituloWeb: "Resultados: " + evento.nombre}) %>
+
+<div class="container my-5">
+    <h2 class="fw-bold mb-4">Resultados Oficiales: <%= evento.nombre %></h2>
+
+    <!-- TOP 3 DE EQUIPOS (COPA POR EQUIPOS) -->
+    <div class="card bg-dark text-white p-4 mb-5 shadow" style="border-radius: 15px;">
+        <h4 class="text-warning fw-bold mb-3"><i class="fas fa-users"></i> Pódium de Equipos</h4>
+        <div class="row text-center">
+            <% rankingTeams.slice(0,3).forEach((team, i) => { %>
+                <div class="col-md-4">
+                    <div class="display-6 fw-bold"><%= i+1 %>°</div>
+                    <div class="fs-5"><%= team.nombre %></div>
+                    <div class="text-warning small"><%= team.puntos %> Puntos</div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+
+    <!-- ACORDEÓN POR CATEGORÍA -->
+    <div class="accordion shadow-sm" id="accordionResultados">
+        <% categorias.forEach((cat, index) => { %>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#cat<%= index %>">
+                        <%= cat.nombre_categoria %>
+                    </button>
+                </h2>
+                <div id="cat<%= index %>" class="accordion-collapse collapse" data-bs-parent="#accordionResultados">
+                    <div class="accordion-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 80px;">Pos.</th>
+                                    <th>Atleta</th>
+                                    <th>Dorsal</th>
+                                    <th>Team</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% cat.atletas.forEach(atl => { %>
+                                    <tr>
+                                        <td class="fw-bold <%= atl.posicion <= 3 ? 'text-primary' : '' %>"><%= atl.posicion %>°</td>
+                                        <td><%= atl.nombre %></td>
+                                        <td><span class="badge bg-light text-dark border"><%= atl.dorsal %></span></td>
+                                        <td class="small"><%= atl.team %></td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+</div>
+
+<%- include("../template/footer") %>

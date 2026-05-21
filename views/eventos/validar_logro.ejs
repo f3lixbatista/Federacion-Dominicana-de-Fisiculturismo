@@ -1,0 +1,36 @@
+<%- include("../template/cabecera", {tituloWeb: "Validación de Logro FDFF"}) %>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 text-center" style="border-radius: 20px;">
+                <div class="card-header bg-success text-white py-4">
+                    <i class="fas fa-check-circle fa-4x mb-3"></i>
+                    <h2 class="fw-bold">Certificado Validado</h2>
+                </div>
+                <div class="card-body p-5">
+                    <h4 class="text-primary fw-bold mb-4"><%= logro.atletas?.nombre %></h4>
+                    <hr>
+                    <div class="text-start">
+                        <p><strong>Evento:</strong> <%= logro.eventos?.nombre %></p>
+                        <p><strong>Categoría:</strong> <%= logro.eventos_categorias?.categorias?.nombre %> (<%= logro.eventos_categorias?.categorias?.modalidad %>)</p>
+                        <p><strong>Puesto Obtenido:</strong> 
+                            <span class="badge bg-warning text-dark fs-5">
+                                <%= logro.posicion_final ? logro.posicion_final + '° Lugar' : 'Participante Oficial' %>
+                            </span>
+                        </p>
+                        <p><strong>Dorsal:</strong> #<%= logro.numero_atleta %></p>
+                        <p><strong>Fecha del Evento:</strong> <%= logro.eventos?.fecha_inicio %></p>
+                    </div>
+                    <div class="mt-4 pt-3 border-top">
+                        <p class="small text-muted">Este registro es parte de los archivos oficiales de la Federación Dominicana de Fisiculturismo y Fitness (FDFF).</p>
+                        <p class="small text-muted">Validado el: <%= fecha %></p>
+                    </div>
+                    <a href="/" class="btn btn-outline-primary mt-3">Ir al Inicio</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include("../template/footer") %>

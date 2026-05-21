@@ -1,0 +1,68 @@
+<%- include("../template/cabecera", {tituloWeb: "Comprobante Oficial FDFF"}) %>
+
+<style>
+    .ticket { max-width: 500px; margin: 20px auto; border: 2px solid #333; padding: 20px; font-family: 'Courier New', Courier, monospace; background: #fff; }
+    .linea { border-top: 1px dashed #333; margin: 15px 0; }
+    @media print { .no-print { display: none; } }
+</style>
+
+<div class="container text-center no-print my-4">
+    <button onclick="window.print()" class="btn btn-dark"><i class="fas fa-print"></i> IMPRIMIR COMPROBANTE</button>
+</div>
+
+<div class="ticket">
+    <img src="/img/fdff3.jpg" style="width: 60px; float: left;">
+    <div style="text-align: right;">
+        <h5 class="fw-bold mb-0">FDFF - OFICIAL</h5>
+        <small>ID Atleta: <%= atleta.id.substring(0,8) %></small>
+    </div>
+    
+    <div class="linea"></div>
+    <h6 class="text-center fw-bold">COMPROBANTE DE REGISTRO Y PAGO</h6>
+    <div class="linea"></div>
+
+    <p><strong>ATLETA:</strong> <%= atleta.nombre %></p>
+    <p><strong>DNI:</strong> <%= atleta.cedula %></p>
+    <p><strong>TEAM:</strong> <%= atleta.preparadores?.nombre_completo || 'INDEPENDIENTE' %></p>
+    
+    <!-- Bloque de Validación QR para Mesa Técnica -->
+    <div class="text-center my-3">
+        <img src="<%= qrCodeData %>" style="width: 140px; border: 1px solid #eee;">
+        <p class="mb-0 fw-bold" style="font-size: 0.6rem; color: #555;">ESCANEAR PARA VALIDACIÓN TÉCNICA</p>
+    </div>
+
+    <div class="bg-light p-2 small">
+        <strong>ESTATUS MEMBRESÍA:</strong> <%= atleta.estatus_afiliacion.toUpperCase() %><br>
+        <strong>VIGENCIA:</strong> 31/DIC/<%= new Date().getFullYear() %>
+    </div>
+
+    <div class="linea"></div>
+    <p class="small fw-bold">CATEGORÍAS INSCRITAS (<%= evento.nombre %>):</p>
+    <ul class="small">
+        <% (inscripciones || []).forEach(ins => { %>
+            <li><%= ins.eventos_categorias?.categorias?.nombre || 'Categoría no identificada' %></li>
+        <% }) %>
+    </ul>
+
+    <div class="linea"></div>
+    <div style="font-size: 1.2rem; text-align: right;" class="fw-bold">
+        TOTAL PAGADO: RD$ <%= (totalPagado || 0).toLocaleString() %>
+    </div>
+    <div class="linea"></div>
+
+    <div class="row mt-4 text-center small">
+        <div class="col-6">
+            <div style="border-top: 1px solid #000; margin-top: 40px;">Firma Atleta</div>
+        </div>
+        <div class="col-6">
+            <div style="border-top: 1px solid #000; margin-top: 40px;">Sello Mesa Técnica</div>
+        </div>
+    </div>
+
+    <p class="text-center mt-3 mb-0" style="font-size: 0.7rem;">
+        Este documento certifica su afiliación y derecho a competencia.<br>
+        Valide su pesaje oficial con este comprobante.
+    </p>
+</div>
+
+<%- include("../template/footer") %>

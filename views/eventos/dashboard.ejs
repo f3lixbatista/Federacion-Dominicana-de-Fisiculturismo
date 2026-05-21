@@ -91,7 +91,7 @@
                     <% if (locals.user) { %>
                         <!-- ROL ATLETA / ADMIN -->
                         <% if (['admin', 'atleta'].includes(user.role) && evento.estado === 'inscripcion') { %>
-                            <a href="/inscripcion/IscripcionAtleta?evento=<%= evento.id %>" class="btn btn-primary btn-lg fw-bold">
+                            <a href="/inscripcion/InscripcionAtleta?evento=<%= evento.id %>" class="btn btn-primary btn-lg fw-bold">
                                 <i class="fas fa-edit"></i> SELECCIÓN WEB
                             </a>
                         <% } %>

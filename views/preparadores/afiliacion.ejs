@@ -12,7 +12,11 @@
                 <div class="card-body p-5">
                     <form action="/preparadores/solicitar" method="POST">
                         <div class="row g-3">
-                            <div class="col-md-12">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold text-primary">ID Coach FDFF</label>
+                                <input type="text" name="ID_Coach_FDFF" class="form-control bg-light" value="<%= locals.ID_Coach_FDFF || '00045' %>" readonly>
+                            </div>
+                            <div class="col-md-8">
                                 <label class="form-label fw-bold">Nombre Completo</label>
                                 <input type="text" name="nombre_completo" class="form-control" required>
                             </div>

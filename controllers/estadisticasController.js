@@ -1,4 +1,5 @@
 const { supabase, supabaseAdmin } = require('../supabaseClient'); // Se mantiene esta importación para consistencia, aunque solo se use supabaseAdmin aquí.
+const QRCode = require('qrcode');
 const votingService = require('../services/votingService');
 
 const listarEstadisticas = async (req, res) => {
@@ -288,6 +289,101 @@ const imprimirBoletas = async (req, res) => {
     }
 };
 
+const verPresidenteMesa = async (req, res) => {
+    const { eventoCatId } = req.params;
+    try {
+        // 1. Datos de la categoría y atletas
+        const { data: competidores } = await supabaseAdmin
+            .from('competidores')
+            .select('atleta_id, numero_atleta, atletas(nombre)')
+            .eq('evento_cat_id', eventoCatId);
+
+        // 2. Votos de pre-selección del Top 5
+        const { data: preSeleccion } = await supabaseAdmin
+            .from('pre_seleccion_top5')
+            .select('*')
+            .eq('evento_cat_id', eventoCatId);
+
+        res.render('estadisticas/presidente_mesa', {
+            catId: eventoCatId,
+            competidores: competidores || [],
+            preSeleccion: preSeleccion || []
+        });
+    } catch (error) { 
+        console.error("Error en panel presidente mesa:", error.message);
+        res.redirect('/eventos/competencias'); 
+    }
+};
+
+const imprimirCertificadosMasivos = async (req, res) => {
+    const { eventoId } = req.params;
+    try {
+        const { data: resultados, error } = await supabaseAdmin
+            .from('competidores')
+            .select(`
+                *,
+                atletas(nombre),
+                eventos_categorias(categorias(nombre)),
+                eventos(nombre)
+            `)
+            .eq('id_evento', eventoId)
+            .order('posicion_final', { ascending: true });
+
+        if (error) throw error;
+
+        // Generamos los QR para cada certificado individualmente en el servidor
+        const resultadosConQR = await Promise.all((resultados || []).map(async (r) => {
+            const validUrl = `${req.protocol}://${req.get('host')}/eventos/validar-logro/${r.id}`;
+            const qrCode = await QRCode.toDataURL(validUrl, { margin: 1, color: { dark: '#002d72' } });
+            return { ...r, qrCode };
+        }));
+
+        res.render('reportes/impresion_masiva', { resultados: resultadosConQR });
+    } catch (error) {
+        console.error("Error en impresión masiva:", error.message);
+        res.redirect('/eventos');
+    }
+};
+
+const verCertificadoPreview = async (req, res) => {
+    const { idCompetidor } = req.params;
+    try {
+        const { data: comp, error } = await supabaseAdmin
+            .from('competidores')
+            .select(`
+                id,
+                posicion_final,
+                eventos ( id, nombre, lugar, fecha_inicio, estado ),
+                eventos_categorias ( categorias ( nombre ) ),
+                atletas ( id, nombre, cedula )
+            `)
+            .eq('id', idCompetidor)
+            .single();
+
+        if (error || !comp) return res.status(404).send('Registro no encontrado.');
+
+        // Solo se visualiza si el evento está finalizado
+        if (comp.eventos?.estado !== 'finalizado') {
+            return res.send("El certificado estará disponible una vez se cierre el evento.");
+        }
+
+        // Generar QR de validación dinámico
+        const validUrl = `${req.protocol}://${req.get('host')}/eventos/validar-logro/${comp.id}`;
+        const qrValidacion = await QRCode.toDataURL(validUrl, { margin: 1, color: { dark: '#002d72' } });
+
+        res.render('reportes/certificado', {
+            atleta: comp.atletas,
+            evento: comp.eventos,
+            posicion: comp.posicion_final ? `${comp.posicion_final}° Lugar` : 'Participante',
+            categoria: comp.eventos_categorias?.categorias?.nombre || 'N/A',
+            qrValidacion
+        });
+    } catch (error) {
+        console.error('🔥 Error al previsualizar certificado:', error.message);
+        res.status(500).send(error.message);
+    }
+};
+
 module.exports = { 
     listarEstadisticas, 
     verCalculosEvento, 
@@ -298,5 +394,8 @@ module.exports = {
     verGestionAbsolutos, 
     verMesaComputoAbsoluto, 
     oficializarAbsoluto, 
-    imprimirBoletas 
+    imprimirBoletas,
+    verPresidenteMesa,
+    imprimirCertificadosMasivos,
+    verCertificadoPreview
 };

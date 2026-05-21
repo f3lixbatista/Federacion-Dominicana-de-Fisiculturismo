@@ -1,0 +1,98 @@
+<%- include("../template/cabecera", {tituloWeb: "Centro de Mando FDFF"}) %>
+
+<div class="container-fluid my-4 px-5">
+    <div class="row g-4">
+        <!-- SECCIÓN A: ESTADO DEL SHOW (LOGÍSTICA) -->
+        <div class="col-lg-3">
+            <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
+                <div class="card-header bg-dark text-white fw-bold">⚙️ Logística y Mesa Técnica</div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/eventos/preparacion-evento/<%= evento.id %>" class="btn btn-outline-primary text-start">
+                            <i class="fas fa-users-cog me-2"></i> Configurar Panel y Sillas
+                        </a>
+                        <a href="/inscripcion?evento=<%= evento.id %>" class="btn btn-outline-primary text-start">
+                            <i class="fas fa-weight me-2"></i> Registro y Pesaje (Dorsales)
+                        </a>
+                        <a href="/eventos/<%= evento.id %>/recaudacion" class="btn btn-outline-success text-start">
+                            <i class="fas fa-cash-register me-2"></i> Auditoría de Recaudación
+                        </a>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <small class="text-muted d-block mb-2">Presidente de Mesa Activo:</small>
+                        <span class="badge bg-warning text-dark fs-6" id="nombrePresidente">
+                            <%= presidente || 'No asignado' %>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN B: PRODUCCIÓN AUDIOVISUAL (DJ & LED) -->
+        <div class="col-lg-6">
+            <div class="card shadow-lg border-0 h-100" style="border-radius: 15px;">
+                <div class="card-header bg-primary text-white fw-bold text-center">🎭 Producción de Espectáculo (Show en Vivo)</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded bg-light text-center">
+                                <i class="fas fa-music fa-2x mb-2 text-info"></i>
+                                <h6 class="fw-bold">DJ VIRTUAL</h6>
+                                <p class="small text-muted">Gestión de MP3 y Playlist de pasarelas.</p>
+                                <a href="/dj/playlist/<%= evento.id %>" class="btn btn-info btn-sm w-100">Abrir Consola</a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded bg-light text-center">
+                                <i class="fas fa-desktop fa-2x mb-2 text-danger"></i>
+                                <h6 class="fw-bold">VIDEO & BROADCAST</h6>
+                                <p class="small text-muted">Efectos LED, Lower Thirds y Transmisión.</p>
+                                <a href="/broadcast/live/<%= evento.id %>" class="btn btn-danger btn-sm w-100">Panel VMD</a>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="p-3 border rounded bg-dark text-white text-center">
+                                <i class="fas fa-microphone-alt fa-2x mb-2 text-warning"></i>
+                                <h6 class="fw-bold">MONITOR DEL MC</h6>
+                                <p class="small text-muted">Programa dinámico y canto de podios.</p>
+                                <a href="/eventos/<%= evento.id %>/monitor-mc" class="btn btn-warning btn-sm w-100 fw-bold">Monitor de Tarima</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN C: ARBITRAJE Y FOTOGRAFÍA -->
+        <div class="col-lg-3">
+            <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
+                <div class="card-header bg-secondary text-white fw-bold">📸 Resultados y Media</div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/fotografia/upload?evento=<%= evento.id %>" class="btn btn-outline-dark text-start">
+                            <i class="fas fa-camera me-2"></i> Subir Fotos (Social/Muro)
+                        </a>
+                        <a href="/estadisticas/presidente-mesa/<%= evento.id %>" class="btn btn-outline-dark text-start">
+                            <i class="fas fa-gavel me-2"></i> Monitor de Top 5 (Arbitraje)
+                        </a>
+                        <hr>
+                        <button onclick="cerrarEvento()" class="btn btn-danger fw-bold">
+                            <i class="fas fa-flag-checkered me-2"></i> CERRAR COMPETENCIA
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function cerrarEvento() {
+        if(confirm("¿Estás seguro de cerrar la competencia? Se publicarán los resultados finales y se desactivarán las votaciones.")) {
+            // Lógica para llamar al endpoint de cierre
+        }
+    }
+</script>
+
+<%- include("../template/footer") %>

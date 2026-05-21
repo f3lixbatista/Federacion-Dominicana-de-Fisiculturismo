@@ -28,7 +28,7 @@ const getUserProfileFromId = async (userId) => {
     // Usamos supabaseAdmin para evitar la recursión infinita en las políticas RLS de la tabla 'profiles'
     const { data: profile, error } = await supabaseAdmin
         .from('profiles')
-        .select('role, nombre, email')
+        .select('role, nombre, email, id_fdff')
         .eq('id', userId)
         .single();
 
@@ -51,7 +51,8 @@ const getAuthenticatedUser = async (req) => {
         id: data.user.id,
         email: data.user.email,
         role: profile?.role || 'general',
-        nombre: profile?.nombre || data.user.email
+        nombre: profile?.nombre || data.user.email,
+        idfdff: profile?.id_fdff || 'SIN ID'
     };
 };
 

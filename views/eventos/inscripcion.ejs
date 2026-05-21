@@ -19,6 +19,28 @@
     </div>
 
     <!-- SECCIÓN 1: BUSCADOR DE ATLETAS (ESTACIÓN DE REGISTRO) -->
+    <div class="card shadow-sm mb-4 border-0" style="border-radius: 15px;">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3"><i class="fas fa-search me-2"></i> Localizar Atleta para Pesaje</h5>
+            
+            <div class="row g-2">
+                <div class="col-md-8">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-user text-muted"></i></span>
+                        <input type="text" id="busquedaAtleta" class="form-control border-start-0 ps-0" 
+                               placeholder="Escriba Nombre, Cédula o escanee con lector de mano..." onkeyup="filtrarTablaAtletas()">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-dark btn-lg w-100 fw-bold" onclick="iniciarEscaneoCamara()">
+                        <i class="fas fa-camera me-2"></i> USAR CÁMARA
+                    </button>
+                </div>
+            </div>
+            <div id="reader" class="mt-3 mx-auto" style="width: 300px; display: none;"></div>
+        </div>
+    </div>
+
     <div class="container divGeneral border border-1 border-dark p-4 col-12 shadow-sm bg-white" style="border-radius: 15px;">
         <h2 class="mb-4 fw-bold text-primary border-bottom pb-2">Estación de Inscripción Asistida</h2>
         <div class="table-responsive">     
@@ -31,7 +53,7 @@
                         <th scope="col" class="text-white">Acción</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="bodyAtletas">
                     <% arrayAtletas.forEach(atleta => { %>
                         <tr>
                             <td><%= atleta.cedula %></td>
@@ -87,6 +109,26 @@
                     
                     <div id="listaCategoriasAfines" class="list-group shadow-sm">
                         <!-- Se inyecta vía JavaScript -->
+                    </div>
+
+                    <!-- Componente de Carga de Audio (DJ Virtual) -->
+                    <div class="card border-primary mt-4 mb-3">
+                        <div class="card-header bg-primary text-white fw-bold">
+                            <i class="fas fa-music me-2"></i> Audio de Presentación (DJ Virtual)
+                        </div>
+                        <div class="card-body">
+                            <div id="playerAudio" class="mb-3 d-none">
+                                <audio id="audioElement" controls class="w-100"></audio>
+                            </div>
+                            
+                            <div class="input-group">
+                                <input type="file" id="fileMusica" class="form-control" accept=".mp3,.wav">
+                                <button type="button" onclick="subirMusicaAsistida()" class="btn btn-dark" id="btnSubirMusica">
+                                    <i class="fas fa-upload"></i> Cargar
+                                </button>
+                            </div>
+                            <small class="text-muted mt-2 d-block">Límite: 90 segundos. Solo se permite un archivo por evento.</small>
+                        </div>
                     </div>
 
                     <!-- RESUMEN DE COBRO -->
@@ -153,7 +195,7 @@
 <script src="/js/supabase.js"></script>
 <script>
     // 1. Inicialización de Supabase
-    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
     
     // 2. Variables del Servidor (Protegidas para evitar errores de sintaxis JS)
     const categoriasDelEvento = JSON.parse('<%- JSON.stringify(arrayCategorias || []) %>');
@@ -169,7 +211,7 @@
         if (modalEl) myModal = new bootstrap.Modal(modalEl);
     });
 
-function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso, cedula) {
+async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso, cedula) {
         // TRADUCCIÓN DE LA LÓGICA VBA [Páginas 22-26]
         if (!nombre) return alert("Falta Nombre");
         if (!sexo) return alert("Falta Sexo");
@@ -190,6 +232,25 @@ function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso, cedul
         document.getElementById('signNombre').innerText = nombre;
         document.getElementById('signCedula').innerText = cedula || 'Sin especificar';
         document.getElementById('checkDescargo').checked = false; // Reset del checkbox para cada atleta
+
+        // Reset y Verificación de Música Existente
+        const player = document.getElementById('playerAudio');
+        const audio = document.getElementById('audioElement');
+        player.classList.add('d-none');
+        audio.src = '';
+        document.getElementById('fileMusica').value = '';
+
+        const { data: compData } = await _supabase
+            .from('competidores')
+            .select('musica_url')
+            .eq('atleta_id', id)
+            .eq('id_evento', "<%= eventoActual.id %>")
+            .limit(1);
+
+        if (compData && compData.length > 0 && compData[0].musica_url) {
+            audio.src = compData[0].musica_url;
+            player.classList.remove('d-none');
+        }
         
         // Inyectamos el costo desde el evento actual
         document.getElementById('detallePrecios').innerText = 
@@ -224,7 +285,7 @@ function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso, cedul
                                value="${rel.id}" id="check-${rel.id}" onchange="validarAfinidad(this)">
                         <label class="form-check-label w-100" for="check-${rel.id}">
                             <span class="fw-bold d-block">${rel.categorias?.nombre || 'S/N'}</span>
-                            <span class="small text-muted">${rel.categorias?.modalidad || ''} | ${rel.categorias?.division || ''}</span>
+                            <span class="small text-muted">${rel.categorias?.disciplina || ''} | ${rel.categorias?.modalidad || ''} | ${rel.categorias?.division || ''}</span>
                         </label>
                     </div>
                 </div>`;
@@ -504,6 +565,89 @@ function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso, cedul
         else location.reload();
     }
 
+    async function subirMusicaAsistida() {
+        const atletaId = document.getElementById('atletaIdIns').value;
+        const file = document.getElementById('fileMusica').files[0];
+        const idEvento = "<%= eventoActual?.id %>";
+        
+        if(!file) return alert("Elija un archivo de audio.");
+        
+        const btn = document.getElementById('btnSubirMusica');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        const filePath = `${atletaId}/pose_${Date.now()}.mp3`;
+        
+        try {
+            const { data, error } = await _supabase.storage
+                .from('musica_atletas')
+                .upload(filePath, file, { upsert: true });
+
+            if(error) throw error;
+
+            const { data: { publicUrl } } = _supabase.storage.from('musica_atletas').getPublicUrl(filePath);
+            
+            await _supabase.from('competidores')
+                .update({ musica_url: publicUrl })
+                .eq('atleta_id', atletaId)
+                .eq('id_evento', idEvento);
+                
+            alert("Música vinculada al dorsal correctamente.");
+            
+            const player = document.getElementById('playerAudio');
+            const audio = document.getElementById('audioElement');
+            audio.src = publicUrl;
+            player.classList.remove('d-none');
+        } catch (err) {
+            alert("Error al procesar audio: " + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-upload"></i> Cargar';
+        }
+    }
+
+    // --- Lógica de Búsqueda y QR ---
+    const listaAtletasGlobal = <%- JSON.stringify(arrayAtletas || []) %>;
+
+    function filtrarTablaAtletas() {
+        const input = document.getElementById('busquedaAtleta').value;
+        // Usamos la API de DataTables para filtrar la tabla existente
+        $('#mydatatable').DataTable().search(input).draw();
+    }
+
+    async function iniciarEscaneoCamara() {
+        const readerDiv = document.getElementById('reader');
+        readerDiv.style.display = 'block';
+        const html5QrCode = new Html5Qrcode("reader");
+        
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            { fps: 10, qrbox: 250 },
+            (decodedText) => {
+                // El QR del ticket lleva la URL completa o solo el ID.
+                // Extraemos el ID del atleta (última parte de la URL o el texto directo)
+                const atletaId = decodedText.split('/').pop();
+                
+                if(atletaId) {
+                    html5QrCode.stop().then(() => {
+                        readerDiv.style.display = 'none';
+                        seleccionarAtleta(atletaId);
+                    });
+                }
+            }
+        ).catch(err => alert("Error de cámara: " + err));
+    }
+
+    function seleccionarAtleta(id) {
+        // Buscamos el atleta en la lista cargada para abrir su modal
+        const atl = listaAtletasGlobal.find(a => a.id === id);
+        if(atl) {
+            abrirModalInscripcion(atl.id, atl.nombre, atl.sexo, atl.fecha_nacimiento, atl.estatura, atl.peso, atl.cedula);
+        } else {
+            alert("Atleta no encontrado en el listado de atletas habilitados.");
+        }
+    }
+
     $(document).ready(function () {
         $('#mydatatable').DataTable({
             "dom": 'Bfrtip',
@@ -512,5 +656,6 @@ function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso, cedul
         });
     });
 </script>
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <%- include("../template/footer") %>

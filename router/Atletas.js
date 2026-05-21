@@ -12,6 +12,7 @@ router.get('/perfil', atletasController.verPerfilPropio);
 router.post('/perfil/actualizar-team', atletasController.actualizarTeamPropio);
 router.post('/perfil/subir-foto', upload.single('imagen'), atletasController.subirPublicacion);
 router.post('/perfil/comentar', atletasController.comentarPublicacion);
+router.get('/mi-comprobante/:idEvento', checkRole(['atleta', 'admin']), atletasController.verComprobanteInscripcion);
 
 // Rutas Administrativas (Protegidas por Rol)
 router.get('/', checkRole(['juez', 'admin']), atletasController.listarAtletas);

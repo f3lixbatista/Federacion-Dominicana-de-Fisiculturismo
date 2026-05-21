@@ -1,0 +1,92 @@
+<%- include("../template/cabecera", {tituloWeb: "LED Wall - FDFF Live"}) %>
+
+<style>
+    body { background: transparent; overflow: hidden; } /* Para usar como croma en OBS/Vmix */
+    
+    .escenario-virtual {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: radial-gradient(circle, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
+    }
+
+    /* Foto Atlética con Efecto de Fuego/Humo */
+    .foto-atletica-container {
+        position: relative;
+        height: 80vh;
+        filter: drop-shadow(0 0 20px rgba(255, 69, 0, 0.6));
+        animation: pulsoFuego 2s infinite alternate;
+    }
+
+    .foto-atletica {
+        height: 100%;
+        object-fit: contain;
+    }
+
+    /* CINTA INFORMATIVA (Lower Third) */
+    .cinta-atleta {
+        position: absolute;
+        bottom: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80%;
+        background: linear-gradient(90deg, rgba(0,45,114,0.9) 0%, rgba(206,17,38,0.9) 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        border-left: 10px solid #f1c40f;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: entradaCinta 1s ease-out;
+    }
+
+    @keyframes pulsoFuego {
+        from { filter: drop-shadow(0 0 20px rgba(255, 69, 0, 0.5)); }
+        to { filter: drop-shadow(0 0 50px rgba(255, 140, 0, 0.8)); transform: scale(1.02); }
+    }
+
+    @keyframes entradaCinta {
+        from { transform: translate(-50%, 100px); opacity: 0; }
+        to { transform: translate(-50%, 0); opacity: 1; }
+    }
+</style>
+
+<div class="escenario-virtual">
+    <!-- El Video Director controla qué atleta se muestra vía Realtime -->
+    <div class="foto-atletica-container">
+        <img src="<%= atleta.foto_atletica_url || '/img/placeholder_poses.png' %>" class="foto-atletica">
+    </div>
+
+    <div class="cinta-atleta">
+        <div class="info-primaria">
+            <h1 class="fw-bold mb-0 text-uppercase"><%= atleta.nombre %></h1>
+            <h4 class="mb-0 opacity-75"><%= atleta.provincia %> | <%= atleta.preparador %></h4>
+        </div>
+        <div class="info-tecnica text-end">
+            <div class="badge bg-warning text-dark fs-4 mb-2">DORSAL: <%= atleta.dorsal %></div>
+            <div class="small fw-bold">
+                <%= atleta.peso %> KG | <%= atleta.estatura %> CM | <%= atleta.edad %> AÑOS
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script para Voz Artificial (Text-to-Speech) -->
+<script>
+    function anunciarAtleta() {
+        const mensaje = new SpeechSynthesisUtterance("Atleta número <%= atleta.dorsal %>, <%= atleta.nombre %>, del equipo <%= atleta.preparador %>");
+        mensaje.lang = 'es-ES';
+        mensaje.rate = 0.9;
+        window.speechSynthesis.speak(mensaje);
+    }
+    
+    // Se dispara automáticamente al cargar si el VMD lo activa
+    window.onload = anunciarAtleta;
+</script>
+
+<%- include("../template/footer") %>

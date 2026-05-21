@@ -1,4 +1,5 @@
 const { supabase, supabaseAdmin } = require('../supabaseClient');
+const QRCode = require('qrcode');
 
 const listarEventos = async (req, res) => {
     try {
@@ -27,6 +28,14 @@ const prepararEventoPage = async (req, res) => {
         if (eventoError || !evento) {
             throw eventoError || new Error('Evento no encontrado');
         }
+
+        // Traer jueces habilitados para el panel
+        const { data: jueces, error: errJueces } = await supabaseAdmin
+            .from('profiles')
+            .select('id, nombre')
+            .eq('role', 'juez');
+
+        if (errJueces) throw errJueces;
 
         const { data: relaciones, error: errRel } = await supabaseAdmin
             .from('eventos_categorias')
@@ -102,7 +111,8 @@ const prepararEventoPage = async (req, res) => {
         res.render('eventos/preparacion', {
             eventoId,
             arrayCategorias,
-            evento
+            evento,
+            juecesDisponibles: jueces || []
         });
     } catch (error) {
         console.error('Error en preparación de evento:', error.message || error);
@@ -476,6 +486,176 @@ const verBackstage = async (req, res) => {
     }
 };
 
+const verCentroMando = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data: evento, error: errEv } = await supabaseAdmin
+            .from('eventos')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (errEv || !evento) return res.redirect('/eventos');
+
+        // Buscamos quién es el presidente asignado en el panel
+        const { data: presidente } = await supabaseAdmin
+            .from('panel_sillas_jueces')
+            .select('profiles(nombre)')
+            .eq('id_evento', id)
+            .eq('es_presidente', true)
+            .limit(1)
+            .single();
+
+        res.render('eventos/centro_mando', { 
+            evento, 
+            presidente: presidente?.profiles?.nombre || 'No asignado' 
+        });
+    } catch (error) {
+        res.redirect('/eventos');
+    }
+};
+
+const verCertificadoOficial = async (req, res) => {
+    const { idAtleta, idEvento } = req.params;
+    try {
+        const { data: comp, error } = await supabaseAdmin
+            .from('competidores')
+            .select(`
+                id,
+                posicion_final,
+                eventos ( id, nombre, lugar, fecha_inicio ),
+                eventos_categorias ( categorias ( nombre ) ),
+                atletas ( id, nombre )
+            `)
+            .eq('atleta_id', idAtleta)
+            .eq('id_evento', idEvento)
+            .single();
+
+        if (error || !comp) return res.status(404).send('Certificado no disponible aún. El evento debe estar oficializado.');
+
+        // Generar QR de validación (URL pública para verificar el logro)
+        const validUrl = `${req.protocol}://${req.get('host')}/eventos/validar-logro/${comp.id}`;
+        const qrValidacion = await QRCode.toDataURL(validUrl, { margin: 1, color: { dark: '#002d72' } });
+
+        res.render('reportes/certificado', {
+            atleta: comp.atletas,
+            evento: comp.eventos,
+            posicion: comp.posicion_final ? `${comp.posicion_final}° Lugar` : 'Participante',
+            categoria: comp.eventos_categorias?.categorias?.nombre || 'N/A',
+            qrValidacion
+        });
+    } catch (error) {
+        console.error('🔥 Error al generar certificado:', error.message);
+        res.status(500).send('Error interno al procesar el certificado.');
+    }
+};
+
+const validarLogroPublico = async (req, res) => {
+    const { idCompetidor } = req.params;
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('competidores')
+            .select(`
+                id,
+                numero_atleta,
+                posicion_final,
+                eventos ( nombre, lugar, fecha_inicio ),
+                eventos_categorias ( categorias ( nombre, modalidad ) ),
+                atletas ( nombre )
+            `)
+            .eq('id', idCompetidor)
+            .single();
+
+        if (error || !data) throw new Error("Registro de logro no encontrado.");
+
+        res.render('eventos/validar_logro', { 
+            logro: data,
+            fecha: new Date().toLocaleDateString('es-DO')
+        });
+    } catch (error) {
+        console.error('Error validando logro:', error.message);
+        res.status(404).send("<h3>Error de Validación</h3><p>El certificado o logro no pudo ser validado en los registros oficiales de la FDFF.</p>");
+    }
+};
+
+const verHistorico = async (req, res) => {
+    try {
+        const { data: eventosPasados, error } = await supabase
+            .from('eventos')
+            .select('*')
+            .eq('estado', 'finalizado')
+            .order('fecha_inicio', { ascending: false });
+
+        if (error) throw error;
+        res.render('eventos/historico_lista', { eventos: eventosPasados || [] });
+    } catch (error) {
+        console.error('🔥 Error en histórico:', error.message);
+        res.redirect('/eventos/competencias');
+    }
+};
+
+const verResultadosPublicos = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data: evento, error: errEv } = await supabaseAdmin.from('eventos').select('*').eq('id', id).single();
+        if (errEv || !evento) return res.redirect('/eventos');
+
+        const { data: relaciones } = await supabaseAdmin
+            .from('eventos_categorias')
+            .select(`
+                id,
+                categorias ( nombre ),
+                competidores ( numero_atleta, posicion_final, atletas ( nombre, gimnasio ) )
+            `)
+            .eq('evento_id', id)
+            .order('orden_secuencia_categoria', { ascending: true });
+
+        const categorias = (relaciones || []).map(rel => ({
+            nombre_categoria: rel.categorias?.nombre,
+            atletas: (rel.competidores || [])
+                .filter(c => c.posicion_final)
+                .sort((a, b) => a.posicion_final - b.posicion_final)
+                .map(a => ({
+                    posicion: a.posicion_final,
+                    nombre: a.atletas?.nombre,
+                    dorsal: a.numero_atleta,
+                    team: a.atletas?.gimnasio || 'Independiente'
+                }))
+        }));
+
+        // Lógica de Ranking de Equipos (basada en verReporteOficial)
+        const { data: participaciones } = await supabaseAdmin
+            .from('competidores')
+            .select('posicion_final, es_ganador_absoluto, atletas(preparadores(nombre_completo))')
+            .eq('id_evento', id)
+            .not('posicion_final', 'is', null);
+
+        const puntosMap = { 1: 7, 2: 5, 3: 4, 4: 3, 5: 2, 6: 1 };
+        const teamsRankingRaw = {};
+
+        (participaciones || []).forEach(p => {
+            const teamName = p.atletas?.preparadores?.nombre_completo || 'Independientes';
+            if (!teamsRankingRaw[teamName]) teamsRankingRaw[teamName] = 0;
+            
+            if (puntosMap[p.posicion_final]) teamsRankingRaw[teamName] += puntosMap[p.posicion_final];
+            if (p.es_ganador_absoluto) teamsRankingRaw[teamName] += 11;
+        });
+
+        const rankingTeams = Object.entries(teamsRankingRaw)
+            .map(([nombre, puntos]) => ({ nombre, puntos }))
+            .sort((a, b) => b.puntos - a.puntos);
+
+        res.render('eventos/resultados_publicos', { 
+            evento, 
+            categorias, 
+            rankingTeams 
+        });
+    } catch (error) {
+        console.error('🔥 Error en resultados públicos:', error.message);
+        res.redirect('/eventos/historico');
+    }
+};
+
 module.exports = {
     listarEventos,
     prepararEventoPage,
@@ -487,5 +667,10 @@ module.exports = {
     verReporteOficial,
     verDashboardEvento,
     verDiplomaAtleta,
-    verBackstage
+    verBackstage,
+    verCentroMando,
+    verCertificadoOficial,
+    validarLogroPublico,
+    verHistorico,
+    verResultadosPublicos
 };

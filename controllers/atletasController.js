@@ -1,4 +1,5 @@
 const { supabase, supabaseAdmin } = require('../supabaseClient');
+const QRCode = require('qrcode');
 
 const listarAtletas = async (req, res) => {
     try {
@@ -63,7 +64,7 @@ const crearAtleta = async (req, res) => {
 
         const { error: errorProfile } = await supabase
             .from('profiles')
-            .insert([{ id: newUserId, nombre, role: 'atleta', cedula, email }]);
+            .insert([{ id: newUserId, nombre, role: 'atleta', cedula, email, id_fdff: idfdff }]);
 
         if (errorProfile) throw new Error('Error en Profile: ' + errorProfile.message);
 
@@ -307,6 +308,119 @@ const comentarPublicacion = async (req, res) => {
     }
 };
 
+const verComprobanteInscripcion = async (req, res) => {
+    const { idEvento } = req.params;
+    const atletaId = res.locals.user?.id;
+
+    if (!atletaId) return res.redirect('/login');
+
+    try {
+        // 1. Buscamos datos del atleta, su estatus de afiliación y su preparador
+        const { data: atleta } = await supabase
+            .from('atletas')
+            .select('*, preparadores(nombre_completo)')
+            .eq('id', atletaId)
+            .single();
+
+        // 2. Buscamos las categorías donde se inscribió en ESTE evento
+        const { data: inscripciones } = await supabase
+            .from('competidores')
+            .select('eventos_categorias(categorias(nombre)), id_evento, estatus_pesaje')
+            .eq('atleta_id', atletaId)
+            .eq('id_evento', idEvento);
+
+        // 3. Info del evento para sacar los precios
+        const { data: evento } = await supabase
+            .from('eventos').select('*').eq('id', idEvento).single();
+
+        if (!evento) throw new Error("Evento no encontrado.");
+
+        // 4. Cálculo de Monto (Lógica FDFF: 1ra cat + adicionales)
+        const cant = (inscripciones || []).length;
+        const totalPagado = cant > 0 ? (evento.costo_primera_cat + (cant - 1) * (evento.costo_adicional || 0)) : 0;
+
+        // 5. Generar Código QR para validación instantánea en Mesa Técnica
+        // Apuntamos a la ruta de detalle de inscripción que ya tienes definida
+        const qrUrl = `${req.protocol}://${req.get('host')}/inscripcion/${atletaId}`;
+        const qrCodeData = await QRCode.toDataURL(qrUrl, { errorCorrectionLevel: 'H', margin: 1 });
+
+        res.render('atleta_vistas/comprobante_pdf', {
+            atleta: atleta || {},
+            inscripciones: inscripciones || [],
+            evento,
+            totalPagado,
+            qrCodeData,
+            fecha: new Date().toLocaleDateString('es-DO')
+        });
+    } catch (e) {
+        console.error("🔥 Error al generar comprobante:", e.message);
+        res.redirect('/atletas/perfil');
+    }
+};
+
+const verUploadFotografo = async (req, res) => {
+    try {
+        // Traemos eventos activos o finalizados recientemente para el selector del fotógrafo
+        const { data: eventos, error } = await supabase
+            .from('eventos')
+            .select('id, nombre')
+            .order('fecha_inicio', { ascending: false });
+
+        if (error) throw error;
+        res.render('fotografo/upload', { eventosActivos: eventos || [] });
+    } catch (error) {
+        console.error('🔥 Error panel fotógrafo:', error.message);
+        res.redirect('/eventos/competencias');
+    }
+};
+
+const verEntradaAtleta = async (req, res) => {
+    const { idEvento, idAtleta } = req.params;
+    try {
+        // Usamos supabaseAdmin para garantizar que la pantalla LED siempre tenga acceso a los datos
+        const { data: competidor, error } = await supabaseAdmin
+            .from('competidores')
+            .select(`
+                numero_atleta,
+                foto_atletica_url,
+                atletas (
+                    nombre,
+                    provincia,
+                    preparador,
+                    peso,
+                    estatura,
+                    fecha_nacimiento
+                )
+            `)
+            .eq('id_evento', idEvento)
+            .eq('atleta_id', idAtleta)
+            .single();
+
+        if (error || !competidor) throw error || new Error('Registro de competidor no encontrado');
+
+        const atl = competidor.atletas;
+        if (!atl) throw new Error('El competidor no tiene un perfil de atleta vinculado.');
+
+        const edad = atl.fecha_nacimiento ? new Date().getFullYear() - new Date(atl.fecha_nacimiento).getFullYear() : '--';
+
+        res.render('eventos/broadcast/entrada_atleta', {
+            atleta: {
+                nombre: atl.nombre,
+                provincia: atl.provincia || 'N/A',
+                preparador: atl.preparador || 'Independiente',
+                dorsal: competidor.numero_atleta || '00',
+                peso: atl.peso || '--',
+                estatura: atl.estatura || '--',
+                edad: edad,
+                foto_atletica_url: competidor.foto_atletica_url
+            }
+        });
+    } catch (error) {
+        console.error('🔥 Error en pantalla LED:', error.message);
+        res.status(500).send('Error al cargar la pantalla LED');
+    }
+};
+
 module.exports = {
     listarAtletas,
     mostrarFormularioCrear,
@@ -317,5 +431,8 @@ module.exports = {
     verPerfilPropio,
     actualizarTeamPropio,
     subirPublicacion,
-    comentarPublicacion
+    comentarPublicacion,
+    verComprobanteInscripcion,
+    verUploadFotografo,
+    verEntradaAtleta
 };

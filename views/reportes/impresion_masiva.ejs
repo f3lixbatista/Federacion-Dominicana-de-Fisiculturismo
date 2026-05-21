@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Impresión Masiva de Certificados FDFF</title>
+    <style>
+        @media print {
+            .no-print { display: none; }
+            .page-break { page-break-after: always; }
+        }
+        body { margin: 0; padding: 0; background-color: #f4f4f4; }
+        .certificado-wrapper { background: #fff; padding: 0; margin: 0; }
+        .certificado-container {
+            width: 1100px; height: 750px; padding: 50px;
+            border: 20px solid #002d72; background: #fff;
+            position: relative; margin: 20px auto; font-family: 'Georgia', serif;
+            box-sizing: border-box;
+        }
+        .marco-interno { border: 5px solid #ce1126; height: 100%; padding: 40px; text-align: center; box-sizing: border-box; }
+        .nombre-atleta { font-size: 60px; color: #002d72; border-bottom: 2px solid #333; margin: 20px 0; font-weight: bold; }
+        .firmas { margin-top: 50px; display: flex; justify-content: space-around; }
+        .linea-firma { width: 250px; border-top: 2px solid #000; padding-top: 10px; }
+        .qr-section { position: absolute; bottom: 40px; right: 80px; text-align: right; }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align: center; padding: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; font-weight: bold; background: #002d72; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            IMPRIMIR TODOS LOS CERTIFICADOS
+        </button>
+    </div>
+
+    <div class="certificado-wrapper">
+        <% resultados.forEach((res, index) => { %>
+            <div class="certificado-container <%= index < resultados.length - 1 ? 'page-break' : '' %>">
+                <div class="marco-interno">
+                    <img src="/img/fdff3.jpg" style="width: 120px;">
+                    <h1 style="margin-top: 10px; font-size: 28px;">FEDERACIÓN DOMINICANA DE FISICOCULTURISMO Y FITNESS</h1>
+                    <h3 style="letter-spacing: 5px; color: #ce1126;">CERTIFICADO DE PARTICIPACIÓN</h3>
+                    
+                    <p style="font-size: 20px; margin-top: 30px;">Otorga el presente reconocimiento a:</p>
+                    <div class="nombre-atleta"><%= res.atletas?.nombre %></div>
+                    
+                    <p style="font-size: 22px;">Por su destacada participación en el evento:<br><strong>"<%= res.eventos?.nombre %>"</strong></p>
+                    <p style="font-size: 20px;">Obteniendo el puesto: <strong><%= res.posicion_final ? res.posicion_final + '° Lugar' : 'Participante' %></strong> en la categoría <strong><%= res.eventos_categorias?.categorias?.nombre %></strong></p>
+
+                    <div class="firmas">
+                        <div class="linea-firma"><p>Tony Peña R.<br><small>Presidente FDFF</small></p></div>
+                        <div class="linea-firma"><p>Comité Técnico<br><small>Juez Principal</small></p></div>
+                    </div>
+
+                    <div class="qr-section">
+                        <img src="<%= res.qrCode %>" style="width: 80px;"><br>
+                        <small style="font-size: 10px;">Validar autenticidad</small>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+</body>
+</html>

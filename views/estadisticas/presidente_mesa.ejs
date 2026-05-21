@@ -1,0 +1,83 @@
+<%- include("../template/cabecera", {tituloWeb: "Presidente de Mesa - Arbitraje"}) %>
+
+<div class="container-fluid my-4 px-5">
+    <div class="card shadow-lg border-0" style="border-radius: 20px;">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+            <h4 class="mb-0 fw-bold"><i class="fas fa-gavel text-warning"></i> ARBITRAJE INTERNO: PRE-SELECCIÓN TOP 5</h4>
+            <span class="badge bg-danger animate-pulse">MONITOR EN VIVO</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered text-center align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 80px;">Dorsal</th>
+                            <th class="text-start">Nombre Atleta</th>
+                            <!-- Columnas para 7 jueces -->
+                            <% for(let i=1; i<=7; i++) { %> <th>Juez <%= i %></th> <% } %>
+                            <th class="bg-primary text-white">TOTAL X</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% competidores.forEach(comp => { 
+                            let totalX = 0;
+                        %>
+                            <tr id="fila-<%= comp.atleta_id %>">
+                                <td class="fw-bold fs-4"><%= comp.numero_atleta %></td>
+                                <td class="text-start fw-bold"><%= comp.atletas.nombre %></td>
+                                
+                                <% for(let i=1; i<=7; i++) { 
+                                    // Buscamos si este juez marcó a este atleta
+                                    const marcado = preSeleccion.find(p => p.atleta_id === comp.atleta_id && p.juez_numero === i);
+                                    if(marcado) totalX++;
+                                %>
+                                    <td class="fs-5">
+                                        <% if(marcado) { %>
+                                            <span class="text-danger fw-bold"><i class="fas fa-times"></i></span>
+                                        <% } %>
+                                    </td>
+                                <% } %>
+
+                                <td class="fw-bold fs-4 bg-light"><%= totalX %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-info mt-4">
+                <i class="fas fa-info-circle"></i> Los atletas con mayor cantidad de marcas (X) son la tendencia para el pódium. 
+                <strong>El Presidente debe dar el visto bueno para proceder a la votación de posiciones (1° al 15°).</strong>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button onclick="habilitarVotacionFinal()" class="btn btn-success btn-lg fw-bold shadow">
+                    <i class="fas fa-unlock-alt me-2"></i> HABILITAR VOTACIÓN NUMÉRICA (1° AL 5°)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+
+    async function habilitarVotacionFinal() {
+        if(!confirm("¿Desea desbloquear las boletas de los jueces para la votación final?")) return;
+        
+        // Cambiamos el estatus de la categoría en Supabase
+        const { error } = await _supabase
+            .from('eventos_categorias')
+            .update({ estatus_votacion: 'final_abierta' })
+            .eq('id', '<%= catId %>');
+
+        if(!error) {
+            alert("¡Boletas desbloqueadas! Los jueces ya pueden asignar puestos.");
+            window.location.href = "/eventos/<%= catId %>/computo";
+        } else {
+            alert("Error al habilitar votación: " + error.message);
+        }
+    }
+</script>
+<%- include("../template/footer") %>

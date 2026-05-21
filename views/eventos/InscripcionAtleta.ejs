@@ -1,9 +1,22 @@
 <%- include("../template/cabecera", {tituloWeb: "Servicios FDFF"}) %>
 
 <div class="container my-5">
+    <% if (typeof eventoId !== 'undefined' && eventoId) { %>
+        <div class="mb-4">
+            <a href="/eventos/<%= eventoId %>" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a Inscripción
+            </a>
+        </div>
+    <% } %>
+
     <h1 class="fw-bold mb-4">Inscripción a Competencias</h1>
     
     <% if (eventos.length > 0) { %>
+        <% if (locals.error) { %>
+            <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+
+        <!-- El bucle ahora solo se ejecutará una vez para el evento específico -->
         <div class="accordion" id="accordionEventos">
             <% eventos.forEach((evento, index) => { %>
                 <div class="accordion-item mb-3 shadow-sm">
@@ -24,9 +37,18 @@
                                 
                                 <% evento.eventos_categorias.forEach(rel => { %>
                                     <div class="form-check border-bottom py-2">
-                                        <input class="form-check-input" type="checkbox" name="cat_evento_id" value="<%= rel.id %>" id="cat<%= rel.id %>">
+                                        <input class="form-check-input" type="checkbox" name="cat_evento_id" 
+                                            value="<%= rel.id %>" id="cat<%= rel.id %>"
+                                            data-costo1="<%= evento.costo_primera_cat %>"
+                                            data-costo-extra="<%= evento.costo_adicional %>"
+                                            onchange="calcularTotal()"
+                                        >
                                         <label class="form-check-label" for="cat<%= rel.id %>">
-                                            <%= rel.categorias.nombre %>
+                                            <!-- Cambia la línea 42 por esta -->
+<%= rel.categorias ? rel.categorias.nombre : 'Categoría no encontrada' %> 
+— 
+<span class="text-muted small"><%= rel.categorias?.disciplina || '' %></span>
+
                                         </label>
                                     </div>
                                 <% }) %>
@@ -50,7 +72,7 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
 
     document.querySelectorAll('.formInscripcion').forEach(form => {
         form.addEventListener('submit', async (e) => {
@@ -66,10 +88,12 @@
             const inscripciones = catEventoIds.map(id => ({
                 atleta_id: user.id,
                 evento_cat_id: id,
-                estatus_pesaje: 'pendiente'
+                id_evento: formData.get('evento_id'),
+                estatus_pesaje: 'pendiente',
+                salida: 0
             }));
 
-            const { error } = await _supabase.from('inscripciones').insert(inscripciones);
+            const { error } = await _supabase.from('competidores').insert(inscripciones);
 
             if (error) {
                 alert("Error: " + error.message);
@@ -87,17 +111,18 @@ function calcularTotal() {
     if (seleccionadas.length === 0) {
         totalAPagar = 0;
     } else {
-        // Tomamos el costo de la primera y sumamos las adicionales
-        // Nota: Los costos deben venir embebidos en el checkbox o un data-attribute
-        let costo1ra = parseFloat(seleccionadas[0].dataset.costo1);
-        let costoExtra = 0;
-        
-        for (let i = 1; i < seleccionadas.length; i++) {
-            costoExtra += parseFloat(seleccionadas[i].dataset.costoExtra);
+        // La lógica correcta es: 1ra categoría + (cantidad de categorías - 1) * costo adicional
+        const numCategoriasSeleccionadas = seleccionadas.length;
+        const costoPrimeraCat = parseFloat(seleccionadas[0].dataset.costo1);
+        const costoAdicional = parseFloat(seleccionadas[0].dataset.costoExtra);
+
+        if (numCategoriasSeleccionadas > 0) {
+            totalAPagar = costoPrimeraCat + (numCategoriasSeleccionadas - 1) * costoAdicional;
+        } else {
+            totalAPagar = 0;
         }
-        totalAPagar = costo1ra + costoExtra;
     }
-    document.getElementById('displayTotal').innerText = `Total Estimado: RD$ ${totalAPagar}`;
+    document.getElementById('displayTotal').innerText = totalAPagar.toLocaleString('es-DO');
 }
 
     </script>

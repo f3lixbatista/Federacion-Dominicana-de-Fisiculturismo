@@ -39,6 +39,39 @@
             </div>
         </div>
 
+        <!-- Vista de Configuración: "El Armado del Panel" -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white fw-bold">
+                <i class="fas fa-th me-2"></i> Configuración de Panel de Jueces
+            </div>
+            <div class="card-body">
+                <div class="row text-center mb-4">
+                    <!-- SILLAS DEL PANEL -->
+                    <% for(let i=1; i<=7; i++) { %>
+                        <div class="col">
+                            <div class="p-3 border rounded bg-light">
+                                <label class="small fw-bold">SILLA <%= i %></label>
+                                <select class="form-select select-juez" data-silla="<%= i %>">
+                                    <option value="">-- Vacío --</option>
+                                    <% juecesDisponibles.forEach(juez => { %>
+                                        <option value="<%= juez.id %>"><%= juez.nombre %></option>
+                                    <% }) %>
+                                </select>
+                                <div class="form-check form-switch mt-2 d-flex justify-content-center">
+                                    <input class="form-check-input check-presidente" type="radio" 
+                                           name="radioPresidente" id="presi<%= i %>" data-silla="<%= i %>">
+                                    <label class="form-check-label ms-2 small" for="presi<%= i %>">Presidente</label>
+                                </div>
+                            </div>
+                        </div>
+                    <% } %>
+                </div>
+                <button type="button" onclick="guardarPanel()" class="btn btn-primary fw-bold w-100">
+                    <i class="fas fa-save me-2"></i> OFICIALIZAR PANEL Y POSICIONES
+                </button>
+            </div>
+        </div>
+
         <% arrayCategorias.forEach((catRel, index) => { %>
             <div class="card mb-4 shadow-sm border-2 cat-container-box" id="card-<%= catRel.id %>"
                  data-modalidad="<%= catRel.categorias.modalidad %>"
@@ -137,7 +170,10 @@
     </div>
 </div>
 
+<script src="/js/supabase.js"></script>
 <script>
+    window._supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+
     // Guardamos en memoria el estado real de fusiones ejecutadas en la interfaz
     let mapaFusiones = {}; 
     const modalFusionObj = new bootstrap.Modal(document.getElementById('modalFusion'));
@@ -261,6 +297,36 @@
 
         contenedor.appendChild(item);
         contenedor.scrollTop = contenedor.scrollHeight;
+    }
+
+    async function guardarPanel() {
+        const filas = [];
+        const idEvento = "<%= evento.id %>";
+        
+        document.querySelectorAll('.select-juez').forEach(select => {
+            const silla = select.dataset.silla;
+            const juezId = select.value;
+            const esPresidente = document.getElementById(`presi${silla}`).checked;
+
+            if (juezId) {
+                filas.push({
+                    id_evento: idEvento,
+                    juez_id: juezId,
+                    numero_silla: parseInt(silla),
+                    es_presidente: esPresidente,
+                    panel_numero: 1 // Si manejas más de un panel, esto sería dinámico
+                });
+            }
+        });
+
+        // Guardamos en bloque en Supabase
+        const { error } = await _supabase.from('panel_sillas_jueces').insert(filas);
+        
+        if(!error) {
+            alert("Panel de Jueces configurado con éxito.");
+        } else {
+            alert("Error al configurar el panel: " + error.message);
+        }
     }
 </script>
 

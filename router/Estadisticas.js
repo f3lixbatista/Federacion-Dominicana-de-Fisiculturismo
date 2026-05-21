@@ -30,4 +30,13 @@ router.post('/oficializar-absoluto', checkRole(['admin', 'estadistico']), estadi
 // 9. GENERAR BOLETAS DE VOTACIÓN MASIVAS (PARA IMPRESIÓN FÍSICA)
 router.get('/:idEvento/imprimir-boletas', checkRole(['admin', 'estadistico']), estadisticasController.imprimirBoletas);
 
+// 10. PANEL DEL PRESIDENTE DE MESA (PRE-SELECCIÓN TOP 5)
+router.get('/presidente-mesa/:eventoCatId', checkRole(['admin', 'estadistico']), estadisticasController.verPresidenteMesa);
+
+// 11. IMPRESIÓN MASIVA DE CERTIFICADOS
+router.get('/imprimir-certificados/:eventoId', checkRole(['admin', 'ejecutivo', 'estadistico']), estadisticasController.imprimirCertificadosMasivos);
+
+// 12. PREVISUALIZACIÓN DE CERTIFICADO PARA EL STAFF
+router.get('/certificado-preview/:idCompetidor', checkRole(['admin', 'ejecutivo', 'estadistico']), estadisticasController.verCertificadoPreview);
+
 module.exports = router;

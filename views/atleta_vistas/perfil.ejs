@@ -5,11 +5,22 @@
         <!-- COLUMNA IZQUIERDA: CARNET DIGITAL Y AFILIACIÓN -->
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm text-center p-4 bg-white mb-4" style="border-radius: 15px;">
-                <div class="mx-auto bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                    <i class="fas fa-user-run display-6"></i>
+                <div class="mx-auto mb-3 shadow-sm" style="width: 100px; height: 125px; overflow: hidden; border-radius: 10px; border: 3px solid #f8f9fa;">
+                    <% if (atleta.foto_url) { %>
+                        <img src="<%= atleta.foto_url %>" class="w-100 h-100" style="object-fit: cover;" alt="Foto Carnet">
+                    <% } else { %>
+                        <div class="bg-primary text-white w-100 h-100 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-user-tie display-4"></i>
+                        </div>
+                    <% } %>
                 </div>
                 <h4 class="fw-bold mb-1"><%= atleta.nombre || user.nombre %></h4>
                 <p class="text-muted small mb-3"><%= user.email %></p>
+                
+                <!-- En lugar de buscar un ID en la tabla atletas, usamos el del perfil -->
+                <p class="small mb-2 text-warning fw-bold">
+                    ID OFICIAL: <%= user.idfdff %>
+                </p>
                 
                 <!-- ESTADO DE AFILIACIÓN -->
                 <div class="p-2 rounded mb-3 <%= atleta.estatus_afiliacion === 'habilitado' ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger' %>">
@@ -25,6 +36,22 @@
                     <p class="mb-1"><strong>Sexo:</strong> <%= atleta.sexo || '--' %></p>
                     <p class="mb-0"><strong>Última Renovación:</strong> <%= atleta.fecha_ultima_renovacion || 'No registrada' %></p>
                 </div>
+            </div>
+
+            <!-- FORMULARIO CARGA FOTO CARNET -->
+            <div class="card border-0 shadow-sm p-3 mt-3 bg-light" style="border-radius: 15px;">
+                <label class="form-label small fw-bold text-dark text-uppercase">
+                    <i class="fas fa-id-badge me-1"></i> Actualizar Foto Oficial
+                </label>
+                <div class="input-group input-group-sm">
+                    <input type="file" id="inputFotoCarnet" class="form-control" accept="image/*">
+                    <button class="btn btn-primary fw-bold" type="button" id="btnSubirFoto" onclick="actualizarFotoCarnet()">
+                        SUBIR
+                    </button>
+                </div>
+                <p class="text-muted mt-1 mb-0" style="font-size: 0.65rem;">
+                    * Se recomienda fondo liso. Al subir una nueva, se borrará la anterior.
+                </p>
             </div>
 
             <!-- GESTIÓN DE PREPARADOR / TEAM -->
@@ -85,6 +112,10 @@
                                                        target="_blank" class="btn btn-outline-danger btn-sm mt-1" style="font-size: 0.7rem;">
                                                         <i class="fas fa-certificate"></i> DIPLOMA
                                                     </a>
+                                                    <a href="/eventos/atleta/<%= atleta.id %>/evento/<%= row.eventos.id %>/certificado-oficial" 
+                                                       target="_blank" class="btn btn-outline-primary btn-sm mt-1" style="font-size: 0.7rem;">
+                                                        <i class="fas fa-file-contract"></i> CERTIFICADO
+                                                    </a>
                                                 </div>
                                             <% } else { %>
                                                 <span class="text-muted font-monospace" style="font-size:0.8rem;">En progreso...</span>
@@ -111,6 +142,20 @@
                     <i class="fas fa-camera-retro text-primary"></i> Mi Galería y Muro
                 </h3>
                 
+                <!-- Formulario de Subida (Integrado de perfil.ejs) -->
+                <div class="bg-light p-3 rounded mb-4">
+                    <form action="/atletas/perfil/subir-foto" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Subir nueva foto al muro</label>
+                            <input type="file" name="imagen" class="form-control form-control-sm" accept="image/*" required>
+                        </div>
+                        <div class="mb-3">
+                            <textarea name="descripcion" class="form-control form-control-sm" placeholder="¿Qué estás entrenando hoy?" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm fw-bold">PUBLICAR</button>
+                    </form>
+                </div>
+
                 <!-- Feed de Publicaciones -->
                 <div class="row g-3">
                     <% if (publicaciones && publicaciones.length > 0) { %>
@@ -157,7 +202,68 @@
 
 <script src="/js/supabase.js"></script>
 <script>
+    const userId = "<%= user.id %>";
     window._supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+
+    async function actualizarFotoCarnet() {
+        const input = document.getElementById('inputFotoCarnet');
+        if (input.files.length === 0) return alert("Selecciona una foto primero.");
+
+        const file = input.files[0];
+        const btn = document.getElementById('btnSubirFoto');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+        try {
+            // 1. Compresión y redimensionamiento (400x500px)
+            const optimizedBlob = await optimizarParaCarnet(file, 400, 500);
+            const filePath = `${userId}/perfil_oficial.jpg`;
+
+            // 2. Subida al Storage (bucket: fotos_perfil)
+            const { error: uploadError } = await _supabase.storage
+                .from('fotos_perfil')
+                .upload(filePath, optimizedBlob, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            // 3. Obtener URL y actualizar base de datos
+            const { data: { publicUrl } } = _supabase.storage.from('fotos_perfil').getPublicUrl(filePath);
+            const urlFinal = `${publicUrl}?t=${Date.now()}`;
+
+            const { error: dbError } = await _supabase.from('atletas')
+                .update({ foto_url: urlFinal })
+                .eq('id', userId);
+
+            if (dbError) throw dbError;
+
+            alert("¡Foto de Carnet Oficial actualizada con éxito!");
+            location.reload();
+        } catch (err) {
+            alert("Error: " + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'SUBIR';
+        }
+    }
+
+    function optimizarParaCarnet(file, maxWidth, maxHeight) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = maxWidth;
+                    canvas.height = maxHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, maxWidth, maxHeight);
+                    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8);
+                };
+            };
+        });
+    }
 
     async function modificarTeamAtleta() {
         const prepId = document.getElementById('selectPrepPerfil').value;
@@ -176,6 +282,24 @@
             }
         } catch (e) {
             alert("Error de red al actualizar el team.");
+        }
+    }
+
+    async function enviarComentario(postId) {
+        const input = document.querySelector(`.input-comentario-${postId}`);
+        const comentario = input.value;
+        if (!comentario) return;
+
+        try {
+            const res = await fetch('/atletas/perfil/comentar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ publicacion_id: postId, comentario })
+            });
+            const data = await res.json();
+            if (data.estado) window.location.reload();
+        } catch (e) {
+            alert("Error al enviar el comentario.");
         }
     }
 </script>

@@ -1,0 +1,35 @@
+<%- include("../template/cabecera", {tituloWeb: "Historial de Resultados FDFF"}) %>
+
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold display-4 text-dark"><i class="fas fa-archive text-primary"></i> Salón de la Fama</h1>
+        <p class="text-muted">Resultados oficiales y estadísticas de eventos anteriores</p>
+    </div>
+
+    <div class="row g-4">
+        <% eventos.forEach(ev => { %>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm" style="border-radius: 20px;">
+                    <div class="card-body p-4">
+                        <div class="badge bg-secondary mb-2">Finalizado: <%= new Date(ev.fecha_inicio).getFullYear() %></div>
+                        <h4 class="fw-bold mb-3"><%= ev.nombre %></h4>
+                        <p class="small text-muted mb-4"><i class="fas fa-calendar-alt"></i> <%= new Date(ev.fecha_inicio).toLocaleDateString('es-DO') %></p>
+                        
+                        <div class="d-grid gap-2">
+                            <!-- Botón para ver la tabla de posiciones de ese evento -->
+                            <a href="/eventos/<%= ev.id %>/resultados-publicos" class="btn btn-primary fw-bold">
+                                <i class="fas fa-trophy me-2"></i> VER RESULTADOS
+                            </a>
+                            <!-- Botón para ver las fotos oficiales de ese evento -->
+                            <a href="/social/muro?evento=<%= ev.id %>" class="btn btn-outline-dark">
+                                <i class="fas fa-camera me-2"></i> VER GALERÍA
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+</div>
+
+<%- include("../template/footer") %>

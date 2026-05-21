@@ -25,7 +25,7 @@ const inscripcionPage = async (req, res) => {
                 .from('eventos_categorias')
                 .select(`
                     id,
-                    categorias!inner (id, nombre, modalidad, sexo, division)
+                    categorias!inner (id, nombre, modalidad, disciplina, sexo, division)
                 `)
                 .eq('evento_id', evento.id);
             arrayCategorias = cats || [];
@@ -75,28 +75,46 @@ const asignarNumeros = async (req, res) => {
 };
 
 const inscripcionAtletaPage = async (req, res) => {
-    try {
-        const { data: eventosConCategorias, error } = await supabase
+    const { evento } = req.query; // Capturamos el ID del evento desde el query param
+    try { // Buscamos el evento específico por su ID y que esté en estado 'inscripcion'
+        const { data: eventoEspecifico, error } = await supabase
             .from('eventos')
             .select(`
                 id,
                 nombre,
                 lugar,
                 fecha_inicio,
+                costo_primera_cat,
+                costo_adicional,
                 eventos_categorias (
                     id,
                     categoria_id,
                     categorias (nombre, modalidad, disciplina, division)
                 )
             `)
-            .eq('estado', 'inscripcion');
+            .eq('estado', 'inscripcion')
+            .eq('id', evento) // Filtramos por el ID del evento
+            .single(); // Esperamos un solo resultado
 
         if (error) throw error;
 
-        res.render('eventos/InscripcionAtleta', { eventos: eventosConCategorias || [] });
+        if (!eventoEspecifico) {
+            // Si Supabase no devuelve un evento (ej. no existe o no está en estado 'inscripcion')
+            console.warn(`Evento ${evento} no encontrado o no está en estado 'inscripcion'.`);
+            return res.render('eventos/InscripcionAtleta', {
+                eventos: [], // No se encontró el evento
+                eventoId: evento,
+                error: "El evento especificado no existe o no está abierto para inscripción."
+            });
+        }
+
+        res.render('eventos/InscripcionAtleta', { 
+            eventos: [eventoEspecifico], // Pasamos el evento encontrado dentro de un array para que el bucle de la vista funcione
+            eventoId: evento // Lo pasamos a la vista EJS
+        });
     } catch (error) {
         console.error('Error en InscripcionAtleta:', error.message);
-        res.render('eventos/InscripcionAtleta', { eventos: [] });
+        res.status(500).render('eventos/InscripcionAtleta', { eventos: [], eventoId: evento, error: "Ocurrió un error interno al cargar la página de inscripción." });
     }
 };
 

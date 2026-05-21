@@ -1,0 +1,73 @@
+<%- include("../template/cabecera", {tituloWeb: "Muro Social FDFF"}) %>
+
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold display-5 text-dark">📸 Muro de Atletas FDFF</h1>
+        <p class="text-muted">Galería oficial de competidores capturada por nuestro Staff</p>
+        <hr class="w-25 mx-auto border-primary border-2">
+    </div>
+
+    <!-- FEED DE PUBLICACIONES -->
+    <div class="row g-4 justify-content-center">
+        <% if (publicaciones && publicaciones.length > 0) { %>
+            <% publicaciones.forEach(pub => { %>
+                <div class="col-sm-12 col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 20px; transition: transform 0.3s;">
+                        <!-- Encabezado de la Publicación -->
+                        <div class="card-header bg-white border-0 py-3 px-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                                    <%= pub.profiles?.nombre ? pub.profiles.nombre.charAt(0) : 'A' %>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="mb-0 fw-bold text-dark"><%= pub.profiles?.nombre || 'Atleta' %></h6>
+                                    <small class="text-muted text-uppercase" style="font-size: 0.7rem;">
+                                        <i class="fas fa-map-marker-alt text-danger"></i> <%= pub.eventos?.nombre || 'Evento FDFF' %>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- La Foto Oficial -->
+                        <div class="ratio ratio-1x1">
+                            <img src="<%= pub.foto_url %>" class="card-img-top" style="object-fit: cover;" alt="Foto Atleta FDFF">
+                        </div>
+
+                        <!-- Pie de Foto y Acciones -->
+                        <div class="card-body px-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="text-danger fs-5">
+                                    <i class="far fa-heart cursor-pointer"></i>
+                                    <span class="small text-muted ms-1"><%= pub.likes || 0 %> likes</span>
+                                </div>
+                                <span class="badge bg-light text-dark border small fw-normal">#FDFF_Oficial</span>
+                            </div>
+                            
+                            <p class="card-text small text-dark mb-2">
+                                <%= pub.descripcion || "Orgullo dominicano en tarima." %>
+                            </p>
+                            
+                            <p class="text-muted mb-0" style="font-size: 0.65rem;">
+                                <i class="far fa-clock"></i> Publicado: <%= pub.fecha_publicacion ? new Date(pub.fecha_publicacion).toLocaleDateString('es-DO') : 'Recientemente' %>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="text-center py-5">
+                <i class="fas fa-images display-1 text-light mb-4"></i>
+                <h3 class="text-muted">Aún no hay fotos oficiales en el muro.</h3>
+                <p>El fotógrafo de la federación subirá contenido pronto.</p>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<style>
+    .card:hover { transform: translateY(-5px); }
+    .cursor-pointer { cursor: pointer; }
+    .aspect-square { aspect-ratio: 1 / 1; }
+</style>
+
+<%- include("../template/footer") %>
