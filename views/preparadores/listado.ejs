@@ -1,0 +1,65 @@
+<%- include("../template/cabecera", {tituloWeb: "Gestión de Preparadores"}) %>
+
+<div class="p-4 divGeneral">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold"><i class="fas fa-user-tie text-primary"></i> Panel de Preparadores / Coaches</h1>
+        <a class="btn btn-success btn-lg fw-bold shadow-sm" href="/preparadores/registrar">
+            <i class="fas fa-plus-circle me-1"></i> Registrar Nuevo Coach
+        </a>
+    </div>
+
+    <div class="table-responsive bg-white p-3 rounded shadow-sm border">
+        <table class="table table-striped table-hover align-middle border-dark" id="tablaPreparadores">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID FDFF</th>
+                    <th>Nombre del Preparador</th>
+                    <th>Cédula</th>
+                    <th>Gimnasio / Team</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Estatus</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (arrayPreparadores.length > 0) { %>
+                    <% arrayPreparadores.forEach(prep => { %>
+                        <tr>
+                            <td class="fw-bold text-primary"><%= prep.ID_Coach_FDFF %></td>
+                            <td class="fw-bold"><%= prep.nombre_completo %></td>
+                            <td><%= prep.cedula || '---' %></td>
+                            <td><%= prep.gimnasio_labora || 'Independiente' %></td>
+                            <td><%= prep.telefono || '---' %></td>
+                            <td class="small"><%= prep.email %></td>
+                            <td>
+                                <span class="badge <%= prep.estatus_afiliacion === 'habilitado' ? 'bg-success' : 'bg-danger' %>">
+                                    <%= prep.estatus_afiliacion %>
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a href="/preparadores/editar/<%= prep.id %>" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr><td colspan="8" class="text-center py-4 text-muted">No hay preparadores registrados.</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#tablaPreparadores').DataTable({
+            "dom": 'Bfrtip',
+            "language": { "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json" },
+            "buttons": ['excel', 'pdf', 'print']
+        });
+    });
+</script>
+
+<%- include("../template/footer") %>

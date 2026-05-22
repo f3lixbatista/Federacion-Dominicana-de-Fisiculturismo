@@ -3,6 +3,8 @@ const routerEventos = express.Router();
 const { checkRole } = require('../middlewares/auth');
 const eventosController = require('../controllers/eventosController');
 const atletasController = require('../controllers/atletasController');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 // A. LISTADO GLOBAL: Lo que ve todo el mundo al entrar
 routerEventos.get('/competencias', checkRole(['admin', 'estadistico', 'ejecutivo', 'preparador', 'atleta', 'juez', 'general', 'mc', 'backstage']), eventosController.listarEventos);
@@ -21,6 +23,9 @@ routerEventos.get('/:id', checkRole(['admin', 'estadistico', 'ejecutivo', 'prepa
 
 // C. CENTRO DE MANDO: Dashboard administrativo centralizado
 routerEventos.get('/:id/centro-mando', checkRole(['admin', 'estadistico', 'ejecutivo']), eventosController.verCentroMando);
+
+// RUTA PARA ACTUALIZAR DATOS Y AFICHE (Edición de Evento)
+routerEventos.post('/editar/:id', checkRole(['admin']), upload.single('banner'), eventosController.actualizarEvento);
 
 // RUTA DE BROADCAST: Pantalla LED de entrada
 routerEventos.get('/:idEvento/entrada/:idAtleta', checkRole(['admin', 'estadistico', 'mc']), atletasController.verEntradaAtleta);

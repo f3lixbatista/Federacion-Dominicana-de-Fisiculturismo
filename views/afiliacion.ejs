@@ -180,7 +180,7 @@
 <script src="/js/supabase.js"></script>
 <script>
     // 1. Inicialización de Supabase
-    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_ANON_KEY %>");
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
 
     // 2. Lógica para el SWITCH de activación (Para el Juez/Estadístico)
     async function actualizarAfiliacionDetalle(atletaId, estaActivo) {

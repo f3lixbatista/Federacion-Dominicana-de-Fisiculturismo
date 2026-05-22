@@ -3,17 +3,46 @@
 
 <!-- <script src="/js/bootstrap.min.js"></script> -->
 
-<!-- 
-<script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></!-->
-<script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/select/1.4.0/js/dataTables.select.min.js"></script>
 <script src="https://cdn.datatables.net/datetime/1.1.2/js/dataTables.dateTime.min.js"></script>
-<script src="../../extensiones/Editor/js/dataTables.editor.min.js"></script> -->
 
+<script>
+    // Suscripción Universal a Notificaciones Push
+    const userRole = "<%= locals.user ? user.role : 'invitado' %>";
+    const userId = "<%= locals.user ? user.id : '' %>";
+    const VAPID_PUBLIC_KEY = "<%= locals.VAPID_PUBLIC_KEY || '' %>";
 
-
-
-
-
+    if ('serviceWorker' in navigator && userRole !== 'invitado' && userId && VAPID_PUBLIC_KEY) {
+        window.addEventListener('load', async () => {
+            try {
+                const reg = await navigator.serviceWorker.register('/sw.js');
+                console.log('Service Worker de FDFF registrado');
+                
+                let sub = await reg.pushManager.getSubscription();
+                
+                if (!sub) {
+                    sub = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: VAPID_PUBLIC_KEY
+                    });
+                    
+                    // Usamos el cliente global de Supabase si está disponible
+                    const client = window._supabase || (typeof supabase !== 'undefined' ? supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>") : null);
+                    
+                    if (client) {
+                        const { error } = await client.from('notificaciones_suscripciones').upsert({
+                            user_id: userId,
+                            subscription_json: JSON.stringify(sub)
+                        }, { onConflict: 'user_id' });
+                        
+                        if (error) console.error("Error guardando suscripción:", error.message);
+                        else console.log("✅ Suscripción Push oficializada en Supabase");
+                    }
+                }
+            } catch (err) {
+                console.log('Error en suscripción Push:', err);
+            }
+        });
+    }
+</script>
 </body>
 </html>

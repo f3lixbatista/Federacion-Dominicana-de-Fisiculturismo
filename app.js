@@ -5,13 +5,23 @@ const cookieParser = require('cookie-parser');
 const { attachUser, checkRole } = require('./middlewares/auth');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 const { supabaseAdmin } = require('./supabaseClient');
+const webpush = require('web-push');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Validación preventiva de Variables de Entorno
-const variablesRequeridas = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY'];
+const variablesRequeridas = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_EMAIL'];
 let faltanVariables = false;
+
+// Configuración de Web Push
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_EMAIL) {
+    webpush.setVapidDetails(
+        `mailto:${process.env.VAPID_EMAIL}`,
+        process.env.VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+    );
+}
 
 if (envResult.error) {
     console.error(`\x1b[31m%s\x1b[0m`, `❌ ERROR AL CARGAR .ENV:`, envResult.error.message);
@@ -41,6 +51,7 @@ app.use(cookieParser());
 app.use((req, res, next) => {
     res.locals.SUPABASE_URL = process.env.SUPABASE_URL;
     res.locals.SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+    res.locals.VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
     next();
 });
 
@@ -57,6 +68,7 @@ app.use('/eventos', require('./router/Eventos'));
 app.use('/inscripcion', require('./router/Inscripcion'));
 app.use('/atletas', require('./router/Atletas'));
 app.use('/categorias', checkRole(['ejecutivo', 'admin']), require('./router/Categoria'));
+app.use('/admin', require('./router/Admin')); // Nuevo router para funciones administrativas
 app.use('/estadisticas', checkRole(['estadistico', 'admin']), require('./router/Estadisticas'));
 app.use('/preparadores', require('./router/Preparadores'));
 app.use('/', require('./router/rutasBat'));

@@ -85,9 +85,42 @@
             </div>
         </div>
     </div>
+
+    <!-- PANEL DE PRUEBA DE NOTIFICACIONES PUSH -->
+    <div class="card border-warning mt-4 shadow-sm" style="border-radius: 15px;">
+        <div class="card-header bg-warning text-dark fw-bold">🚀 Prueba de Notificaciones Push</div>
+        <div class="card-body">
+            <p class="small text-muted">Usa esto para verificar que el Service Worker está activo en los dispositivos suscritos.</p>
+            <div class="input-group">
+                <input type="text" id="mensajePrueba" class="form-control" placeholder="Escribe un mensaje de prueba...">
+                <button onclick="enviarPruebaPush()" class="btn btn-dark fw-bold">Enviar a Todos</button>
+            </div>
+            <div id="statusPush" class="mt-2 small fw-bold text-muted"></div>
+        </div>
+    </div>
 </div>
 
 <script>
+    async function enviarPruebaPush() {
+        const msg = document.getElementById('mensajePrueba').value;
+        if(!msg) return alert("Escribe un mensaje para enviar.");
+        
+        document.getElementById('statusPush').innerText = "Enviando notificaciones...";
+        
+        const res = await fetch('/admin/test-push', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ mensaje: msg })
+        });
+        
+        const data = await res.json();
+        if (data.ok) {
+            document.getElementById('statusPush').innerText = `✅ Éxito: ${data.enviados} notificaciones procesadas.`;
+        } else {
+            document.getElementById('statusPush').innerText = `❌ Error: ${data.error}`;
+        }
+    }
+
     function cerrarEvento() {
         if(confirm("¿Estás seguro de cerrar la competencia? Se publicarán los resultados finales y se desactivarán las votaciones.")) {
             // Lógica para llamar al endpoint de cierre

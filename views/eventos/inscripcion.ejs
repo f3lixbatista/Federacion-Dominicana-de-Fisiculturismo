@@ -61,7 +61,7 @@
                             <td><%= atleta.idfdff || 'Sin ID' %></td>
                             <td>
                                 <button class="btn btn-warning btn-sm fw-bold px-3" 
-                                        onclick="abrirModalInscripcion('<%= atleta.id %>', '<%= atleta.nombre %>', '<%= atleta.sexo %>', '<%= atleta.fecha_nacimiento %>', '<%= atleta.estatura %>', '<%= atleta.peso %>', '<%= atleta.cedula %>')">
+                                        onclick="abrirModalInscripcion('<%= atleta.id %>', '<%= atleta.nombre.replace(/'/g, "\\'") %>', '<%= atleta.sexo %>', '<%= atleta.fecha_nacimiento %>', '<%= atleta.estatura %>', '<%= atleta.peso %>', '<%= atleta.cedula %>')">
                                     <i class="fas fa-edit"></i> Inscribir
                                 </button>
                             </td>
@@ -194,11 +194,11 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    // 1. Inicialización de Supabase
+    // 1. Inicialización de Supabase (usamos las variables inyectadas por app.js)
     const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
     
-    // 2. Variables del Servidor (Protegidas para evitar errores de sintaxis JS)
-    const categoriasDelEvento = JSON.parse('<%- JSON.stringify(arrayCategorias || []) %>');
+    // 2. Variables del Servidor (Inyectamos el objeto directo para evitar errores de comillas)
+    const categoriasDelEvento = <%- JSON.stringify(arrayCategorias || []) %>;
     const costos = { 
         primera: Number("<%= eventoActual.costo_primera_cat || 0 %>"), 
         adicional: Number("<%= eventoActual.costo_adicional || 0 %>") 
@@ -208,7 +208,11 @@
     let myModal;
     document.addEventListener('DOMContentLoaded', () => {
         const modalEl = document.getElementById('modalInscripcion');
-        if (modalEl) myModal = new bootstrap.Modal(modalEl);
+        if (modalEl && typeof bootstrap !== 'undefined') {
+            myModal = new bootstrap.Modal(modalEl);
+        } else if (typeof bootstrap === 'undefined') {
+            console.error("Bootstrap no se cargó correctamente. Verifique su conexión o use una copia local.");
+        }
     });
 
 async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso, cedula) {
@@ -233,21 +237,26 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
         document.getElementById('signCedula').innerText = cedula || 'Sin especificar';
         document.getElementById('checkDescargo').checked = false; // Reset del checkbox para cada atleta
 
-        // Reset y Verificación de Música Existente
+        // Reset de Música con comprobación de existencia de elementos
         const player = document.getElementById('playerAudio');
         const audio = document.getElementById('audioElement');
-        player.classList.add('d-none');
-        audio.src = '';
-        document.getElementById('fileMusica').value = '';
+        const fileMusica = document.getElementById('fileMusica');
+
+        if (player) player.classList.add('d-none');
+        if (audio) {
+            audio.pause();
+            audio.src = '';
+        }
+        if (fileMusica) fileMusica.value = '';
 
         const { data: compData } = await _supabase
             .from('competidores')
             .select('musica_url')
             .eq('atleta_id', id)
-            .eq('id_evento', "<%= eventoActual.id %>")
+            .eq('id_evento', configEl.id)
             .limit(1);
 
-        if (compData && compData.length > 0 && compData[0].musica_url) {
+        if (compData && compData.length > 0 && compData[0].musica_url && player && audio) {
             audio.src = compData[0].musica_url;
             player.classList.remove('d-none');
         }
@@ -257,7 +266,12 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
             `1ra Cat: RD$ ${costos.primera.toLocaleString()} | Adic: RD$ ${costos.adicional.toLocaleString()}`;
         
         renderizarCategorias(sexoNormalizado); // Aquí aplicaremos el bloqueo de afinidad
-        myModal.show();
+        
+        if (myModal) {
+            myModal.show();
+        } else {
+            console.error("Error: El objeto del modal no está inicializado.");
+        }
     }
 
     function renderizarCategorias(sexoAtleta) {
@@ -398,7 +412,7 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     atleta_id: atletaId,
-                    id_evento: "<%= eventoActual?.id %>", // Variable global con el ID del evento de la URL
+                    id_evento: configEl.id,
                     categoriasElegidas: categoriasElegidas,
                     preparador_id: preparadorId
                 })
@@ -568,7 +582,7 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
     async function subirMusicaAsistida() {
         const atletaId = document.getElementById('atletaIdIns').value;
         const file = document.getElementById('fileMusica').files[0];
-        const idEvento = "<%= eventoActual?.id %>";
+        const idEvento = configEl.id;
         
         if(!file) return alert("Elija un archivo de audio.");
         
@@ -618,6 +632,10 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
     async function iniciarEscaneoCamara() {
         const readerDiv = document.getElementById('reader');
         readerDiv.style.display = 'block';
+        
+        if (typeof Html5Qrcode === 'undefined') {
+            return alert("La librería de escaneo QR no se ha cargado. Verifique su conexión a internet.");
+        }
         const html5QrCode = new Html5Qrcode("reader");
         
         html5QrCode.start(
@@ -651,7 +669,7 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
     $(document).ready(function () {
         $('#mydatatable').DataTable({
             "dom": 'Bfrtip',
-            "language": { "url": "https://datatables.net" },
+            "language": { "url": "//cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json" },
             "buttons": ['excel', 'pdf']
         });
     });

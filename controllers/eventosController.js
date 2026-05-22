@@ -1,5 +1,33 @@
 const { supabase, supabaseAdmin } = require('../supabaseClient');
 const QRCode = require('qrcode');
+const webpush = require('web-push'); // Import web-push
+
+// Configure web-push with VAPID keys from environment variables
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_EMAIL) {
+    webpush.setVapidDetails(
+        `mailto:${process.env.VAPID_EMAIL}`,
+        process.env.VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+    );
+} else {
+    console.warn('VAPID keys or email not configured. Push notifications will not work.');
+}
+
+// Helper function for uploading to Supabase Storage
+async function subirAStorage(file, bucketName, folderName) {
+    if (!file) return null;
+    const fileName = `${Date.now()}_${file.originalname}`;
+    const filePath = `${folderName}/${fileName}`;
+
+    const { error: uploadError } = await supabaseAdmin.storage
+        .from(bucketName)
+        .upload(filePath, file.buffer, { contentType: file.mimetype });
+
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = supabaseAdmin.storage.from(bucketName).getPublicUrl(filePath);
+    return urlData.publicUrl;
+}
 
 const listarEventos = async (req, res) => {
     try {
@@ -419,7 +447,7 @@ const verReporteOficial = async (req, res) => {
 const verDashboardEvento = async (req, res) => {
     const { id } = req.params;
     try {
-        const { data: evento } = await supabase.from('eventos').select(`*, eventos_categorias(id, categorias(*))`).eq('id', id).single();
+        const { data: evento } = await supabase.from('eventos').select(`*, eventos_categorias(id, categorias!inner(*))`).eq('id', id).single();
         if (!evento) return res.redirect('/eventos');
 
         let listadoPublico = [];
@@ -656,6 +684,161 @@ const verResultadosPublicos = async (req, res) => {
     }
 };
 
+const crearNuevoEvento = async (req, res) => {
+    const { NombreEvento, Fecha, Lugar, direccion, fecha_pesaje, lugar_pesaje, direccion_pesaje, costo_primera, costo_adicional, info_pesaje, Categorias } = req.body;
+    
+    try {
+        let bannerEventoUrl = null;
+        let bannerPesajeUrl = null;
+
+        // 1. Procesar los Banners si existen
+        if (req.files && req.files['banner_evento']) {
+            bannerEventoUrl = await subirAStorage(req.files['banner_evento'][0], 'eventos-banners', 'banners');
+        }
+        if (req.files && req.files['banner_pesaje']) {
+            bannerPesajeUrl = await subirAStorage(req.files['banner_pesaje'][0], 'eventos-banners', 'afiches_pesaje');
+        }
+
+        // 2. Crear el Evento
+        const { data: nuevoEv, error: evError } = await supabaseAdmin
+            .from('eventos')
+            .insert([{
+                nombre: NombreEvento,
+                fecha_inicio: Fecha,
+                lugar: Lugar,
+                direccion,
+                fecha_pesaje,
+                lugar_pesaje,
+                direccion_pesaje,
+                costo_primera_cat: parseFloat(costo_primera) || 0,
+                costo_adicional: parseFloat(costo_adicional) || 0,
+                banner_url: bannerEventoUrl, // Promotional banner
+                afiche_pesaje_url: bannerPesajeUrl, // Technical pesaje banner
+                info_pesaje: info_pesaje, // Pesaje description
+                estado: 'inscripcion'
+            }])
+            .select()
+            .single();
+
+        if (evError) throw evError;
+
+        // 3. Vincular Categorías (If Categorias is an array of IDs)
+        if (Categorias && Array.isArray(Categorias)) {
+            const vinculos = Categorias.map(catId => ({
+                evento_id: nuevoEv.id,
+                categoria_id: catId,
+                orden_secuencia_categoria: 0 // Default order, can be updated later
+            }));
+
+            const { error: errVin } = await supabaseAdmin
+                .from('eventos_categorias')
+                .insert(vinculos);
+
+            if (errVin) console.error('Error vinculando categorías:', errVin.message);
+        } else if (Categorias) { // Handle single category case if not an array
+             const vinculos = [{
+                evento_id: nuevoEv.id,
+                categoria_id: Categorias,
+                orden_secuencia_categoria: 0
+            }];
+            const { error: errVin } = await supabaseAdmin
+                .from('eventos_categorias')
+                .insert(vinculos);
+            if (errVin) console.error('Error vinculando categoría única:', errVin.message);
+        }
+
+
+        // 4. ENVÍO DE NOTIFICACIÓN PUSH
+        if (webpush.VAPIDDetails) { // Only send if VAPID is configured
+            const payload = JSON.stringify({
+                title: '📢 NOTICIA OFICIAL FDFF',
+                body: `Nuevo Evento: ${NombreEvento}. ¡Revisa los detalles de pesaje!`,
+                image: bannerEventoUrl || '/img/default-event.jpg',
+                url: `${req.protocol}://${req.get('host')}/eventos/historico`
+            });
+
+            const { data: suscripciones } = await supabaseAdmin.from('notificaciones_suscripciones').select('subscription_json');
+            
+            if (suscripciones && suscripciones.length > 0) {
+                suscripciones.forEach(s => {
+                    webpush.sendNotification(JSON.parse(s.subscription_json), payload)
+                        .catch(err => console.error("Error enviando push a suscripción:", err.message, s.subscription_json));
+                });
+            }
+        }
+
+        res.redirect(`/eventos/${nuevoEv.id}`);
+    } catch (error) {
+        console.error('🔥 Error creando evento:', error.message);
+        // Need to fetch categories again for rendering the form
+        const { data: arrayCategorias, error: catError } = await supabaseAdmin
+            .from('categorias')
+            .select('*')
+            .order('nombre', { ascending: true });
+
+        res.render('nuevoEvento', { 
+            error: true, 
+            mensaje: 'Fallo al crear el evento: ' + error.message,
+            arrayCategorias: arrayCategorias || [],
+            evento: null // No event data on error
+        });
+    }
+};
+
+const actualizarEvento = async (req, res) => {
+    const { id } = req.params;
+    const { NombreEvento, Fecha, Lugar, direccion, info_pesaje, costo_primera, costo_adicional, estado } = req.body;
+
+    try {
+        let bannerUrl = null;
+
+        // 1. Procesar el Banner si se adjunta uno nuevo (Multer + Supabase Storage)
+        if (req.file) {
+            const fileName = `${Date.now()}_banner_${id}.jpg`;
+            const { error: uploadError } = await supabaseAdmin.storage
+                .from('eventos-banners')
+                .upload(`banners/${fileName}`, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: true
+                });
+
+            if (uploadError) throw uploadError;
+
+            const { data: urlData } = supabaseAdmin.storage
+                .from('eventos-banners')
+                .getPublicUrl(`banners/${fileName}`);
+            
+            bannerUrl = urlData.publicUrl;
+        }
+
+        // 2. Preparar objeto de actualización
+        const updateData = {
+            nombre: NombreEvento,
+            fecha_inicio: Fecha,
+            lugar: Lugar,
+            direccion,
+            info_pesaje,
+            costo_primera_cat: parseFloat(costo_primera) || 0,
+            costo_adicional: parseFloat(costo_adicional) || 0,
+            estado
+        };
+
+        if (bannerUrl) updateData.banner_url = bannerUrl;
+
+        const { error } = await supabaseAdmin
+            .from('eventos')
+            .update(updateData)
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.redirect(`/eventos/${id}/centro-mando`);
+    } catch (error) {
+        console.error('🔥 Error actualizando evento:', error.message);
+        res.status(500).send('Error al actualizar el evento: ' + error.message);
+    }
+};
+
 module.exports = {
     listarEventos,
     prepararEventoPage,
@@ -672,5 +855,7 @@ module.exports = {
     verCertificadoOficial,
     validarLogroPublico,
     verHistorico,
-    verResultadosPublicos
+    verResultadosPublicos,
+    crearNuevoEvento,
+    actualizarEvento
 };

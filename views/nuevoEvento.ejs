@@ -1,16 +1,14 @@
-<%- include("template/cabecera", {tituloWeb: "Crear Evento - FDFF"}) %>
+<%- include("template/cabecera", {tituloWeb: "Crear/Editar Evento - FDFF"}) %>
 
 <div class="container" style="margin-top: -5vh;">
-    <form id="formEditar">
-        <% if (error) { %>
-            <p class="alert alert-danger"><%= mensaje %></p>
-            <a href="/categorias" class="btn btn-warning btn-block">Volver</a>
+    <form id="formMaster" method="post" action="/categorias/nuevoEvento" enctype="multipart/form-data">        
+        <% if (locals.error) { %>
+            <p class="alert alert-danger"><%= locals.mensaje %></p>
+            <a href="/categorias" class="btn btn-warning btn-block mt-3">Volver</a>
         <% } %>
         
-        <% if (!error) { %>
-
-
-            <label class="fs-1 fw-bold">Crear Nuevo Evento</label><br>
+        <% if (!locals.error) { %>
+            <label class="fs-1 fw-bold">Configuración de Competencia</label><br>
            
             <div class="container col-12 pt-2">
                 <div class="row g-4">
@@ -18,56 +16,78 @@
                     <div class="col-5">
                         <label for="evento" class="fs-4 fw-bold col-sm-7 form-label mr-0 pr-0">Nombre del Evento:</label>
                         <div class="col-10 ml-2 pl-0"> <!-- Nombre evento  -->
-                            <input class="form-control" type="text" placeholder="Nombre del Evento (Ej: Copa Independencia 2024)" name="NombreEvento" id="evento">
+                            <input class="form-control" type="text" placeholder="Nombre del Evento (Ej: Copa Independencia 2024)" name="NombreEvento" id="evento" value="<%= locals.evento ? evento.nombre : '' %>" required>
                         </div>
                     </div>
 
                     <div class="col-2">
                         <label for="fech" class="fs-5 fw-bold col-sm-12 form-label mr-0 pr-0">Fecha:</label>
                         <div class="col-12 ml-2 pl-0"> <!-- Fecha evento  -->
-                            <input class="col-sm-10 form-control" type="date" placeholder="Fecha" name="Fecha" id="fech">
-                        </div>
-                    </div>
-
-                    <div class="col-2">
-                        <label for="fech" class="fs-5 fw-bold col-sm-12 form-label mr-0 pr-0">Lugar:</label>
-                        <div class="col-12 ml-2 pl-0"> <!-- Lugar evento  -->
-                            <input class="col-sm-10 form-control" type="text" placeholder="Lugar del Evento" name="Lugar" id="lug">
+                            <input class="form-control" type="date" placeholder="Fecha" name="Fecha" id="fech" value="<%= locals.evento ? evento.fecha_inicio : '' %>">
                         </div>
                     </div>
 
                     <div class="col-3">
-                        <label for="fech" class="fs-5 fw-bold col-sm-12 form-label mr-0 pr-0">Direccion:</label>
-                        <div class="col-12 ml-2 pl-0"> <!-- Direccion de evento  -->
-                            <input class="col-sm-12 form-control" type="text" placeholder="Direccion de Evento" name="direccion" id="fech">
+                        <label for="lug" class="fs-5 fw-bold col-sm-12 form-label">Lugar y Dirección:</label>
+                        <div class="col-12"> <!-- Lugar evento  -->
+                            <input class="form-control mb-2" type="text" placeholder="Lugar (Ej: Teatro La Fiesta)" name="Lugar" id="lug" value="<%= locals.evento ? evento.lugar : '' %>">
+                            <input class="form-control" type="text" placeholder="Dirección Exacta" name="direccion" value="<%= locals.evento ? evento.direccion : '' %>">
+                        </div>
+                    </div>
+
+                    <div class="col-4">
+                        <label class="fs-5 fw-bold col-sm-12 form-label text-primary">1. Afiche Promocional (Social):</label>
+                        <div class="col-12">
+                            <input class="form-control" type="file" name="banner_evento" accept="image/*">
+                            <small class="text-muted" style="font-size: 0.7rem;">Se recomienda imagen de 1200x400px.</small>
+                            <% if (locals.evento && evento.banner_url) { %>
+                                <img src="<%= evento.banner_url %>" alt="Banner Actual" class="img-thumbnail mt-2" style="max-width: 150px;">
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <div class="col-4">
+                        <label class="fs-5 fw-bold col-sm-12 form-label text-danger">2. Afiche Técnico (Pesaje):</label>
+                        <div class="col-12">
+                            <input class="form-control" type="file" name="banner_pesaje" accept="image/*">
+                            <small class="text-muted" style="font-size: 0.7rem;">Imagen con croquis y pesos para atletas.</small>
+                            <% if (locals.evento && evento.afiche_pesaje_url) { %>
+                                <img src="<%= evento.afiche_pesaje_url %>" alt="Afiche Pesaje Actual" class="img-thumbnail mt-2" style="max-width: 150px;">
+                            <% } %>
                         </div>
                     </div>
             
                 </div>
             </div>
 
-
             <div class="container col-12 mb-0 pt-5">
+                <h4 class="fw-bold border-bottom pb-2">Logística de Pesaje e Inscripción</h4>
                 <div class="row g-3">
 
                     <div class="col-3">
                         <label for="event" class="fs-5 fw-bold col-sm-10 form-label mr-0 pr-0">Fecha de Pesaje:</label>
                         <div class="col-10 ml-2 pl-0"> <!-- Fecha Pesaje  -->
-                            <input class="form-control" type="date" placeholder="Fecha" name="fecha_pesaje" id="event">
+                            <input class="form-control" type="date" placeholder="Fecha" name="fecha_pesaje" id="event" value="<%= locals.evento ? evento.fecha_pesaje : '' %>">
                         </div>
                     </div>
 
                     <div class="col-3">
                         <label for="fech" class="fs-5 fw-bold col-sm-12 form-label mr-0 pr-0">Lugar de Pesaje:</label>
                         <div class="col-12 ml-2 pl-0"> <!-- Lugar Pesaje  -->
-                            <input class="col-sm-10 form-control" type="text" placeholder="Lugar" name="lugar_pesaje" id="fech">
+                            <input class="form-control" type="text" placeholder="Lugar" name="lugar_pesaje" id="fech" value="<%= locals.evento ? evento.lugar_pesaje : '' %>">
                         </div>
                     </div>
 
                     <div class="col-6">
                         <label for="fech" class="fs-5 fw-bold col-sm-12 form-label mr-0 pr-0">Direccion de Pesaje:</label>
                         <div class="col-12 ml-2 pl-0"> <!-- direccion pesaje  -->
-                            <input class="col-sm-7 form-control" type="text" placeholder="Direccion" name="direccion_pesaje" id="lug">
+                            <input class="form-control" type="text" placeholder="Direccion" name="direccion_pesaje" id="lug" value="<%= locals.evento ? evento.direccion_pesaje : '' %>">
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="fs-5 fw-bold form-label">Instrucciones Adicionales de Pesaje:</label>
+                        <textarea class="form-control" name="info_pesaje" rows="2" placeholder="Ej: Atletas deben traer vestimenta de competencia. No se aceptará efectivo..."><%= locals.evento ? evento.info_pesaje : '' %></textarea>
                         </div>
                     </div>
 
@@ -91,22 +111,21 @@
                     <div class="row col-3 me-4">                      
                         <div class="row g-2 my-0 pt-0 p-0">
                             <div class="p-0  my-0 col-9">
-                                <p class="position-absolute top-50 end-0 translate-middle-y small p-0 pe-1 pb-0 my-0"><small class="text-end align-middle fw-bold">Costo 1ra Categoría (RD$)</small></p>
+                                <p class="position-absolute top-50 end-0 translate-middle-y small p-0 pe-1 pb-0 my-0"><small class="text-end align-middle fw-bold">Costo 1ra Cat. (RD$)</small></p>
                             </div>   
                             <div class="p-0 my-0 col-3">
-                                <input type="number" name="costo_primera" class="form-control col-12 border-primary position-absolute top-50 end-0 translate-middle-y small p-0 pb-0 my-0" required>
+                                <input type="number" name="costo_primera" class="form-control col-12 border-primary position-absolute top-50 end-0 translate-middle-y small p-0 pb-0 my-0" value="<%= locals.evento ? evento.costo_primera_cat : '' %>" required>
                             </div>
                         </div>
                     </div>
 
-
                     <div class="row col-3">
                         <div class="row g-2 my-0 pt-0 p-0">
                             <div class="p-0 my-0 col-9">
-                                <p class="position-absolute top-50 end-0 translate-middle-y small me-1 p-0 pe-1 pb-0 my-0"><small class="text-end align-middle fw-bold">Costo Categorías Adicionales (RD$)</small></p>
+                                <p class="position-absolute top-50 end-0 translate-middle-y small me-1 p-0 pe-1 pb-0 my-0"><small class="text-end align-middle fw-bold">Costo Cat. Adic. (RD$)</small></p>
                             </div>
                              <div class="p-0 my-0 col-3">
-                                <input type="number" name="costo_adicional" class="form-control col-12 border-primary position-absolute top-50 end-0 translate-middle-y small p-0 pb-0 height-2" required>  
+                                <input type="number" name="costo_adicional" class="form-control col-12 border-primary position-absolute top-50 end-0 translate-middle-y small p-0 pb-0 height-2" value="<%= locals.evento ? evento.costo_adicional : '' %>" required>  
                             </div>
                         </div>
                     </div>
@@ -156,7 +175,7 @@
                                     </div>
 
                                     <div class="col-1 mb-3 position-relative">
-                                        <input value="<%= categoria.nombre %>" class="position-absolute top-50 end-0 translate-middle checkCategoriaEvent form-check-input fs-4" name="Ready" type="checkbox">
+                                        <input value="<%= categoria.id %>" class="position-absolute top-50 end-0 translate-middle checkCategoriaEvent form-check-input fs-4" name="Categorias" type="checkbox">
                                     </div>
                                 </div>
 
@@ -183,120 +202,93 @@
 
                 <% } %>
             </div>
-        <% } %> 
 
         <div class="container w-50 text-center">
             <a class="btn btn-outline-dark btn-sm my-4" href="/categorias/crearCategoria">+ Nueva Categoría</a>
         </div>
-    </form>
 
-    <hr>
-    <div class="container mt-4 mb-2"><h1>Confirmar Selección y Orden:</h1></div>
+        <hr>
+        <div class="container mt-4 mb-2"><h1>Confirmar Selección y Orden:</h1></div>
 
-    <form id="formEvento" method="post" action="/categorias/nuevoEvento">
-        <div class="row mb-3 align-items-center">
-            <label class="col-sm-2 fs-3 text-end p-0">Evento:</label>
-            <div class="col-sm-10">
-                <input type="text" id="nombrenuevoevento" name="NombreEvento" class="border-0 fs-2 fw-bold col-10 bg-light p-2" readonly>
-            </div>
-        </div>
-       
-        
-        <!-- Contenedores dinámicos para el JS -->
-        <div id="resultado" class="mb-5 col-10"></div>
-        <div id="resultado2" class="mb-5"></div>
-        <div id="resultado3" class="mb-5"></div>
-        <div id="resultado4" class="mb-5"></div>
-        <div id="resultado5" class="mb-5"></div>
-        <div id="resultado6" class="mb-5"></div>
-        <div id="resultado7" class="mb-5"></div>
-        <div id="resultado8" class="mb-5"></div>
-        <div id="resultado9" class="mb-5"></div>
-        <div id="resultado10" class="mb-5"></div>
-        <div id="resultado11" class="mb-5"></div>
+        <!-- Contenedor dinámico para las categorías seleccionadas -->
+        <div id="categoriasSeleccionadas" class="mb-5 col-10"></div>
 
         <div class="container w-50">
             <button class="btn btn-primary btn-lg col-12 my-5 shadow" type="submit">CREAR EVENTO COMPLETO</button> 
         </div>
+        <% } %>
     </form>
 </div>
 
 <script>
 // --- Sincronización del Nombre del Evento ---
-const evento = document.getElementById('evento');
-const nombrenuevoevento = document.getElementById('nombrenuevoevento');
-
-evento.addEventListener('keyup', function() {
-    nombrenuevoevento.value = evento.value;
-});
-
-
     const inputBuscar = document.getElementById("buscar");
-    const checks = document.querySelectorAll(".checkCategoriaEvent");
+    const checkboxesCategorias = document.querySelectorAll(".checkCategoriaEvent");
     const filas = document.querySelectorAll(".trcategoria");
-    const eventoInput = document.getElementById("evento");
-    const displayEvento = document.getElementById("nombrenuevoevento");
+    const contenedorSeleccionadas = document.getElementById('categoriasSeleccionadas');
 
-    // Sincronizar nombre del evento
-    eventoInput.addEventListener('keyup', () => {
-        displayEvento.value = eventoInput.value;
+    // Para mantener el estado de las categorías seleccionadas si hay un error de validación
+    const categoriasPreseleccionadas = <%- JSON.stringify(locals.categoriasPreseleccionadas || []) %>;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Marcar categorías preseleccionadas si existen (ej. después de un error de validación)
+        categoriasPreseleccionadas.forEach(catId => {
+            const checkbox = document.querySelector(`.checkCategoriaEvent[value="${catId}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+                // Disparar el evento change para que se renderice en la sección de confirmación
+                checkbox.dispatchEvent(new Event('change'));
+            }
+        });
     });
+
 
     // Buscador
     inputBuscar.addEventListener('keyup', function() {
         let filtro = buscar.value.toLowerCase();
         filas.forEach((fila, i) => {
-            let texto = checks[i].value.toLowerCase();
+            let texto = fila.querySelector('label b').innerText.toLowerCase(); // Busca el texto del nombre de la categoría
             fila.style.display = texto.includes(filtro) ? "flex" : "none";
         });
     });
 
     // Lógica de Selección y Clonación
-    checks.forEach((check, index) => {
+    checkboxesCategorias.forEach((check, index) => {
         check.addEventListener('change', function() {
-            const idBase = index;
+            const categoriaId = this.value;
+            const nombreCategoria = this.closest('.trcategoria').querySelector('label b').innerText;
+            const filaCategoria = this.closest('.trcategoria');
             
             if (this.checked) {
                 // Crear inputs dinámicos
                 const wrapper = document.createElement('div');
-                wrapper.id = 'wrap' + idBase;
-                wrapper.className = "d-flex align-items-center mb-2";
-
-              /*   const inpSalida = document.createElement('input');
-                inpSalida.name = 'Salida'; inpSalida.type = 'number';
-                inpSalida.className = 'form-control bg-info text-white fw-bold text-center mr-2';
-                inpSalida.style.width = '80px'; inpSalida.required = true;
-                inpSalida.placeholder = "0"; */
-
-                const inpCat = document.createElement('input');
-                inpCat.name = 'Categorias'; inpCat.type = 'text';
-                inpCat.className = 'form-control border-0 fw-bold';
-                inpCat.value = this.value; inpCat.readOnly = true;
-
-                // wrapper.appendChild(inpSalida);
-                wrapper.appendChild(inpCat);
-                document.getElementById('resultado').appendChild(wrapper);
-
-                // Clonar metadata oculta
-                const campos = ['Modalidad', 'Genero', 'Disciplina', 'Division', 'DesdeEdad', 'HastaEdad', 'DesdePeso', 'HastaPeso', 'DesdeEstatura', 'HastaEstatura'];
-                campos.forEach((campo, i) => {
-                    const metaVal = document.querySelectorAll('.checkCategoriaEvent' + (i + 2))[index].value;
-                    const metaInp = document.createElement('input');
-                    metaInp.type = 'hidden'; metaInp.name = campo;
-                    metaInp.value = metaVal; metaInp.id = 'meta' + campo + idBase;
-                    document.getElementById('resultado' + (i + 2)).appendChild(metaInp);
-                });
+                wrapper.id = `selected-cat-${categoriaId}`;
+                wrapper.className = "d-flex align-items-center mb-2 p-2 bg-light border rounded";
+                wrapper.innerHTML = `
+                    <span class="fw-bold me-2">${nombreCategoria}</span>
+                    <input type="hidden" name="Categorias" value="${categoriaId}">
+                    <span class="badge bg-secondary me-1">${filaCategoria.querySelector('.checkCategoriaEvent2').value}</span>
+                    <span class="badge bg-secondary me-1">${filaCategoria.querySelector('.checkCategoriaEvent3').value}</span>
+                    <span class="badge bg-secondary me-1">${filaCategoria.querySelector('.checkCategoriaEvent4').value}</span>
+                    <span class="badge bg-secondary me-1">${filaCategoria.querySelector('.checkCategoriaEvent5').value}</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="eliminarCategoriaSeleccionada('${categoriaId}')">X</button>
+                `;
+                contenedorSeleccionadas.appendChild(wrapper);
 
             } else {
                 // Eliminar si se desmarca
-                document.getElementById('wrap' + idBase)?.remove();
-                const campos = ['Modalidad', 'Genero', 'Disciplina', 'Division', 'DesdeEdad', 'HastaEdad', 'DesdePeso', 'HastaPeso', 'DesdeEstatura', 'HastaEstatura'];
-                campos.forEach(campo => {
-                    document.getElementById('meta' + campo + idBase)?.remove();
-                });
+                document.getElementById(`selected-cat-${categoriaId}`)?.remove();
             }
         });
     });
+
+    function eliminarCategoriaSeleccionada(categoriaId) {
+        const checkbox = document.querySelector(`.checkCategoriaEvent[value="${categoriaId}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+            checkbox.dispatchEvent(new Event('change')); // Dispara el evento para que se elimine del contenedor
+        }
+    }
 </script>
 
 <%- include("template/footer") %>
