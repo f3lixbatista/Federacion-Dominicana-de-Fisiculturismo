@@ -1,0 +1,52 @@
+<%- include("../template/cabecera", {tituloWeb: "Publicar Noticia FDFF"}) %>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0" style="border-radius: 20px;">
+                <div class="card-header bg-primary text-white p-4" style="border-radius: 20px 20px 0 0;">
+                    <h4 class="mb-0 fw-bold"><i class="fas fa-newspaper me-2"></i> Nueva Noticia Oficial</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form action="/social/noticias/guardar" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Título del Comunicado</label>
+                            <input type="text" name="titulo" class="form-control" placeholder="Ej: Nueva fecha para el pesaje..." required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contenido</label>
+                            <textarea name="contenido" class="form-control" rows="5" placeholder="Escriba aquí los detalles de la noticia..." required></textarea>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Subir Imagen (Archivo)</label>
+                                <input type="file" name="imagen" class="form-control" accept="image/*">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">O URL externa</label>
+                                <input type="text" name="imagen_url_manual" class="form-control" placeholder="https://...">
+                            </div>
+                        </div>
+
+                        <div class="form-check form-switch mb-4 p-3 bg-light rounded border">
+                            <input class="form-check-input ms-0" type="checkbox" name="es_destacada" id="flexSwitch">
+                            <label class="form-check-label fw-bold ms-2" for="flexSwitch">
+                                <i class="fas fa-star text-warning"></i> Marcar como Noticia Destacada
+                            </label>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold shadow">
+                                <i class="fas fa-paper-plane me-2"></i> PUBLICAR AHORA
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include("../template/footer") %>

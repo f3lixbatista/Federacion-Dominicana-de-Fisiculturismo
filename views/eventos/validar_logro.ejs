@@ -1,5 +1,10 @@
 <%- include("../template/cabecera", {tituloWeb: "Validación de Logro FDFF"}) %>
 
+<!-- Meta tags para compartir logro -->
+<meta property="og:title" content="Logro Oficial FDFF - <%= logro.atletas?.nombre %>" />
+<meta property="og:description" content="Validación oficial de puesto <%= logro.posicion_final %>° en el evento <%= logro.eventos?.nombre %>" />
+<meta property="og:image" content="/img/fdff3.jpg" />
+
 <div class="container my-5">
     <div class="row justify-content-center">
         <div class="col-md-6">

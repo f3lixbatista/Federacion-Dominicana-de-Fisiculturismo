@@ -26,9 +26,9 @@
             <div class="row g-2">
                 <div class="col-md-8">
                     <div class="input-group input-group-lg">
-                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-user text-muted"></i></span>
-                        <input type="text" id="busquedaAtleta" class="form-control border-start-0 ps-0" 
-                               placeholder="Escriba Nombre, Cédula o escanee con lector de mano..." onkeyup="filtrarTablaAtletas()">
+                        <!-- <span class="input-group-text bg-white border-end-0"><i class="fas fa-user text-muted"></i></span> -->
+                        <input type="text" id="busquedaAtleta" class="form-control border-1 border-dark ps-0" 
+                               placeholder=" Escriba Nombre, Cédula o escanee con lector de mano..." onkeyup="filtrarTablaAtletas()">
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -61,7 +61,14 @@
                             <td><%= atleta.idfdff || 'Sin ID' %></td>
                             <td>
                                 <button class="btn btn-warning btn-sm fw-bold px-3" 
-                                        onclick="abrirModalInscripcion('<%= atleta.id %>', '<%= atleta.nombre.replace(/'/g, "\\'") %>', '<%= atleta.sexo %>', '<%= atleta.fecha_nacimiento %>', '<%= atleta.estatura %>', '<%= atleta.peso %>', '<%= atleta.cedula %>')">
+                                        onclick="abrirModalDesdeBoton(this)"
+                                        data-id="<%= atleta.id %>"
+                                        data-nombre="<%= atleta.nombre %>"
+                                        data-sexo="<%= atleta.sexo %>"
+                                        data-nacimiento="<%= atleta.fecha_nacimiento %>"
+                                        data-estatura="<%= atleta.estatura %>"
+                                        data-peso="<%= atleta.peso %>"
+                                        data-cedula="<%= atleta.cedula %>">
                                     <i class="fas fa-edit"></i> Inscribir
                                 </button>
                             </td>
@@ -192,16 +199,31 @@
     </div>
 </div>
 
+<!-- SECCIÓN DE INYECCIÓN DE DATOS (Para evitar errores de sintaxis en el editor) -->
+<div id="config-evento" class="d-none" 
+     data-url="<%= SUPABASE_URL %>" 
+     data-anon="<%= SUPABASE_ANON_KEY %>"
+     data-id="<%= eventoActual?.id || '' %>"
+     data-nombre="<%= eventoActual?.nombre || '' %>"
+     data-costo1="<%= eventoActual?.costo_primera_cat || 0 %>"
+     data-costo-adic="<%= eventoActual?.costo_adicional || 0 %>">
+</div>
+<script id="data-categorias" type="application/json"><%- JSON.stringify(arrayCategorias || []) %></script>
+<script id="data-atletas" type="application/json"><%- JSON.stringify(arrayAtletas || []) %></script>
+
 <script src="/js/supabase.js"></script>
 <script>
-    // 1. Inicialización de Supabase (usamos las variables inyectadas por app.js)
-    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+    // 1. Recuperación de Configuración desde el DOM
+    const configEl = document.getElementById('config-evento').dataset;
+    const categoriasDelEvento = JSON.parse(document.getElementById('data-categorias').textContent);
+    const listaAtletasGlobal = JSON.parse(document.getElementById('data-atletas').textContent);
+
+    // 2. Inicialización de Supabase
+    const _supabase = supabase.createClient(configEl.url, configEl.anon);
     
-    // 2. Variables del Servidor (Inyectamos el objeto directo para evitar errores de comillas)
-    const categoriasDelEvento = <%- JSON.stringify(arrayCategorias || []) %>;
     const costos = { 
-        primera: Number("<%= eventoActual.costo_primera_cat || 0 %>"), 
-        adicional: Number("<%= eventoActual.costo_adicional || 0 %>") 
+        primera: Number(configEl.costo1), 
+        adicional: Number(configEl.costoAdic) 
     };
 
     // 3. Inicialización del Modal
@@ -214,6 +236,12 @@
             console.error("Bootstrap no se cargó correctamente. Verifique su conexión o use una copia local.");
         }
     });
+
+    // Función puente para manejar los datos del botón
+    function abrirModalDesdeBoton(btn) {
+        const d = btn.dataset;
+        abrirModalInscripcion(d.id, d.nombre, d.sexo, d.nacimiento, d.estatura, d.peso, d.cedula);
+    }
 
 async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso, cedula) {
         // TRADUCCIÓN DE LA LÓGICA VBA [Páginas 22-26]
@@ -519,7 +547,7 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
                 <div class="header">
                     <h2>FEDERACIÓN DOMINICANA DE FISICULTURISMO Y FITNESS</h2>
                     <h3>DOCUMENTO DE DESCARGO Y CONSENTIMIENTO</h3>
-                    <p><strong>Evento:</strong> <%= eventoActual.nombre %></p>
+                    <p><strong>Evento:</strong> ${configEl.nombre}</p>
                     <p><strong>Fecha:</strong> ${fechaActual}</p>
                 </div>
 
@@ -619,9 +647,6 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
             btn.innerHTML = '<i class="fas fa-upload"></i> Cargar';
         }
     }
-
-    // --- Lógica de Búsqueda y QR ---
-    const listaAtletasGlobal = <%- JSON.stringify(arrayAtletas || []) %>;
 
     function filtrarTablaAtletas() {
         const input = document.getElementById('busquedaAtleta').value;

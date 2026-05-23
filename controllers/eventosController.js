@@ -839,6 +839,48 @@ const actualizarEvento = async (req, res) => {
     }
 };
 
+const verAuditoriaRecaudacion = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data: evento, error: errEv } = await supabaseAdmin.from('eventos').select('*').eq('id', id).single();
+        if (errEv || !evento) return res.redirect('/eventos');
+
+        // Buscamos todos los competidores con sus datos de atleta
+        const { data: competidores, error: errComp } = await supabaseAdmin
+            .from('competidores')
+            .select('atleta_id, atletas(nombre, cedula, estatus_afiliacion)')
+            .eq('id_evento', id);
+
+        if (errComp) throw errComp;
+
+        // Agrupamos por atleta para calcular el cobro (1ra cat + adicionales)
+        const desglose = {};
+        (competidores || []).forEach(c => {
+            const uid = c.atleta_id;
+            if (!desglose[uid]) {
+                desglose[uid] = {
+                    nombre: c.atletas?.nombre || 'N/A',
+                    cedula: c.atletas?.cedula || 'N/A',
+                    cant: 0,
+                    monto: 0
+                };
+            }
+            desglose[uid].cant++;
+        });
+
+        let granTotal = 0;
+        const listaFinal = Object.values(desglose).map(item => {
+            item.monto = (evento.costo_primera_cat || 0) + ((item.cant - 1) * (evento.costo_adicional || 0));
+            granTotal += item.monto;
+            return item;
+        });
+
+        res.render('eventos/recaudacion', { evento, recaudacion: listaFinal, granTotal });
+    } catch (error) {
+        res.redirect(`/eventos/${id}`);
+    }
+};
+
 module.exports = {
     listarEventos,
     prepararEventoPage,
@@ -857,5 +899,6 @@ module.exports = {
     verHistorico,
     verResultadosPublicos,
     crearNuevoEvento,
-    actualizarEvento
+    actualizarEvento,
+    verAuditoriaRecaudacion
 };

@@ -133,6 +133,11 @@ const detalleAtleta = async (req, res) => {
 const eliminarAtleta = async (req, res) => {
     const { id } = req.params;
     try {
+        // 1. Borrar de Supabase Auth (Limpia el acceso al sistema)
+        const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id);
+        if (authError) console.warn("Aviso: El usuario no existía en Auth o no pudo ser borrado:", authError.message);
+
+        // 2. Borrar de la tabla Atletas
         const { error } = await supabase
             .from('atletas')
             .delete()

@@ -167,11 +167,11 @@
                 <% if (arrayCategorias.length > 0) { %>
                     <% arrayCategorias.forEach((categoria, index) => { %>
                         <div class="row trcategoria"> 
-                            <div class="col-9 my-2 m-0 form-check fila pt-2 rounded-pill pl-1 shadow-sm position-relative" id="divCheck"> 
+                            <div class="col-9 my-2 m-0 form-check fila pt-2 rounded-pill pl-1 shadow-sm position-relative"> 
                                 
                                 <div class="row col-12 g-2 position-relative">  
                                     <div class="col-11">
-                                        <label class="ml-2 form-check-label lh-1 fs-5 col-12 p-0"><b><%= categoria.nombre %></b></label>                              
+                                        <label class="ml-2 form-check-label lh-1 fs-5 col-12 p-0 fw-bold"><b><%= categoria.nombre %></b></label>
                                     </div>
 
                                     <div class="col-1 mb-3 position-relative">
@@ -220,6 +220,7 @@
     </form>
 </div>
 
+<script id="data-preseleccionadas" type="application/json"><%- JSON.stringify(locals.categoriasPreseleccionadas || []) %></script>
 <script>
 // --- Sincronización del Nombre del Evento ---
     const inputBuscar = document.getElementById("buscar");
@@ -228,7 +229,8 @@
     const contenedorSeleccionadas = document.getElementById('categoriasSeleccionadas');
 
     // Para mantener el estado de las categorías seleccionadas si hay un error de validación
-    const categoriasPreseleccionadas = <%- JSON.stringify(locals.categoriasPreseleccionadas || []) %>;
+    const dataPre = document.getElementById('data-preseleccionadas');
+    const categoriasPreseleccionadas = dataPre ? JSON.parse(dataPre.textContent) : [];
 
     document.addEventListener('DOMContentLoaded', () => {
         // Marcar categorías preseleccionadas si existen (ej. después de un error de validación)

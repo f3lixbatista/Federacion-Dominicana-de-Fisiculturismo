@@ -17,6 +17,9 @@
                         <a href="/eventos/<%= evento.id %>/recaudacion" class="btn btn-outline-success text-start">
                             <i class="fas fa-cash-register me-2"></i> Auditoría de Recaudación
                         </a>
+                        <a href="/social/admin-noticias" class="btn btn-outline-info text-start">
+                            <i class="fas fa-bullhorn me-2"></i> Publicar Comunicado Oficial
+                        </a>
                     </div>
                     <hr>
                     <div class="text-center">
@@ -73,8 +76,8 @@
                         <a href="/fotografia/upload?evento=<%= evento.id %>" class="btn btn-outline-dark text-start">
                             <i class="fas fa-camera me-2"></i> Subir Fotos (Social/Muro)
                         </a>
-                        <a href="/estadisticas/presidente-mesa/<%= evento.id %>" class="btn btn-outline-dark text-start">
-                            <i class="fas fa-gavel me-2"></i> Monitor de Top 5 (Arbitraje)
+                        <a href="/eventos/preparacion-evento/<%= evento.id %>" class="btn btn-outline-dark text-start">
+                            <i class="fas fa-gavel me-2"></i> Control de Arbitraje
                         </a>
                         <hr>
                         <button onclick="cerrarEvento()" class="btn btn-danger fw-bold">

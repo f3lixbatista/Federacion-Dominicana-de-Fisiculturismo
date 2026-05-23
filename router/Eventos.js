@@ -24,6 +24,9 @@ routerEventos.get('/:id', checkRole(['admin', 'estadistico', 'ejecutivo', 'prepa
 // C. CENTRO DE MANDO: Dashboard administrativo centralizado
 routerEventos.get('/:id/centro-mando', checkRole(['admin', 'estadistico', 'ejecutivo']), eventosController.verCentroMando);
 
+// AUDITORÍA FINANCIERA DEL EVENTO
+routerEventos.get('/:id/recaudacion', checkRole(['admin', 'ejecutivo', 'estadistico']), eventosController.verAuditoriaRecaudacion);
+
 // RUTA PARA ACTUALIZAR DATOS Y AFICHE (Edición de Evento)
 routerEventos.post('/editar/:id', checkRole(['admin']), upload.single('banner'), eventosController.actualizarEvento);
 

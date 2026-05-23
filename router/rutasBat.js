@@ -68,12 +68,4 @@ router.get('/jueces', checkRole(['general', 'juez', 'admin']), (req, res) => {
     res.render('jueces', { titulo: 'Comité de Jueces' });
 });
 
-router.get('/noticias', checkRole(['admin', 'estadistico', 'ejecutivo', 'preparador', 'atleta', 'juez', 'general', 'mc', 'backstage']), (req, res) => {
-    res.render('noticias', { titulo: 'Noticias FDFF' });
-});
-
-router.get('/social', checkRole(['admin', 'estadistico', 'ejecutivo', 'preparador', 'atleta', 'juez', 'general', 'mc', 'backstage']), (req, res) => {
-    res.render('social', { titulo: 'Federados Social' });
-});
-
 module.exports = router;

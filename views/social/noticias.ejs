@@ -1,0 +1,50 @@
+<%- include("../template/cabecera", {tituloWeb: "Noticias FDFF"}) %>
+
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold display-4 text-dark">📰 Actualidad FDFF</h1>
+        <p class="text-muted">Comunicados oficiales y novedades del fisicoculturismo dominicano</p>
+        <hr class="w-25 mx-auto border-primary border-2">
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <% if (locals.noticias && noticias.length > 0) { %>
+            <% noticias.forEach(noticia => { %>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+                        <% if (noticia.imagen_url) { %>
+                            <img src="<%= noticia.imagen_url %>" class="card-img-top" style="height: 200px; object-fit: cover;" alt="Noticia FDFF">
+                        <% } else { %>
+                            <div class="bg-primary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="fas fa-newspaper fa-4x opacity-50"></i>
+                            </div>
+                        <% } %>
+                        
+                        <div class="card-body p-4">
+                            <% if (noticia.es_destacada) { %>
+                                <span class="badge bg-danger mb-2"><i class="fas fa-star"></i> DESTACADO</span>
+                            <% } %>
+                            <h4 class="fw-bold mb-2 text-primary"><%= noticia.titulo %></h4>
+                            <p class="text-muted small mb-3">
+                                <i class="far fa-calendar-alt"></i> <%= (noticia && noticia.fecha_creacion) ? new Date(noticia.fecha_creacion).toLocaleDateString('es-DO') : 'Reciente' %>
+                            </p>
+                            <p class="card-text text-dark" style="overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4;">
+                                <%= noticia.contenido %>
+                            </p>
+                        </div>
+                        <div class="card-footer bg-white border-0 pb-4 px-4">
+                            <button class="btn btn-outline-primary btn-sm fw-bold w-100" onclick="alert('Funcionalidad de lectura completa próximamente.')">Leer más</button>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="text-center py-5">
+                <i class="fas fa-comment-slash display-1 text-light mb-3"></i>
+                <h3 class="text-muted">No hay noticias publicadas en este momento.</h3>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<%- include("../template/footer") %>
