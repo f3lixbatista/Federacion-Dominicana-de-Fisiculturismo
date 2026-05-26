@@ -140,11 +140,18 @@ const verMesaComputo = async (req, res) => {
             .eq('evento_cat_id', eventoCatId)
             .eq('fase_competencia', faseTrabajo);
 
-        res.render('estadisticas/mesa_computo', {
-            categoria: categoriaRel,
-            atletas: atletas || [],
-            jueces: jueces || [],
-            votos: votosEmitidos || [],
+        // Preparar mapa de votos para la vista unificada
+        const mapaVotos = {};
+        (atletas || []).forEach(a => mapaVotos[a.atleta_id] = {});
+        (votosEmitidos || []).forEach(v => { if (mapaVotos[v.atleta_id]) mapaVotos[v.atleta_id][v.juez_id] = v.posicion_asignada; });
+
+        res.render('estadisticas/computo', {
+            eventoId: categoriaRel.evento_id,
+            catRelId: eventoCatId,
+            categoriaNombre: categoriaRel?.categorias?.nombre,
+            jueces: (jueces || []).map(j => ({ id: j.profiles.id, nombre: j.profiles.nombre })),
+            atletas: (atletas || []).map(a => ({ id: a.atleta_id, dorsal: a.numero_atleta, nombre: a.atletas.nombre })),
+            mapaVotos,
             faseTrabajo
         });
     } catch (error) {
@@ -384,6 +391,33 @@ const verCertificadoPreview = async (req, res) => {
     }
 };
 
+/**
+ * Busca la categoría actualmente activa en el evento y redirige a la mesa de cómputo.
+ * Esto permite al estadístico tener una "pantalla única" desde el Centro de Mando.
+ */
+const verMesaComputoActual = async (req, res) => {
+    const { id: eventoId } = req.params;
+    try {
+        const { data: catActiva, error } = await supabaseAdmin
+            .from('eventos_categorias')
+            .select('id')
+            .eq('evento_id', eventoId)
+            .in('estatus_logistica', ['abierta activa', 'abierta exhibicion', 'exhibicion'])
+            .order('orden_secuencia_categoria', { ascending: true })
+            .limit(1)
+            .single();
+
+        if (error || !catActiva) {
+            return res.status(404).send("No hay ninguna categoría activa en tarima actualmente. Por favor, abra una categoría en el panel de Preparación.");
+        }
+
+        res.redirect(`/eventos/${eventoId}/computo/${catActiva.id}`);
+    } catch (error) {
+        console.error("Error al localizar mesa actual:", error.message);
+        res.redirect(`/eventos/${eventoId}/centro-mando`);
+    }
+};
+
 module.exports = { 
     listarEstadisticas, 
     verCalculosEvento, 
@@ -397,5 +431,6 @@ module.exports = {
     imprimirBoletas,
     verPresidenteMesa,
     imprimirCertificadosMasivos,
-    verCertificadoPreview
+    verCertificadoPreview,
+    verMesaComputoActual
 };

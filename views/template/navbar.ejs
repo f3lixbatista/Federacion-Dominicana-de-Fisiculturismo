@@ -39,11 +39,14 @@
 
       <% if (locals.user) { %>
         <!-- PÚBLICO / GENERAL (Logueados) -->
-        <li class="nav-item"><a class="nav-link" href="/social"><strong>Social</strong></a></li>
+        <li class="nav-item"><a class="nav-link" href="/social/muro"><strong>Muro Social</strong></a></li>
         <li class="nav-item"><a class="nav-link" href="/social/noticias"><strong>Noticias</strong></a></li>
 
         <!-- ATLETAS -->
         <% if (user.role === 'atleta' || user.role === 'admin') { %>
+          <li class="nav-item">
+              <a class="nav-link text-warning" href="/atletas/perfil"><strong><i class="fas fa-user-circle"></i> Mi Perfil</strong></a>
+          </li>
           <li class="nav-item"><a class="nav-link" href="/servicios"><strong>Servicios</strong></a></li>
           <li class="nav-item"><a class="nav-link" href="/afiliacion"><strong>Afiliacion</strong></a></li>
         <% } %>
@@ -59,6 +62,7 @@
                         <li><a class="dropdown-item fw-bold" href="/eventos/<%= evento.id %>/centro-mando"><i class="fas fa-broadcast-tower me-2"></i> CENTRO DE MANDO</a></li>
                     <% } %>
                     <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/admin/registro_staff"><i class="fas fa-user-shield me-2"></i> Gestión de Personal</a></li>
                     <li><a class="dropdown-item" href="/atletas"><i class="fas fa-users me-2"></i> Gestión de Atletas</a></li>
                     <li><a class="dropdown-item" href="/preparadores"><i class="fas fa-user-tie me-2"></i> Gestión de Coaches</a></li>
                     <li><a class="dropdown-item" href="/categorias"><i class="fas fa-tags me-2"></i> Gestión de Categorías</a></li>

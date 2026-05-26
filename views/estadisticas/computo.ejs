@@ -75,27 +75,36 @@
         </div>
     </div>
 
-    <!-- ACCIONES DE TRANSMISIÓN -->
+    <!-- ACCIONES DE TRANSMISIÓN Y CIERRE -->
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <button onclick="ejecutarAlgoritmoEstadistico()" class="btn btn-success btn-lg w-100 fw-bold py-3 shadow">
                 <i class="fas fa-calculator me-2"></i> COMPU-ESTADÍSTICA (CALCULAR LUGARES)
             </button>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <button onclick="inyectarResultadosAlMC()" id="btnEnviarMC" class="btn btn-danger btn-lg w-100 fw-bold py-3 shadow" disabled>
                 <i class="fas fa-broadcast-tower me-2"></i> ENVIAR RESULTADOS AL MC
             </button>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <button onclick="transmitirJuecesAlMicofono()" class="btn btn-warning btn-lg w-100 fw-bold py-3 shadow text-dark">
                 <i class="fas fa-gavel me-2"></i> TRANSMITIR JUECES AL MC
+            </button>
+        </div>
+        <!-- NUEVO BOTÓN CONSOLIDADO -->
+        <div class="col-md-3">
+            <button onclick="oficializarCategoria()" id="btnOficializar" 
+                    class="btn btn-dark btn-lg w-100 fw-bold py-3 shadow" 
+                    style="background-color: #000; color: #fff;" disabled>
+                <i class="fas fa-save me-2"></i> OFICIALIZAR RESULTADOS
             </button>
         </div>
     </div>
 </div>
 
 <script src="/js/supabase.js"></script>
+<script src="/js/compu-algo.js"></script>
 <script>
     // Inicialización Robusta
     const _url = "<%= SUPABASE_URL || '' %>";
@@ -131,52 +140,65 @@
 
             if (votos.length === 0) return;
 
-            // 1. Calcular Subtotal
-            const subtotal = votos.reduce((a, b) => a + b, 0);
-            fila.querySelector('.cell-subtotal').innerText = subtotal;
-
-            // 2. REGLA FDFF: Si hay 5 o más jueces, eliminamos el más alto y el más bajo
-            let votosLimpios = [...votos];
-            if (votos.length >= 5) {
-                votosLimpios.sort((a, b) => a - b);
-                votosLimpios.pop(); // Elimina el más alto
-                votosLimpios.shift(); // Elimina el más bajo
-            }
-
-            const puntajeLimpio = votosLimpios.reduce((a, b) => a + b, 0);
-            fila.querySelector('.cell-limpio').innerText = puntajeLimpio;
+            // USAR LA NUEVA LIBRERÍA COMPARTIDA
+            const calculo = CompuAlgo.calcular(votos);
+            
+            fila.querySelector('.cell-subtotal').innerText = calculo.subtotal;
+            fila.querySelector('.cell-limpio').innerText = calculo.puntajeLimpio;
 
             tablaPosiciones.push({
                 atletaId: atletaId,
                 dorsal: fila.querySelector('td').innerText,
                 nombre: fila.querySelector('.text-start').innerText,
-                puntos: puntajeLimpio,
-                votosOriginales: votos // Guardamos por si hay empates técnicos
+                puntos: calculo.puntajeLimpio,
+                votosOriginales: calculo.votosOriginales
             });
         });
 
-        // 3. ORDENAR GANADORES (A menor puntuación, mejor lugar)
-        tablaPosiciones.sort((a, b) => {
-            if (a.puntos !== b.puntos) {
-                return a.puntos - b.puntos;
-            }
-            // CRITERIO DE DESEMPATE: El que tenga más votos preferenciales de primer lugar
-            const unosA = a.votosOriginales.filter(v => v === 1).length;
-            const unosB = b.votosOriginales.filter(v => v === 1).length;
-            return unosB - unosA; 
+        // 3. ORDENAR USANDO LIBRERÍA
+        resultadosCalculados = CompuAlgo.ordenarResultados(tablaPosiciones);
+
+        // 4. Actualizar Interfaz
+        resultadosCalculados.forEach((res) => {
+            const fila = document.querySelector(`.fila-atleta-voto[data-atleta-id="${res.atletaId}"]`);
+            fila.querySelector('.cell-posicion').innerText = `${res.lugar}°`;
         });
 
-        // 4. Asignar e imprimir los lugares en la interfaz
-        tablaPosiciones.forEach((pos, index) => {
-            const lugar = index + 1;
-            const fila = document.querySelector(`.fila-atleta-voto[data-atleta-id="${pos.atletaId}"]`);
-            fila.querySelector('.cell-posicion').innerText = `${lugar}°`;
-            pos.lugar = lugar; // Inyectamos el lugar al objeto
-        });
-
-        resultadosCalculados = tablaPosiciones;
-        document.getElementById('btnEnviarMC').disabled = false; // Habilitamos el envío a tarima
+        document.getElementById('btnEnviarMC').disabled = false;
+        document.getElementById('btnOficializar').disabled = false;
         alert("¡Cómputo completado con éxito! Extremos eliminados automáticamente.");
+    }
+
+    async function oficializarCategoria() {
+        if (!resultadosCalculados) return alert("Debe calcular los lugares antes de oficializar.");
+        if (!confirm("¿Desea oficializar estos resultados? Se publicarán en el reporte oficial y la cartelera pública.")) return;
+
+        const idCatRel = document.getElementById('idCatRel').value;
+        const payload = {
+            eventoCatId: idCatRel,
+            resultados: resultadosCalculados.map(r => ({
+                atleta_id: r.atletaId,
+                posicion: r.lugar,
+                puntos: r.puntos
+            }))
+        };
+
+        try {
+            const res = await fetch('/estadisticas/oficializar-categoria', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.estado) {
+                alert("✅ Categoría oficializada con éxito.");
+                window.location.href = `/eventos/${idEventoActual}/reporte-oficial`;
+            } else {
+                alert("❌ Error: " + data.mensaje);
+            }
+        } catch (e) {
+            alert("Error de comunicación con el servidor.");
+        }
     }
 
     // ENVIAR EN TIEMPO REAL AL TELEPRONTER DEL MC

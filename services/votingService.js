@@ -50,6 +50,28 @@ const calcularPosicionesFinales = (votosPorAtleta) => {
     }));
 };
 
+const calcularRankingEquipos = (participaciones) => {
+    const puntosMap = { 1: 7, 2: 5, 3: 4, 4: 3, 5: 2, 6: 1 };
+    const teamsRankingRaw = {};
+
+    (participaciones || []).forEach(p => {
+        const teamName = p.atletas?.preparadores?.nombre_completo || 'Independientes';
+        if (!teamsRankingRaw[teamName]) teamsRankingRaw[teamName] = 0;
+        
+        if (puntosMap[p.posicion_final]) {
+            teamsRankingRaw[teamName] += puntosMap[p.posicion_final];
+        }
+        if (p.es_ganador_absoluto) {
+            teamsRankingRaw[teamName] += 11;
+        }
+    });
+
+    return Object.entries(teamsRankingRaw)
+        .map(([nombre, puntos]) => ({ nombre, puntos }))
+        .sort((a, b) => b.puntos - a.puntos);
+};
+
 module.exports = {
-    calcularPosicionesFinales
+    calcularPosicionesFinales,
+    calcularRankingEquipos
 };

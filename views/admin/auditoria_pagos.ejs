@@ -1,0 +1,168 @@
+<%- include("../template/cabecera", {tituloWeb: "Auditoría Financiera - FDFF"}) %>
+
+<div class="container my-5">
+    <div class="card shadow-lg border-0 p-4" style="border-radius: 20px;">
+        <h4 class="fw-bold mb-4"><i class="fas fa-search-dollar text-success"></i> Localizador de Recibos y Pagos</h4>
+        
+        <!-- Barra de Búsqueda -->
+        <form action="/admin/auditoria-pagos" method="GET" class="row g-2 mb-4">
+            <div class="col-md-9">
+                <input type="text" name="query" class="form-control form-control-lg" 
+                       placeholder="Buscar por Cédula, Nombre, ID FDFF o Empresa..." value="<%= query || '' %>">
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-dark btn-lg w-100 fw-bold">BUSCAR</button>
+            </div>
+        </form>
+
+        <!-- Resultados -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Concepto / Pagador</th>
+                        <th>Monto</th>
+                        <th>Método</th>
+                        <th class="text-center">Soporte</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Pagos Administrativos (Membresías/Backstage) -->
+                    <% pagos.forEach(p => { %>
+                        <tr>
+                            <td class="small"><%= new Date(p.fecha_pago).toLocaleDateString() %></td>
+                            <td>
+                                <strong><%= p.tipo_pago.replace('_', ' ').toUpperCase() %></strong><br>
+                                <small class="text-muted"><%= p.profiles?.nombre %> (<%= p.profiles?.id_fdff %>)</small>
+                            </td>
+                            <td class="fw-bold">RD$ <%= p.monto.toLocaleString() %></td>
+                            <td><span class="badge bg-light text-dark border"><%= p.metodo_pago %></span></td>
+                            <td class="text-center">
+                                <% if(p.recibo_url) { %>
+                                    <a href="<%= p.recibo_url %>" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                <% } else { %>
+                                    <i class="fas fa-minus text-muted"></i>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+
+                    <!-- Inscripciones con Comprobante (Validación de Tickets) -->
+                    <% inscripciones.forEach(i => { %>
+                        <tr class="<%= i.pago_validado ? 'table-light' : 'table-warning' %>">
+                            <td class="small"><%= new Date(i.created_at).toLocaleDateString() %></td>
+                            <td>
+                                <strong>INSCRIPCIÓN EVENTO</strong><br>
+                                <small class="text-muted"><%= i.atletas?.nombre %> - <%= i.eventos?.nombre %></small>
+                            </td>
+                            <td class="fw-bold">VALIDACIÓN PEND.</td>
+                            <td><span class="badge bg-info text-dark border">TRANSFERENCIA</span></td>
+                            <td class="text-center">
+                                <% if (i.url_comprobante_pago && !i.pago_validado) { %>
+                                    <button onclick="abrirValidacion('<%= i.url_comprobante_pago %>', '<%= i.id %>', '<%= i.atleta_id %>')" class="btn btn-sm btn-warning fw-bold">
+                                        <i class="fas fa-search-dollar me-1"></i> VALIDAR PAGO
+                                    </button>
+                                <% } else if (i.pago_validado) { %>
+                                    <span class="badge bg-success"><i class="fas fa-check"></i> VALIDADO</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+
+                    <!-- Ingresos Extra (Patrocinios/Boletas) -->
+                    <% extras.forEach(e => { %>
+                        <tr class="table-info">
+                            <td class="small"><%= new Date(e.created_at).toLocaleDateString() %></td>
+                            <td>
+                                <strong><%= e.concepto %></strong><br>
+                                <small class="text-muted">Evento: <%= e.eventos?.nombre %></small>
+                            </td>
+                            <td class="fw-bold text-success">RD$ <%= e.monto.toLocaleString() %></td>
+                            <td><span class="badge bg-success">INGRESO EXTRA</span></td>
+                            <td class="text-center">
+                                <% if(e.recibo_url) { %>
+                                    <a href="<%= e.recibo_url %>" target="_blank" class="btn btn-sm btn-dark">
+                                        <i class="fas fa-file-invoice"></i> Ver
+                                    </a>
+                                <% } else { %>
+                                    <i class="fas fa-minus text-muted"></i>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Validación de Comprobante -->
+<div class="modal fade" id="modalValidarPago" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-file-invoice-dollar text-success me-2"></i> Verificar Comprobante</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <img id="imgComprobante" src="" class="img-fluid rounded shadow mb-3" style="max-height: 500px; border: 1px solid #ddd;">
+                <input type="hidden" id="competidorIdValidar">
+                <input type="hidden" id="atletaIdValidar">
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" onclick="rechazarPago()" class="btn btn-danger fw-bold">RECHAZAR PAGO</button>
+                <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" onclick="validarComprobante()" class="btn btn-success fw-bold px-4">CONFIRMAR VALIDACIÓN</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+    const modalVal = new bootstrap.Modal(document.getElementById('modalValidarPago'));
+
+    function abrirValidacion(url, id, atletaId) {
+        document.getElementById('imgComprobante').src = url;
+        document.getElementById('competidorIdValidar').value = id;
+        document.getElementById('atletaIdValidar').value = atletaId;
+        modalVal.show();
+    }
+
+    async function validarComprobante() {
+        const id = document.getElementById('competidorIdValidar').value;
+        const { error } = await _supabase.from('competidores').update({ pago_validado: true }).eq('id', id);
+        if(!error) {
+            alert("✅ Pago validado con éxito. El ticket QR del atleta ha sido activado.");
+            location.reload();
+        } else alert("Error: " + error.message);
+    }
+
+    async function rechazarPago() {
+        const competidorId = document.getElementById('competidorIdValidar').value;
+        const motivo = prompt("Indique el motivo del rechazo (ej: Monto incompleto, imagen borrosa):");
+        if (!motivo) return;
+
+        const { error } = await _supabase
+            .from('competidores')
+            .update({ 
+                url_comprobante_pago: null, // Permitimos que suba uno nuevo
+                observaciones_pago: motivo,
+                pago_validado: false,
+                fecha_revision_pago: new Date().toISOString()
+            })
+            .eq('id', competidorId);
+
+        if(!error) {
+            alert("Notificación enviada al atleta.");
+            // El sistema reflejará el cambio al recargar y el atleta lo verá en su perfil
+            location.reload();
+        } else alert("Error: " + error.message);
+    }
+</script>
+
+<%- include("../template/footer") %>

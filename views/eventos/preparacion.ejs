@@ -74,10 +74,10 @@
 
         <% arrayCategorias.forEach((catRel, index) => { %>
             <div class="card mb-4 shadow-sm border-2 cat-container-box" id="card-<%= catRel.id %>"
-                 data-modalidad="<%= catRel.categorias.modalidad %>"
-                 data-sexo="<%= catRel.categorias.sexo %>"
-                 data-disciplina="<%= catRel.categorias.disciplina %>"
-                 data-division="<%= catRel.categorias.division %>">
+                 data-modalidad="<%= catRel.categorias?.modalidad || 'N/A' %>"
+                 data-sexo="<%= catRel.categorias?.sexo || 'N/A' %>"
+                 data-disciplina="<%= catRel.categorias?.disciplina || 'N/A' %>"
+                 data-division="<%= catRel.categorias?.division || 'N/A' %>">
                 
                 <div class="card-header bg-light p-3 d-flex justify-content-between align-items-center">
                     <!-- ORDEN DE SALIDA -->

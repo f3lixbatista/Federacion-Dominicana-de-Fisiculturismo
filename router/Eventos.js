@@ -2,6 +2,7 @@ const express = require('express');
 const routerEventos = express.Router();
 const { checkRole } = require('../middlewares/auth');
 const eventosController = require('../controllers/eventosController');
+const estadisticasController = require('../controllers/estadisticasController');
 const atletasController = require('../controllers/atletasController');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
@@ -43,8 +44,11 @@ routerEventos.get('/:id/preparacion', checkRole(['ejecutivo', 'admin']), eventos
 
 routerEventos.post('/preparacion/oficializar', checkRole(['ejecutivo', 'admin']), eventosController.oficializarPreparacion);
 
-// RUTA PARA MESA DE CÓMPUTO ESTADÍSTICO
-routerEventos.get('/:id/computo/:catId', checkRole(['estadistico', 'admin']), eventosController.verMesaComputo);
+// RUTA PARA MESA DE CÓMPUTO ESTADÍSTICO (Vinculada al controlador de estadísticas)
+routerEventos.get('/:id/computo/:eventoCatId', checkRole(['estadistico', 'admin']), estadisticasController.verMesaComputo);
+
+// REDIRECCIÓN INTELIGENTE A LA CATEGORÍA ACTUAL
+routerEventos.get('/:id/mesa-tecnica-actual', checkRole(['estadistico', 'admin']), estadisticasController.verMesaComputoActual);
 
 // RUTA PARA INYECTAR JUECES CONFIRMADOS AL MC EN TIEMPO REAL
 routerEventos.post('/:id/inyectar-jueces-mc', checkRole(['admin', 'estadistico']), eventosController.inyectarJuecesMC);
@@ -66,5 +70,17 @@ routerEventos.get('/atleta/:idAtleta/evento/:idEvento/certificado-oficial', chec
 
 // RUTA PARA PANEL BACKSTAGE
 routerEventos.get('/:id/backstage', checkRole(['admin', 'backstage', 'estadistico']), eventosController.verBackstage);
+
+// RUTA PARA PORTERÍA (ESCÁNER QR)
+routerEventos.get('/:id/backstage-seguridad', checkRole(['admin', 'backstage', 'estadistico']), eventosController.verBackstageSeguridad);
+
+// RUTAS PARA PRODUCCIÓN (DJ Y BROADCAST)
+routerEventos.get('/:id/dj-consola', checkRole(['admin', 'estadistico', 'mc', 'fotografo']), eventosController.verDJConsola);
+
+routerEventos.get('/:id/broadcast-live', checkRole(['admin', 'estadistico']), eventosController.verBroadcastLive);
+
+// RUTAS FINANCIERAS ADICIONALES
+routerEventos.post('/ingreso-extra', checkRole(['admin', 'ejecutivo']), eventosController.registrarIngresoExtra);
+routerEventos.post('/gasto-operativo', checkRole(['admin', 'ejecutivo']), upload.single('recibo_foto'), eventosController.registrarGastoOperativo);
 
 module.exports = routerEventos;

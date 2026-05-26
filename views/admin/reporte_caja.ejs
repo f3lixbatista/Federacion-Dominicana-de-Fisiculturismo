@@ -1,0 +1,59 @@
+<%- include("../template/cabecera", {tituloWeb: "Cierre de Caja Diario - FDFF"}) %>
+
+<div class="container my-5">
+    <div class="card shadow-lg border-0" style="border-radius: 20px;">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center p-4">
+            <h4 class="mb-0 fw-bold"><i class="fas fa-file-invoice-dollar me-2 text-success"></i> Auditoría de Caja: <%= new Date().toLocaleDateString('es-DO') %></h4>
+            <button onclick="window.print()" class="btn btn-outline-light btn-sm no-print">
+                <i class="fas fa-print me-1"></i> Imprimir Cierre
+            </button>
+        </div>
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Miembro del Staff</th>
+                            <th>Concepto de Cobro</th>
+                            <th class="text-center">Transacciones</th>
+                            <th class="text-end">Total Recaudado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (resumen.length > 0) { 
+                            let granTotal = 0;
+                        %>
+                            <% resumen.forEach(fila => { 
+                                granTotal += parseFloat(fila.total_recaudado);
+                            %>
+                                <tr>
+                                    <td class="fw-bold"><%= fila.staff_nombre %></td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            <%= fila.tipo_pago === 'membresia_anual' ? 'Membresía Atleta' : 'Pase Backstage' %>
+                                        </span>
+                                    </td>
+                                    <td class="text-center"><%= fila.cantidad_transacciones %></td>
+                                    <td class="text-end fw-bold">RD$ <%= parseFloat(fila.total_recaudado).toLocaleString() %></td>
+                                </tr>
+                            <% }) %>
+                            <tr class="table-dark">
+                                <td colspan="3" class="text-end fw-bold text-uppercase">Total General en Caja:</td>
+                                <td class="text-end fw-bold fs-5">RD$ <%= granTotal.toLocaleString() %></td>
+                            </tr>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">No se han registrado pagos el día de hoy.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 no-print text-center">
+                <a href="/eventos/competencias" class="btn btn-secondary px-4">Volver al Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include("../template/footer") %>

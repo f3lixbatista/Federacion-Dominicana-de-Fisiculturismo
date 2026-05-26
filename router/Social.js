@@ -5,6 +5,14 @@ const { requireAuth, checkRole } = require('../middlewares/auth');
 const webpush = require('web-push');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
+const { z } = require('zod');
+
+// Definición del esquema de validación para una noticia
+const noticiaSchema = z.object({
+    titulo: z.string().min(5, "El título debe tener al menos 5 caracteres").max(100),
+    contenido: z.string().min(10, "El contenido es demasiado corto"),
+    es_destacada: z.preprocess((val) => val === 'on', z.boolean().optional())
+});
 
 // Redirección de la raíz /social al muro
 router.get('/', (req, res) => {
@@ -71,6 +79,14 @@ router.post('/noticias/guardar', requireAuth, checkRole(['admin', 'ejecutivo']),
     let imagenUrl = null;
 
     try {
+        // Validar los datos de entrada con Zod
+        const validacion = noticiaSchema.safeParse(req.body);
+        
+        if (!validacion.success) {
+            const errores = validacion.error.errors.map(e => e.message).join(", ");
+            return res.status(400).send("Error de validación: " + errores);
+        }
+
         if (req.file) {
             const file = req.file;
             const fileName = `${Date.now()}_noticia.jpg`;

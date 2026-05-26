@@ -1,6 +1,24 @@
 const { supabase, supabaseAdmin } = require('../supabaseClient');
 const QRCode = require('qrcode');
 const webpush = require('web-push'); // Import web-push
+const { z } = require('zod');
+
+// Esquema para validar la creación de un evento
+const nuevoEventoSchema = z.object({
+    NombreEvento: z.string().min(3, "Nombre de evento requerido"),
+    Fecha: z.string().refine(val => !isNaN(Date.parse(val)), "Fecha de inicio inválida"),
+    Lugar: z.string().min(3, "Lugar requerido"),
+    direccion: z.string().optional(),
+    fecha_pesaje: z.string().optional(),
+    lugar_pesaje: z.string().optional(),
+    costo_primera: z.preprocess((val) => parseFloat(val), z.number().min(0)),
+    costo_adicional: z.preprocess((val) => parseFloat(val), z.number().min(0)),
+    info_pesaje: z.string().optional(),
+    Categorias: z.union([z.string(), z.array(z.string())]).optional(),
+    fecha_limite_oferta: z.string().optional().refine(val => !val || !isNaN(Date.parse(val)), "Fecha de oferta inválida"),
+    costo_oferta_primera: z.preprocess((val) => val === '' ? undefined : parseFloat(val), z.number().min(0).optional()),
+    costo_oferta_adicional: z.preprocess((val) => val === '' ? undefined : parseFloat(val), z.number().min(0).optional()),
+});
 
 // Configure web-push with VAPID keys from environment variables
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_EMAIL) {
@@ -94,7 +112,7 @@ const prepararEventoPage = async (req, res) => {
             .select(`
                 id,
                 evento_cat_id,
-                atletas (
+                atletas!inner (
                     nombre,
                     cedula,
                     gimnasio,
@@ -156,25 +174,29 @@ const oficializarPreparacion = async (req, res) => {
     }
 
     try {
-        // 1. Procesar fusiones y actualizaciones de estado en la tabla 'eventos_categorias'
-        for (const item of logistica) {
-            await supabaseAdmin
+        // 1. Procesar fusiones y actualizaciones en paralelo
+        const promesasLogistica = logistica.map(item => {
+            const updates = [
+                supabaseAdmin
                 .from('eventos_categorias')
                 .update({
                     orden_secuencia_categoria: item.orden,
                     estatus_logistica: item.estatus,
                     fusion_destino_id: item.fusion_destino_id || null
                 })
-                .eq('id', item.evento_cat_id);
+                .eq('id', item.evento_cat_id)
+            ];
 
-            if (item.estatus === 'fusionada' && item.fusion_destino_id) { // Asegúrate de que esto sea correcto
-                await supabase
-                    .from('competidores')
+            if (item.estatus === 'fusionada' && item.fusion_destino_id) {
+                updates.push(supabaseAdmin.from('competidores')
                     .update({ evento_cat_id: item.fusion_destino_id })
                     .eq('evento_cat_id', item.evento_cat_id)
-                    .eq('id_evento', eventoId);
+                    .eq('id_evento', eventoId));
             }
-        }
+            return updates;
+        }).flat();
+
+        await Promise.all(promesasLogistica);
 
         // 2. Dorsaleo correlativo automático
         const { data: categoriasOrdenadas, error: categoriasError } = await supabaseAdmin
@@ -274,59 +296,30 @@ const verMonitorMC = async (req, res) => {
     }
 };
 
-const verMesaComputo = async (req, res) => {
-    const { id, catId } = req.params;
-    const { fase = 'final' } = req.query;
-    try {
-        const { data: evento } = await supabaseAdmin.from('eventos').select('id, nombre').eq('id', id).single();
-        const { data: catRel } = await supabaseAdmin.from('eventos_categorias').select('id, categorias(nombre)').eq('id', catId).single();
-        const { data: jueces } = await supabaseAdmin.from('jueces_eventos').select('jueces(id, nombre)').eq('evento_id', id);
-        const { data: atletas } = await supabase.from('competidores').select('id, numero_atleta, nombre').eq('evento_cat_id', catId).order('numero_atleta', { ascending: true });
-        const { data: votos } = await supabase.from('votaciones_jueces').select('juez_id, atleta_id, posicion_asignada').eq('id_evento', id).eq('evento_cat_id', catId).eq('fase_competencia', fase);
-
-        const mapaVotos = {};
-        (atletas || []).forEach(a => mapaVotos[a.id] = {});
-        (votos || []).forEach(v => { if (mapaVotos[v.atleta_id]) mapaVotos[v.atleta_id][v.juez_id] = v.posicion_asignada; });
-
-        res.render('eventos/computo', {
-            eventoId: id,
-            catRelId: catId,
-            categoriaNombre: catRel?.categorias?.nombre,
-            jueces: (jueces || []).map(j => j.jueces),
-            atletas: (atletas || []).map(a => ({ id: a.id, dorsal: a.numero_atleta, nombre: a.nombre })),
-            mapaVotos
-        });
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
-};
-
 const inyectarJuecesMC = async (req, res) => {
     const { id } = req.params;
     const { panelId } = req.body;
     try {
         const { data: sillasPanel } = await supabaseAdmin
             .from('panel_sillas_jueces')
-            .select(`numero_silla, paneles_jueces!inner(id, numero_panel), profiles(id, nombre)`)
-            .eq('panel_id', panelId);
+            .select(`
+                numero_silla,
+                paneles_jueces ( numero_panel ),
+                profiles ( nombre )
+            `)
+            .eq('panel_id', panelId)
+            .order('numero_silla', { ascending: true });
 
-        const { data: todosJuecesEvento } = await supabaseAdmin
-            .from('paneles_jueces')
-            .select(`id, numero_panel, panel_sillas_jueces(profiles(id, nombre))`) // Usar supabaseAdmin para evitar RLS en profiles
-            .eq('id_evento', id);
+        const listaPanelActivo = (sillasPanel || []).map(s => s.profiles?.nombre || 'Juez Vacío');
+        
+        const { data: todasLasSillas } = await supabaseAdmin
+            .from('panel_sillas_jueces')
+            .select('profiles(nombre), paneles_jueces!inner(id_evento)')
+            .eq('paneles_jueces.id_evento', id);
 
-        const listaPanelActivo = (sillasPanel || []).sort((a, b) => a.numero_silla - b.numero_silla).map(s => ({
-            silla: s.numero_silla,
-            nombre: s.profiles?.nombre || 'Juez de Mesa'
-        }));
-
-        const nombresPanelActivo = new Set(listaPanelActivo.map(j => j.nombre));
-        const juecesRelevo = [];
-        (todosJuecesEvento || []).forEach(panel => {
-            panel.panel_sillas_jueces?.forEach(silla => {
-                if (silla.profiles && !nombresPanelActivo.has(silla.profiles.nombre)) juecesRelevo.push(silla.profiles.nombre);
-            });
-        });
+        const juecesRelevo = (todasLasSillas || [])
+            .map(s => s.profiles?.nombre)
+            .filter(n => n && !listaPanelActivo.includes(n));
 
         const paqueteJuecesMC = {
             tipo_alerta: 'presentacion_jueces',
@@ -685,9 +678,19 @@ const verResultadosPublicos = async (req, res) => {
 };
 
 const crearNuevoEvento = async (req, res) => {
-    const { NombreEvento, Fecha, Lugar, direccion, fecha_pesaje, lugar_pesaje, direccion_pesaje, costo_primera, costo_adicional, info_pesaje, Categorias } = req.body;
+    const { 
+        NombreEvento, Fecha, Lugar, direccion, fecha_pesaje, lugar_pesaje, direccion_pesaje, 
+        costo_primera, costo_adicional, info_pesaje, Categorias,
+        fecha_limite_oferta, costo_oferta_primera, costo_oferta_adicional
+    } = req.body;
     
     try {
+        // Validación de entrada
+        const validacion = nuevoEventoSchema.safeParse(req.body);
+        if (!validacion.success) {
+            throw new Error(validacion.error.errors.map(e => e.message).join(". "));
+        }
+
         let bannerEventoUrl = null;
         let bannerPesajeUrl = null;
 
@@ -712,6 +715,9 @@ const crearNuevoEvento = async (req, res) => {
                 direccion_pesaje,
                 costo_primera_cat: parseFloat(costo_primera) || 0,
                 costo_adicional: parseFloat(costo_adicional) || 0,
+                fecha_limite_oferta: fecha_limite_oferta || null,
+                costo_oferta_primera: parseFloat(costo_oferta_primera) || 0,
+                costo_oferta_adicional: parseFloat(costo_oferta_adicional) || 0,
                 banner_url: bannerEventoUrl, // Promotional banner
                 afiche_pesaje_url: bannerPesajeUrl, // Technical pesaje banner
                 info_pesaje: info_pesaje, // Pesaje description
@@ -787,7 +793,10 @@ const crearNuevoEvento = async (req, res) => {
 
 const actualizarEvento = async (req, res) => {
     const { id } = req.params;
-    const { NombreEvento, Fecha, Lugar, direccion, info_pesaje, costo_primera, costo_adicional, estado } = req.body;
+    const { 
+        NombreEvento, Fecha, Lugar, direccion, info_pesaje, costo_primera, costo_adicional, estado,
+        fecha_limite_oferta, costo_oferta_primera, costo_oferta_adicional
+    } = req.body;
 
     try {
         let bannerUrl = null;
@@ -820,7 +829,10 @@ const actualizarEvento = async (req, res) => {
             info_pesaje,
             costo_primera_cat: parseFloat(costo_primera) || 0,
             costo_adicional: parseFloat(costo_adicional) || 0,
-            estado
+            estado,
+            fecha_limite_oferta: fecha_limite_oferta || null,
+            costo_oferta_primera: parseFloat(costo_oferta_primera) || 0,
+            costo_oferta_adicional: parseFloat(costo_oferta_adicional) || 0,
         };
 
         if (bannerUrl) updateData.banner_url = bannerUrl;
@@ -848,7 +860,17 @@ const verAuditoriaRecaudacion = async (req, res) => {
         // Buscamos todos los competidores con sus datos de atleta
         const { data: competidores, error: errComp } = await supabaseAdmin
             .from('competidores')
-            .select('atleta_id, atletas(nombre, cedula, estatus_afiliacion)')
+            .select(`
+                id,
+                atleta_id,
+                created_at,
+                atletas!inner (
+                    nombre,
+                    cedula,
+                    estatus_afiliacion,
+                    idfdff
+                )
+            `)
             .eq('id_evento', id);
 
         if (errComp) throw errComp;
@@ -862,22 +884,147 @@ const verAuditoriaRecaudacion = async (req, res) => {
                     nombre: c.atletas?.nombre || 'N/A',
                     cedula: c.atletas?.cedula || 'N/A',
                     cant: 0,
-                    monto: 0
+                    monto: 0,
+                    fecha_registro: c.created_at,
+                    estatus_afiliacion: c.atletas?.estatus_afiliacion // FIX: Se requiere para el cálculo posterior
                 };
             }
             desglose[uid].cant++;
         });
 
-        let granTotal = 0;
+        let totalInscripciones = 0;
         const listaFinal = Object.values(desglose).map(item => {
-            item.monto = (evento.costo_primera_cat || 0) + ((item.cant - 1) * (evento.costo_adicional || 0));
-            granTotal += item.monto;
+            // Lógica Early Bird: Comparamos fecha de registro con límite de oferta
+            const fechaReg = new Date(item.fecha_registro);
+            const fechaLim = evento.fecha_limite_oferta ? new Date(evento.fecha_limite_oferta) : null;
+            const esOferta = fechaLim && fechaReg <= fechaLim;
+
+            const p1 = esOferta ? (evento.costo_oferta_primera || evento.costo_primera_cat) : (evento.costo_primera_cat || 0);
+            const pA = esOferta ? (evento.costo_oferta_adicional || evento.costo_adicional) : (evento.costo_adicional || 0);
+
+            const costoInscripcion = p1 + ((item.cant - 1) * pA);
+            const costoMembresia = (item.estatus_afiliacion === 'pendiente') ? 1500 : 0; // Ejemplo: 1500 membresía
+            
+            item.monto = costoInscripcion + costoMembresia;
+            totalInscripciones += item.monto;
             return item;
         });
 
-        res.render('eventos/recaudacion', { evento, recaudacion: listaFinal, granTotal });
+        // 2. Traer Ingresos Extras (Patrocinios, Tickets, etc.)
+        const { data: extras } = await supabaseAdmin
+            .from('evento_ingresos_extra')
+            .select('monto')
+            .eq('evento_id', id);
+        
+        const totalExtra = (extras || []).reduce((acc, e) => acc + parseFloat(e.monto || 0), 0);
+
+        // 3. Traer Gastos Operativos
+        const { data: gastos } = await supabaseAdmin
+            .from('evento_gastos')
+            .select('monto')
+            .eq('evento_id', id);
+
+        const totalGastos = (gastos || []).reduce((acc, g) => acc + parseFloat(g.monto || 0), 0);
+
+        res.render('eventos/recaudacion', { 
+            evento, 
+            recaudacion: listaFinal, 
+            totalInscripciones,
+            totalExtra,
+            totalGastos
+        });
     } catch (error) {
-        res.redirect(`/eventos/${id}`);
+        console.error("❌ Error en Auditoría de Recaudación:", error.message);
+        res.status(500).send("Error en recaudación: " + error.message);
+    }
+};
+
+const registrarIngresoExtra = async (req, res) => {
+    const { evento_id, concepto, monto } = req.body;
+    try {
+        await supabaseAdmin.from('evento_ingresos_extra').insert([{ evento_id, concepto, monto: parseFloat(monto) }]);
+        res.redirect(`/eventos/${evento_id}/recaudacion`);
+    } catch (e) { res.status(500).send(e.message); }
+};
+
+const registrarGastoOperativo = async (req, res) => {
+    const { evento_id, concepto, monto } = req.body;
+    try {
+        let reciboUrl = null;
+        if (req.file) {
+            // Utilizamos el helper subirAStorage ya definido en el controlador
+            reciboUrl = await subirAStorage(req.file, 'eventos-banners', 'recibos_gastos');
+        }
+
+        await supabaseAdmin.from('evento_gastos').insert([{ 
+            evento_id, 
+            concepto, 
+            monto: parseFloat(monto),
+            recibo_url: reciboUrl // Asegúrate de tener esta columna en tu tabla de Supabase
+        }]);
+
+        res.redirect(`/eventos/${evento_id}/recaudacion`);
+    } catch (e) { res.status(500).send(e.message); }
+};
+
+const verBackstageSeguridad = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data: evento, error } = await supabaseAdmin.from('eventos').select('*').eq('id', id).single();
+        if (error || !evento) throw new Error("Evento no encontrado para Portería");
+        res.render('eventos/scanner', { evento });
+    } catch (e) {
+        console.error("❌ Error en Portería:", e.message);
+        res.status(404).send("Error: " + e.message);
+    }
+};
+
+const verDJConsola = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data: evento, error } = await supabaseAdmin.from('eventos').select('*').eq('id', id).single();
+        if (error || !evento) throw new Error("Evento no encontrado para Consola DJ");
+
+        // Traer competidores aprobados con su música
+        const { data: competidores } = await supabaseAdmin
+            .from('competidores')
+            .select(`
+                id,
+                numero_atleta,
+                musica_url,
+                atletas ( nombre ),
+                eventos_categorias (
+                    categorias ( nombre )
+                )
+            `)
+            .eq('id_evento', id)
+            .eq('estatus_pesaje', 'aprobado')
+            .order('numero_atleta', { ascending: true });
+
+        res.render('eventos/dj_consola', { evento, competidores: competidores || [], user: res.locals.user });
+    } catch (e) {
+        console.error("❌ Error 500 en Consola DJ:", e.message);
+        res.status(500).send("Error Interno en Consola DJ: " + e.message);
+    }
+};
+
+const verBroadcastLive = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data: evento, error } = await supabaseAdmin.from('eventos').select('*').eq('id', id).single();
+        if (error || !evento) throw new Error("Evento no encontrado para Broadcast");
+        
+        // Obtener categorías activas para el panel de video
+        const { data: cats } = await supabaseAdmin
+            .from('eventos_categorias')
+            .select('*, categorias(nombre)')
+            .eq('evento_id', id)
+            .in('estatus_logistica', ['abierta activa', 'abierta exhibicion', 'exhibicion']);
+
+        res.render('eventos/broadcast_live', { evento, categoriasActivas: cats || [] });
+    } catch (e) {
+        console.error("❌ Error en Broadcast:", e.message);
+        res.status(500).send("Error en Broadcast: " + e.message);
     }
 };
 
@@ -886,7 +1033,6 @@ module.exports = {
     prepararEventoPage,
     oficializarPreparacion,
     verMonitorMC,
-    verMesaComputo,
     inyectarJuecesMC,
     verBoletaJuez,
     verReporteOficial,
@@ -900,5 +1046,10 @@ module.exports = {
     verResultadosPublicos,
     crearNuevoEvento,
     actualizarEvento,
-    verAuditoriaRecaudacion
+    verAuditoriaRecaudacion,
+    verBackstageSeguridad,
+    verDJConsola,
+    verBroadcastLive,
+    registrarIngresoExtra,
+    registrarGastoOperativo
 };

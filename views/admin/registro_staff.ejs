@@ -1,0 +1,85 @@
+<%- include("../template/cabecera", {tituloWeb: "Gestión de Personal FDFF"}) %>
+
+<div class="container my-5">
+    <div class="row">
+        <!-- Formulario de Registro -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 p-4" style="border-radius: 20px;">
+                <h5 class="fw-bold mb-3"><i class="fas fa-user-plus text-primary"></i> Registrar Personal</h5>
+                <form action="/admin/registro_staff/guardar" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label small">Correo del Usuario (Ya registrado)</label>
+                        <input type="email" name="email" class="form-control" placeholder="ejemplo@gmail.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Nombre Completo</label>
+                        <input type="text" name="nombre" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Asignar Rol de Acceso</label>
+                        <select name="role" class="form-select" required>
+                            <option value="staff">Staff General (Seguridad/Apoyo)</option>
+                            <option value="fotografo">Fotógrafo Oficial</option>
+                            <option value="estadistico">Estadístico / Cómputos</option>
+                            <option value="juez">Juez Oficial</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Puesto Específico</label>
+                        <input type="text" name="puesto" class="form-control" placeholder="Ej: DJ, MC, Portería">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">GUARDAR EN FEDERACIÓN</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Listado de Personal Activo -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 p-4" style="border-radius: 20px;">
+                <h5 class="fw-bold mb-3"><i class="fas fa-users-cog"></i> Directorio de Staff y Jueces</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Rol / Puesto</th>
+                                <th>Estatus</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% personal.forEach(p => { %>
+                                <tr>
+                                    <td><strong><%= p.nombre_completo %></strong></td>
+                                    <td>
+                                        <span class="badge bg-dark"><%= p.puesto_especifico %></span><br>
+                                        <small class="text-muted text-uppercase"><%= p.profiles?.role %></small>
+                                    </td>
+                                    <td><span class="badge bg-success">ACTIVO</span></td>
+                                    <td>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="quitarPersonal('<%= p.id %>')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function quitarPersonal(id) {
+        if(!confirm("¿Estás seguro de quitar a esta persona del Staff? Se le revocará el acceso administrativo y volverá a ser un usuario general.")) return;
+        
+        const res = await fetch(`/admin/registro_staff/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if(data.ok) location.reload();
+        else alert("Error al eliminar: " + data.error);
+    }
+</script>
+
+<%- include("../template/footer") %>

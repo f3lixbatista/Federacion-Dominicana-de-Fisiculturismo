@@ -63,6 +63,19 @@ app.get('/logout', (req, res) => {
     res.render('vistas_auth/logout');
 });
 
+// REDIRECCIÓN DE LEGADO: Maneja URLs antiguas para evitar fallos de seguridad (CORS) en el navegador
+// REDIRECCIONES DE LEGADO: Maneja URLs antiguas y las normaliza a la nueva estructura por evento
+app.get('/votacion', (req, res) => {
+    const { evento } = req.query;
+    res.redirect(evento ? `/eventos/${evento}/votacion` : '/eventos/competencias');
+});
+
+app.get('/dj/consola/:id', (req, res) => res.redirect(`/eventos/${req.params.id}/dj-consola`));
+app.get('/admin/recaudacion', (req, res) => {
+    const { evento } = req.query;
+    res.redirect(evento ? `/eventos/${evento}/recaudacion` : '/eventos/competencias');
+});
+
 app.use('/', require('./router/auth'));
 app.use('/eventos', require('./router/Eventos'));
 app.use('/inscripcion', require('./router/Inscripcion'));

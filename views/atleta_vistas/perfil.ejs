@@ -77,6 +77,67 @@
 
         <!-- COLUMNA DERECHA: HISTORIAL DE COMPETENCIA FDFF -->
         <div class="col-lg-8">
+            <!-- CENTRO DE SEGUIMIENTO DE INSCRIPCIÓN -->
+            <% if (locals.evento) { %>
+                <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px;">
+                    <div class="card-header bg-dark text-white fw-bold">
+                        <i class="fas fa-tasks me-2"></i> Estatus de mi Inscripción: <%= evento.nombre %>
+                    </div>
+                    <div class="card-body">
+                        <% if (inscripcion && inscripcion.observaciones_pago && !inscripcion.pago_validado) { %>
+                            <div class="alert alert-danger border-2 shadow-sm mb-3">
+                                <h6 class="fw-bold"><i class="fas fa-exclamation-triangle"></i> ATENCIÓN: Tu pago fue rechazado</h6>
+                                <p class="mb-2"><strong>Motivo:</strong> <%= inscripcion.observaciones_pago %></p>
+                                <hr>
+                                <p class="small mb-0">Por favor, sube un nuevo comprobante corregido para continuar.</p>
+                            </div>
+                        <% } %>
+
+                        <% if (!inscripcion) { %>
+                            <!-- FASE 0: No ha empezado -->
+                            <p class="text-muted">Aún no te has inscrito en este evento.</p>
+                            <a href="/inscripcion/InscripcionAtleta?evento=<%= evento.id %>" class="btn btn-primary w-100 fw-bold">
+                                INICIAR INSCRIPCIÓN
+                            </a>
+                        <% } else if (!inscripcion.url_comprobante_pago) { %>
+                            <!-- FASE 1: Inscrito pero sin comprobante -->
+                            <div class="alert alert-warning border-0 mb-3 shadow-sm">
+                                <strong><i class="fas fa-clock"></i> Pendiente de Pago</strong><br>
+                                Ya elegiste tus categorías, pero falta el comprobante para activar tu ticket.
+                            </div>
+                            
+                            <div class="bg-light p-3 rounded mb-3 border">
+                                <small class="text-muted d-block fw-bold">Monto a depositar:</small>
+                                <h4 class="fw-bold text-primary">RD$ <%= inscripcion.monto_total.toLocaleString() %></h4>
+                                <p class="small mb-0">Cuenta Corriente: 123456789 (Banreservas)</p>
+                            </div>
+
+                            <label class="form-label small fw-bold">Subir Comprobante de Depósito/Transferencia:</label>
+                            <div class="input-group">
+                                <input type="file" id="inputRetomaPago" class="form-control" accept="image/*">
+                                <button onclick="subirPagoDiferido('<%= inscripcion.id %>')" class="btn btn-dark fw-bold">SUBIR</button>
+                            </div>
+                        <% } else if (!inscripcion.pago_validado) { %>
+                            <!-- FASE 2: Esperando al Staff -->
+                            <div class="text-center py-3">
+                                <i class="fas fa-hourglass-half fa-2x text-warning mb-2"></i>
+                                <h6 class="fw-bold text-uppercase">Comprobante en Revisión</h6>
+                                <p class="small text-muted">Subiste tu pago el <%= new Date(inscripcion.fecha_subida_pago).toLocaleDateString('es-DO') %>. Estamos validando con el banco.</p>
+                            </div>
+                        <% } else { %>
+                            <!-- FASE 3: Todo listo -->
+                            <div class="text-center py-3">
+                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                <h6 class="fw-bold text-uppercase">¡Todo listo para el pesaje!</h6>
+                                <a href="/atletas/mi-comprobante/<%= evento.id %>" class="btn btn-success fw-bold shadow-sm px-4">
+                                    <i class="fas fa-qrcode me-2"></i> DESCARGAR TICKET QR
+                                </a>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            <% } %>
+
             <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 15px; min-height: 550px;">
                 <h3 class="fw-bold text-dark mb-4 border-bottom pb-2"><i class="fas fa-history text-primary"></i> Mi Historial de Competencias</h3>
                 
@@ -200,9 +261,50 @@
     </div>
 </div>
 
+<!-- Botón Flotante de Ayuda -->
+<button type="button" class="btn btn-primary rounded-circle shadow-lg" 
+        style="position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 1000;"
+        data-bs-toggle="modal" data-bs-target="#modalManual">
+    <i class="fas fa-question fa-lg"></i>
+</button>
+
+<!-- Modal del Manual -->
+<div class="modal fade" id="modalManual" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="border-radius: 20px;">
+            <div class="modal-header bg-dark text-white border-0" style="border-radius: 20px 20px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-book-reader me-2 text-warning"></i> Pasos para tu Inscripción</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex mb-3">
+                    <div class="me-3"><span class="badge bg-primary rounded-circle">1</span></div>
+                    <div><strong>Selecciona tus categorías:</strong> Elige las modalidades donde competirás. Recuerda los bloqueos por afinidad.</div>
+                </div>
+                <div class="d-flex mb-3">
+                    <div class="me-3"><span class="badge bg-primary rounded-circle">2</span></div>
+                    <div><strong>Realiza el Pago:</strong> Transfiere a la cuenta de la FDFF. Si estás en fecha de oferta, el sistema calculará el descuento automáticamente.</div>
+                </div>
+                <div class="d-flex mb-3">
+                    <div class="me-3"><span class="badge bg-primary rounded-circle">3</span></div>
+                    <div><strong>Sube el Comprobante:</strong> Hazle una foto clara a tu recibo y súbela desde tu perfil.</div>
+                </div>
+                <div class="d-flex mb-3">
+                    <div class="me-3"><span class="badge bg-primary rounded-circle">4</span></div>
+                    <div><strong>Validación y Ticket:</strong> El Staff revisará tu pago. Una vez aprobado, se activará tu <strong>Ticket QR</strong> para el pesaje.</div>
+                </div>
+                <div class="alert alert-info small mb-0">
+                    <i class="fas fa-info-circle"></i> Si tu pago es rechazado, verás el motivo en la sección "Observaciones" de tu perfil.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="/js/supabase.js"></script>
 <script>
     const userId = "<%= user.id %>";
+    const idEventoActual = "<%= locals.evento?.id || '' %>";
     window._supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
 
     async function actualizarFotoCarnet() {
@@ -282,6 +384,43 @@
             }
         } catch (e) {
             alert("Error de red al actualizar el team.");
+        }
+    }
+
+    async function subirPagoDiferido(inscripcionId) {
+        const fileInput = document.getElementById('inputRetomaPago');
+        if (fileInput.files.length === 0) return alert("Por favor, selecciona la imagen de tu recibo.");
+
+        const file = fileInput.files[0];
+        const path = `comprobantes/${inscripcionId}_${Date.now()}.jpg`;
+
+        try {
+            // 1. Subir al Storage (Bucket: comprobantes_atletas)
+            const { data: uploadData, error: uploadError } = await _supabase.storage
+                .from('comprobantes_atletas')
+                .upload(path, file);
+
+            if (uploadError) throw uploadError;
+
+            // 2. Obtener URL y actualizar registros existentes en la tabla competidores
+            const { data: { publicUrl } } = _supabase.storage.from('comprobantes_atletas').getPublicUrl(path);
+
+            const { error: dbError } = await _supabase
+                .from('competidores')
+                .update({ 
+                    url_comprobante_pago: publicUrl, 
+                    fecha_subida_pago: new Date().toISOString() 
+                })
+                .eq('atleta_id', userId)
+                .eq('id_evento', idEventoActual);
+
+            if (dbError) throw dbError;
+
+            alert("✅ Comprobante enviado con éxito. El staff lo revisará pronto.");
+            location.reload();
+        } catch (err) {
+            console.error("Error en subida diferida:", err.message);
+            alert("Error al procesar el pago: " + err.message);
         }
     }
 

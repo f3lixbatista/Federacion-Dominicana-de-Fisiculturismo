@@ -58,9 +58,12 @@ router.get('/nuevoEvento', checkRole(['ejecutivo', 'admin']), async (req, res) =
 // 4. PROCESAR NUEVO EVENTO (Estructura Relacional)
 router.post('/nuevoEvento', upload.single('banner'), async (req, res) => {
    
-
     try {
-         const { NombreEvento, Lugar, fecha_pesaje, lugar_pesaje, direccion_pesaje, direccion, Fecha, costo_primera, costo_adicional, CategoriasIds } = req.body;
+         const { 
+            NombreEvento, Lugar, fecha_pesaje, lugar_pesaje, direccion_pesaje, direccion, Fecha, 
+            costo_primera, costo_adicional, CategoriasIds,
+            fecha_limite_oferta, costo_oferta_primera, costo_oferta_adicional
+         } = req.body;
         let publicUrl = '';
 
          if (req.file) {
@@ -96,6 +99,9 @@ router.post('/nuevoEvento', upload.single('banner'), async (req, res) => {
                 banner_url: publicUrl,
                 costo_primera_cat: parseFloat(costo_primera) || 0,
                 costo_adicional: parseFloat(costo_adicional) || 0,
+                fecha_limite_oferta: fecha_limite_oferta || null,
+                costo_oferta_primera: parseFloat(costo_oferta_primera) || 0,
+                costo_oferta_adicional: parseFloat(costo_oferta_adicional) || 0,
                 estado: 'inscripcion',
                 fecha_pesaje: fecha_pesaje,
                 direccion_pesaje: direccion_pesaje,

@@ -203,7 +203,9 @@ const verPerfilPropio = async (req, res) => {
                 id,
                 numero_atleta,
                 posicion_final,
-                eventos ( nombre, fecha_inicio, estado ),
+                pago_validado,
+                url_comprobante_pago,
+                eventos ( id, nombre, fecha_inicio, estado ),
                 eventos_categorias ( categorias ( nombre ) )
             `)
             .eq('atleta_id', usuarioId)
@@ -222,12 +224,48 @@ const verPerfilPropio = async (req, res) => {
             .eq('atleta_id', usuarioId)
             .order('created_at', { ascending: false });
 
+        // 5. Identificar el evento activo actual para inscripciones
+        const { data: currentEvent } = await supabase
+            .from('eventos')
+            .select('*')
+            .or('estado.eq.inscripcion,estado.eq.pesaje')
+            .order('fecha_inicio', { ascending: false })
+            .limit(1)
+            .single();
+
+        let enrollmentData = null;
+        if (currentEvent) {
+            // 6. Verificar si el atleta tiene una inscripción activa para este evento
+            const { data: participations } = await supabase
+                .from('competidores')
+                .select('id, url_comprobante_pago, pago_validado, fecha_subida_pago, observaciones_pago')
+                .eq('atleta_id', usuarioId)
+                .eq('id_evento', currentEvent.id);
+
+            if (participations && participations.length > 0) {
+                // Cálculo de monto basado en la cantidad de categorías inscritas
+                const cant = participations.length;
+                const monto_total = (currentEvent.costo_primera_cat || 0) + (cant - 1) * (currentEvent.costo_adicional || 0);
+                
+                enrollmentData = {
+                    id: participations[0].id, 
+                    url_comprobante_pago: participations.find(p => p.url_comprobante_pago)?.url_comprobante_pago || null,
+                    pago_validado: participations.every(p => p.pago_validado),
+                    fecha_subida_pago: participations.find(p => p.fecha_subida_pago)?.fecha_subida_pago || null,
+                    monto_total: monto_total,
+                    observaciones_pago: participations.find(p => p.observaciones_pago)?.observaciones_pago || null
+                };
+            }
+        }
+
         res.render('atleta_vistas/perfil', {
             atleta: atleta || {},
             preparadores: preparadores || [],
             historial: historial || [],
             publicaciones: publicaciones || [],
-            user: res.locals.user
+            user: res.locals.user,
+            evento: currentEvent,
+            inscripcion: enrollmentData
         });
     } catch (error) {
         console.error("🔥 Error cargando perfil de atleta:", error.message);
@@ -388,13 +426,9 @@ const verEntradaAtleta = async (req, res) => {
             .select(`
                 numero_atleta,
                 foto_atletica_url,
-                atletas (
-                    nombre,
-                    provincia,
-                    preparador,
-                    peso,
-                    estatura,
-                    fecha_nacimiento
+                atletas ( nombre, provincia, preparador, peso, estatura, fecha_nacimiento ),
+                eventos_categorias (
+                    categorias ( nombre )
                 )
             `)
             .eq('id_evento', idEvento)
@@ -417,8 +451,10 @@ const verEntradaAtleta = async (req, res) => {
                 peso: atl.peso || '--',
                 estatura: atl.estatura || '--',
                 edad: edad,
-                foto_atletica_url: competidor.foto_atletica_url
-            }
+                foto_atletica_url: competidor.foto_atletica_url,
+                categoria: competidor.eventos_categorias?.categorias?.nombre || 'Categoría Oficial'
+            },
+            eventoId: idEvento
         });
     } catch (error) {
         console.error('🔥 Error en pantalla LED:', error.message);

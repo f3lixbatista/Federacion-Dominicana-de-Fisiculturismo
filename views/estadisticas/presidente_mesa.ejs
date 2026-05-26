@@ -74,7 +74,7 @@
 
         if(!error) {
             alert("¡Boletas desbloqueadas! Los jueces ya pueden asignar puestos.");
-            window.location.href = "/eventos/<%= catId %>/computo";
+            window.location.href = "/eventos/<%= competidores[0]?.id_evento %>/computo/<%= catId %>";
         } else {
             alert("Error al habilitar votación: " + error.message);
         }

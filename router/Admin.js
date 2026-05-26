@@ -9,4 +9,11 @@ router.use(checkRole(['admin'])); // Solo administradores pueden acceder a estas
 // Ruta para enviar notificaciones push de prueba
 router.post('/test-push', adminController.testPush);
 
+// Rutas para Gestión de Personal (Staff y Jueces)
+router.get('/registro_staff', adminController.verRegistroStaff);
+router.post('/registro_staff/guardar', adminController.guardarStaff);
+router.delete('/registro_staff/:id', adminController.eliminarStaff);
+router.get('/reporte-caja', adminController.verReporteCaja);
+router.get('/auditoria-pagos', adminController.verAuditoriaPagos);
+
 module.exports = router;

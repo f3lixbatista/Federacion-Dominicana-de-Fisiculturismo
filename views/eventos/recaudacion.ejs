@@ -1,50 +1,67 @@
-<%- include("../template/cabecera", {tituloWeb: "Auditoría de Recaudación"}) %>
+<%- include("../template/cabecera", {tituloWeb: "Balance del Evento - FDFF"}) %>
 
 <div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold"><i class="fas fa-cash-register text-success"></i> Auditoría: <%= evento.nombre %></h2>
-        <div class="text-end">
-            <span class="text-muted d-block small">TOTAL RECAUDADO:</span>
-            <h2 class="text-success fw-bold">RD$ <%= granTotal.toLocaleString() %></h2>
+    <div class="row g-4">
+        <!-- Dashboard de Totales -->
+        <div class="col-md-4">
+            <div class="card bg-success text-white p-4 shadow-sm border-0">
+                <h6 class="text-uppercase small">Total Ingresos</h6>
+                <h2 class="fw-bold">RD$ <%= (totalInscripciones + totalExtra).toLocaleString() %></h2>
+                <small>Inscripciones + Patrocinios/Tickets</small>
+            </div>
         </div>
-    </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white p-4 shadow-sm border-0">
+                <h6 class="text-uppercase small">Total Gastos</h6>
+                <h2 class="fw-bold">RD$ <%= totalGastos.toLocaleString() %></h2>
+                <small>Operación y Logística</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card <%= (totalInscripciones + totalExtra - totalGastos) >= 0 ? 'bg-dark' : 'bg-warning' %> text-white p-4 shadow-sm border-0">
+                <h6 class="text-uppercase small">Balance Final</h6>
+                <h2 class="fw-bold">RD$ <%= (totalInscripciones + totalExtra - totalGastos).toLocaleString() %></h2>
+                <small>Utilidad Neta del Evento</small>
+            </div>
+        </div>
 
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
-            <table class="table table-hover align-middle" id="tablaRecaudacion">
-                <thead class="table-light">
-                    <tr>
-                        <th>Atleta</th>
-                        <th>Cédula</th>
-                        <th class="text-center">Categorías</th>
-                        <th class="text-end">Monto Generado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% recaudacion.forEach(atl => { %>
-                        <tr>
-                            <td class="fw-bold"><%= atl.nombre %></td>
-                            <td><%= atl.cedula %></td>
-                            <td class="text-center"><span class="badge bg-dark"><%= atl.cant %></span></td>
-                            <td class="text-end fw-bold text-primary">RD$ <%= atl.monto.toLocaleString() %></td>
-                        </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+        <!-- Formularios de Registro Rápido -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 p-4">
+                <h5 class="fw-bold text-success mb-3"><i class="fas fa-plus-circle"></i> Otros Ingresos (Tickets/Patrocinio)</h5>
+                <form action="/eventos/ingreso-extra" method="POST" class="row g-2">
+                    <input type="hidden" name="evento_id" value="<%= evento.id %>">
+                    <div class="col-8">
+                        <input type="text" name="concepto" class="form-control" placeholder="Ej: Venta 50 Boletas VIP" required>
+                    </div>
+                    <div class="col-4">
+                        <input type="number" name="monto" class="form-control" placeholder="Monto" required>
+                    </div>
+                    <button class="btn btn-success w-100 mt-2 fw-bold">Registrar Ingreso</button>
+                </form>
+            </div>
         </div>
-    </div>
-    <div class="mt-4 no-print">
-        <button onclick="window.print()" class="btn btn-outline-dark"><i class="fas fa-print"></i> Imprimir Informe</button>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 p-4">
+                <h5 class="fw-bold text-danger mb-3"><i class="fas fa-minus-circle"></i> Registro de Gastos</h5>
+                <form action="/eventos/gasto-operativo" method="POST" class="row g-2" enctype="multipart/form-data">
+                    <input type="hidden" name="evento_id" value="<%= evento.id %>">
+                    <div class="col-8">
+                        <input type="text" name="concepto" class="form-control" placeholder="Ej: Pago de Trofeos" required>
+                    </div>
+                    <div class="col-4">
+                        <input type="number" name="monto" class="form-control" placeholder="Monto" required>
+                    </div>
+                    <div class="col-12 mt-2">
+                        <label class="small fw-bold">Foto del Recibo / Factura (Opcional)</label>
+                        <input type="file" name="recibo_foto" class="form-control form-control-sm" accept="image/*">
+                    </div>
+                    <button class="btn btn-danger w-100 mt-2 fw-bold">Registrar Gasto</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
-
-<script>
-    $(document).ready(function() {
-        $('#tablaRecaudacion').DataTable({
-            "dom": 'Bfrtip',
-            "buttons": ['excel', 'pdf']
-        });
-    });
-</script>
 
 <%- include("../template/footer") %>

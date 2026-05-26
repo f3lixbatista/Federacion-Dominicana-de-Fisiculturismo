@@ -11,6 +11,23 @@
         justify-content: center;
         align-items: center;
         background: radial-gradient(circle, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
+        transition: opacity 0.5s ease-in-out;
+    }
+
+    /* CINTA DE CATEGORÍA (Top Right Overlay) */
+    .cinta-categoria {
+        position: absolute;
+        top: 40px;
+        right: 0;
+        background: #000;
+        color: #f1c40f;
+        padding: 10px 40px;
+        font-weight: bold;
+        text-transform: uppercase;
+        border-left: 5px solid #f1c40f;
+        font-size: 1.5rem;
+        box-shadow: -5px 5px 15px rgba(0,0,0,0.3);
+        z-index: 10;
     }
 
     /* Foto Atlética con Efecto de Fuego/Humo */
@@ -57,36 +74,97 @@
 </style>
 
 <div class="escenario-virtual">
-    <!-- El Video Director controla qué atleta se muestra vía Realtime -->
+    <!-- Cinta de Categoría -->
+    <div class="cinta-categoria" id="displayCategoria"><%= atleta.categoria %></div>
+
     <div class="foto-atletica-container">
-        <img src="<%= atleta.foto_atletica_url || '/img/placeholder_poses.png' %>" class="foto-atletica">
+        <img src="<%= atleta.foto_atletica_url || '/img/placeholder_poses.png' %>" class="foto-atletica" id="displayFoto">
     </div>
 
     <div class="cinta-atleta">
         <div class="info-primaria">
-            <h1 class="fw-bold mb-0 text-uppercase"><%= atleta.nombre %></h1>
-            <h4 class="mb-0 opacity-75"><%= atleta.provincia %> | <%= atleta.preparador %></h4>
+            <h1 class="fw-bold mb-0 text-uppercase" id="displayNombre"><%= atleta.nombre %></h1>
+            <h4 class="mb-0 opacity-75" id="displayOrigen"><%= atleta.provincia %> | <%= atleta.preparador %></h4>
         </div>
         <div class="info-tecnica text-end">
-            <div class="badge bg-warning text-dark fs-4 mb-2">DORSAL: <%= atleta.dorsal %></div>
-            <div class="small fw-bold">
+            <div class="badge bg-warning text-dark fs-4 mb-2" id="displayDorsal">DORSAL: <%= atleta.dorsal %></div>
+            <div class="small fw-bold" id="displayTecnico">
                 <%= atleta.peso %> KG | <%= atleta.estatura %> CM | <%= atleta.edad %> AÑOS
             </div>
         </div>
     </div>
 </div>
 
-<!-- Script para Voz Artificial (Text-to-Speech) -->
+<script src="/js/supabase.js"></script>
 <script>
-    function anunciarAtleta() {
-        const mensaje = new SpeechSynthesisUtterance("Atleta número <%= atleta.dorsal %>, <%= atleta.nombre %>, del equipo <%= atleta.preparador %>");
-        mensaje.lang = 'es-ES';
-        mensaje.rate = 0.9;
-        window.speechSynthesis.speak(mensaje);
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+    const eventoId = "<%= eventoId %>";
+
+    function anunciarAtleta(nombre, dorsal, preparador) {
+        window.speechSynthesis.cancel(); // Cancelar anuncios previos para no saturar
+        const msg = new SpeechSynthesisUtterance(`Atleta número ${dorsal}, ${nombre}, del equipo ${preparador || 'Independiente'}`);
+        msg.lang = 'es-ES';
+        msg.rate = 0.9;
+        window.speechSynthesis.speak(msg);
     }
     
-    // Se dispara automáticamente al cargar si el VMD lo activa
-    window.onload = anunciarAtleta;
-</script>
+    // ESCUCHAR CAMBIOS EN TIEMPO REAL (RECEPCIÓN VMD)
+    _supabase.channel('led-flow')
+        .on('postgres_changes', { 
+            event: 'UPDATE', 
+            schema: 'public', 
+            table: 'eventos', 
+            filter: `id=eq.${eventoId}` 
+        }, async (payload) => {
+            const data = payload.new.resultados_en_vivo;
+            // Si el Director de Video lanza un atleta, actualizamos sin recargar
+            if (data && data.tipo === 'atleta_entrada') {
+                await actualizarPantallaDinamica(data.atleta_id, data.categoria_nombre);
+            }
+        }).subscribe();
 
+    async function actualizarPantallaDinamica(atletaId, categoriaNombre) {
+        // 1. Obtener datos frescos del atleta desde la DB
+        const { data: c, error } = await _supabase
+            .from('competidores')
+            .select(`
+                numero_atleta,
+                foto_atletica_url,
+                atletas ( nombre, provincia, preparador, peso, estatura, fecha_nacimiento )
+            `)
+            .eq('id_evento', eventoId)
+            .eq('atleta_id', atletaId)
+            .single();
+
+        if (error || !c) return console.error("Error al recibir atleta:", error);
+
+        const atl = c.atletas;
+        const edad = atl.fecha_nacimiento ? new Date().getFullYear() - new Date(atl.fecha_nacimiento).getFullYear() : '--';
+        const container = document.querySelector('.escenario-virtual');
+
+        // 2. Efecto de transición (Fade Out)
+        container.style.opacity = '0';
+
+        setTimeout(() => {
+            // 3. Inyectar nuevos datos en el DOM
+            document.getElementById('displayFoto').src = c.foto_atletica_url || '/img/placeholder_poses.png';
+            document.getElementById('displayNombre').innerText = atl.nombre;
+            document.getElementById('displayOrigen').innerText = `${atl.provincia || 'N/A'} | ${atl.preparador || 'Independiente'}`;
+            document.getElementById('displayDorsal').innerText = `DORSAL: ${c.numero_atleta || '00'}`;
+            document.getElementById('displayTecnico').innerText = `${atl.peso || '--'} KG | ${atl.estatura || '--'} CM | ${edad} AÑOS`;
+            document.getElementById('displayCategoria').innerText = categoriaNombre || 'Competencia';
+
+            // 4. Efecto de transición (Fade In)
+            container.style.opacity = '1';
+            
+            // 5. Anuncio por voz
+            anunciarAtleta(atl.nombre, c.numero_atleta, atl.preparador);
+        }, 500);
+    }
+
+    // Carga inicial (SSR)
+    window.onload = () => {
+        anunciarAtleta("<%= atleta.nombre %>", "<%= atleta.dorsal %>", "<%= atleta.preparador %>");
+    };
+</script>
 <%- include("../template/footer") %>

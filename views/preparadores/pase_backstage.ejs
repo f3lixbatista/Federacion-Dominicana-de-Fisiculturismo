@@ -1,0 +1,31 @@
+<%- include("../template/cabecera", {tituloWeb: "Pase Backstage - " + coach.nombre_completo}) %>
+
+<style>
+    body { background-color: #f0f2f5; }
+    .ticket-backstage { max-width: 380px; background: #fff; border-radius: 25px; position: relative; overflow: hidden; }
+    .ticket-header { background: #ce1126; color: white; padding: 20px; }
+    .qr-box { background: #f8f9fa; border: 2px solid #eee; padding: 15px; border-radius: 15px; }
+</style>
+
+<div class="container my-5 d-flex justify-content-center">
+    <div class="ticket-backstage shadow-lg border-0 text-center">
+        <div class="ticket-header">
+            <img src="/img/fdff3.jpg" style="width: 70px; filter: brightness(0) invert(1);" class="mb-2">
+            <h4 class="fw-bold mb-0">PASE OFICIAL</h4>
+            <h5 class="fw-bold mb-0">ZONA BACKSTAGE</h5>
+        </div>
+        
+        <div class="p-4">
+            <div class="qr-box mb-3">
+                <img src="<%= qrCode %>" class="img-fluid" alt="QR Access">
+            </div>
+            <h5 class="fw-bold text-uppercase mb-1"><%= coach.nombre_completo %></h5>
+            <p class="badge bg-dark mb-3">ID COACH: <%= coach.ID_Coach_FDFF %></p>
+            <hr>
+            <div class="alert alert-warning small fw-bold py-2">VÁLIDO SOLO PARA CALENTAMIENTO</div>
+            <p class="small text-muted mb-0">Evento: <%= evento.nombre %></p>
+        </div>
+    </div>
+</div>
+
+<%- include("../template/footer") %>

@@ -1,0 +1,88 @@
+<%- include("../template/cabecera", {tituloWeb: "Consola DJ - FDFF"}) %>
+<div class="container-fluid my-4 px-4">
+    <div class="card shadow border-0 bg-dark text-white mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <h2 class="mb-0"><i class="fas fa-compact-disc fa-spin me-2"></i> CONSOLA DJ: <%= evento.nombre %></h2>
+            <div class="text-end">
+                <span class="badge bg-danger p-2">LIVE AUDIO CONTROL</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white fw-bold">🎶 Lista de Reproducción por Puesto</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Dorsal</th>
+                                    <th>Atleta</th>
+                                    <th>Categoría</th>
+                                    <th class="text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% competidores.forEach(comp => { %>
+                                    <tr>
+                                        <td class="fw-bold fs-5 text-primary"><%= comp.numero_atleta %></td>
+                                        <td><%= comp.atletas?.nombre %></td>
+                                        <td class="small text-muted"><%= comp.eventos_categorias?.categorias?.nombre %></td>
+                                        <td class="text-center">
+                                            <% if(comp.musica_url) { %>
+                                                <button class="btn btn-success btn-sm" onclick="playMusic('<%= comp.musica_url %>', '<%= comp.atletas?.nombre %>')">
+                                                    <i class="fas fa-play"></i> REPRODUCIR
+                                                </button>
+                                            <% } else { %>
+                                                <span class="badge bg-secondary opacity-50">Sin Audio</span>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-dark text-white fw-bold">📻 Reproductor Maestro</div>
+                <div class="card-body text-center py-5">
+                    <h5 id="nowPlayingTitle" class="text-muted">Esperando selección...</h5>
+                    <audio id="mainAudioPlayer" controls class="w-100 my-4"></audio>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-danger" onclick="document.getElementById('mainAudioPlayer').pause()">
+                            <i class="fas fa-stop me-2"></i> PARAR TODO (PANIC BUTTON)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+    const eventoId = "<%= evento.id %>";
+
+    // ESCUCHAR COMANDOS DEL VMD / MC
+    _supabase.channel('cambios-vivo')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'eventos', filter: `id=eq.${eventoId}` }, payload => {
+            const data = payload.new.resultados_en_vivo;
+            if (data && data.tipo === 'atleta_entrada' && data.musica_url) {
+                playMusic(data.musica_url, data.nombre_atleta);
+            }
+        }).subscribe();
+
+    function playMusic(url, name) {
+        const player = document.getElementById('mainAudioPlayer');
+        const title = document.getElementById('nowPlayingTitle');
+        title.innerText = "Reproduciendo: " + name;
+        player.src = url;
+        player.play();
+    }
+</script>
+<%- include("../template/footer") %>

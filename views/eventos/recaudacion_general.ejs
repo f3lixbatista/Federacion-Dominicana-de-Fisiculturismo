@@ -1,0 +1,52 @@
+<%- include("../template/cabecera", {tituloWeb: "Recaudación General - FDFF"}) %>
+
+<div class="container my-5">
+    <h2 class="fw-bold mb-4 text-dark"><i class="fas fa-wallet text-success"></i> Control de Caja y Recaudación</h2>
+    
+    <div class="row g-4">
+        <!-- Resumen Rápido -->
+        <div class="col-md-6">
+            <div class="card bg-primary text-white p-4 shadow-sm border-0" style="border-radius: 15px;">
+                <h6 class="text-uppercase opacity-75">Total Membresías (Hoy)</h6>
+                <h2 class="fw-bold display-5">RD$ <%= totalMembresias.toLocaleString() %></h2>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-danger text-white p-4 shadow-sm border-0" style="border-radius: 15px;">
+                <h6 class="text-uppercase opacity-75">Pases Backstage (Hoy)</h6>
+                <h2 class="fw-bold display-5">RD$ <%= totalBackstage.toLocaleString() %></h2>
+            </div>
+        </div>
+
+        <!-- Formulario de Cobro Rápido -->
+        <div class="col-md-12">
+            <div class="card p-4 border-0 shadow-sm" style="border-radius: 20px;">
+                <h5 class="fw-bold mb-4"><i class="fas fa-cash-register me-2 text-muted"></i> Registrar Nuevo Pago Manual</h5>
+                <form action="/admin/registrar-pago" method="POST" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Concepto de Pago</label>
+                        <select name="tipo_pago" class="form-select border-primary" required>
+                            <option value="membresia_anual">Membresía Anual (Atleta)</option>
+                            <option value="pase_backstage">Pase Backstage (Coach)</option>
+                            <option value="renovacion">Renovación General</option>
+                            <option value="otros">Otros Ingresos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">ID FDFF / Cédula del Usuario</label>
+                        <input type="text" name="identificador" class="form-control border-primary" placeholder="Ej: FDFF-1001 o 001-..." required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">Monto (RD$)</label>
+                        <input type="number" name="monto" class="form-control border-primary" value="1500" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-dark w-100 fw-bold py-2">PROCESAR COBRO</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include("../template/footer") %>

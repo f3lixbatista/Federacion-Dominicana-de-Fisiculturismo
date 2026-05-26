@@ -1,0 +1,77 @@
+<%- include("../template/cabecera", {tituloWeb: "Panel VMD - Broadcast"}) %>
+<div class="container-fluid my-4 px-4">
+    <div class="card bg-danger text-white mb-4 shadow">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <h2 class="mb-0"><i class="fas fa-desktop me-2"></i> PANEL DE CONTROL DE VIDEO (VMD)</h2>
+            <span class="badge bg-white text-danger fw-bold">BROADCAST MODO: ON-AIR</span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white fw-bold">1. Categorías Activas</div>
+                <div class="list-group list-group-flush">
+                    <% (categoriasActivas || []).forEach(cat => { %>
+                        <button class="list-group-item list-group-item-action" onclick="cargarAtletasDeCat('<%= cat.id %>')">
+                            <span class="fw-bold"><%= cat.categorias?.nombre %></span>
+                            <br><small class="text-muted"><%= cat.estatus_logistica %></small>
+                        </button>
+                    <% }) %>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white fw-bold">2. Atletas en Tarima (Llamado a Pantalla LED)</div>
+                <div class="card-body">
+                    <div id="atletaControlList" class="row g-3">
+                        <p class="text-center text-muted py-5">Seleccione una categoría para listar atletas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+    const eventoId = "<%= evento.id %>";
+    let categoriaActualNombre = "";
+
+    async function cargarAtletasDeCat(catId) {
+        const { data, error } = await _supabase.from('competidores')
+            .select('atleta_id, numero_atleta, musica_url, atletas(nombre), eventos_categorias(categorias(nombre))')
+            .eq('evento_cat_id', catId);
+        
+        categoriaActualNombre = data[0]?.eventos_categorias?.categorias?.nombre || "Competencia";
+        const container = document.getElementById('atletaControlList');
+        
+        container.innerHTML = data.map(c => `
+            <div class="col-md-6">
+                <div class="card border-danger shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <h5 class="fw-bold">#${c.numero_atleta} - ${c.atletas.nombre}</h5>
+                        <button onclick="lanzarAtletaLive('${c.atleta_id}', '${c.musica_url}', '${c.atletas.nombre}')" class="btn btn-danger w-100 fw-bold">
+                            <i class="fas fa-broadcast-tower"></i> LANZAR A TARIMA
+                        </button>
+                    </div>
+                </div>
+            </div>`).join('');
+    }
+
+    async function lanzarAtletaLive(atletaId, musicaUrl, nombre) {
+        // Sincronización Realtime: Actualiza el estado del evento
+        await _supabase.from('eventos').update({
+            resultados_en_vivo: {
+                tipo: 'atleta_entrada',
+                atleta_id: atletaId,
+                musica_url: musicaUrl,
+                categoria_nombre: categoriaActualNombre,
+                nombre_atleta: nombre,
+                timestamp: Date.now()
+            }
+        }).eq('id', eventoId);
+    }
+</script>
+<%- include("../template/footer") %>

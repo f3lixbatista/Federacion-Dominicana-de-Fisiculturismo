@@ -33,9 +33,13 @@
                             <td><%= prep.telefono || '---' %></td>
                             <td class="small"><%= prep.email %></td>
                             <td>
-                                <span class="badge <%= prep.estatus_afiliacion === 'habilitado' ? 'bg-success' : 'bg-danger' %>">
-                                    <%= prep.estatus_afiliacion %>
-                                </span>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" 
+                                           id="switch-<%= prep.id %>" 
+                                           <%= prep.estatus_afiliacion === 'habilitado' ? 'checked' : '' %>
+                                           onchange="toggleEstatusCoach('<%= prep.id %>')">
+                                    <label class="form-check-label small fw-bold" for="switch-<%= prep.id %>"><%= prep.estatus_afiliacion.toUpperCase() %></label>
+                                </div>
                             </td>
                             <td class="text-center">
                                 <a href="/preparadores/editar/<%= prep.id %>" class="btn btn-warning btn-sm">
@@ -52,7 +56,10 @@
     </div>
 </div>
 
+<script src="/js/supabase.js"></script>
 <script>
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+
     $(document).ready(function () {
         $('#tablaPreparadores').DataTable({
             "dom": 'Bfrtip',
@@ -60,6 +67,24 @@
             "buttons": ['excel', 'pdf', 'print']
         });
     });
+
+    async function toggleEstatusCoach(id) {
+        const checkbox = document.getElementById(`switch-${id}`);
+        const nuevoEstatus = checkbox.checked ? 'habilitado' : 'pendiente';
+        const label = checkbox.nextElementSibling;
+        
+        const { error } = await _supabase
+            .from('preparadores')
+            .update({ estatus_afiliacion: nuevoEstatus })
+            .eq('id', id);
+
+        if (error) {
+            alert("No se pudo actualizar el estatus: " + error.message);
+            checkbox.checked = !checkbox.checked;
+        } else {
+            label.innerText = nuevoEstatus.toUpperCase();
+        }
+    }
 </script>
 
 <%- include("../template/footer") %>

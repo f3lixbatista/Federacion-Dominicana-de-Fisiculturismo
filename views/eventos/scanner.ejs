@@ -1,0 +1,30 @@
+<%- include("../template/cabecera", {tituloWeb: "Portería - Escáner QR"}) %>
+<div class="container my-5 text-center">
+    <h1 class="fw-bold mb-4"><i class="fas fa-qrcode text-danger"></i> VALIDACIÓN DE ACCESO</h1>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div id="reader" style="width: 100%; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);"></div>
+            <div id="result" class="mt-4 p-4 rounded d-none"></div>
+        </div>
+    </div>
+    <div class="mt-4 text-muted">
+        <p><i class="fas fa-info-circle"></i> Apunte a la boleta del atleta para validar su inscripción y pesaje.</p>
+    </div>
+</div>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+    const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    scanner.render(onScanSuccess);
+
+    function onScanSuccess(decodedText) {
+        // Supongamos que el QR es una URL como /eventos/validar-logro/ID
+        const resultDiv = document.getElementById('result');
+        resultDiv.classList.remove('d-none', 'alert-success', 'alert-danger');
+        resultDiv.classList.add('alert', 'alert-info');
+        resultDiv.innerHTML = "<h4>Procesando...</h4>";
+
+        // Redirigir a la página de validación que ya tenemos
+        window.location.href = decodedText;
+    }
+</script>
+<%- include("../template/footer") %>
