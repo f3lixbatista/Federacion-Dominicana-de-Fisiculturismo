@@ -12,13 +12,18 @@
 
     <!-- SELECTOR DE FASE DE COMPETENCIA Y PANEL DE JUECES -->
     <div class="card p-3 mb-4 bg-light shadow-sm">
-        <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
             <label class="fw-bold text-secondary mb-0">FASE DE EVALUACIÓN:</label>
-            <select id="selectFase" class="form-select border-success fw-bold" style="width: 250px;" onchange="recargarMesaComputo()">
-                <option value="semifinal">Semifinales (Eliminatorias)</option>
-                <option value="final" selected>Finales (Top 6 / Pódium)</option>
-                <option value="absoluto">Absoluto (Overall)</option>
+            <select id="selectFase" class="form-select border-success fw-bold" style="width: 260px;" onchange="recargarMesaComputo()">
+                <option value="eliminatoria" <%= faseTrabajo === 'eliminatoria' ? 'selected' : '' %>>Eliminatoria (>15 atletas → Top 15)</option>
+                <option value="semifinal"    <%= faseTrabajo === 'semifinal'    ? 'selected' : '' %>>Semifinal (7-15 atletas → Top 6)</option>
+                <option value="final_r1"     <%= faseTrabajo === 'final_r1'     ? 'selected' : '' %>>Final — Ronda 1</option>
+                <option value="final_r2"     <%= faseTrabajo === 'final_r2'     ? 'selected' : '' %>>Final — Ronda 2 (acumulada)</option>
+                <option value="absoluto"     <%= faseTrabajo === 'absoluto'     ? 'selected' : '' %>>Absoluto (Overall)</option>
             </select>
+            <span class="badge bg-success fs-6 px-3">
+                FASE DETECTADA: <%= (faseTrabajo || 'auto').toUpperCase().replace('_',' ') %>
+            </span>
             <h4 class="mb-0 ms-auto fw-bold text-primary">Categoría: <%= categoriaNombre %></h4>
         </div>
         <div class="d-flex align-items-center gap-3">
@@ -41,6 +46,9 @@
                         <% jueces.forEach((juez, idx) => { %>
                             <th>Juez <%= idx + 1 %><br><span class="small opacity-50"><%= juez.nombre.split(' ')[0] %></span></th>
                         <% }) %>
+                        <% if (faseTrabajo === 'final_r2') { %>
+                            <th class="table-primary text-primary fw-bold">R1</th>
+                        <% } %>
                         <th class="table-danger text-dark fw-bold">Subtotal</th>
                         <th class="table-success text-dark fw-bold">Limpio</th>
                         <th class="table-primary text-dark fw-bold">Lugar</th>
@@ -64,6 +72,10 @@
                                 </td>
                             <% }) %>
 
+                            <!-- Columna R1 (solo en Ronda 2) -->
+                            <% if (faseTrabajo === 'final_r2') { %>
+                                <td class="fw-bold text-primary bg-primary bg-opacity-10 cell-r1"><%= atleta.puntos_r1 || 0 %></td>
+                            <% } %>
                             <!-- Columnas calculadas dinámicamente -->
                             <td class="fw-bold text-muted cell-subtotal">--</td>
                             <td class="fw-bold text-danger fs-5 cell-limpio">--</td>
@@ -106,22 +118,20 @@
 <script src="/js/supabase.js"></script>
 <script src="/js/compu-algo.js"></script>
 <script>
-    // Inicialización Robusta
     const _url = "<%= SUPABASE_URL || '' %>";
     const _key = "<%= SUPABASE_ANON_KEY || '' %>";
     const _supabase = window._supabase = (_url && _key) ? supabase.createClient(_url, _key) : null;
 
-    if (!_supabase) console.error("⚠️ Error: Cliente Supabase no inicializado. Verifique su archivo .env en localhost.");
+    if (!_supabase) console.error("⚠️ Supabase no inicializado. Verifique .env");
 
     let resultadosCalculados = null;
-    const idEventoActual = "<%= eventoId %>"; // Corregido para usar eventoId pasado por el controlador
+    const idEventoActual = "<%= eventoId %>";
+    const faseTrabajo = "<%= faseTrabajo %>";
 
     function recargarMesaComputo() {
-        const fase = document.getElementById('selectFase').value;
-        const idEvento = document.getElementById('idEvento').value;
+        const fase    = document.getElementById('selectFase').value;
         const idCatRel = document.getElementById('idCatRel').value;
-        // Reconstruir la URL completa para la recarga
-        window.location.href = `/eventos/${idEvento}/computo/${idCatRel}?fase=${fase}`;
+        window.location.href = `/estadisticas/mesa-computo/${idCatRel}?fase=${fase}`;
     }
 
     // ALGORITMO ESTADÍSTICO FDFF (Eliminación de extremos y jerarquía de puestos)
@@ -140,17 +150,23 @@
 
             if (votos.length === 0) return;
 
-            // USAR LA NUEVA LIBRERÍA COMPARTIDA
             const calculo = CompuAlgo.calcular(votos);
-            
+
+            // Acumular puntos de Ronda 1 si estamos en Ronda 2
+            let puntajeTotal = calculo.puntajeLimpio;
+            if (faseTrabajo === 'final_r2') {
+                const r1 = parseInt(fila.querySelector('.cell-r1')?.innerText) || 0;
+                puntajeTotal += r1;
+            }
+
             fila.querySelector('.cell-subtotal').innerText = calculo.subtotal;
-            fila.querySelector('.cell-limpio').innerText = calculo.puntajeLimpio;
+            fila.querySelector('.cell-limpio').innerText = puntajeTotal;
 
             tablaPosiciones.push({
                 atletaId: atletaId,
                 dorsal: fila.querySelector('td').innerText,
                 nombre: fila.querySelector('.text-start').innerText,
-                puntos: calculo.puntajeLimpio,
+                puntos: puntajeTotal,
                 votosOriginales: calculo.votosOriginales
             });
         });

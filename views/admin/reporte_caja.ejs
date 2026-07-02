@@ -1,36 +1,59 @@
-<%- include("../template/cabecera", {tituloWeb: "Cierre de Caja Diario - FDFF"}) %>
+<%- include("../template/cabecera", {tituloWeb: "Cierre de Caja - FDFF"}) %>
 
-<div class="container my-5">
+<div class="container my-4">
+
+    <!-- ENCABEZADO + FILTRO FECHA -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 no-print">
+        <h4 class="fw-bold mb-0">
+            <i class="fas fa-file-invoice-dollar text-success me-2"></i> Cierre de Caja
+        </h4>
+        <form action="/admin/reporte-caja" method="GET" class="d-flex gap-2 align-items-center">
+            <label class="form-label small mb-0 fw-bold">Fecha:</label>
+            <input type="date" name="fecha" class="form-control form-control-sm" value="<%= fecha %>" style="width:160px;">
+            <button class="btn btn-dark btn-sm fw-bold px-3">Filtrar</button>
+        </form>
+    </div>
+
+    <!-- CARD CAJA -->
     <div class="card shadow-lg border-0" style="border-radius: 20px;">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center p-4">
-            <h4 class="mb-0 fw-bold"><i class="fas fa-file-invoice-dollar me-2 text-success"></i> Auditoría de Caja: <%= new Date().toLocaleDateString('es-DO') %></h4>
+            <h5 class="mb-0 fw-bold">
+                <i class="fas fa-cash-register me-2 text-success"></i>
+                Reporte del <%= new Date(fecha + 'T12:00:00').toLocaleDateString('es-DO', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) %>
+            </h5>
             <button onclick="window.print()" class="btn btn-outline-light btn-sm no-print">
-                <i class="fas fa-print me-1"></i> Imprimir Cierre
+                <i class="fas fa-print me-1"></i> Imprimir
             </button>
         </div>
         <div class="card-body p-4">
-            <div class="table-responsive">
+
+            <!-- SECCIÓN 1: PAGOS EN CAJA (membresías, pases, etc.) -->
+            <h6 class="fw-bold text-uppercase text-muted mb-3">
+                <i class="fas fa-coins me-1"></i> Pagos en Caja
+            </h6>
+            <div class="table-responsive mb-4">
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
                             <th>Miembro del Staff</th>
-                            <th>Concepto de Cobro</th>
+                            <th>Concepto</th>
                             <th class="text-center">Transacciones</th>
                             <th class="text-end">Total Recaudado</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <% if (resumen.length > 0) { 
-                            let granTotal = 0;
-                        %>
-                            <% resumen.forEach(fila => { 
-                                granTotal += parseFloat(fila.total_recaudado);
+                        <% if (resumen.length > 0) {
+                            let totalCaja = 0; %>
+                            <% resumen.forEach(fila => {
+                                totalCaja += parseFloat(fila.total_recaudado);
                             %>
                                 <tr>
                                     <td class="fw-bold"><%= fila.staff_nombre %></td>
                                     <td>
                                         <span class="badge bg-light text-dark border">
-                                            <%= fila.tipo_pago === 'membresia_anual' ? 'Membresía Atleta' : 'Pase Backstage' %>
+                                            <%= fila.tipo_pago === 'membresia_anual' ? 'Membresía Atleta'
+                                              : fila.tipo_pago === 'pase_backstage' ? 'Pase Backstage'
+                                              : fila.tipo_pago.replace(/_/g, ' ').toUpperCase() %>
                                         </span>
                                     </td>
                                     <td class="text-center"><%= fila.cantidad_transacciones %></td>
@@ -38,19 +61,58 @@
                                 </tr>
                             <% }) %>
                             <tr class="table-dark">
-                                <td colspan="3" class="text-end fw-bold text-uppercase">Total General en Caja:</td>
-                                <td class="text-end fw-bold fs-5">RD$ <%= granTotal.toLocaleString() %></td>
+                                <td colspan="3" class="text-end fw-bold">Subtotal Caja:</td>
+                                <td class="text-end fw-bold fs-6">RD$ <%= totalCaja.toLocaleString() %></td>
                             </tr>
                         <% } else { %>
-                            <tr>
-                                <td colspan="4" class="text-center py-5 text-muted">No se han registrado pagos el día de hoy.</td>
-                            </tr>
+                            <tr><td colspan="4" class="text-center py-3 text-muted">Sin pagos en caja para esta fecha.</td></tr>
                         <% } %>
                     </tbody>
                 </table>
             </div>
-            <div class="mt-4 no-print text-center">
-                <a href="/eventos/competencias" class="btn btn-secondary px-4">Volver al Dashboard</a>
+
+            <!-- SECCIÓN 2: INSCRIPCIONES VALIDADAS -->
+            <h6 class="fw-bold text-uppercase text-muted mb-3">
+                <i class="fas fa-ticket-alt me-1"></i> Inscripciones de Eventos Validadas
+            </h6>
+            <div class="table-responsive mb-4">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Evento</th>
+                            <th class="text-center">Inscripciones Validadas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (inscripciones.length > 0) {
+                            let totalInscripciones = 0;
+                        %>
+                            <% inscripciones.forEach(row => {
+                                totalInscripciones += row.cantidad;
+                            %>
+                                <tr>
+                                    <td class="fw-bold"><%= row.evento %></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success fs-6"><%= row.cantidad %></span>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                            <tr class="table-light">
+                                <td class="text-end fw-bold">Total inscripciones:</td>
+                                <td class="text-center fw-bold"><%= totalInscripciones %></td>
+                            </tr>
+                        <% } else { %>
+                            <tr><td colspan="2" class="text-center py-3 text-muted">Sin inscripciones validadas en esta fecha.</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="text-center no-print">
+                <a href="/admin/auditoria-pagos" class="btn btn-outline-primary me-2 fw-bold">
+                    <i class="fas fa-search-dollar me-1"></i> Ver Auditoría Completa
+                </a>
+                <a href="/eventos/competencias" class="btn btn-secondary fw-bold">Volver</a>
             </div>
         </div>
     </div>

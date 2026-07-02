@@ -7,7 +7,12 @@
   },
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "seed:catalogo": "node seeds/catalogoCategorias.js",
+    "seed:datos": "node seeds/testData.js",
+    "seed:votos": "node seeds/testVotos.js",
+    "seed:limpiar": "node seeds/limpiarPruebas.js",
+    "seed:todo": "node seeds/testData.js && node seeds/testVotos.js"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +26,6 @@
     "multer": "^2.0.0-rc.1",
     "qrcode": "^1.5.4",
     "web-push": "^3.6.7",
-    "ws": "^8.18.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

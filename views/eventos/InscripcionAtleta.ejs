@@ -1,11 +1,36 @@
-<%- include("../template/cabecera", {tituloWeb: "Servicios FDFF"}) %>
+﻿<%- include("../template/cabecera", {tituloWeb: "Servicios FDFF"}) %>
+
+<style>
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    .animated-bg {
+        background: linear-gradient(-45deg, #e3f2fd, #f1f8e9, #fff3e0, #fce4ec);
+        background-size: 400% 400%;
+        animation: gradientBG 10s ease infinite;
+    }
+</style>
 
 <div class="container my-5">
     <% if (typeof eventoId !== 'undefined' && eventoId) { %>
-        <div class="mb-4">
-            <a href="/eventos/<%= eventoId %>" class="btn btn-outline-secondary">
+        <div class="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <a href="/eventos/<%= eventoId %>" class="btn btn-outline-secondary shadow-sm">
                 <i class="fas fa-arrow-left"></i> Volver a Inscripción
             </a>
+            <% if (locals.atleta) { 
+                const edad = new Date().getFullYear() - new Date(atleta.fecha_nacimiento).getFullYear();
+                const sexoFull = atleta.sexo === 'F' ? 'Femenino' : (atleta.sexo === 'M' ? 'Masculino' : 'N/A');
+                const primerNombre = locals.atleta.nombre ? locals.atleta.nombre.split(' ')[0] : 'Atleta';
+            %>
+                <div class="alert animated-bg border mb-0 py-2 flex-grow-1 shadow-sm text-center" style="border-left: 5px solid #0d6efd !important; max-width: 800px;">
+                    <span class="fs-5">
+                        ¡Hola <strong><%= primerNombre %></strong>!, por tu edad (<strong><%= edad %> años</strong>) y sexo (<strong><%= sexoFull %></strong>) estas son tus categorías. 
+                        <small class="d-block text-muted" style="font-size: 0.75rem;">Sube tu música en tu <a href="/atletas/perfil" class="fw-bold text-primary text-decoration-none"><i class="fas fa-user-circle"></i> Perfil de Atleta</a>.</small>
+                    </span>
+                </div>
+            <% } %>
         </div>
     <% } %>
 
@@ -21,40 +46,113 @@
             <% eventos.forEach((evento, index) => { %>
                 <div class="accordion-item mb-3 shadow-sm">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= index %>">
+                        <button class="accordion-button <%= index === 0 ? '' : 'collapsed' %>" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= index %>">
                             <div class="d-flex justify-content-between w-100 pe-3">
                                 <span><strong><%= evento.nombre %></strong></span>
                                 <small class="text-muted"><%= evento.fecha_inicio %></small>
                             </div>
                         </button>
                     </h2>
-                    <div id="collapse<%= index %>" class="accordion-collapse collapse" data-bs-parent="#accordionEventos">
+                    <div id="collapse<%= index %>" class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>" data-bs-parent="#accordionEventos">
                         <div class="accordion-body">
                             <p class="text-muted small"><i class="fas fa-map-marker-alt"></i> <%= evento.lugar %></p>
-                            <h6>Selecciona tus categorías:</h6>
-                            <form class="formInscripcion">
-                                <input type="hidden" name="evento_id" value="<%= evento.id %>">
-                                
-                                <% evento.eventos_categorias.forEach(rel => { %>
-                                    <div class="form-check border-bottom py-2">
-                                        <input class="form-check-input" type="checkbox" name="cat_evento_id" 
-                                            value="<%= rel.id %>" id="cat<%= rel.id %>"
-                                            data-costo1="<%= evento.costo_primera_cat %>"
-                                            data-costo-extra="<%= evento.costo_adicional %>"
-                                            onchange="calcularTotal()"
-                                        >
-                                        <label class="form-check-label" for="cat<%= rel.id %>">
-                                            <!-- Cambia la línea 42 por esta -->
-<%= rel.categorias ? rel.categorias.nombre : 'Categoría no encontrada' %> 
-— 
-<span class="text-muted small"><%= rel.categorias?.disciplina || '' %></span>
-
-                                        </label>
+                            <% if ((locals.categoriasInscritas || []).length > 0) { %>
+                                <div class="card border-success shadow-sm">
+                                    <div class="card-header bg-success text-white py-2">
+                                        <i class="fas fa-check-circle me-1"></i> <strong>Ya estás inscrito en este evento</strong>
                                     </div>
-                                <% }) %>
-                                
-                                <button type="submit" class="btn btn-primary mt-3 btn-sm">Confirmar Inscripción</button>
-                            </form>
+                                    <div class="card-body pb-2">
+                                        <p class="small mb-2">Tus categorías inscritas:</p>
+                                        <ul class="list-group list-group-flush mb-3">
+                                        <% evento.eventos_categorias.forEach(function(catRel) { if ((locals.categoriasInscritas || []).indexOf(catRel.id) >= 0) { %>
+                                            <li class="list-group-item px-0 py-1 border-0">
+                                                <i class="fas fa-trophy text-warning me-1 small"></i>
+                                                <strong><%= catRel.categorias ? catRel.categorias.nombre : '' %></strong>
+                                                <span class="text-muted small ms-1">— <%= catRel.categorias ? (catRel.categorias.disciplina || '') : '' %></span>
+                                            </li>
+                                        <% } }); %>
+                                        </ul>
+                                        <div class="alert alert-warning py-2 mb-0 small">
+                                            <i class="fas fa-lock me-1"></i> Tu inscripción solo puede ser modificada por el <strong>Juez Estadístico</strong> durante el pesaje.
+                                        </div>
+                                    </div>
+                                </div>
+                            <% } else { %>
+                                <h6>Selecciona tus categorías:</h6>
+                                <form class="formInscripcion">
+                                    <input type="hidden" name="evento_id" value="<%= evento.id %>">
+
+                                    <%
+                                        let categoriasFiltradas = evento.eventos_categorias;
+
+                                        if (locals.atleta) {
+                                            // Cálculo preciso de edad (día y mes incluidos)
+                                            const hoy = new Date();
+                                            const nac = new Date(atleta.fecha_nacimiento);
+                                            let edadAtleta = hoy.getFullYear() - nac.getFullYear();
+                                            const mDiff = hoy.getMonth() - nac.getMonth();
+                                            if (mDiff < 0 || (mDiff === 0 && hoy.getDate() < nac.getDate())) edadAtleta--;
+
+                                            categoriasFiltradas = evento.eventos_categorias.filter(rel => {
+                                                const cat = rel.categorias;
+                                                if (!cat) return false;
+
+                                                const modalidad = (cat.modalidad || '').toLowerCase();
+                                                const sexoCat   = cat.sexo || '';
+
+                                                // Filtro por sexo (F-M visible para todos — cada atleta se inscribe individual)
+                                                if (sexoCat !== 'F-M' && sexoCat !== atleta.sexo) return false;
+
+                                                // Children: aislado, solo < 16 años
+                                                if (modalidad === 'children' && edadAtleta >= 16) return false;
+                                                if ((cat.disciplina || '').toLowerCase().includes('children') && edadAtleta >= 16) return false;
+
+                                                // Filtro edad con fallback FDFF cuando edad_min es null/0
+                                                const emin = (cat.edad_min != null && cat.edad_min > 0) ? cat.edad_min : null;
+                                                const emax = (cat.edad_max != null) ? cat.edad_max : null;
+
+                                                if (modalidad === 'master') {
+                                                    const piso = emin ?? (atleta.sexo === 'F' ? 35 : 40);
+                                                    if (edadAtleta < piso) return false;
+                                                } else if (modalidad === 'junior') {
+                                                    const piso  = emin ?? 16;
+                                                    const techo = (emax != null && emax < 200) ? emax : 23;
+                                                    if (edadAtleta < piso || edadAtleta > techo) return false;
+                                                } else {
+                                                    if (emin != null && edadAtleta < emin) return false;
+                                                    if (emax != null && emax < 200 && edadAtleta > emax) return false;
+                                                }
+
+                                                return true;
+                                            });
+                                        }
+                                    %>
+
+                                    <div id="lista-cats-web" style="display:flex;flex-direction:column;">
+                                    <% categoriasFiltradas.forEach(function(rel) { %>
+                                    <% var nombreCat = rel.categorias ? (rel.categorias.nombre || '') : ''; %>
+                                        <div class="form-check border-bottom py-2 cat-item-web">
+                                            <input class="form-check-input check-categoria" type="checkbox" name="cat_evento_id"
+                                                value="<%= rel.id %>" id="cat<%= rel.id %>"
+                                                data-costo1="<%= evento.costo_primera_cat %>"
+                                                data-costo-extra="<%= evento.costo_adicional %>"
+                                                data-disciplina="<%= rel.categorias ? (rel.categorias.disciplina || '') : '' %>"
+                                                data-modalidad="<%= rel.categorias ? (rel.categorias.modalidad || '') : '' %>"
+                                                data-division="<%= rel.categorias ? (rel.categorias.division || '') : '' %>"
+                                                data-nombre="<%= nombreCat %>"
+                                                onchange="ejecutarCambioInscripcion(this)"
+                                            >
+                                            <label class="form-check-label" for="cat<%= rel.id %>">
+                                                <%= rel.categorias ? rel.categorias.nombre : 'Categoría no encontrada' %>
+                                                <span class="text-muted small">— <%= rel.categorias ? (rel.categorias.disciplina || '') : '' %></span>
+                                            </label>
+                                        </div>
+                                    <% }) %>
+                                    </div><!-- /lista-cats-web -->
+
+                                    <button type="submit" class="btn btn-primary mt-3 btn-sm">Confirmar Inscripción</button>
+                                </form>
+                            <% } %>
                         </div>
                     </div>
                 </div>
@@ -72,37 +170,155 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
-
     document.querySelectorAll('.formInscripcion').forEach(form => {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(form);
             const catEventoIds = formData.getAll('cat_evento_id');
-            
+
             if (catEventoIds.length === 0) return alert("Selecciona al menos una categoría.");
 
-            // Obtenemos el ID del atleta logueado (desde la sesión de Supabase en el navegador)
-            const { data: { user } } = await _supabase.auth.getUser();
+            const resp = await fetch('/inscripcion/inscribir', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ catEventoIds, eventoId: formData.get('evento_id') })
+            });
 
-            const inscripciones = catEventoIds.map(id => ({
-                atleta_id: user.id,
-                evento_cat_id: id,
-                id_evento: formData.get('evento_id'),
-                estatus_pesaje: 'pendiente',
-                salida: 0
-            }));
-
-            const { error } = await _supabase.from('competidores').insert(inscripciones);
-
-            if (error) {
-                alert("Error: " + error.message);
+            const result = await resp.json();
+            if (!resp.ok || result.error) {
+                alert("Error: " + (result.error || 'Error desconocido'));
             } else {
-                alert("¡Inscripción realizada con éxito! Prepárate para el pesaje.");
+                alert("¡Inscripción guardada!");
                 window.location.reload();
             }
         });
     });
+
+    // --- 3. LÓGICA DE AFINIDAD Y COMPATIBILIDAD FDFF ---
+    // Misma lógica que inscripcion.ejs (admin), adaptada a .check-categoria / .cat-item-web
+
+    const _GRUPOS_AFINIDAD_WEB = {
+        "culturismo_m":  ["Men's Bodybuilding", "Men's Classic Bodybuilding", "Men's Classic Physique", "Men's Games Classic"],
+        "physique_m":    ["Men's Physique", "Men's Fit Model", "Men's Fitness"],
+        "muscular_m":    ["Muscular Men's Physique"],
+        "wellness_f":    ["Women's Wellness", "Women's Fit Model"],
+        "bikini_f":      ["Women's Bikini", "Women's Fit Model", "Women's Artistic Fitness"],
+        "bodyfitness_f": ["Women's Bodyfitness", "Women's Acrobatic Fitness"],
+        "physique_f":    ["Women's Physique"],
+        "children_m":    ["Male Children Fitness"],
+        "children_f":    ["Female Children Fitness"]
+    };
+
+    function _normW(s) {
+        return (s || '').toLowerCase().replace(/[''ʼ`´]/g, "'").trim();
+    }
+
+    const _AFINIDAD_NORM_W = {};
+    for (const discs of Object.values(_GRUPOS_AFINIDAD_WEB)) {
+        const normas = discs.map(_normW);
+        for (const nd of normas) _AFINIDAD_NORM_W[nd] = normas;
+    }
+
+    const _FIT_PAIRS_W   = _normW("Fit Pairs");
+    const _MIXED_PAIRS_W = _normW("Mixed Pairs");
+    const _SEXO_ATLETA   = "<%= atleta ? atleta.sexo.toLowerCase() : 'm' %>";
+
+    function _getPermitidasW(normPrincipal) {
+        if (normPrincipal === _FIT_PAIRS_W) {
+            const k = _SEXO_ATLETA === 'f' ? "bikini_f" : "physique_m";
+            const base = _AFINIDAD_NORM_W[_normW(_GRUPOS_AFINIDAD_WEB[k][0])] || [normPrincipal];
+            return [...base, _FIT_PAIRS_W];
+        }
+        if (normPrincipal === _MIXED_PAIRS_W) {
+            const k = _SEXO_ATLETA === 'f' ? "physique_f" : "culturismo_m";
+            const base = _AFINIDAD_NORM_W[_normW(_GRUPOS_AFINIDAD_WEB[k][0])] || [normPrincipal];
+            return [...base, _MIXED_PAIRS_W];
+        }
+        const grupo = _AFINIDAD_NORM_W[normPrincipal] || [normPrincipal];
+        const extra = [];
+        if (_SEXO_ATLETA === 'm') {
+            if (grupo.includes(_normW("Men's Physique")))     extra.push(_FIT_PAIRS_W);
+            if (grupo.includes(_normW("Men's Bodybuilding"))) extra.push(_MIXED_PAIRS_W);
+        } else {
+            if (grupo.includes(_normW("Women's Bikini")))    extra.push(_FIT_PAIRS_W);
+            if (grupo.includes(_normW("Women's Physique"))) extra.push(_MIXED_PAIRS_W);
+        }
+        return [...grupo, ...extra];
+    }
+
+    function aplicarReglasAfinidad() {
+        const marcados       = Array.from(document.querySelectorAll('.check-categoria:checked'));
+        const todosLosChecks = document.querySelectorAll('.check-categoria');
+
+        if (marcados.length === 0) {
+            todosLosChecks.forEach(cb => {
+                cb.disabled = false;
+                const item = cb.closest('.cat-item-web');
+                item.classList.remove('opacity-50');
+                item.style.order = '';
+            });
+            return;
+        }
+
+        const normPrincipal  = _normW(marcados[0].dataset.disciplina || '');
+        const permitidasNorm = _getPermitidasW(normPrincipal);
+
+        const modalidadesMarcadas = new Set(
+            marcados.map(cb => (cb.dataset.modalidad || '').toLowerCase())
+        );
+        const tieneJunior = modalidadesMarcadas.has('junior');
+        const tieneMaster = modalidadesMarcadas.has('master');
+
+        // División por (disciplina + modalidad): no bloquea modalidades distintas
+        const divPorDiscModal = {};
+        marcados.forEach(cb => {
+            const key = _normW(cb.dataset.disciplina || '') + '|' + (cb.dataset.modalidad || '').toLowerCase();
+            const div = (cb.dataset.division || '').toLowerCase();
+            if (!divPorDiscModal[key]) divPorDiscModal[key] = new Set();
+            divPorDiscModal[key].add(div);
+        });
+
+        todosLosChecks.forEach(cb => {
+            const item          = cb.closest('.cat-item-web');
+            const normItem      = _normW(cb.dataset.disciplina || '');
+            const modalidadItem = (cb.dataset.modalidad || '').toLowerCase();
+            const divItem       = (cb.dataset.division || '').toLowerCase();
+
+            if (cb.checked) {
+                cb.disabled = false;
+                item.classList.remove('opacity-50');
+                item.style.order = '0';
+                return;
+            }
+
+            // Regla 1: grupo de disciplina
+            const esGrupoValido = permitidasNorm.includes(normItem);
+
+            // Regla 2: modalidad (solo 1 Junior, solo 1 Master, nunca ambos)
+            let esModalidadValida = true;
+            if (modalidadItem === 'junior')     esModalidadValida = !tieneJunior && !tieneMaster;
+            else if (modalidadItem === 'master') esModalidadValida = !tieneMaster && !tieneJunior;
+            else if (modalidadItem === 'children') esModalidadValida = false;
+
+            // Regla 3: división — dentro de la misma disciplina y modalidad, solo una división
+            const _divKey = normItem + '|' + modalidadItem;
+            let esDivisionValida = true;
+            if (divPorDiscModal[_divKey]) {
+                esDivisionValida = divPorDiscModal[_divKey].has(divItem);
+            }
+
+            const esValida = esGrupoValido && esModalidadValida && esDivisionValida;
+            cb.disabled = !esValida;
+            item.classList.toggle('opacity-50', !esValida);
+            // Agrupación visual: disponibles arriba, bloqueadas abajo
+            item.style.order = esValida ? '0' : '1';
+        });
+    }
+
+    function ejecutarCambioInscripcion(el) {
+        calcularTotal();
+        aplicarReglasAfinidad();
+    }
 
 let totalAPagar = 0;
 

@@ -1,30 +1,195 @@
-<%- include("../template/cabecera", {tituloWeb: "Portería - Escáner QR"}) %>
-<div class="container my-5 text-center">
-    <h1 class="fw-bold mb-4"><i class="fas fa-qrcode text-danger"></i> VALIDACIÓN DE ACCESO</h1>
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div id="reader" style="width: 100%; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);"></div>
-            <div id="result" class="mt-4 p-4 rounded d-none"></div>
+<%- include("../template/cabecera", {tituloWeb: "Portería — Validación QR"}) %>
+
+<style>
+    body { background: #0d0d0d; }
+    #main-content { background: #0d0d0d; }
+    .scanner-wrapper { max-width: 480px; margin: 0 auto; }
+    #reader { border-radius: 16px; overflow: hidden; }
+    #reader video { border-radius: 16px; }
+    .resultado-card { border-radius: 20px; animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .dorsal-badge { width: 56px; height: 56px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:900; }
+    .foto-atleta { width: 80px; height: 80px; border-radius: 12px; object-fit:cover; }
+    .acceso-ok   { background: #0d1f0d; border: 2px solid #28a745; }
+    .acceso-deny { background: #1f0d0d; border: 2px solid #dc3545; }
+    .scan-btn { font-size:1.1rem; border-radius:12px; padding:.85rem 2rem; }
+</style>
+
+<div class="container py-4">
+    <div class="scanner-wrapper">
+        <!-- HEADER -->
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-white mb-1">
+                <i class="fas fa-shield-alt text-warning me-2"></i> PORTERÍA FDFF
+            </h2>
+            <p class="text-secondary small mb-0"><%= evento.nombre %></p>
+        </div>
+
+        <!-- ÁREA DEL ESCÁNER -->
+        <div id="panelScanner">
+            <div id="reader" class="mb-3"></div>
+            <p class="text-center text-secondary small">
+                <i class="fas fa-qrcode me-1"></i> Apunte el QR de la boleta del atleta
+            </p>
+        </div>
+
+        <!-- RESULTADO INLINE -->
+        <div id="resultado" style="display:none;"></div>
+
+        <!-- BOTÓN ESCANEAR SIGUIENTE -->
+        <div id="panelSiguiente" style="display:none;" class="text-center mt-3">
+            <button class="btn btn-outline-light scan-btn" onclick="reiniciarScanner()">
+                <i class="fas fa-qrcode me-2"></i> Escanear siguiente
+            </button>
         </div>
     </div>
-    <div class="mt-4 text-muted">
-        <p><i class="fas fa-info-circle"></i> Apunte a la boleta del atleta para validar su inscripción y pesaje.</p>
-    </div>
 </div>
-<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-    const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-    scanner.render(onScanSuccess);
+    const idEvento = "<%= evento.id %>";
+    let scanner = null;
+    let procesando = false;
 
-    function onScanSuccess(decodedText) {
-        // Supongamos que el QR es una URL como /eventos/validar-logro/ID
-        const resultDiv = document.getElementById('result');
-        resultDiv.classList.remove('d-none', 'alert-success', 'alert-danger');
-        resultDiv.classList.add('alert', 'alert-info');
-        resultDiv.innerHTML = "<h4>Procesando...</h4>";
-
-        // Redirigir a la página de validación que ya tenemos
-        window.location.href = decodedText;
+    function iniciarScanner() {
+        procesando = false;
+        scanner = new Html5Qrcode("reader");
+        scanner.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 280, height: 280 } },
+            onScanSuccess,
+            () => {}
+        ).catch(err => {
+            document.getElementById('reader').innerHTML =
+                `<div class="alert alert-danger text-center m-3">No se pudo acceder a la cámara: ${err}</div>`;
+        });
     }
+
+    async function onScanSuccess(decodedText) {
+        if (procesando) return;
+        procesando = true;
+
+        // Detener scanner mientras mostramos resultado
+        if (scanner) {
+            await scanner.stop().catch(() => {});
+            scanner = null;
+        }
+        document.getElementById('panelScanner').style.display = 'none';
+
+        // Extraer el atletaId de la URL escaneada
+        // El QR tiene formato: http://host/inscripcion/:atletaId
+        const partes = decodedText.split('/');
+        const atletaId = partes[partes.length - 1];
+
+        if (!atletaId || atletaId.length < 10) {
+            mostrarError('QR inválido o no reconocido.');
+            return;
+        }
+
+        mostrarCargando();
+
+        try {
+            const resp = await fetch(`/eventos/${idEvento}/validar-acceso/${atletaId}`);
+            if (!resp.ok) throw new Error('Error de servidor (' + resp.status + ')');
+            const data = await resp.json();
+            mostrarResultado(data);
+        } catch (e) {
+            mostrarError('Error de conexión: ' + e.message);
+        }
+    }
+
+    function mostrarCargando() {
+        document.getElementById('resultado').style.display = 'block';
+        document.getElementById('resultado').innerHTML = `
+            <div class="text-center py-5 text-white">
+                <i class="fas fa-spinner fa-spin fa-3x mb-3 text-warning"></i>
+                <p class="fw-bold">Verificando...</p>
+            </div>`;
+    }
+
+    function mostrarResultado(data) {
+        const acceso = data.acceso;
+        const atleta = data.atleta || {};
+        const parts  = data.participaciones || [];
+
+        // Sonido
+        const freq = acceso ? 880 : 220;
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            osc.connect(ctx.destination);
+            osc.frequency.value = freq;
+            osc.start();
+            osc.stop(ctx.currentTime + (acceso ? 0.15 : 0.4));
+        } catch(e) {}
+
+        const clase = acceso ? 'acceso-ok' : 'acceso-deny';
+        const icono = acceso ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger';
+        const titulo = acceso ? 'ACCESO AUTORIZADO' : 'ACCESO DENEGADO';
+        const colorTitulo = acceso ? 'text-success' : 'text-danger';
+
+        const fotoHtml = atleta.foto_url
+            ? `<img src="${atleta.foto_url}" class="foto-atleta me-3" alt="Foto">`
+            : `<div class="foto-atleta me-3 bg-secondary d-flex align-items-center justify-content-center text-white" style="font-size:2rem;"><i class="fas fa-user"></i></div>`;
+
+        const dorsalesHtml = parts.map(p => `
+            <div class="d-flex align-items-center mb-2 py-2 border-bottom border-secondary">
+                <div class="dorsal-badge bg-warning text-dark me-3">#${p.dorsal || '—'}</div>
+                <div class="flex-grow-1">
+                    <div class="fw-bold text-white small">${p.categoria || '—'}</div>
+                    <div class="mt-1">
+                        <span class="badge ${p.pesaje === 'aprobado' ? 'bg-success' : 'bg-warning text-dark'} me-1">
+                            <i class="fas fa-weight me-1"></i>${p.pesaje === 'aprobado' ? 'Pesaje OK' : 'Sin pesaje'}
+                        </span>
+                        <span class="badge ${p.pago ? 'bg-success' : 'bg-danger'}">
+                            <i class="fas fa-dollar-sign me-1"></i>${p.pago ? 'Pago OK' : 'Sin pago'}
+                        </span>
+                    </div>
+                </div>
+            </div>`).join('');
+
+        document.getElementById('resultado').innerHTML = `
+            <div class="resultado-card p-4 ${clase} text-white mb-3">
+                <div class="text-center mb-3">
+                    <i class="${icono} fa-3x mb-2 d-block"></i>
+                    <h4 class="fw-bold ${colorTitulo} mb-1">${titulo}</h4>
+                    <p class="text-secondary small mb-0">${data.mensaje}</p>
+                </div>
+                <div class="d-flex align-items-center mb-3 p-3 bg-black bg-opacity-25 rounded-3">
+                    ${fotoHtml}
+                    <div>
+                        <h5 class="fw-bold mb-0 text-white">${atleta.nombre || '—'}</h5>
+                        <small class="text-secondary">${atleta.cedula ? 'C.I. ' + atleta.cedula : ''}</small>
+                    </div>
+                </div>
+                ${parts.length > 0 ? `<div>${dorsalesHtml}</div>` : ''}
+            </div>`;
+
+        document.getElementById('panelSiguiente').style.display = 'block';
+        document.getElementById('resultado').style.display = 'block';
+    }
+
+    function mostrarError(msg) {
+        document.getElementById('resultado').style.display = 'block';
+        document.getElementById('resultado').innerHTML = `
+            <div class="resultado-card p-4 acceso-deny text-white mb-3 text-center">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3 d-block"></i>
+                <h5 class="fw-bold text-danger">Error de Lectura</h5>
+                <p class="text-secondary small">${msg}</p>
+            </div>`;
+        document.getElementById('panelSiguiente').style.display = 'block';
+    }
+
+    function reiniciarScanner() {
+        document.getElementById('resultado').style.display = 'none';
+        document.getElementById('resultado').innerHTML = '';
+        document.getElementById('panelSiguiente').style.display = 'none';
+        document.getElementById('panelScanner').style.display = 'block';
+        iniciarScanner();
+    }
+
+    // Arrancar al cargar
+    iniciarScanner();
 </script>
+
 <%- include("../template/footer") %>

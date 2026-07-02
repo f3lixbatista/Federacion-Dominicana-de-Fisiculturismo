@@ -1,73 +1,219 @@
 <%- include("../template/cabecera", {tituloWeb: "Muro Social FDFF"}) %>
 
 <div class="container my-5">
-    <div class="text-center mb-5">
-        <h1 class="fw-bold display-5 text-dark">📸 Muro de Atletas FDFF</h1>
-        <p class="text-muted">Galería oficial de competidores capturada por nuestro Staff</p>
+    <div class="text-center mb-4">
+        <h1 class="fw-bold display-5 text-dark"><i class="fas fa-camera-retro me-2 text-primary"></i> Muro de Atletas FDFF</h1>
+        <p class="text-muted">Galería oficial de publicaciones de nuestra comunidad</p>
         <hr class="w-25 mx-auto border-primary border-2">
     </div>
 
+    <% if (locals.user && (user.role === 'atleta' || user.role === 'admin' || user.role === 'ejecutivo')) { %>
+        <div class="text-center mb-5">
+            <button class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPublicar">
+                <i class="fas fa-plus-circle me-2"></i> Publicar en el Muro
+            </button>
+        </div>
+    <% } %>
+
     <!-- FEED DE PUBLICACIONES -->
-    <div class="row g-4 justify-content-center">
+    <div class="d-flex flex-column align-items-center gap-5">
         <% if (publicaciones && publicaciones.length > 0) { %>
-            <% publicaciones.forEach(pub => { %>
-                <div class="col-sm-12 col-md-6 col-lg-4">
-                    <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 20px; transition: transform 0.3s;">
-                        <!-- Encabezado de la Publicación -->
-                        <div class="card-header bg-white border-0 py-3 px-4">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
-                                    <%= pub.profiles?.nombre ? pub.profiles.nombre.charAt(0) : 'A' %>
-                                </div>
-                                <div class="ms-3">
-                                    <h6 class="mb-0 fw-bold text-dark"><%= pub.profiles?.nombre || 'Atleta' %></h6>
-                                    <small class="text-muted text-uppercase" style="font-size: 0.7rem;">
-                                        <i class="fas fa-map-marker-alt text-danger"></i> <%= pub.eventos?.nombre || 'Evento FDFF' %>
-                                    </small>
-                                </div>
+            <% publicaciones.forEach(post => { %>
+                <div class="w-100" style="max-width: 600px;">
+                    <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+                        
+                        <!-- Cabecera del Post (Autor y Contexto) -->
+                        <div class="card-header bg-white border-0 py-3 d-flex align-items-center px-4">
+                            <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 45px; height: 45px; overflow: hidden;">
+                                <% if (post.atleta_id && post.atletas?.foto_url) { %>
+                                    <img src="<%= post.atletas.foto_url %>" class="w-100 h-100" style="object-fit: cover;">
+                                <% } else { %>
+                                    <i class="fas fa-user"></i>
+                                <% } %>
+                            </div>
+                            <div>
+                                <% const nombreAutor = post.profiles?.nombre || post.atletas?.nombre || 'Miembro FDFF'; %>
+                                <h6 class="fw-bold mb-0 text-dark">
+                                    <%= nombreAutor %>
+                                </h6>
+                                <% if (post.eventos?.nombre) { %>
+                                    <small class="text-primary fw-bold"><i class="fas fa-calendar-check me-1"></i> <%= post.eventos.nombre %></small>
+                                <% } else { %>
+                                    <small class="text-muted">Publicación de Atleta</small>
+                                <% } %>
                             </div>
                         </div>
 
-                        <!-- La Foto Oficial -->
-                        <div class="ratio ratio-1x1">
-                            <img src="<%= pub.foto_url %>" class="card-img-top" style="object-fit: cover;" alt="Foto Atleta FDFF">
-                        </div>
+                        <!-- Imagen Principal -->
+                        <img src="<%= post.foto_url %>" class="w-100" style="height: 600px; object-fit: cover;" alt="Foto Muro FDFF">
 
-                        <!-- Pie de Foto y Acciones -->
-                        <div class="card-body px-4">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="text-danger fs-5">
-                                    <i class="far fa-heart cursor-pointer"></i>
-                                    <span class="small text-muted ms-1"><%= pub.likes || 0 %> likes</span>
-                                </div>
-                                <span class="badge bg-light text-dark border small fw-normal">#FDFF_Oficial</span>
+                        <!-- Interacciones y Cuerpo -->
+                        <div class="card-body p-4">
+                            <!-- Like Count e Interacción -->
+                            <div class="d-flex align-items-center mb-3">
+                                <% if (locals.user) { %>
+                                    <button class="btn btn-sm btn-link p-0 text-decoration-none me-3" onclick="toggleLikeGlobal('<%= post.id %>')">
+                                        <i class="<%= post.userLiked ? 'fas' : 'far' %> fa-heart text-danger fs-3"></i>
+                                    </button>
+                                <% } else { %>
+                                    <i class="far fa-heart text-muted fs-3 me-3"></i>
+                                <% } %>
+                                <span class="fw-bold" id="like-count-<%= post.id %>">
+                                    <%= post.likesCount %> me gusta
+                                </span>
                             </div>
-                            
-                            <p class="card-text small text-dark mb-2">
-                                <%= pub.descripcion || "Orgullo dominicano en tarima." %>
+
+                            <!-- Descripción -->
+                            <p class="mb-3">
+                                <strong class="me-2"><%= nombreAutor.split(' ')[0] %></strong> 
+                                <span class="text-dark"><%= post.descripcion %></span>
                             </p>
-                            
-                            <p class="text-muted mb-0" style="font-size: 0.65rem;">
-                                <i class="far fa-clock"></i> Publicado: <%= pub.fecha_publicacion ? new Date(pub.fecha_publicacion).toLocaleDateString('es-DO') : 'Recientemente' %>
+
+                            <!-- Comentarios -->
+                            <div class="comentarios-box mb-3" style="max-height: 150px; overflow-y: auto;">
+                                <% if (post.publicacion_comentarios && post.publicacion_comentarios.length > 0) { %>
+                                    <% post.publicacion_comentarios.forEach(c => { %>
+                                        <%
+                                            const nombreComentario = c.profiles?.nombre || 'Miembro FDFF';
+                                        %>
+                                        <div class="small mb-1">
+                                             <strong class="text-dark"><%= nombreComentario %>:</strong> 
+                                            <span class="text-muted"><%= c.comentario %></span>
+                                        </div>
+                                    <% }) %>
+                                <% } %>
+                            </div>
+
+                            <!-- Input para Comentar (Solo Autenticados) -->
+                            <% if (locals.user) { %>
+                                <div class="input-group border-top pt-3 position-relative">
+                                    <button class="btn btn-link p-2 text-decoration-none" type="button" onclick="toggleEmojiPickerGlobal('<%= post.id %>')">
+                                        <i class="far fa-smile fs-5"></i>
+                                    </button>
+                                    <input type="text" class="form-control border-0 shadow-none input-comentario-<%= post.id %>" placeholder="Añadir un comentario...">
+                                    <button class="btn btn-link text-primary fw-bold text-decoration-none" type="button" onclick="enviarComentarioGlobal('<%= post.id %>')">
+                                        Publicar
+                                    </button>
+                                </div>
+                                <div id="emoji-container-<%= post.id %>" class="d-none position-absolute" style="bottom: 55px; left: 0; z-index: 1000; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.2);"></div>
+                            <% } else { %>
+                                <div class="text-center border-top pt-3">
+                                    <a href="/login" class="small text-decoration-none">Inicia sesión para dar like o comentar</a>
+                                </div>
+                            <% } %>
+
+                            <p class="text-muted mt-3 mb-0" style="font-size: 0.65rem;">
+                                <i class="far fa-clock"></i> <%= post.fecha_publicacion ? new Date(post.fecha_publicacion).toLocaleDateString('es-DO') : 'Recientemente' %>
                             </p>
                         </div>
                     </div>
                 </div>
             <% }) %>
         <% } else { %>
-            <div class="text-center py-5">
-                <i class="fas fa-images display-1 text-light mb-4"></i>
-                <h3 class="text-muted">Aún no hay fotos oficiales en el muro.</h3>
-                <p>El fotógrafo de la federación subirá contenido pronto.</p>
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-images fa-3x mb-3 d-block opacity-25"></i>
+                <h5>El muro está vacío por ahora.</h5>
+                <% if (locals.user && (user.role === 'atleta' || user.role === 'admin')) { %>
+                    <p class="small">¡Sé el primero en publicar!</p>
+                <% } %>
             </div>
         <% } %>
     </div>
 </div>
 
-<style>
-    .card:hover { transform: translateY(-5px); }
-    .cursor-pointer { cursor: pointer; }
-    .aspect-square { aspect-ratio: 1 / 1; }
-</style>
+<!-- Modal: Publicar en el Muro -->
+<div class="modal fade" id="modalPublicar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:20px;">
+            <div class="modal-header bg-dark text-white border-0" style="border-radius:20px 20px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-camera-retro me-2 text-warning"></i> Nueva publicación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/atletas/perfil/subir-foto" method="POST" enctype="multipart/form-data">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Foto <span class="text-danger">*</span></label>
+                        <input type="file" name="imagen" class="form-control" accept="image/*" required>
+                        <div class="form-text">Formatos: JPG, PNG, WEBP. Máx. 10 MB.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descripción</label>
+                        <textarea name="descripcion" class="form-control" rows="3"
+                                  placeholder="¿Qué quieres compartir?" maxlength="300"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4">
+                        <i class="fas fa-paper-plane me-1"></i> PUBLICAR
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function toggleLikeGlobal(postId) {
+        try {
+            const res = await fetch('/atletas/perfil/like', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ publicacion_id: postId })
+            });
+            const data = await res.json();
+            if (data.estado) {
+                const icon = document.querySelector(`[onclick="toggleLikeGlobal('${postId}')"] i`);
+                const countSpan = document.getElementById(`like-count-${postId}`);
+                let count = parseInt(countSpan.innerText);
+                
+                icon.classList.toggle('fas');
+                icon.classList.toggle('far');
+                countSpan.innerText = `${data.operacion === 'dar' ? count + 1 : count - 1} me gusta`;
+            }
+        } catch (e) { console.error("Error al dar like:", e); }
+    }
+
+    function toggleEmojiPickerGlobal(postId) {
+        const container = document.getElementById(`emoji-container-${postId}`);
+        if (container.innerHTML === "") {
+            const picker = document.createElement('emoji-picker');
+            picker.classList.add('light');
+            picker.style.width = "100%";
+            picker.style.maxWidth = "300px";
+            picker.style.height = "350px";
+            picker.addEventListener('emoji-click', event => {
+                const input = document.querySelector(`.input-comentario-${postId}`);
+                input.value += event.detail.unicode;
+                container.classList.add('d-none');
+            });
+            container.appendChild(picker);
+        }
+        container.classList.toggle('d-none');
+    }
+
+    // Cerrar pickers al hacer click fuera
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.input-group') && !e.target.closest('emoji-picker')) {
+            document.querySelectorAll('[id^="emoji-container-"]').forEach(c => c.classList.add('d-none'));
+        }
+    });
+
+    async function enviarComentarioGlobal(postId) {
+        const input = document.querySelector(`.input-comentario-${postId}`);
+        const comentario = input.value;
+        if (!comentario) return;
+
+        try {
+            const res = await fetch('/atletas/perfil/comentar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ publicacion_id: postId, comentario })
+            });
+            const data = await res.json();
+            if (data.estado) window.location.reload();
+        } catch (e) { alert("Error al enviar el comentario."); }
+    }
+</script>
 
 <%- include("../template/footer") %>

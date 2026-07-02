@@ -1,5 +1,12 @@
 <%- include("template/cabecera", {tituloWeb: "Pagina de Atletas"}) %>
 
+<style>
+    /* Forzar títulos blancos sobre el fondo oscuro, anulando estilos de DataTables */
+    #mydatatable thead th {
+        color: white !important;
+    }
+</style>
+
 <div class="p-2 divGeneral">
     <div class="row g-2">
         <div class="col-6">
@@ -16,11 +23,11 @@
     </div>
     <div class="table-responsive" id="mydatatable-container">
         <table class="records_list table table-striped table-bordered border-dark table-hover" id="mydatatable">
-            <thead>
-                <tr class="table-lightblue">
-                    <th scope="col">Accion</th>
-                    <th scope="col">IDFDFF</th>
-                    <th scope="col" class="atl"><h5 class="mb-0 col-sm-12 mr-5">Atleta</h5></th>
+            <thead class="bg-dark shadow-sm">
+                <tr class="text-white">
+                    <th scope="col" class="text-center py-3" style="width: 100px;">Acción</th>
+                    <th scope="col" style="width: 50px;">IDFDFF</th>
+                    <th scope="col" class="atl" style="min-width: 400px;">Atleta</th>
                     <th scope="col">Cedula</th>
                     <th scope="col">Pasaporte</th>
                     <th scope="col">Celular</th>
@@ -89,9 +96,22 @@
                         <tr>
                             <!-- CAMBIO CLAVE: atleta.id en lugar de atleta._id -->
                              <!-- Cambiamos "atletas/crear/idfdff" por "atletas/id" -->
-                            <td><a href="/atletas/<%= atleta.id %>" class="btn btn-warning btn-sm">Editar</a></td>
+                            <td>
+                                <a href="/atletas/<%= atleta.id %>" 
+                                   class="btn btn-sm <%= atleta.estatus_afiliacion !== 'habilitado' ? 'btn-danger text-white fw-bold shadow' : 'btn-warning' %>"
+                                >
+                                    <%= atleta.estatus_afiliacion !== 'habilitado' ? 'PENDIENTE' : 'Editar' %>
+                                </a>
+                            </td>
                             <th scope="row"><%= atleta.idfdff %></th>
-                            <td class="col-sm-8"><%= atleta.nombre %></td>
+                            <td class="fw-bold">
+                                <%= atleta.nombre %>
+                                <% if (atleta.estatus_afiliacion !== 'habilitado') { %>
+                                    <span class="badge bg-danger ms-1 small shadow-sm"><i class="fas fa-clock"></i> PENDIENTE</span>
+                                <% } else { %>
+                                    <span class="badge bg-success ms-1 small shadow-sm"><i class="fas fa-check-circle"></i> OK</span>
+                                <% } %>
+                            </td>
                             <td><%= atleta.cedula %></td>
                             <td><%= atleta.pasaporte %></td>
                             <td><%= atleta.celular %></td>
@@ -109,7 +129,7 @@
                             <td><%= atleta.sector %></td>
                             <td><%= atleta.calle %></td>
                             <td><%= atleta.postal %></td>                      
-                            <td><%= atleta.nacimiento %></td>
+                            <td><%= atleta.fecha_nacimiento %></td>
                             <!-- <td><%= atleta.edad %></td>-->
                             <td><%= atleta.sexo %></td>
                             <td><%= atleta.peso %></td>

@@ -1,0 +1,185 @@
+<%- include("../template/cabecera", {tituloWeb: "Panel Fotógrafo FDFF"}) %>
+
+<style>
+    body, #main-content { background: #0d0d0d; color: #e8e8e8; }
+    .foto-card { background: #161616; border: 1px solid #2a2a2a; border-radius: 14px; overflow: hidden; transition: border-color .2s; }
+    .foto-card:hover { border-color: #ffc107; }
+    .foto-card img { width: 100%; height: 180px; object-fit: cover; }
+    .foto-card .sin-foto { width: 100%; height: 180px; background: #222; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #444; }
+    .dorsal-tag { font-family: monospace; font-size: 1.1rem; font-weight: 900; color: #ffc107; }
+    .nombre-comp { font-size: .85rem; font-weight: 600; color: #ddd; }
+    .btn-upload-foto { background: #1a1a1a; border: 1px dashed #444; color: #aaa; border-radius: 8px; width: 100%; padding: .35rem; font-size: .78rem; cursor: pointer; transition: all .2s; }
+    .btn-upload-foto:hover { border-color: #ffc107; color: #ffc107; }
+    input[type="file"].input-foto { display: none; }
+    .progreso-bar { height: 4px; border-radius: 2px; background: #ffc107; width: 0%; transition: width .3s; }
+    .progreso-wrap { height: 4px; background: #333; border-radius: 2px; margin-top: 6px; }
+    .status-ok { font-size: .7rem; color: #28a745; font-weight: 700; }
+    .status-err { font-size: .7rem; color: #dc3545; font-weight: 700; }
+</style>
+
+<div class="container-fluid py-4 px-4">
+
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div>
+            <h4 class="fw-bold mb-0 text-warning"><i class="fas fa-camera me-2"></i> Panel del Fotógrafo</h4>
+            <small class="text-secondary">Sube fotos atléticas de competidores para la pantalla LED y el muro</small>
+        </div>
+        <% if (eventoSeleccionado) { %>
+            <span class="badge bg-primary px-3 py-2 fs-6"><%= eventoSeleccionado.nombre %></span>
+        <% } %>
+    </div>
+
+    <!-- Selector de Evento -->
+    <div class="card mb-4" style="background:#161616;border:1px solid #2a2a2a;border-radius:14px;">
+        <div class="card-body p-3">
+            <form action="/fotografo/upload" method="GET" class="row g-2 align-items-end">
+                <div class="col-md-8">
+                    <label class="form-label text-secondary small fw-bold text-uppercase">Seleccionar Evento</label>
+                    <select name="evento_id" class="form-select" style="background:#1e1e1e;border:1px solid #333;color:#fff;">
+                        <option value="">— Seleccionar evento —</option>
+                        <% eventosActivos.forEach(ev => { %>
+                            <option value="<%= ev.id %>" <%= ev.id === evento_id ? 'selected' : '' %>>
+                                <%= ev.nombre %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-warning fw-bold w-100">
+                        <i class="fas fa-search me-1"></i> Cargar Competidores
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <% if (!evento_id) { %>
+        <div class="text-center py-5 text-secondary">
+            <i class="fas fa-camera fa-3x mb-4 d-block opacity-25"></i>
+            <h5>Selecciona un evento para ver la lista de competidores</h5>
+        </div>
+    <% } else if (competidores.length === 0) { %>
+        <div class="text-center py-5 text-secondary">
+            <i class="fas fa-user-clock fa-3x mb-4 d-block"></i>
+            <h5>No hay competidores aprobados en este evento todavía</h5>
+            <small>Solo se muestran atletas que completaron el pesaje</small>
+        </div>
+    <% } else { %>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-secondary small"><%= competidores.length %> competidores aprobados</span>
+            <input type="text" id="buscadorFoto" class="form-control form-control-sm w-auto"
+                   placeholder="Buscar atleta..." style="background:#1e1e1e;border:1px solid #333;color:#fff;width:200px!important;">
+        </div>
+
+        <div class="row g-3" id="gridCompetidores">
+            <% competidores.forEach(comp => { %>
+                <div class="col-6 col-md-4 col-lg-3 col-xl-2 comp-item"
+                     data-nombre="<%= (comp.atletas?.nombre || '').toLowerCase() %>"
+                     data-dorsal="<%= comp.numero_atleta || '' %>">
+                    <div class="foto-card">
+                        <% if (comp.foto_atletica_url) { %>
+                            <img src="<%= comp.foto_atletica_url %>" id="img-<%= comp.id %>" alt="Foto Atlética">
+                        <% } else { %>
+                            <div class="sin-foto" id="img-<%= comp.id %>-placeholder">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <img src="" id="img-<%= comp.id %>" alt="" style="display:none;width:100%;height:180px;object-fit:cover;">
+                        <% } %>
+                        <div class="p-2">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="dorsal-tag">#<%= comp.numero_atleta || '?' %></span>
+                                <span class="nombre-comp text-truncate"><%= comp.atletas?.nombre || '—' %></span>
+                            </div>
+
+                            <input type="file" class="input-foto" id="file-<%= comp.id %>"
+                                   accept="image/*"
+                                   onchange="subirFoto('<%= comp.id %>', '<%= evento_id %>')">
+
+                            <label for="file-<%= comp.id %>" class="btn-upload-foto">
+                                <i class="fas fa-cloud-upload-alt me-1"></i>
+                                <%= comp.foto_atletica_url ? 'Cambiar foto' : 'Subir foto' %>
+                            </label>
+
+                            <div class="progreso-wrap mt-1">
+                                <div class="progreso-bar" id="prog-<%= comp.id %>"></div>
+                            </div>
+                            <div id="status-<%= comp.id %>"></div>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    <% } %>
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+    const BUCKET = 'fotos-atleticas';
+
+    // Buscador
+    const buscador = document.getElementById('buscadorFoto');
+    if (buscador) {
+        buscador.addEventListener('input', function () {
+            const q = this.value.toLowerCase().trim();
+            document.querySelectorAll('.comp-item').forEach(el => {
+                const nombre = el.dataset.nombre || '';
+                const dorsal = el.dataset.dorsal || '';
+                el.style.display = (!q || nombre.includes(q) || dorsal.includes(q)) ? '' : 'none';
+            });
+        });
+    }
+
+    async function subirFoto(competidorId, eventoId) {
+        const input = document.getElementById(`file-${competidorId}`);
+        const file = input.files[0];
+        if (!file) return;
+
+        const prog = document.getElementById(`prog-${competidorId}`);
+        const status = document.getElementById(`status-${competidorId}`);
+        prog.style.width = '30%';
+        status.innerHTML = '<span class="text-warning" style="font-size:.7rem;"><i class="fas fa-spinner fa-spin"></i> Subiendo...</span>';
+
+        try {
+            const ext = file.name.split('.').pop();
+            const path = `evento_${eventoId}/${competidorId}_${Date.now()}.${ext}`;
+
+            const { data: uploadData, error: uploadError } = await _supabase.storage
+                .from(BUCKET)
+                .upload(path, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            prog.style.width = '70%';
+
+            const { data: { publicUrl } } = _supabase.storage.from(BUCKET).getPublicUrl(path);
+
+            // Guardar en BD vía endpoint del servidor
+            const res = await fetch('/fotografo/subir-foto-atletica', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ competidor_id: competidorId, foto_url: publicUrl })
+            });
+            const result = await res.json();
+            if (!result.ok) throw new Error(result.mensaje || 'Error al guardar');
+
+            prog.style.width = '100%';
+            status.innerHTML = `<span class="status-ok"><i class="fas fa-check"></i> Guardada</span>`;
+
+            // Actualizar imagen en el grid sin recargar la página
+            const img = document.getElementById(`img-${competidorId}`);
+            const placeholder = document.getElementById(`img-${competidorId}-placeholder`);
+            if (placeholder) placeholder.style.display = 'none';
+            img.src = publicUrl;
+            img.style.display = '';
+
+            setTimeout(() => { prog.style.width = '0%'; }, 2000);
+        } catch (err) {
+            prog.style.width = '0%';
+            status.innerHTML = `<span class="status-err"><i class="fas fa-times"></i> ${err.message}</span>`;
+        }
+    }
+</script>
+
+<%- include("../template/footer") %>

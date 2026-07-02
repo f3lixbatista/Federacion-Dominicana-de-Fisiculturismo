@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://getbootstrap.com/docs/5.2/assets/css/docs.css" rel="stylesheet">
+
+    <!-- Font Awesome 6 (Para iconos como el corazón de Like) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="/js/kiosko-logic.js"></script>
+
+    <!-- Required meta tags -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+
+    <!-- Datatables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/v/bs4-4.1.1/dt-1.10.18/datatables.min.css">
+    <script src="https://cdn.datatables.net/v/bs4-4.1.1/dt-1.10.18/datatables.min.js"></script>
+
+    <!-- Buttons -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.6.2/css/buttons.dataTables.min.css">
+    <script src="https://cdn.datatables.net/buttons/1.6.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.rawgit.com/bpampuch/pdfmake/0.1.53/build/pdfmake.min.js"></script>
+    <script src="https://cdn.rawgit.com/bpampuch/pdfmake/0.1.53/build/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.flash.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.print.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+
+    
+        <!-- links para exportar a excel -->
+        <script src="https://unpkg.com/xlsx@0.16.9/dist/xlsx.full.min.js"></script>
+        <script src="https://unpkg.com/file-saverjs@latest/FileSaver.min.js"></script>
+        <script src="https://unpkg.com/tableexport@latest/dist/js/tableexport.min.js"></script>
+
+
+    <style>
+        /* #datatable tfoot input {
+            width: 80% !important;
+            height: 10%;  
+            margin-left: 10%;
+            margin-right: 10%;
+            color-scheme: none;
+            background-color: rgb(255, 217, 0);
+        } */
+
+        th.sorting_desc {
+        color: rgb(0, 0, 0);
+        }
+
+        th.sorting {
+        color: rgb(0, 0, 0);
+        }
+
+        .divGeneral, .divGralDetIns {
+            background-color: rgb(247, 247, 247);
+        }
+
+        .table-striped tbody tr:nth-of-type(2n+1) {
+        background-color: rgb(207, 246, 216);
+
+        }
+
+        .table-striped tbody tr:nth-of-type(2n+2) {
+        background-color: rgb(157, 140, 255);
+        
+        }
+
+        /* .bg-striped .fila:nth-of-type(1n+1) {
+        background-color: rgb(207, 246, 216);
+
+        } */
+
+        .bg-striped .fila:nth-of-type(2n+1) {
+        background-color: rgb(119, 239, 255);
+        
+        }
+
+        th::after, th::before {
+            color: rgb(255, 255, 255);
+            /* background-color: lawngreen; */
+        }
+
+        .records_list thead tr td::after, .records_list thead tr td::before {
+            /* color: rgb(255, 255, 255); */
+            /* background-color: lawngreen; */
+            display: none;
+            visibility: hidden;
+        }
+
+        .table-bordered td, .table-bordered th {
+            border: 2px solid rgb(255, 255, 255);
+        }
+
+        table.dataTable {
+            border: 2px solid rgb(255, 255, 255);
+            border-spacing: 2px;
+            border-collapse: collapse !important;
+        }
+
+        input::placeholder {
+            color: rgb(137, 137, 137, 0.5);
+        }
+
+        input:nth-of-type(1n+1) {
+            background-color: rgb(193, 255, 118);
+        }
+
+        /* .table-responsive table thead .nombreAtleta {
+            width: 40vw;
+            background-color: rgb(0, 255, 38);
+            color: rgb(0, 0, 0);
+            padding-left: 60px;
+            padding-right: 200px;
+            margin-right: 50px;
+            right: 50px;
+        } */
+        
+        thead {
+            background-color: rgb(0, 0, 255);
+        }
+
+        
+
+        .table thead th {
+            border: 2px solid rgb(0, 0, 0);
+            
+        }
+
+        #mydatatable tfoot {
+            display: table-header-group !important;
+            background-color: rgb(0, 0, 0);
+
+        }
+
+        .imgFdff {
+            width: 5vw;
+            height: 10vw;  
+            top: -1vh;
+        }
+
+        .imgIfbb {
+            width: 4.5vw;
+            height: 9.5vw;  
+            top: -1vh;
+        }
+
+        a.buttons-collection {
+        margin-left: 1em;
+    }
+
+        h4, .oculto, .imprimirDescargo {
+            display: none;
+        }
+
+
+        .flotante {
+                position: absolute;
+                margin-left: 30vw;
+                margin-top: -12.5vh;
+            }
+
+            .spanFed {
+                line-height: 1;
+                font-size: 4vw;
+                color: rgb(0, 0, 220);
+                
+            }
+
+            .spanFedSub {
+                line-height: 0.8;
+                font-size: 4vw;
+                color: rgb(0, 0, 220);
+                
+            }
+
+            .seccionAtl {
+                font-size: 3vw;
+            }
+
+            .haciaMembresia {
+               font-size: 1.5vw;
+            }
+            
+            .divisiones option {
+                display: none;
+            } 
+
+            .modalidades option {
+                display: none;
+            }
+
+            #campoSenior, #campoEdad, #campoEstatura, #campoPeso, #campoDivision {
+                display: none;
+            }
+
+        /* --- Estilos personalizados para el Navbar --- */
+        .navbar .nav-link, .navbar .navbar-brand {
+            transition: all 0.3s ease-in-out !important; 
+            color: #ffffff !important; /* Forzamos blanco para todos por defecto */
+        }
+
+        /* Efecto de iluminación al pasar el mouse (hover) - Brillo más potente */
+        .navbar .nav-link:hover, .navbar .navbar-brand:hover {
+            color: #ffffff !important;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 1), 
+                         0 0 30px rgba(255, 255, 255, 0.8), 
+                         0 0 45px rgba(255, 255, 255, 0.4) !important;
+            opacity: 1 !important;
+        }
+
+        /* Estado activo: Gris tímido (Solo cuando NO se está pasando el mouse) */
+        .navbar .nav-item.active .nav-link:not(:hover),
+        .navbar .nav-item.active .navbar-brand:not(:hover) {
+            color: #adb5bd !important; 
+            text-shadow: none !important;
+        }
+
+        @media print {
+            .navbar, #titulo, button, script, hr, a, .divGralDetIns {
+                display: none;
+                visibility: hidden;
+            }
+	        body *, .imprimirDescargo, .imprInsc {
+		        display: block;
+	        }
+
+            .detalleAll {
+                width: 50%;
+            }
+
+            .firma {
+                margin-top: 5px;
+            }
+
+            .spanFed, .spanFedSub {
+                font-size: 4vw;
+                
+            }
+
+            div .encabezado {
+                height: 9vw;
+            }
+
+            img {
+                width: 6vw;
+                height: 10vw;
+                top: 0.5vw;
+                background-color: rgb(255, 255, 255);
+            }
+
+            h4 {
+                position: absolute;
+                top: 88vh;
+            }
+
+            header {
+                margin-top: -4vh;
+            }
+            /* .encabezado {
+                top: -8vh;
+            } */
+
+            .caja {
+                margin-top: -1vh;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+
+
+        /* @media visualViewport {
+            div {
+                display: none;
+            }
+        } */
+
+    </style>
+
+
+    <title>FDFF - <%= tituloWeb %></title>
+
+   
+
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+
+    
+</head>  
+
+<body>
+
+   
+
+    <%- include("navbar") %>
+    <%- include("header") %>
+
+</body>    

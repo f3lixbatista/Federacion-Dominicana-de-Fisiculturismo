@@ -1,4 +1,4 @@
-const { supabase, supabaseAdmin } = require('../supabaseClient');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 const QRCode = require('qrcode');
 
 const listarAtletas = async (req, res) => {
@@ -6,6 +6,7 @@ const listarAtletas = async (req, res) => {
         const { data, error } = await supabase
             .from('atletas')
             .select('*')
+            .order('estatus_afiliacion', { ascending: false }) // 'pendiente' (p) aparecerá antes que 'habilitado' (h)
             .order('nombre', { ascending: true });
 
         if (error) throw error;
@@ -52,6 +53,8 @@ const crearAtleta = async (req, res) => {
     } = req.body;
 
     try {
+        console.log("📩 Intento de creación de atleta recibido para:", email);
+
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
             email,
             password,
@@ -61,20 +64,25 @@ const crearAtleta = async (req, res) => {
         if (authError) throw new Error('Error en Auth: ' + authError.message);
 
         const newUserId = authData.user.id;
+        console.log("✅ Usuario creado en Supabase Auth con ID:", newUserId);
 
-        const { error: errorProfile } = await supabase
+
+        // 2. Crear Perfil (Upsert evita errores si un trigger ya creó el registro)
+        const { error: errorProfile } = await supabaseAdmin
             .from('profiles')
-            .insert([{ id: newUserId, nombre, role: 'atleta', cedula, email, id_fdff: idfdff }]);
+            .upsert({ id: newUserId, nombre, role: 'atleta', cedula, email, id_fdff: idfdff || null }, { onConflict: 'id' });
 
         if (errorProfile) throw new Error('Error en Profile: ' + errorProfile.message);
 
-        const { error: errorAtleta } = await supabase
+        // 3. Crear registro en tabla Atletas
+        const { error: errorAtleta } = await supabaseAdmin
             .from('atletas')
             .insert([{
                 id: newUserId,
                 nombre,
-                cedula,
-                idfdff,
+                email,
+                cedula: cedula || null,
+                idfdff: idfdff || null,
                 estatus_afiliacion: 'habilitado',
                 fecha_ultima_renovacion: `${new Date().getFullYear()}-12-31`,
                 pasaporte,
@@ -96,16 +104,16 @@ const crearAtleta = async (req, res) => {
                 celular_preparador,
                 email_preparador,
                 categoria,
-                estatura,
-                peso
+                estatura: (estatura && !isNaN(parseFloat(estatura))) ? parseFloat(estatura) : null,
+                peso: (peso && !isNaN(parseFloat(peso))) ? parseFloat(peso) : null
             }]);
 
         if (errorAtleta) throw new Error('Error en Atletas: ' + errorAtleta.message);
 
-        res.redirect('/inscripcion/pesaje');
+        res.json({ estado: true, mensaje: 'Atleta creado y guardado con éxito.' });
     } catch (error) {
-        console.error('🔥 Error detectado:', error.message);
-        res.status(500).send(`<h3>Error al procesar:</h3><p>${error.message}</p><a href='/atletas/crear'>Volver a intentar</a>`);
+        console.error('🔥 Error en crearAtleta:', error.message);
+        res.status(500).json({ estado: false, mensaje: error.message });
     }
 };
 
@@ -114,19 +122,30 @@ const detalleAtleta = async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('atletas')
-            .select('*')
+            .select('*, preparadores(id, nombre_completo, gimnasio_labora)')
             .eq('id', id)
             .single();
 
         if (error || !data) throw error || new Error('Atleta no encontrado');
 
-        res.render('detalle', { atleta: data, error: false });
+        const { data: historial } = await supabaseAdmin
+            .from('competidores')
+            .select(`
+                id,
+                numero_atleta,
+                posicion_final,
+                pago_validado,
+                estatus_pesaje,
+                eventos ( id, nombre, fecha_inicio, estado ),
+                eventos_categorias ( categorias ( nombre ) )
+            `)
+            .eq('atleta_id', id)
+            .order('created_at', { ascending: false });
+
+        res.render('detalle', { atleta: data, historial: historial || [], error: false });
     } catch (error) {
         console.error('Error al obtener atleta:', error.message);
-        res.render('detalle', {
-            error: true,
-            mensaje: 'No encontrado'
-        });
+        res.render('detalle', { error: true, mensaje: 'No encontrado' });
     }
 };
 
@@ -138,7 +157,7 @@ const eliminarAtleta = async (req, res) => {
         if (authError) console.warn("Aviso: El usuario no existía en Auth o no pudo ser borrado:", authError.message);
 
         // 2. Borrar de la tabla Atletas
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
             .from('atletas')
             .delete()
             .eq('id', id);
@@ -157,10 +176,9 @@ const actualizarAtleta = async (req, res) => {
 
     delete datosRecibidos.role;
     delete datosRecibidos.id;
-    delete datosRecibidos.email;
 
     try {
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
             .from('atletas')
             .update(datosRecibidos)
             .eq('id', id);
@@ -170,6 +188,98 @@ const actualizarAtleta = async (req, res) => {
         res.json({ estado: true, mensaje: 'Atleta actualizado con éxito' });
     } catch (error) {
         console.error('Error en PUT atleta:', error.message);
+        res.status(500).json({ estado: false, mensaje: error.message });
+    }
+};
+
+const solicitarAfiliacion = async (req, res) => {
+    const usuarioId = res.locals.user?.id;
+    console.log("📩 Solicitud de afiliación recibida para usuario ID:", usuarioId);
+    if (!usuarioId) return res.status(401).json({ estado: false, mensaje: "Sesión expirada" });
+
+    try {
+        const { error } = await supabaseAdmin
+            .from('atletas')
+            .upsert({ ...req.body, id: usuarioId });
+
+        if (error) throw error;
+
+        // Asignamos el rol de 'atleta' al usuario en el momento que envía su solicitud
+         // Sincronizamos el NOMBRE y el ROL en la tabla de perfiles
+        await supabaseAdmin.from('profiles').update({ 
+            nombre: req.body.nombre,
+            email: req.body.email,
+            role: 'atleta' 
+        }).eq('id', usuarioId);
+
+        res.json({ estado: true, mensaje: "Solicitud enviada correctamente" });
+    } catch (error) {
+        console.error("🔥 Error en solicitarAfiliacion:", error.message);
+        res.status(500).json({ estado: false, mensaje: error.message });
+    }
+};
+
+const validarAfiliacion = async (req, res) => {
+    const { atletaId, estaActivo } = req.body;
+    if (!atletaId) return res.status(400).json({ estado: false, mensaje: "ID requerido" });
+
+    const nuevoEstatus = estaActivo ? 'habilitado' : 'deshabilitado';
+    const fechaRenovacion = estaActivo ? new Date().getFullYear() + "-12-31" : null;
+
+    try {
+        // 1. Actualizar estatus en tabla atletas
+        const { error: errAtleta } = await supabaseAdmin
+            .from('atletas')
+            .update({ 
+                estatus_afiliacion: nuevoEstatus,
+                fecha_ultima_renovacion: fechaRenovacion 
+            })
+            .eq('id', atletaId);
+
+        if (errAtleta) throw errAtleta;
+
+        // Nota: El rol ya fue asignado durante la solicitud de afiliación web
+        // o durante la creación manual por el administrador.
+        res.json({ estado: true, mensaje: `Atleta ${nuevoEstatus} correctamente.` });
+    } catch (error) {
+        console.error("🔥 Error validando afiliación:", error.message);
+        res.status(500).json({ estado: false, mensaje: error.message });
+    }
+};
+
+const actualizarFotoPerfil = async (req, res) => {
+    const usuarioId = res.locals.user?.id;
+    if (!usuarioId) return res.status(401).json({ estado: false, mensaje: "Sesión expirada" });
+
+    try {
+        if (!req.file) throw new Error("Debe seleccionar una imagen.");
+
+        const file = req.file;
+        const filePath = `${usuarioId}/perfil_oficial.jpg`;
+
+        // Subida al Storage usando supabaseAdmin (ignora RLS y evita error de tabla users)
+        const { error: uploadError } = await supabaseAdmin.storage
+            .from('fotos_perfil')
+            .upload(filePath, file.buffer, { 
+                contentType: file.mimetype,
+                upsert: true 
+            });
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabaseAdmin.storage.from('fotos_perfil').getPublicUrl(filePath);
+        const urlFinal = `${urlData.publicUrl}?t=${Date.now()}`;
+
+        // Actualizar la tabla atletas
+        const { error: dbError } = await supabaseAdmin.from('atletas')
+            .update({ foto_url: urlFinal })
+            .eq('id', usuarioId);
+
+        if (dbError) throw dbError;
+
+        res.json({ estado: true, mensaje: "Foto de perfil actualizada correctamente.", url: urlFinal });
+    } catch (error) {
+        console.error("🔥 Error actualizando foto perfil:", error.message);
         res.status(500).json({ estado: false, mensaje: error.message });
     }
 };
@@ -205,6 +315,7 @@ const verPerfilPropio = async (req, res) => {
                 posicion_final,
                 pago_validado,
                 url_comprobante_pago,
+                musica_url,
                 eventos ( id, nombre, fecha_inicio, estado ),
                 eventos_categorias ( categorias ( nombre ) )
             `)
@@ -212,17 +323,28 @@ const verPerfilPropio = async (req, res) => {
             .order('created_at', { ascending: false });
 
         // 4. Traer publicaciones (estilo Facebook)
-        const { data: publicaciones } = await supabase
-            .from('atleta_publicaciones')
+        const { data: publicaciones } = await supabaseAdmin
+            .from('publicaciones_muro')
             .select(`
                 *,
-                publicacion_comentarios (
+                profiles!atleta_id (nombre),
+                atletas!atleta_id ( nombre, foto_url ),
+                imagen_url:foto_url,
+                publicacion_comentarios!publicacion_id (
                     *,
-                    profiles ( nombre )
-                )
+                    profiles ( nombre ),
+                    atletas!user_id ( nombre )
+                ),
+                publicacion_likes!publicacion_id ( user_id )
             `)
             .eq('atleta_id', usuarioId)
-            .order('created_at', { ascending: false });
+            .order('fecha_publicacion', { ascending: false });
+
+        const postsConLikes = (publicaciones || []).map(p => ({
+            ...p,
+            likesCount: p.publicacion_likes?.length || 0,
+            userLiked: p.publicacion_likes?.some(l => l.user_id === usuarioId)
+        }));
 
         // 5. Identificar el evento activo actual para inscripciones
         const { data: currentEvent } = await supabase
@@ -238,22 +360,30 @@ const verPerfilPropio = async (req, res) => {
             // 6. Verificar si el atleta tiene una inscripción activa para este evento
             const { data: participations } = await supabase
                 .from('competidores')
-                .select('id, url_comprobante_pago, pago_validado, fecha_subida_pago, observaciones_pago')
+                .select('id, url_comprobante_pago, pago_validado, fecha_subida_pago, observaciones_pago, created_at, musica_url')
                 .eq('atleta_id', usuarioId)
                 .eq('id_evento', currentEvent.id);
 
             if (participations && participations.length > 0) {
-                // Cálculo de monto basado en la cantidad de categorías inscritas
+                // Lógica de cálculo considerando oferta basada en la fecha de creación del registro
+                const fechaReg = new Date(participations[0].created_at);
+                const fechaLim = currentEvent.fecha_limite_oferta ? new Date(currentEvent.fecha_limite_oferta) : null;
+                const esOferta = fechaLim && fechaReg <= fechaLim;
+
+                const p1 = esOferta ? (currentEvent.costo_oferta_primera || currentEvent.costo_primera_cat) : (currentEvent.costo_primera_cat || 0);
+                const pA = esOferta ? (currentEvent.costo_oferta_adicional || currentEvent.costo_adicional) : (currentEvent.costo_adicional || 0);
+
                 const cant = participations.length;
-                const monto_total = (currentEvent.costo_primera_cat || 0) + (cant - 1) * (currentEvent.costo_adicional || 0);
+                const monto_total = p1 + (cant - 1) * pA;
                 
                 enrollmentData = {
-                    id: participations[0].id, 
+                    id: participations[0].id,
                     url_comprobante_pago: participations.find(p => p.url_comprobante_pago)?.url_comprobante_pago || null,
                     pago_validado: participations.every(p => p.pago_validado),
                     fecha_subida_pago: participations.find(p => p.fecha_subida_pago)?.fecha_subida_pago || null,
                     monto_total: monto_total,
-                    observaciones_pago: participations.find(p => p.observaciones_pago)?.observaciones_pago || null
+                    observaciones_pago: participations.find(p => p.observaciones_pago)?.observaciones_pago || null,
+                    musica_url: participations.find(p => p.musica_url)?.musica_url || null
                 };
             }
         }
@@ -262,7 +392,7 @@ const verPerfilPropio = async (req, res) => {
             atleta: atleta || {},
             preparadores: preparadores || [],
             historial: historial || [],
-            publicaciones: publicaciones || [],
+            publicaciones: postsConLikes,
             user: res.locals.user,
             evento: currentEvent,
             inscripcion: enrollmentData
@@ -292,6 +422,31 @@ const actualizarTeamPropio = async (req, res) => {
     }
 };
 
+const darLikePublicacion = async (req, res) => {
+    const usuarioId = res.locals.user?.id;
+    const { publicacion_id } = req.body;
+    if (!usuarioId) return res.status(401).json({ estado: false, mensaje: "Inicia sesión" });
+
+    try {
+        const { data: existingLike } = await supabase
+            .from('publicacion_likes')
+            .select('*')
+            .eq('publicacion_id', publicacion_id)
+            .eq('user_id', usuarioId)
+            .single();
+
+        if (existingLike) {
+            await supabase.from('publicacion_likes').delete().eq('id', existingLike.id);
+            res.json({ estado: true, operacion: 'quitar' });
+        } else {
+            await supabase.from('publicacion_likes').insert({ publicacion_id, user_id: usuarioId });
+            res.json({ estado: true, operacion: 'dar' });
+        }
+    } catch (error) {
+        res.status(500).json({ estado: false, mensaje: error.message });
+    }
+};
+
 const subirPublicacion = async (req, res) => {
     const usuarioId = res.locals.user?.id;
     const { descripcion } = req.body;
@@ -304,26 +459,28 @@ const subirPublicacion = async (req, res) => {
         const fileName = `${Date.now()}-${usuarioId}.${fileExt}`;
         const filePath = `social/${fileName}`;
 
-        // Se asume la existencia del bucket 'atleta-galeria' en Supabase Storage
-        const { error: uploadError } = await supabase.storage
-            .from('atleta-galeria')
+        // Usamos el bucket 'muro_social' y el cliente admin para evitar errores de permisos
+        const { error: uploadError } = await supabaseAdmin.storage
+            .from('muro_social')
             .upload(filePath, file.buffer, { contentType: file.mimetype });
 
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage.from('atleta-galeria').getPublicUrl(filePath);
+        const { data: urlData } = supabaseAdmin.storage.from('muro_social').getPublicUrl(filePath);
 
-        const { error: dbError } = await supabase
-            .from('atleta_publicaciones')
+        const { error: dbError } = await supabaseAdmin
+            .from('publicaciones_muro')
             .insert({
                 atleta_id: usuarioId,
-                imagen_url: urlData.publicUrl,
+                foto_url: urlData.publicUrl,
                 descripcion
             });
 
         if (dbError) throw dbError;
 
-        res.redirect('/atletas/perfil');
+        const referer = req.get('Referer') || '';
+        const destino = referer.includes('/social/muro') ? '/social/muro' : '/atletas/perfil';
+        res.redirect(destino);
     } catch (error) {
         console.error("🔥 Error subiendo publicación:", error.message);
         res.status(500).send("Error al subir la publicación: " + error.message);
@@ -335,7 +492,7 @@ const comentarPublicacion = async (req, res) => {
     const { publicacion_id, comentario } = req.body;
 
     try {
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
             .from('publicacion_comentarios')
             .insert({
                 publicacion_id,
@@ -368,7 +525,7 @@ const verComprobanteInscripcion = async (req, res) => {
         // 2. Buscamos las categorías donde se inscribió en ESTE evento
         const { data: inscripciones } = await supabase
             .from('competidores')
-            .select('eventos_categorias(categorias(nombre)), id_evento, estatus_pesaje')
+            .select('eventos_categorias(categorias(nombre)), id_evento, estatus_pesaje, created_at')
             .eq('atleta_id', atletaId)
             .eq('id_evento', idEvento);
 
@@ -378,9 +535,16 @@ const verComprobanteInscripcion = async (req, res) => {
 
         if (!evento) throw new Error("Evento no encontrado.");
 
-        // 4. Cálculo de Monto (Lógica FDFF: 1ra cat + adicionales)
+        // 4. Cálculo de Monto considerando oferta en el Comprobante
+        const fechaReg = inscripciones && inscripciones.length > 0 ? new Date(inscripciones[0].created_at) : new Date();
+        const fechaLim = evento.fecha_limite_oferta ? new Date(evento.fecha_limite_oferta) : null;
+        const esOferta = fechaLim && fechaReg <= fechaLim;
+
+        const p1 = esOferta ? (evento.costo_oferta_primera || evento.costo_primera_cat) : (evento.costo_primera_cat || 0);
+        const pA = esOferta ? (evento.costo_oferta_adicional || evento.costo_adicional) : (evento.costo_adicional || 0);
+
         const cant = (inscripciones || []).length;
-        const totalPagado = cant > 0 ? (evento.costo_primera_cat + (cant - 1) * (evento.costo_adicional || 0)) : 0;
+        const totalPagado = cant > 0 ? (p1 + (cant - 1) * pA) : 0;
 
         // 5. Generar Código QR para validación instantánea en Mesa Técnica
         // Apuntamos a la ruta de detalle de inscripción que ya tienes definida
@@ -403,17 +567,56 @@ const verComprobanteInscripcion = async (req, res) => {
 
 const verUploadFotografo = async (req, res) => {
     try {
-        // Traemos eventos activos o finalizados recientemente para el selector del fotógrafo
+        const { evento_id } = req.query;
+
         const { data: eventos, error } = await supabase
             .from('eventos')
             .select('id, nombre')
             .order('fecha_inicio', { ascending: false });
 
         if (error) throw error;
-        res.render('fotografo/upload', { eventosActivos: eventos || [] });
+
+        let competidores = [];
+        let eventoSeleccionado = null;
+
+        if (evento_id) {
+            const [{ data: ev }, { data: comps }] = await Promise.all([
+                supabaseAdmin.from('eventos').select('id, nombre').eq('id', evento_id).single(),
+                supabaseAdmin.from('competidores')
+                    .select('id, numero_atleta, foto_atletica_url, atletas(nombre, foto_url)')
+                    .eq('id_evento', evento_id)
+                    .eq('estatus_pesaje', 'aprobado')
+                    .order('numero_atleta', { ascending: true })
+            ]);
+            eventoSeleccionado = ev || null;
+            competidores = comps || [];
+        }
+
+        res.render('fotografo/upload', {
+            eventosActivos: eventos || [],
+            competidores,
+            eventoSeleccionado,
+            evento_id: evento_id || ''
+        });
     } catch (error) {
         console.error('🔥 Error panel fotógrafo:', error.message);
         res.redirect('/eventos/competencias');
+    }
+};
+
+const subirFotoAtletica = async (req, res) => {
+    const { competidor_id, foto_url } = req.body;
+    if (!competidor_id || !foto_url) return res.status(400).json({ ok: false, mensaje: 'Datos incompletos' });
+    try {
+        const { error } = await supabaseAdmin
+            .from('competidores')
+            .update({ foto_atletica_url: foto_url })
+            .eq('id', competidor_id);
+        if (error) throw error;
+        res.json({ ok: true });
+    } catch (err) {
+        console.error('🔥 Error subirFotoAtletica:', err.message);
+        res.status(500).json({ ok: false, mensaje: err.message });
     }
 };
 
@@ -462,6 +665,60 @@ const verEntradaAtleta = async (req, res) => {
     }
 };
 
+const subirMusicaCompetidor = async (req, res) => {
+    const usuarioId = res.locals.user?.id;
+    if (!usuarioId) return res.status(401).json({ estado: false, mensaje: 'Sesión expirada' });
+
+    const { id_evento } = req.body;
+    if (!id_evento) return res.status(400).json({ estado: false, mensaje: 'Evento no especificado' });
+
+    try {
+        if (!req.file) throw new Error('Debes seleccionar un archivo de audio.');
+
+        const file = req.file;
+        const ext = (file.originalname.split('.').pop() || 'mp3').toLowerCase();
+        const allowed = ['mp3', 'wav', 'ogg', 'm4a', 'aac'];
+        if (!allowed.includes(ext)) throw new Error('Formato no permitido. Usa MP3, WAV o M4A.');
+
+        const filePath = `${usuarioId}/${id_evento}/musica.${ext}`;
+
+        // Crear bucket si no existe
+        const { data: buckets } = await supabaseAdmin.storage.listBuckets();
+        const bucketExiste = buckets && buckets.some(b => b.name === 'musica_atletas');
+        if (!bucketExiste) {
+            const { error: bucketErr } = await supabaseAdmin.storage.createBucket('musica_atletas', { public: true, fileSizeLimit: 20971520 });
+            if (bucketErr) throw new Error('No se pudo crear el bucket de música: ' + bucketErr.message);
+        }
+
+        const { error: uploadError } = await supabaseAdmin.storage
+            .from('musica_atletas')
+            .upload(filePath, file.buffer, { contentType: file.mimetype, upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabaseAdmin.storage.from('musica_atletas').getPublicUrl(filePath);
+        const urlMusica = `${urlData.publicUrl}?t=${Date.now()}`;
+
+        const { data: rowsActualizados, error: dbError } = await supabaseAdmin
+            .from('competidores')
+            .update({ musica_url: urlMusica })
+            .eq('atleta_id', usuarioId)
+            .eq('id_evento', id_evento)
+            .select('id');
+
+        if (dbError) throw dbError;
+
+        if (!rowsActualizados || rowsActualizados.length === 0) {
+            return res.status(400).json({ estado: false, mensaje: 'Debes inscribirte en el evento primero para poder subir tu música.' });
+        }
+
+        res.json({ estado: true, mensaje: 'Música subida con éxito. El DJ ya tiene tu canción.', url: urlMusica });
+    } catch (error) {
+        console.error('Error subiendo música del atleta:', error.message);
+        res.status(500).json({ estado: false, mensaje: error.message });
+    }
+};
+
 module.exports = {
     listarAtletas,
     mostrarFormularioCrear,
@@ -471,9 +728,15 @@ module.exports = {
     actualizarAtleta,
     verPerfilPropio,
     actualizarTeamPropio,
+    validarAfiliacion,
+    solicitarAfiliacion,
     subirPublicacion,
+    darLikePublicacion,
+    actualizarFotoPerfil,
     comentarPublicacion,
     verComprobanteInscripcion,
     verUploadFotografo,
-    verEntradaAtleta
+    subirFotoAtletica,
+    verEntradaAtleta,
+    subirMusicaCompetidor
 };

@@ -173,20 +173,22 @@
         const filas = document.querySelectorAll('.fila-atleta');
         const resultados = Array.from(filas).map(f => ({
             atleta_id: f.dataset.id,
-            puntos: parseInt(f.querySelector('.cell-total').innerText),
-            posicion: parseInt(f.querySelector('.cell-posicion').innerText)
+            puntos: parseInt(f.querySelector('.cell-total').innerText) || 0,
+            posicion: parseInt(f.querySelector('.cell-posicion').innerText) || 99
         }));
 
+        const ganador = resultados.reduce((a, b) => a.posicion < b.posicion ? a : b, resultados[0]);
+
         try {
-            const response = await fetch('/estadisticas/oficializar', {
+            const response = await fetch('/estadisticas/oficializar-absoluto', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ eventoCatId: catRelId, resultados })
+                body: JSON.stringify({ atletaGanadorId: ganador?.atleta_id, idEvento, resultados })
             });
             const data = await response.json();
             alert(data.mensaje);
         } catch (err) {
-            alert("Error al oficializar la categoría.");
+            alert("Error al oficializar el absoluto.");
         }
     }
 

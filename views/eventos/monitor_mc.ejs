@@ -112,7 +112,7 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    const _supabase = supabase.createClient("<%= supabaseUrl %>", "<%= supabaseKey %>");
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
     const idEvento = "<%= evento.id %>";
 
     function marcarProgresoMc(idElemento, completado) {
@@ -169,12 +169,60 @@
                 htmlJueces += `</div></div>`;
                 contenedorPantalla.innerHTML = htmlJueces;
 
-            // ESCENARIO B: El Estadístico inyectó resultados de competencia (Top de atletas)
+            // ESCENARIO B: Lista de Clasificados (por dorsal + por posición)
+            } else if (res.tipo_alerta === 'clasificados') {
+                let htmlClasif = `
+                    <div class="card bg-secondary bg-opacity-25 border-success p-3 mb-3">
+                        <h5 class="fw-bold text-success border-bottom pb-2 mb-2">
+                            <i class="fas fa-check-double"></i> ${res.categoria_nombre}
+                        </h5>
+                        <h6 class="text-uppercase text-warning fw-bold mb-3">${res.fase_competencia || 'CLASIFICADOS'}</h6>
+
+                        <h6 class="text-info fw-bold mb-1"><i class="fas fa-sort-numeric-up me-1"></i>Llamada al Escenario (orden de dorsal):</h6>
+                        <div class="d-flex flex-wrap gap-2 mb-3">`;
+
+                (res.atletas || []).forEach(a => {
+                    htmlClasif += `<span class="badge bg-dark border border-warning text-white fs-5 px-3 py-2">
+                        #${a.dorsal} <span class="fw-normal opacity-75">${a.nombre}</span>
+                    </span>`;
+                });
+
+                htmlClasif += `</div>`;
+
+                if (res.atletas_posicion && res.atletas_posicion.length > 0) {
+                    htmlClasif += `<h6 class="text-warning fw-bold mb-1 mt-2"><i class="fas fa-trophy me-1"></i>Resultados Finales (posición descendente):</h6><ol reversed class="fs-5 fw-bold text-white mb-0">`;
+                    res.atletas_posicion.forEach(a => {
+                        htmlClasif += `<li class="mb-1">Dorsal [${a.dorsal}] — ${a.nombre}</li>`;
+                    });
+                    htmlClasif += `</ol>`;
+                }
+
+                htmlClasif += `</div>`;
+                contenedorPantalla.innerHTML = htmlClasif;
+
+            // ESCENARIO C: Llamada Top 5 comparación
+            } else if (res.tipo_alerta === 'top5_comparacion') {
+                let htmlTop5 = `
+                    <div class="card bg-warning bg-opacity-10 border-warning p-3 mb-3">
+                        <h5 class="fw-bold text-warning border-bottom pb-2 mb-2">
+                            <i class="fas fa-star"></i> COMPARACIÓN TOP 5 — ${res.categoria_nombre}
+                        </h5>
+                        <p class="text-light small mb-2">Atletas convocados al centro de escena:</p>
+                        <div class="d-flex flex-wrap gap-2">`;
+
+                (res.atletas || []).forEach(a => {
+                    htmlTop5 += `<span class="badge bg-warning text-dark fs-5 px-3 py-2">#${a.dorsal} ${a.nombre}</span>`;
+                });
+
+                htmlTop5 += `</div></div>`;
+                contenedorPantalla.innerHTML = htmlTop5;
+
+            // ESCENARIO D: Resultados de competencia (formato anterior)
             } else if (res.categoria_nombre && res.atletas) {
                 let htmlResultados = `
                     <div class="card bg-secondary bg-opacity-25 border-success p-3 mb-3">
                         <h5 class="fw-bold text-success border-bottom pb-1 mb-2"><i class="fas fa-trophy"></i> ${res.categoria_nombre}</h5>
-                        <h6 class="text-uppercase fw-bold text-info fs-6">${res.fase_competencia}</h6>
+                        <h6 class="text-uppercase fw-bold text-info fs-6">${res.fase_competencia || ''}</h6>
                         <ol class="fs-4 fw-bold mt-3 text-white">
                 `;
 

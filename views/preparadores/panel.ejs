@@ -1,0 +1,194 @@
+<%- include('../template/cabecera', { tituloWeb: 'Panel del Coach - FDFF' }) %>
+
+<div class="container my-4">
+
+<% if (!prep) { %>
+    <div class="alert alert-warning shadow-sm border-0" style="border-radius:14px;">
+        <h5 class="fw-bold mb-1"><i class="fas fa-exclamation-triangle me-2"></i> Perfil de coach no vinculado</h5>
+        <p class="mb-0">Tu cuenta tiene el rol de preparador pero no encontramos un registro de coach con tu correo <strong><%= user.email %></strong>. Contacta al administrador.</p>
+    </div>
+<% } else { %>
+
+    <!-- CABECERA DEL COACH -->
+    <div class="card border-0 shadow mb-4" style="border-radius:18px;overflow:hidden;">
+        <div class="card-body p-4">
+            <div class="row align-items-center g-3">
+                <div class="col-auto">
+                    <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center shadow"
+                         style="width:72px;height:72px;font-size:2rem;">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                </div>
+                <div class="col">
+                    <h4 class="fw-bold mb-1"><%= prep.nombre_completo %></h4>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <span class="badge bg-dark px-3"><i class="fas fa-dumbbell me-1"></i><%= prep.gimnasio_labora || 'Independiente' %></span>
+                        <span class="badge <%= prep.estatus_afiliacion === 'habilitado' ? 'bg-success' : 'bg-warning text-dark' %> px-3">
+                            <i class="fas fa-circle me-1"></i><%= (prep.estatus_afiliacion || 'pendiente').toUpperCase() %>
+                        </span>
+                        <% if (prep.ID_Coach_FDFF) { %>
+                            <span class="badge bg-primary px-3">ID: <%= prep.ID_Coach_FDFF %></span>
+                        <% } %>
+                    </div>
+                    <p class="text-muted small mb-0 mt-1">
+                        <% if (prep.telefono) { %><i class="fas fa-phone me-1"></i><%= prep.telefono %><% } %>
+                        <% if (prep.email) { %>&nbsp;&nbsp;<i class="fas fa-envelope me-1"></i><%= prep.email %><% } %>
+                    </p>
+                </div>
+                <div class="col-md-auto text-end">
+                    <a href="/preparadores/ranking-teams" class="btn btn-outline-warning fw-bold">
+                        <i class="fas fa-trophy me-1"></i> Ranking Teams
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESTADÍSTICAS DEL TEAM -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3" style="border-radius:14px;">
+                <div class="display-6 fw-bold text-primary"><%= atletas.length %></div>
+                <small class="text-muted fw-bold text-uppercase">Atletas</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3" style="border-radius:14px;">
+                <div class="display-6 fw-bold text-secondary"><%= estadisticas.eventos %></div>
+                <small class="text-muted fw-bold text-uppercase">Eventos</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3" style="border-radius:14px;">
+                <div class="display-6 fw-bold text-warning"><%= estadisticas.medallas_oro %></div>
+                <small class="text-muted fw-bold text-uppercase">Oros</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3" style="border-radius:14px; border-left: 4px solid #0d6efd !important;">
+                <div class="display-6 fw-bold text-primary"><%= estadisticas.puntos %></div>
+                <small class="text-muted fw-bold text-uppercase">Puntos Team</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- ATLETAS DEL TEAM -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:15px;overflow:hidden;">
+                <div class="card-header bg-dark text-white fw-bold px-4 py-3">
+                    <i class="fas fa-users me-2"></i> Mis Atletas (<%= atletas.length %>)
+                </div>
+                <% if (atletas.length === 0) { %>
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-user-plus fa-2x mb-3 d-block opacity-25"></i>
+                        <p class="small">Ningún atleta te tiene asignado como preparador todavía.</p>
+                    </div>
+                <% } else { %>
+                    <div class="list-group list-group-flush">
+                        <% atletas.forEach(atl => {
+                            const edad = atl.fecha_nacimiento
+                                ? new Date().getFullYear() - new Date(atl.fecha_nacimiento).getFullYear()
+                                : null;
+                        %>
+                            <div class="list-group-item d-flex align-items-center gap-3 py-2 px-4">
+                                <div class="rounded-circle bg-light overflow-hidden flex-shrink-0 d-flex align-items-center justify-content-center"
+                                     style="width:40px;height:40px;">
+                                    <% if (atl.foto_url) { %>
+                                        <img src="<%= atl.foto_url %>" class="w-100 h-100" style="object-fit:cover;">
+                                    <% } else { %>
+                                        <i class="fas fa-user text-secondary"></i>
+                                    <% } %>
+                                </div>
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="fw-bold text-truncate"><%= atl.nombre %></div>
+                                    <div class="small text-muted">
+                                        <%= atl.sexo === 'M' ? 'Masculino' : 'Femenino' %>
+                                        <% if (edad) { %> · <%= edad %> años<% } %>
+                                    </div>
+                                </div>
+                                <span class="badge <%= atl.estatus_afiliacion === 'habilitado' ? 'bg-success' : 'bg-warning text-dark' %> flex-shrink-0">
+                                    <%= atl.estatus_afiliacion === 'habilitado' ? 'ACTIVO' : 'PENDIENTE' %>
+                                </span>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- HISTORIAL POR EVENTO -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:15px;overflow:hidden;">
+                <div class="card-header bg-dark text-white fw-bold px-4 py-3">
+                    <i class="fas fa-history me-2"></i> Historial de Competencias del Team
+                </div>
+                <% if (historialEventos.length === 0) { %>
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-calendar-times fa-2x mb-3 d-block opacity-25"></i>
+                        <p class="small">El team no tiene participaciones oficializadas todavía.</p>
+                    </div>
+                <% } else { %>
+                    <div class="accordion accordion-flush" id="accordionEventos">
+                        <% historialEventos.forEach((hev, idx) => {
+                            const puntosEvento = hev.participaciones.reduce((s,p) => s + p.puntos, 0);
+                        %>
+                            <div class="accordion-item border-0">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button <%= idx > 0 ? 'collapsed' : '' %> fw-bold"
+                                            type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#evComp<%= idx %>">
+                                        <span class="me-auto"><%= hev.evento?.nombre || 'Evento' %></span>
+                                        <span class="badge bg-primary me-3"><%= puntosEvento %> pts</span>
+                                    </button>
+                                </h2>
+                                <div id="evComp<%= idx %>" class="accordion-collapse collapse <%= idx === 0 ? 'show' : '' %>">
+                                    <div class="accordion-body p-0">
+                                        <table class="table table-sm align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th class="ps-3">Atleta</th>
+                                                    <th>Categoría</th>
+                                                    <th class="text-center">Pos.</th>
+                                                    <th class="text-center">Pts</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% hev.participaciones.forEach(p => { %>
+                                                    <tr>
+                                                        <td class="ps-3 fw-bold small"><%= p.atleta %></td>
+                                                        <td class="small text-muted"><%= p.categoria %></td>
+                                                        <td class="text-center">
+                                                            <% if (p.posicion === 1) { %>
+                                                                <span class="text-warning fw-bold">🥇 1°</span>
+                                                            <% } else if (p.posicion === 2) { %>
+                                                                <span class="text-secondary fw-bold">🥈 2°</span>
+                                                            <% } else if (p.posicion === 3) { %>
+                                                                <span class="fw-bold" style="color:#cd7f32;">🥉 3°</span>
+                                                            <% } else { %>
+                                                                <span class="text-muted"><%= p.posicion %>°</span>
+                                                            <% } %>
+                                                            <% if (p.absoluto) { %>
+                                                                <span class="badge bg-warning text-dark ms-1" style="font-size:.6rem;">ABS</span>
+                                                            <% } %>
+                                                        </td>
+                                                        <td class="text-center fw-bold text-primary"><%= p.puntos %></td>
+                                                    </tr>
+                                                <% }) %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+    </div>
+<% } %>
+</div>
+
+<%- include('../template/footer') %>

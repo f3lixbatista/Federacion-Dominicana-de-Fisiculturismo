@@ -145,10 +145,13 @@
                     <% (arrayPreparadores || []).forEach(prep => { %>
                         <option value="<%= prep.id %>"><%= prep.nombre_completo %> (<%= prep.gimnasio_labora %>)</option>
                     <% }) %>
+                    <% if (locals.nuevoPrepId) { %>
+                        <option value="<%= nuevoPrepId %>" selected><%= nuevoPrepNombre %> (pendiente de aprobación)</option>
+                    <% } %>
                 </select>
                 <div class="mt-2">
                     <small class="text-muted d-block mb-2">Si su preparador no aparece, regístrelo primero en el módulo de Preparadores.</small>
-                    <a href="/preparadores/registrar" class="btn btn-sm btn-outline-primary">Registrar nuevo preparador</a>
+                    <a href="/afiliacion/nuevo-preparador" id="btnRegistrarPrep" class="btn btn-sm btn-outline-primary">Registrar nuevo preparador</a>
                 </div>
             </div>
 
@@ -177,102 +180,97 @@
     </div>
 </div>
 
-<script src="/js/supabase.js"></script>
 <script>
-    // 1. Inicialización de Supabase
-    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+    const STORAGE_KEY = 'fdff_afiliacion_borrador';
 
-    // 2. Lógica para el SWITCH de activación (Para el Juez/Estadístico)
-    async function actualizarAfiliacionDetalle(atletaId, estaActivo) {
-        const nuevoEstatus = estaActivo ? 'habilitado' : 'deshabilitado';
-        const fechaRenovacion = estaActivo ? new Date().getFullYear() + "-12-31" : null;
+    // Guardar formulario en sessionStorage antes de ir a registrar preparador
+    document.getElementById('btnRegistrarPrep').addEventListener('click', () => {
+        const form = document.getElementById('formMembresia');
+        const datos = {};
+        new FormData(form).forEach((val, key) => { datos[key] = val; });
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(datos));
+    });
 
-        const { error } = await _supabase
-            .from('atletas')
-            .update({ 
-                estatus_afiliacion: nuevoEstatus,
-                fecha_ultima_renovacion: fechaRenovacion 
-            })
-            .eq('id', atletaId);
-
-        if (error) {
-            alert("No se pudo actualizar: " + error.message);
-        } else {
-            if (estaActivo) await _supabase.from('profiles').update({ role: 'atleta' }).eq('id', atletaId);
-            alert("Estatus actualizado correctamente.");
-            window.location.reload();
+    // Restaurar formulario si venimos de registrar preparador
+    document.addEventListener('DOMContentLoaded', () => {
+        const borrador = sessionStorage.getItem(STORAGE_KEY);
+        if (borrador) {
+            const datos = JSON.parse(borrador);
+            const form = document.getElementById('formMembresia');
+            Object.entries(datos).forEach(([key, val]) => {
+                const campo = form.querySelector(`[name="${key}"]`);
+                if (campo && campo.type !== 'hidden') campo.value = val;
+            });
+            sessionStorage.removeItem(STORAGE_KEY);
         }
-    }
+    });
 
-    // 3. Lógica para ENVIAR EL FORMULARIO (Cuando el atleta solicita afiliación)
+    // Enviar formulario de afiliación
     const formMembresia = document.getElementById('formMembresia');
     if (formMembresia) {
         formMembresia.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnEnviar');
-            if(btn) btn.disabled = true;
-
-            const { data: { user }, error: authError } = await _supabase.auth.getUser();
-            
-            if (!user) {
-                alert("Debes iniciar sesión para afiliarte.");
-                window.location.href = '/login';
-                return;
-            }
+            if (btn) btn.disabled = true;
 
             const formData = new FormData(e.target);
-const selectedPreparadorId = formData.get('preparador_id');
-                const preparadorTexto = selectedPreparadorId
-                    ? document.querySelector('#selectPreparadorAfiliacion option:checked').textContent
-                    : '';
+            const selectedPreparadorId = formData.get('preparador_id');
+            const preparadorTexto = selectedPreparadorId
+                ? document.querySelector('#selectPreparadorAfiliacion option:checked').textContent
+                : '';
 
-                const profileData = {
-                    id: user.id,
-                    idfdff: formData.get('idfdff'), // Asegúrate que el input name sea 'idfdff'
-                    nombre: formData.get('nombre'),
-                    cedula: formData.get('cedula'),
-                    pasaporte: formData.get('pasaporte'),
-                    nacionalidad: formData.get('nacionalidad'),
-                    fecha_nacimiento: formData.get('nacimiento'),
-                    sexo: formData.get('sexo'),
-                    ocupacion: formData.get('ocupacion'),
-                    calle: formData.get('calle'),
-                    sector: formData.get('sector'),
-                    municipio: formData.get('municipio'),
-                    provincia: formData.get('provincia'),
-                    pais: formData.get('pais'),
-                    postal: formData.get('postal'),
-                    celular: formData.get('celular'),
-                    telfijo: formData.get('telfijo'),
-                    instagram: formData.get('instagram'),
-                    categoria_afiliacion: formData.get('categoria'),
-                    estatura_inicial: formData.get('estatura'),
-                    peso_inicial: formData.get('peso'),
-                    gimnasio: formData.get('gimnasio'),
-                    preparador_id: selectedPreparadorId || null,
-                    preparador: preparadorTexto,
+            const profileData = {
+                idfdff: formData.get('idfdff'),
+                nombre: formData.get('nombre'),
+                cedula: formData.get('cedula'),
+                pasaporte: formData.get('pasaporte'),
+                nacionalidad: formData.get('nacionalidad'),
+                fecha_nacimiento: formData.get('nacimiento'),
+                sexo: formData.get('sexo'),
+                ocupacion: formData.get('ocupacion'),
+                calle: formData.get('calle'),
+                sector: formData.get('sector'),
+                municipio: formData.get('municipio'),
+                provincia: formData.get('provincia'),
+                pais: formData.get('pais'),
+                postal: formData.get('postal'),
+                email: formData.get('email'),
+                celular: formData.get('celular'),
+                telfijo: formData.get('telfijo'),
+                instagram: formData.get('instagram'),
+                categoria: formData.get('categoria'),
+                estatura: parseFloat(formData.get('estatura')) || null,
+                peso: parseFloat(formData.get('peso')) || null,
+                gimnasio: formData.get('gimnasio'),
+                preparador_id: selectedPreparadorId || null,
+                preparador: preparadorTexto,
                 celular_preparador: formData.get('celular_preparador'),
                 email_preparador: formData.get('email_preparador'),
-                estatus_afiliacion: 'pendiente' // El atleta siempre inicia como pendiente
+                estatus_afiliacion: 'pendiente'
             };
 
-            const { error } = await _supabase.from('atletas').upsert(profileData);
+            try {
+                const response = await fetch('/atletas/solicitar-afiliacion', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(profileData)
+                });
 
-            if (error) {
-                alert("Error al registrar: " + error.message);
-                if(btn) btn.disabled = false;
-            } else {
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Sesión expirada. Inicia sesión nuevamente.");
+                }
+
+                const result = await response.json();
+                if (!result.estado) throw new Error(result.mensaje);
+
+                sessionStorage.removeItem(STORAGE_KEY);
                 alert("¡Solicitud enviada correctamente!");
-                window.location.href = '/servicios';
+                window.location.href = '/eventos/competencias';
+            } catch (err) {
+                alert("Error al registrar: " + err.message);
+                if (btn) btn.disabled = false;
             }
-        });
-    }
-
-    // 4. Lógica para el botón IMPRIMIR
-    const printBtn = document.getElementById('print');
-    if (printBtn) {
-        printBtn.addEventListener('click', function() {
-            window.print();
         });
     }
 </script>

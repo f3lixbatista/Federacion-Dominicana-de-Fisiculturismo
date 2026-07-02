@@ -1,0 +1,99 @@
+<%- include("../template/cabecera", {tituloWeb: "Gestión de Campeones Absolutos"}) %>
+
+<div class="container-fluid my-4 px-4">
+
+    <div class="card bg-dark text-white p-3 mb-4 shadow border-0">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold mb-0">
+                    <i class="fas fa-trophy me-2 text-warning"></i> CAMPEONES ABSOLUTOS
+                </h2>
+                <p class="mb-0 text-muted small">
+                    Solo aparecen grupos con 2 o más divisiones oficializadas en la misma disciplina y modalidad.
+                </p>
+            </div>
+            <a href="/eventos/<%= idEvento %>/centro-mando" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Volver al Centro de Mando
+            </a>
+        </div>
+    </div>
+
+    <% if (!absolutos || absolutos.length === 0) { %>
+        <div class="alert alert-warning shadow-sm">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Sin absolutos disponibles.</strong>
+            Para que aparezca un absoluto, la misma disciplina y modalidad debe tener
+            <strong>2 o más divisiones</strong> con ganador oficializado desde la Mesa de Cómputo.
+            Si solo hubo una división abierta (ej. Open / Única), no aplica absoluto.
+        </div>
+    <% } else { %>
+
+        <div class="row g-4">
+            <% absolutos.forEach(grupo => { %>
+                <div class="col-lg-6">
+                    <div class="card shadow border-0 h-100" style="border-radius: 12px; overflow: hidden;">
+
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0 fw-bold text-uppercase">
+                                    <i class="fas fa-medal me-2"></i><%= grupo.disciplina %>
+                                </h5>
+                                <small class="text-white opacity-75 text-uppercase">
+                                    MODALIDAD: <%= grupo.modalidad %>
+                                </small>
+                            </div>
+                            <span class="badge bg-light text-dark fw-bold">
+                                <%= grupo.campeones.length %> División<%= grupo.campeones.length !== 1 ? 'es' : '' %>
+                            </span>
+                        </div>
+
+                        <div class="card-body p-0">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light small fw-bold">
+                                    <tr>
+                                        <th class="ps-3" style="width: 50px;">Núm.</th>
+                                        <th>Atleta</th>
+                                        <th>Categoría</th>
+                                        <th>División</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% grupo.campeones.forEach(c => { %>
+                                        <tr>
+                                            <td class="ps-3 fw-bold fs-5 text-center">
+                                                <%= c.numero_atleta || '--' %>
+                                            </td>
+                                            <td class="fw-bold">
+                                                <%= c.atletas?.nombre || 'N/A' %>
+                                            </td>
+                                            <td class="small text-muted">
+                                                <%= c.eventos_categorias?.categorias?.nombre || 'N/A' %>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary text-uppercase">
+                                                    <%= c.eventos_categorias?.categorias?.division || '--' %>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="card-footer bg-light d-flex gap-2 justify-content-end">
+                            <a href="/estadisticas/mesa-computo-absoluto?evento=<%= idEvento %>&disciplina=<%= encodeURIComponent(grupo.disciplina) %>&modalidad=<%= encodeURIComponent(grupo.modalidad) %>"
+                               class="btn btn-success fw-bold">
+                                <i class="fas fa-calculator me-1"></i> Abrir Mesa de Cómputo Absoluto
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+
+    <% } %>
+
+</div>
+
+<%- include("../template/footer") %>

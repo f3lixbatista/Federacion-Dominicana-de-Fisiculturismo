@@ -76,7 +76,7 @@
 
             <div class="col-md-3 py-0 pt-0 my-4">
                 <label for="validationTooltip05" class="form-label">Fecha de Nacimiento</label>
-                <input value="<%= atleta.nacimiento %>" type="date" class="form-control" name="nacimiento" id="validationTooltip05" required="">
+                <input value="<%= atleta.fecha_nacimiento %>" type="date" class="form-control" name="fecha_nacimiento" id="validationTooltip05" required="">
                 <div class="invalid-tooltip">
                             Fecha de Nacimiento
                         </div>
@@ -235,23 +235,46 @@
 
 
     <!-- Dentro de tu formulario de detalleInscripcion.ejs -->
-<div class="card border-primary mb-4 shadow-sm">
+<div class="card border-primary mb-4 shadow-sm" style="border-radius: 15px;">
     <div class="card-body d-flex justify-content-between align-items-center">
-        <div>
+        <div class="pe-3">
             <h5 class="fw-bold mb-0">Estatus de Membresía</h5>
-            <small class="text-muted">Active este switch para habilitar al atleta en la competencia actual.</small>
+            <small class="text-muted">Habilite al atleta para permitir su participación y pesaje.</small>
         </div>
-        <div class="form-check form-switch border p-2 rounded bg-light">
-            <input class="form-check-input" type="checkbox" role="switch" id="switchAfiliacion" 
-                   style="width: 4em; height: 2em; cursor: pointer;"
-                   <%= atleta.estatus_afiliacion === 'habilitado' ? 'checked' : '' %>
-                   onchange="actualizarAfiliacionDetalle('<%= atleta.id %>', this.checked)">
-            <label class="form-check-label ms-2 fw-bold" for="switchAfiliacion" id="lblEstatus">
-                <%= atleta.estatus_afiliacion === 'habilitado' ? 'HABILITADO' : 'INACTIVO' %>
-            </label>
+        
+        <!-- Contenedor alineado -->
+        <div class="d-flex align-items-center p-1 border rounded-pill bg-light shadow-sm">
+            <div class="form-check form-switch mb-0 ps-7 pe-4 ml-4" style="min-height: 2.5rem;">
+                <input class="form-check-input" type="checkbox" role="switch" id="switchAfiliacion" 
+                       style="width: 3.5rem; height: 1.75rem; cursor: pointer; margin-left: -3.2rem;"
+                       <%= atleta.estatus_afiliacion === 'habilitado' ? 'checked' : '' %>
+                       onchange="actualizarAfiliacionDetalle('<%= atleta.id %>', this.checked)">
+                
+                <label class="form-check-label fw-bold ms-4 me-0 text-uppercase" 
+                       for="switchAfiliacion" 
+                       id="lblEstatus" 
+                       style="font-size: 0.85rem; line-height: 1.75rem; vertical-align: middle;">
+                    <%= atleta.estatus_afiliacion === 'habilitado' ? 'HABILITADO' : 'INACTIVO' %>
+                </label>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Ajuste para que el switch de Bootstrap no se desplace al agrandarlo */
+    .form-check-input:checked {
+        background-color: #198754; /* Verde éxito */
+        border-color: #198754;
+    }
+    .form-switch .form-check-input {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://w3.org' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");
+    }
+    .form-switch .form-check-input:focus {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://w3.org' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23000'/%3e%3c/svg%3e");
+    }
+</style>
+
 
 
 
@@ -286,38 +309,110 @@
 
             </div>
 
-                <!-- <div class="col-12 mt-5 d-flex gap-2">
-                    <button class="btn btn-warning flex-grow-1" type="submit">Actualizar Datos</button>
-                    <button type="button" class="btn btn-danger flex-grow-1" id="btnEliminar" data-id="<%= atleta.id %>">Eliminar Atleta</button>
-                </div> -->
-                <button 
-                        type="submit"
-                        class="btn btn-danger btn-md my-5 col-3" 
-                        id="print"  
-                    >
-                       Actualizar
-                    </button> 
-
+                <div class="col-12 mt-4 d-flex gap-3 flex-wrap">
+                    <button type="submit" class="btn btn-warning btn-md fw-bold px-5">
+                        <i class="fas fa-save me-1"></i> Actualizar Datos
+                    </button>
+                    <button type="button" id="btnEliminar" data-id="<%= atleta.id %>" class="btn btn-danger btn-md fw-bold px-4">
+                        <i class="fas fa-trash me-1"></i> Eliminar Atleta
+                    </button>
+                    <button type="button" id="btnImprimir" class="btn btn-outline-secondary btn-md fw-bold px-4">
+                        <i class="fas fa-print me-1"></i> Imprimir
+                    </button>
+                    <a href="/atletas" class="btn btn-outline-dark btn-md fw-bold px-4">
+                        <i class="fas fa-arrow-left me-1"></i> Volver
+                    </a>
+                </div>
 
             </form>
         </div>
-            <div class="d-grid gap-3 d-md-block">
-            <!-- <a href="/atletas" class="btn btn-success btn-lg col-md-3">Volver a Atletas</a> -->
-       
 
-            <button 
-                class="btn btn-danger btn-md col-3 my-3 mx-4" 
-                id="btnEliminar" 
-                data-id="<%= atleta.id %>"
-            >
-                Eliminar 
-             </button>
+        <!-- HISTORIAL COMPETITIVO (solo admin) -->
+        <div class="container mt-5 mb-5">
+            <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+                <div class="card-header bg-dark text-white fw-bold py-3">
+                    <i class="fas fa-history me-2 text-warning"></i> Historial de Competencias
+                    <% if (historial.length > 0) { %>
+                        <span class="badge bg-warning text-dark ms-2"><%= historial.length %> participación(es)</span>
+                    <% } %>
+                </div>
+                <div class="card-body p-0">
+                    <% if (historial.length === 0) { %>
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-award display-6 text-light d-block mb-2"></i>
+                            Sin participaciones registradas en eventos FDFF.
+                        </div>
+                    <% } else { %>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">Evento</th>
+                                        <th>Categoría</th>
+                                        <th class="text-center">Dorsal</th>
+                                        <th class="text-center">Pesaje</th>
+                                        <th class="text-center">Posición</th>
+                                        <th class="text-center">Pago</th>
+                                        <th class="text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% historial.forEach(row => { %>
+                                        <tr>
+                                            <td class="ps-3">
+                                                <div class="fw-bold text-dark"><%= row.eventos?.nombre || '—' %></div>
+                                                <div class="text-muted" style="font-size:0.75rem;"><%= row.eventos?.fecha_inicio || '' %></div>
+                                            </td>
+                                            <td class="fw-bold"><%= row.eventos_categorias?.categorias?.nombre || '—' %></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary p-2 fs-6"><%= row.numero_atleta || '—' %></span>
+                                            </td>
+                                            <td class="text-center">
+                                                <% if (row.estatus_pesaje === 'aprobado') { %>
+                                                    <span class="badge bg-success">APROBADO</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-warning text-dark">PENDIENTE</span>
+                                                <% } %>
+                                            </td>
+                                            <td class="text-center fw-bold fs-5">
+                                                <% if (row.eventos?.estado === 'finalizado' && row.posicion_final) { %>
+                                                    <span class="<%= row.posicion_final <= 3 ? 'text-warning' : 'text-success' %>">
+                                                        <%= row.posicion_final %>°
+                                                    </span>
+                                                <% } else { %>
+                                                    <span class="text-muted" style="font-size:0.8rem;">En curso</span>
+                                                <% } %>
+                                            </td>
+                                            <td class="text-center">
+                                                <% if (row.pago_validado) { %>
+                                                    <span class="badge bg-success"><i class="fas fa-check"></i></span>
+                                                <% } else { %>
+                                                    <span class="badge bg-danger"><i class="fas fa-clock"></i></span>
+                                                <% } %>
+                                            </td>
+                                            <td class="text-center">
+                                                <% if (row.eventos?.estado === 'finalizado' && row.posicion_final) { %>
+                                                    <a href="/eventos/atleta/<%= atleta.id %>/evento/<%= row.eventos.id %>/diploma"
+                                                       target="_blank" class="btn btn-outline-danger btn-sm" title="Diploma">
+                                                        <i class="fas fa-certificate"></i>
+                                                    </a>
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } %>
+                </div>
             </div>
+        </div>
 
-   
-             <H4>
-                Firma de Atleta_______________________________________<span class="fs-6">Con esta firma certifico que no tengo antecedentes penales ni asuntos pendientes con la justici</span>
-            </H4>
+        <div class="container mb-5 text-muted small px-4">
+            <hr>
+            Firma: ________________________________________________
+            <span class="ms-3">Con esta firma certifico que no tengo antecedentes penales ni asuntos pendientes con la justicia.</span>
+        </div>
 
 
 
@@ -328,97 +423,79 @@
 <script src="/js/supabase.js"></script>
 <script>
     // 1. INICIALIZACIÓN GLOBAL (Debe ir de primero)
-    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
 
-    // 2. FUNCIÓN DEL SWITCH (Para Habilitar Atleta)
+    // 2. FUNCIÓN DEL SWITCH (Ahora vía Backend para evitar errores de inicialización y RLS)
     async function actualizarAfiliacionDetalle(atletaId, estaActivo) {
-    if (!atletaId) return alert("Error: ID de atleta no válido");
+        if (!atletaId) return alert("Error: ID de atleta no válido");
 
-    const nuevoEstatus = estaActivo ? 'habilitado' : 'deshabilitado';
-    // Habilitado hasta el 31 de dic del año actual
-    const fechaRenovacion = estaActivo ? new Date().getFullYear() + "-12-31" : null;
+        try {
+            const response = await fetch('/atletas/validar-afiliacion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ atletaId, estaActivo })
+            });
 
-    try {
-        // 1. Actualizamos al ATLETA (la fila que estamos viendo)
-        const { error: errAtleta } = await _supabase
-            .from('atletas')
-            .update({ 
-                estatus_afiliacion: nuevoEstatus,
-                fecha_ultima_renovacion: fechaRenovacion 
-            })
-            .eq('id', atletaId); // <--- IMPORTANTE: Usamos el ID del atleta de la fila
+            const result = await response.json();
 
-        if (errAtleta) throw errAtleta;
-
-        // 2. Actualizamos el ROL del Atleta en la tabla PROFILES
-        // Solo si lo estamos habilitando, para que pueda entrar a su panel
-        if (estaActivo) {
-            const { error: errRol } = await _supabase
-                .from('profiles')
-                .update({ role: 'atleta' })
-                .eq('id', atletaId); // <--- IMPORTANTE: Cambiamos el rol AL ATLETA, no a ti
-            
-            if (errRol) console.error("No se pudo actualizar el rol, pero el estatus sí.");
+            if (result.estado) {
+                // Feedback visual inmediato
+                const lbl = document.getElementById('lblEstatus');
+                if (lbl) {
+                    lbl.innerText = estaActivo ? 'HABILITADO' : 'INACTIVO';
+                    lbl.className = estaActivo ? 'form-check-label ms-3 fw-bold text-success' : 'form-check-label ms-2 fw-bold text-muted';
+                }
+                console.log(`✅ Atleta ${atletaId} actualizado correctamente.`);
+            } else {
+                throw new Error(result.mensaje);
+            }
+        } catch (err) {
+            console.error("🔥 Error crítico:", err.message);
+            alert("No se pudo actualizar: " + err.message);
+            // Si falló, regresamos el switch a su estado anterior
+            document.getElementById('switchAfiliacion').checked = !estaActivo;
         }
-
-        // 3. Feedback visual sin recargar la página
-        const lbl = document.getElementById('lblEstatus');
-        if (lbl) {
-            lbl.innerText = estaActivo ? 'HABILITADO' : 'INACTIVO';
-            lbl.className = estaActivo ? 'form-check-label ms-2 fw-bold text-success' : 'form-check-label ms-2 fw-bold text-muted';
-        }
-        
-        console.log(`Atleta ${atletaId} actualizado a ${nuevoEstatus}`);
-
-    } catch (err) {
-        console.error("🔥 Error crítico:", err.message);
-        alert("No se pudo actualizar: " + err.message);
-        // Si falló, regresamos el switch a su estado anterior
-        document.getElementById('switchAfiliacion').checked = !estaActivo;
     }
-}
 
 
     // 3. Lógica para EDITAR (PUT)
     formularioEditar.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const idAtleta = formularioEditar.dataset.id;
-    const formData = new FormData(formularioEditar);
-    const dataObject = Object.fromEntries(formData.entries());
+        e.preventDefault();
+        const idAtleta = formularioEditar.dataset.id;
+        const formData = new FormData(formularioEditar);
+        const dataObject = Object.fromEntries(formData.entries());
 
-    // Mapeo de nombres para Supabase
-    if (dataObject.categoria) { dataObject.categoria_afiliacion = dataObject.categoria; delete dataObject.categoria; }
-    if (dataObject.estatura) { dataObject.estatura_inicial = dataObject.estatura; delete dataObject.estatura; }
-    if (dataObject.peso) { dataObject.peso_inicial = dataObject.peso; delete dataObject.peso; }
+        // Limpiar campos que no son columnas de la tabla 'atletas'
+        delete dataObject.switchAfiliacion;
 
-    // Limpieza de campos que no van a la tabla 'atletas'
-    delete dataObject.role;
-    delete dataObject.email;
-    delete dataObject.switchAfiliacion;
+        // Convertir numéricos
+        if (dataObject.estatura) dataObject.estatura = parseFloat(dataObject.estatura) || null;
+        if (dataObject.peso) dataObject.peso = parseFloat(dataObject.peso) || null;
 
-    try {
-        const res = await fetch(`/atletas/${idAtleta}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dataObject)
-        });
+        try {
+            const res = await fetch(`/atletas/${idAtleta}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataObject)
+            });
 
-        if (!res.ok) {
-            // Si da 403 o 500, lanzamos el error para verlo en consola
-            const texto = await res.text();
-            console.error("Error servidor:", texto);
-            throw new Error("Acceso denegado o error de servidor (403/500)");
+            if (!res.ok) {
+                const texto = await res.text();
+                console.error("Error servidor:", texto);
+                throw new Error("Acceso denegado o error de servidor");
+            }
+
+            const resData = await res.json();
+            if (resData.estado) {
+                alert('✅ Atleta actualizado');
+                window.location.href = '/atletas';
+            } else {
+                alert('Error: ' + resData.mensaje);
+            }
+        } catch (e) {
+            alert(e.message);
         }
-
-        const resData = await res.json();
-        if (resData.estado) {
-            alert('✅ Atleta actualizado');
-            window.location.href = '/atletas';
-        }
-    } catch (e) {
-        alert(e.message);
-    }
-});
+    });
 
 
 
@@ -444,9 +521,9 @@
     }
 
     // 5. Lógica para IMPRIMIR
-    const printBtn = document.getElementById('print');
-    if(printBtn) {
-        printBtn.addEventListener('click', function() {
+    const btnImprimir = document.getElementById('btnImprimir');
+    if (btnImprimir) {
+        btnImprimir.addEventListener('click', function () {
             window.print();
         });
     }

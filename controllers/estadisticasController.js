@@ -1,4 +1,4 @@
-const { supabase, supabaseAdmin } = require('../supabaseClient'); // Se mantiene esta importación para consistencia, aunque solo se use supabaseAdmin aquí.
+const { supabase, supabaseAdmin } = require('../config/supabase');
 const QRCode = require('qrcode');
 const votingService = require('../services/votingService');
 
@@ -115,7 +115,7 @@ const verMesaComputo = async (req, res) => {
 
         const { data: atletas } = await supabaseAdmin
             .from('competidores')
-            .select('atleta_id, numero_atleta, atletas(nombre)')
+            .select('atleta_id, numero_atleta, puntos_totales, atletas(nombre)')
             .eq('evento_cat_id', eventoCatId)
             .order('numero_atleta', { ascending: true });
 
@@ -150,7 +150,7 @@ const verMesaComputo = async (req, res) => {
             catRelId: eventoCatId,
             categoriaNombre: categoriaRel?.categorias?.nombre,
             jueces: (jueces || []).map(j => ({ id: j.profiles.id, nombre: j.profiles.nombre })),
-            atletas: (atletas || []).map(a => ({ id: a.atleta_id, dorsal: a.numero_atleta, nombre: a.atletas.nombre })),
+            atletas: (atletas || []).map(a => ({ id: a.atleta_id, dorsal: a.numero_atleta, nombre: a.atletas?.nombre || '—', puntos_r1: a.puntos_totales || 0 })),
             mapaVotos,
             faseTrabajo
         });
@@ -208,7 +208,7 @@ const verGestionAbsolutos = async (req, res) => {
                 atletas (nombre, preparador_id),
                 eventos_categorias (
                     id,
-                    categorias (nombre, modalidad, disciplina)
+                    categorias (nombre, modalidad, disciplina, division)
                 )
             `)
             .eq('id_evento', idEvento)
@@ -216,30 +216,43 @@ const verGestionAbsolutos = async (req, res) => {
 
         if (error) throw error;
 
-        const disciplinasParaAbsoluto = (campeones || []).reduce((acc, c) => {
-            const disc = c.eventos_categorias?.categorias?.disciplina || 'Otras';
-            if (!acc[disc]) acc[disc] = [];
-            acc[disc].push(c);
-            return acc;
-        }, {});
+        // Agrupar por disciplina + modalidad.
+        // Solo puede haber absoluto si hay 2+ divisiones distintas con campeón
+        // dentro de la misma disciplina y modalidad.
+        const grupos = {};
+        (campeones || []).forEach(c => {
+            const cat = c.eventos_categorias?.categorias || {};
+            const disc = cat.disciplina || 'Otras';
+            const mod  = (cat.modalidad || 'Senior').toLowerCase();
+            const key  = `${disc}|||${mod}`;
+            if (!grupos[key]) grupos[key] = { disciplina: disc, modalidad: cat.modalidad || 'Senior', campeones: [] };
+            grupos[key].campeones.push(c);
+        });
 
-        res.render('estadisticas/gestion_absolutos', { idEvento, absolutos: disciplinasParaAbsoluto });
+        // Filtrar: solo grupos con 2+ campeones (= 2+ divisiones con ganador)
+        const absolutos = Object.values(grupos).filter(g => g.campeones.length >= 2);
+
+        res.render('estadisticas/gestion_absolutos', { idEvento, absolutos });
     } catch (error) {
         res.status(500).send("Error detectando campeones: " + error.message);
     }
 };
 
 const verMesaComputoAbsoluto = async (req, res) => {
-    const { evento, disciplina } = req.query;
+    const { evento, disciplina, modalidad } = req.query;
     try {
         const { data: competidores } = await supabaseAdmin
             .from('competidores')
-            .select('*, atletas(nombre), eventos_categorias(id, categorias(nombre, disciplina))')
+            .select('*, atletas(nombre), eventos_categorias(id, categorias(nombre, disciplina, modalidad))')
             .eq('id_evento', evento)
             .eq('posicion_final', 1);
 
-        // Filtrar manualmente por la disciplina de la categoría
-        const filtrados = (competidores || []).filter(c => c.eventos_categorias?.categorias?.disciplina === disciplina);
+        // Filtrar por disciplina y modalidad para no mezclar Senior con Junior o Master
+        const filtrados = (competidores || []).filter(c => {
+            const cat = c.eventos_categorias?.categorias || {};
+            return cat.disciplina === disciplina &&
+                   (cat.modalidad || '').toLowerCase() === (modalidad || '').toLowerCase();
+        });
 
         const { data: jueces } = await supabaseAdmin
             .from('panel_sillas_jueces')
@@ -247,8 +260,10 @@ const verMesaComputoAbsoluto = async (req, res) => {
             .eq('paneles_jueces.id_evento', evento)
             .order('numero_silla', { ascending: true });
 
+        const tituloAbsoluto = `ABSOLUTO: ${disciplina} (${modalidad || 'Senior'})`;
+
         res.render('estadisticas/nueva_mesa_computo', {
-            catRel: { categorias: { nombre: `ABSOLUTO: ${disciplina}` }, evento_id: evento, orden_secuencia_categoria: 'ABS' },
+            catRel: { categorias: { nombre: tituloAbsoluto }, evento_id: evento, orden_secuencia_categoria: 'ABS' },
             competidores: filtrados,
             faseTrabajo: 'absoluto',
             votos: [],
@@ -298,27 +313,205 @@ const imprimirBoletas = async (req, res) => {
 
 const verPresidenteMesa = async (req, res) => {
     const { eventoCatId } = req.params;
+    const { fase: faseParam } = req.query;
     try {
-        // 1. Datos de la categoría y atletas
+        const { data: catRel } = await supabaseAdmin
+            .from('eventos_categorias')
+            .select('*, categorias(nombre), eventos(id, nombre)')
+            .eq('id', eventoCatId)
+            .single();
+
+        if (!catRel) throw new Error('Categoría no encontrada');
+
         const { data: competidores } = await supabaseAdmin
             .from('competidores')
-            .select('atleta_id, numero_atleta, atletas(nombre)')
-            .eq('evento_cat_id', eventoCatId);
+            .select('atleta_id, numero_atleta, foto_atletica_url, atletas(nombre, provincia)')
+            .eq('evento_cat_id', eventoCatId)
+            .order('numero_atleta', { ascending: true });
 
-        // 2. Votos de pre-selección del Top 5
+        const total = (competidores || []).length;
+        const faseActual = faseParam || (total > 15 ? 'eliminatoria' : total >= 7 ? 'semifinal' : 'final');
+        const requiereTop5 = total > 7;
+        const limiteClasificacion = faseActual === 'eliminatoria' ? 15 : 6;
+
         const { data: preSeleccion } = await supabaseAdmin
             .from('pre_seleccion_top5')
-            .select('*')
-            .eq('evento_cat_id', eventoCatId);
+            .select('atleta_id, juez_id, profiles(nombre)')
+            .eq('evento_cat_id', eventoCatId)
+            .eq('fase', faseActual);
+
+        // Conteo de votos por atleta
+        const consenso = {};
+        (preSeleccion || []).forEach(v => {
+            if (!consenso[v.atleta_id]) consenso[v.atleta_id] = { count: 0, jueces: [] };
+            consenso[v.atleta_id].count++;
+            consenso[v.atleta_id].jueces.push(v.profiles?.nombre || 'Juez');
+        });
+
+        const { data: jueces } = await supabaseAdmin
+            .from('panel_sillas_jueces')
+            .select('numero_silla, profiles(id, nombre), paneles_jueces!inner(id_evento)')
+            .eq('paneles_jueces.id_evento', catRel.evento_id)
+            .order('numero_silla', { ascending: true });
 
         res.render('estadisticas/presidente_mesa', {
             catId: eventoCatId,
-            competidores: competidores || [],
-            preSeleccion: preSeleccion || []
+            eventoId: catRel.evento_id,
+            categoriaNombre: catRel.categorias?.nombre,
+            eventoNombre: catRel.eventos?.nombre,
+            competidores: (competidores || []).map(c => ({
+                atleta_id: c.atleta_id,
+                dorsal: c.numero_atleta,
+                nombre: c.atletas?.nombre,
+                provincia: c.atletas?.provincia,
+                foto_url: c.foto_atletica_url
+            })),
+            faseActual,
+            requiereTop5,
+            limiteClasificacion,
+            totalJueces: (jueces || []).length,
+            jueces: (jueces || []).map(j => ({ id: j.profiles?.id, nombre: j.profiles?.nombre })),
+            consenso
         });
-    } catch (error) { 
+    } catch (error) {
         console.error("Error en panel presidente mesa:", error.message);
-        res.redirect('/eventos/competencias'); 
+        res.redirect('/eventos/competencias');
+    }
+};
+
+// Vista para que los jueces marquen su Top 5 en comparación
+const verComparacionJuez = async (req, res) => {
+    const { eventoCatId } = req.params;
+    const { fase } = req.query;
+    const juezId = res.locals.user?.id;
+    try {
+        const { data: catRel } = await supabaseAdmin
+            .from('eventos_categorias')
+            .select('evento_id, categorias(nombre)')
+            .eq('id', eventoCatId)
+            .single();
+
+        const { data: competidores } = await supabaseAdmin
+            .from('competidores')
+            .select('atleta_id, numero_atleta, foto_atletica_url, atletas(nombre)')
+            .eq('evento_cat_id', eventoCatId)
+            .order('numero_atleta', { ascending: true });
+
+        const total = (competidores || []).length;
+        const faseActual = fase || (total > 15 ? 'eliminatoria' : total >= 7 ? 'semifinal' : 'final');
+
+        // Selección previa de este juez
+        const { data: miSeleccion } = await supabaseAdmin
+            .from('pre_seleccion_top5')
+            .select('atleta_id')
+            .eq('evento_cat_id', eventoCatId)
+            .eq('juez_id', juezId)
+            .eq('fase', faseActual);
+
+        const misSeleccionados = (miSeleccion || []).map(v => v.atleta_id);
+
+        res.render('estadisticas/comparacion_juez', {
+            catId: eventoCatId,
+            categoriaNombre: catRel?.categorias?.nombre,
+            faseActual,
+            competidores: (competidores || []).map(c => ({
+                atleta_id: c.atleta_id,
+                dorsal: c.numero_atleta,
+                nombre: c.atletas?.nombre,
+                foto_url: c.foto_atletica_url,
+                seleccionado: misSeleccionados.includes(c.atleta_id)
+            }))
+        });
+    } catch (e) {
+        res.status(500).send('Error: ' + e.message);
+    }
+};
+
+// Guardar la selección Top 5 de un juez
+const guardarTop5 = async (req, res) => {
+    const { eventoCatId, atletaIds, fase } = req.body;
+    const juezId = res.locals.user?.id;
+    if (!juezId) return res.status(401).json({ ok: false, mensaje: 'No autenticado' });
+    if (!Array.isArray(atletaIds) || atletaIds.length > 5)
+        return res.status(400).json({ ok: false, mensaje: 'Máximo 5 atletas permitidos' });
+
+    try {
+        await supabaseAdmin
+            .from('pre_seleccion_top5')
+            .delete()
+            .eq('evento_cat_id', eventoCatId)
+            .eq('juez_id', juezId)
+            .eq('fase', fase || 'semifinal');
+
+        if (atletaIds.length > 0) {
+            const { error } = await supabaseAdmin.from('pre_seleccion_top5').insert(
+                atletaIds.map(atleta_id => ({
+                    evento_cat_id: eventoCatId,
+                    juez_id: juezId,
+                    atleta_id,
+                    fase: fase || 'semifinal'
+                }))
+            );
+            if (error) throw error;
+        }
+        res.json({ ok: true, guardados: atletaIds.length });
+    } catch (e) {
+        res.status(500).json({ ok: false, mensaje: e.message });
+    }
+};
+
+// Enviar lista de clasificados al MC y Backstage
+const enviarClasificadosMC = async (req, res) => {
+    const { eventoCatId, categoriaNombre, fase, atletasIdsClasificados } = req.body;
+    try {
+        const { data: catRel } = await supabaseAdmin
+            .from('eventos_categorias')
+            .select('evento_id')
+            .eq('id', eventoCatId)
+            .single();
+
+        // Obtener datos de los clasificados en orden de dorsal
+        const { data: clasificados } = await supabaseAdmin
+            .from('competidores')
+            .select('numero_atleta, posicion_final, atletas(nombre)')
+            .eq('evento_cat_id', eventoCatId)
+            .in('atleta_id', atletasIdsClasificados || [])
+            .order('numero_atleta', { ascending: true });
+
+        const enOrdenDorsal = (clasificados || []).map(c => ({
+            dorsal: c.numero_atleta,
+            nombre: c.atletas?.nombre
+        }));
+
+        // Orden descendente de posición (para anuncio de premiación)
+        const enOrdenPosicion = [...(clasificados || [])]
+            .filter(c => c.posicion_final)
+            .sort((a, b) => (b.posicion_final || 99) - (a.posicion_final || 99))
+            .map(c => ({ dorsal: c.numero_atleta, nombre: c.atletas?.nombre, posicion: c.posicion_final }));
+
+        await supabaseAdmin
+            .from('eventos')
+            .update({
+                resultados_en_vivo: {
+                    tipo_alerta: 'clasificados',
+                    categoria_nombre: categoriaNombre,
+                    fase_competencia: fase,
+                    atletas: enOrdenDorsal,
+                    atletas_posicion: enOrdenPosicion,
+                    timestamp: Date.now()
+                }
+            })
+            .eq('id', catRel.evento_id);
+
+        // También actualizar backstage
+        await supabaseAdmin
+            .from('eventos')
+            .update({ orden_backstage: { fase: (fase || '').toUpperCase(), atletas: enOrdenDorsal } })
+            .eq('id', catRel.evento_id);
+
+        res.json({ ok: true });
+    } catch (e) {
+        res.status(500).json({ ok: false, mensaje: e.message });
     }
 };
 
@@ -369,9 +562,10 @@ const verCertificadoPreview = async (req, res) => {
 
         if (error || !comp) return res.status(404).send('Registro no encontrado.');
 
-        // Solo se visualiza si el evento está finalizado
-        if (comp.eventos?.estado !== 'finalizado') {
-            return res.send("El certificado estará disponible una vez se cierre el evento.");
+        // Disponible desde que el evento está en curso (para entrega en tarima) o finalizado
+        const estadosPermitidos = ['en_progreso', 'finalizado'];
+        if (!estadosPermitidos.includes(comp.eventos?.estado)) {
+            return res.send("El certificado estará disponible una vez el evento haya iniciado.");
         }
 
         // Generar QR de validación dinámico
@@ -418,18 +612,21 @@ const verMesaComputoActual = async (req, res) => {
     }
 };
 
-module.exports = { 
-    listarEstadisticas, 
-    verCalculosEvento, 
-    calcularPosiciones, 
-    verMesaComputo, 
-    oficializarCategoria, 
-    prepararPremiacion, 
-    verGestionAbsolutos, 
-    verMesaComputoAbsoluto, 
-    oficializarAbsoluto, 
+module.exports = {
+    listarEstadisticas,
+    verCalculosEvento,
+    calcularPosiciones,
+    verMesaComputo,
+    oficializarCategoria,
+    prepararPremiacion,
+    verGestionAbsolutos,
+    verMesaComputoAbsoluto,
+    oficializarAbsoluto,
     imprimirBoletas,
     verPresidenteMesa,
+    verComparacionJuez,
+    guardarTop5,
+    enviarClasificadosMC,
     imprimirCertificadosMasivos,
     verCertificadoPreview,
     verMesaComputoActual

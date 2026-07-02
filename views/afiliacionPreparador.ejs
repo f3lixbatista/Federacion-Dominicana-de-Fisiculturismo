@@ -14,7 +14,7 @@
                         <div class="alert alert-success">Preparador registrado correctamente.</div>
                     <% } %>
 
-                    <form method="POST" action="/preparadores/registrar">
+                    <form method="POST" action="/afiliacion/nuevo-preparador">
                         <div class="mb-3">
                             <label class="form-label fw-bold text-primary">ID Coach FDFF</label>
                             <input name="ID_Coach_FDFF" value="<%= locals.ID_Coach_FDFF || '00045' %>" type="text" class="form-control bg-light" readonly>
@@ -44,7 +44,7 @@
                             <textarea name="direccion" class="form-control" rows="2"><%= locals.direccion || '' %></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">Guardar Preparador</button>
-                        <a href="/preparadores" class="btn btn-secondary ms-2">Volver al Listado</a>
+                        <a href="/afiliacion" class="btn btn-secondary ms-2">Volver a Afiliación</a>
                     </form>
                 </div>
             </div>

@@ -28,8 +28,14 @@ routerEventos.get('/:id/centro-mando', checkRole(['admin', 'estadistico', 'ejecu
 // AUDITORÍA FINANCIERA DEL EVENTO
 routerEventos.get('/:id/recaudacion', checkRole(['admin', 'ejecutivo', 'estadistico']), eventosController.verAuditoriaRecaudacion);
 
+// RUTA PARA RENDERIZAR EL FORMULARIO DE EDICIÓN (Carga los datos)
+routerEventos.get('/editar/:id', checkRole(['admin']), eventosController.verEditarEvento);
+
 // RUTA PARA ACTUALIZAR DATOS Y AFICHE (Edición de Evento)
-routerEventos.post('/editar/:id', checkRole(['admin']), upload.single('banner'), eventosController.actualizarEvento);
+routerEventos.post('/editar/:id', checkRole(['admin']), upload.fields([
+    { name: 'banner_evento', maxCount: 1 },
+    { name: 'banner_pesaje', maxCount: 1 }
+]), eventosController.actualizarEvento);
 
 // RUTA DE BROADCAST: Pantalla LED de entrada
 routerEventos.get('/:idEvento/entrada/:idAtleta', checkRole(['admin', 'estadistico', 'mc']), atletasController.verEntradaAtleta);
@@ -74,10 +80,19 @@ routerEventos.get('/:id/backstage', checkRole(['admin', 'backstage', 'estadistic
 // RUTA PARA PORTERÍA (ESCÁNER QR)
 routerEventos.get('/:id/backstage-seguridad', checkRole(['admin', 'backstage', 'estadistico']), eventosController.verBackstageSeguridad);
 
+// API: VALIDACIÓN DE ACCESO POR ATLETA (usada por el escáner QR)
+routerEventos.get('/:id/validar-acceso/:idAtleta', checkRole(['admin', 'backstage', 'estadistico', 'ejecutivo']), eventosController.validarAccesoAtleta);
+
 // RUTAS PARA PRODUCCIÓN (DJ Y BROADCAST)
 routerEventos.get('/:id/dj-consola', checkRole(['admin', 'estadistico', 'mc', 'fotografo']), eventosController.verDJConsola);
 
 routerEventos.get('/:id/broadcast-live', checkRole(['admin', 'estadistico']), eventosController.verBroadcastLive);
+
+// LOWER THIRD: Overlay puro para OBS/vMix (sin auth — se abre en browser source)
+routerEventos.get('/:id/lower-third', eventosController.verLowerThird);
+
+// GESTIÓN DE FOTOGRAFÍA (Nueva ruta para correcciones)
+routerEventos.get('/fotografia/gestion-atletica/:id', checkRole(['admin', 'ejecutivo', 'fotografo']), eventosController.verGestionFotografia);
 
 // RUTAS FINANCIERAS ADICIONALES
 routerEventos.post('/ingreso-extra', checkRole(['admin', 'ejecutivo']), eventosController.registrarIngresoExtra);

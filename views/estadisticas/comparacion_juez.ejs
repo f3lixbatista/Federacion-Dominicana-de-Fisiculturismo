@@ -1,0 +1,159 @@
+<%- include("../template/cabecera", {tituloWeb: "Comparación Top 5 - Juez"}) %>
+
+<style>
+  body, #main-content { background: #0f0f0f !important; }
+  .juez-card {
+    border: 3px solid #333; border-radius: 14px; cursor: pointer;
+    transition: border-color .15s, box-shadow .15s, transform .1s;
+    background: #1a1a1a; color: #eee; position: relative;
+    user-select: none;
+  }
+  .juez-card:hover { border-color: #555; transform: scale(1.02); }
+  .juez-card.seleccionado {
+    border-color: #ffc107;
+    box-shadow: 0 0 0 4px rgba(255,193,7,.35);
+    background: #1e1a00;
+  }
+  .juez-card.bloqueado { opacity: .42; cursor: not-allowed; pointer-events: none; }
+  .check-icon {
+    position: absolute; top: 8px; right: 8px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #ffc107; color: #000;
+    display: none; align-items: center; justify-content: center;
+    font-size: .9rem; font-weight: 900;
+  }
+  .juez-card.seleccionado .check-icon { display: flex; }
+  .contador-pill {
+    font-size: 1.5rem; font-weight: 900;
+    color: #ffc107; font-variant-numeric: tabular-nums;
+  }
+  .btn-guardar { font-size: 1.1rem; letter-spacing: 1px; }
+  .guardado-ok { display: none; }
+</style>
+
+<div class="container-fluid py-3 px-3">
+
+  <!-- HEADER -->
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+      <h4 class="fw-bold text-white mb-0"><i class="fas fa-star text-warning me-2"></i>Comparación Top 5</h4>
+      <small class="text-muted"><%= categoriaNombre %> — Fase: <strong class="text-warning"><%= faseActual.toUpperCase() %></strong></small>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <div class="text-center">
+        <div class="contador-pill" id="contadorSel">0</div>
+        <div class="text-muted" style="font-size:.72rem;letter-spacing:1px">DE 5</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSTRUCCIÓN -->
+  <div class="alert alert-warning py-2 mb-3" role="alert">
+    <i class="fas fa-hand-pointer me-1"></i>
+    <strong>Marque sus 5 atletas favoritos.</strong> Solo puede elegir hasta 5. Pulse <strong>GUARDAR</strong> cuando termine.
+  </div>
+
+  <!-- GRID DE ATLETAS -->
+  <div class="row g-2 mb-4" id="gridJuez">
+    <% competidores.forEach(c => { %>
+      <div class="col-4 col-sm-3 col-md-2">
+        <div class="juez-card text-center p-2 h-100 <%= c.seleccionado ? 'seleccionado' : '' %>"
+             id="jc-<%= c.atleta_id %>"
+             data-id="<%= c.atleta_id %>"
+             onclick="toggleSeleccion(this)">
+          <div class="check-icon"><i class="fas fa-check"></i></div>
+          <% if (c.foto_url) { %>
+            <img src="<%= c.foto_url %>" style="height:80px;width:100%;object-fit:cover;border-radius:8px;margin-bottom:6px" alt="">
+          <% } else { %>
+            <div style="height:80px;display:flex;align-items:center;justify-content:center">
+              <i class="fas fa-user fa-2x" style="color:#555"></i>
+            </div>
+          <% } %>
+          <div class="fw-bold text-warning" style="font-size:.9rem">#<%= c.dorsal %></div>
+          <div class="text-truncate" style="font-size:.75rem;color:#ccc"><%= c.nombre %></div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+
+  <!-- BOTÓN GUARDAR -->
+  <div class="d-grid mb-3">
+    <button class="btn btn-warning btn-lg fw-bold btn-guardar" onclick="guardarSeleccion()" id="btnGuardar">
+      <i class="fas fa-save me-2"></i>GUARDAR MI SELECCIÓN TOP 5
+    </button>
+    <div class="alert alert-success mt-2 guardado-ok text-center" id="alertOk">
+      <i class="fas fa-check-circle me-2"></i><strong>¡Selección guardada!</strong>
+      El Presidente de Mesa puede ver su elección en tiempo real.
+    </div>
+  </div>
+
+  <p class="text-muted small text-center">
+    Puede cambiar su selección antes de que el Presidente cierre la fase de comparación.
+  </p>
+</div>
+
+<script>
+const catId      = "<%= catId %>";
+const faseActual = "<%= faseActual %>";
+const MAX        = 5;
+let seleccionados = new Set(
+    [<% competidores.filter(c => c.seleccionado).forEach((c, i, arr) => { %>"<%= c.atleta_id %>"<% if (i < arr.length-1) { %>,<% } %><% }) %>]
+);
+
+function actualizarContador() {
+    const n = seleccionados.size;
+    document.getElementById('contadorSel').textContent = n;
+    // Bloquear tarjetas no seleccionadas si ya hay 5
+    document.querySelectorAll('.juez-card').forEach(card => {
+        if (!seleccionados.has(card.dataset.id)) {
+            card.classList.toggle('bloqueado', n >= MAX);
+        }
+    });
+}
+
+function toggleSeleccion(card) {
+    const id = card.dataset.id;
+    if (seleccionados.has(id)) {
+        seleccionados.delete(id);
+        card.classList.remove('seleccionado');
+    } else {
+        if (seleccionados.size >= MAX) return;
+        seleccionados.add(id);
+        card.classList.add('seleccionado');
+    }
+    actualizarContador();
+    document.getElementById('alertOk').style.display = 'none';
+    document.getElementById('btnGuardar').disabled = false;
+}
+
+async function guardarSeleccion() {
+    const btn = document.getElementById('btnGuardar');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
+
+    const r = await fetch('/estadisticas/guardar-top5', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            eventoCatId: catId,
+            atletaIds: Array.from(seleccionados),
+            fase: faseActual
+        })
+    });
+    const d = await r.json();
+
+    if (d.ok) {
+        btn.innerHTML = '<i class="fas fa-check me-2"></i>GUARDADO';
+        btn.className = 'btn btn-success btn-lg fw-bold btn-guardar';
+        document.getElementById('alertOk').style.display = 'block';
+    } else {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save me-2"></i>GUARDAR MI SELECCIÓN TOP 5';
+        alert('Error al guardar: ' + d.mensaje);
+    }
+}
+
+// Estado inicial
+actualizarContador();
+</script>
+<%- include("../template/footer") %>

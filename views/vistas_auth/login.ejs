@@ -23,8 +23,11 @@
 
     <hr>
 
-    <!-- Login tradicional -->
-    <form onsubmit="loginUsuario(event)">
+    <!-- Alerta de resultado -->
+    <div id="alertaAuth" class="alert d-none mb-2 small py-2" role="alert"></div>
+
+    <!-- Formulario Login -->
+    <form id="formLogin" onsubmit="loginUsuario(event)">
       <div class="mb-2">
         <label for="email" class="form-label small">Email</label>
         <input type="email" name="email" id="email" class="form-control form-control-sm" required autocomplete="username">
@@ -46,6 +49,39 @@
           ¿Olvidaste tu contraseña?
         </button>
       </div>
+      <hr class="my-2">
+      <p class="text-center small text-muted mb-0">
+        ¿No tienes cuenta?
+        <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-bold" onclick="mostrarRegistro()">Regístrate aquí</button>
+      </p>
+    </form>
+
+    <!-- Formulario Registro -->
+    <form id="formRegistro" class="d-none" onsubmit="registrarUsuario(event)">
+      <div class="mb-2">
+        <label for="regNombre" class="form-label small">Nombre completo</label>
+        <input type="text" id="regNombre" class="form-control form-control-sm" required placeholder="Ej: Juan Pérez">
+      </div>
+      <div class="mb-2">
+        <label for="regEmail" class="form-label small">Email</label>
+        <input type="email" id="regEmail" class="form-control form-control-sm" required autocomplete="email">
+      </div>
+      <div class="mb-2">
+        <label for="regPassword" class="form-label small">Contraseña</label>
+        <input type="password" id="regPassword" class="form-control form-control-sm" required minlength="6" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="mb-3">
+        <label for="regPasswordConf" class="form-label small">Confirmar contraseña</label>
+        <input type="password" id="regPasswordConf" class="form-control form-control-sm" required placeholder="Repite tu contraseña">
+      </div>
+      <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-primary btn-sm">Crear cuenta</button>
+      </div>
+      <hr class="my-2">
+      <p class="text-center small text-muted mb-0">
+        ¿Ya tienes cuenta?
+        <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-bold" onclick="mostrarLogin()">Inicia sesión</button>
+      </p>
     </form>
   </div>
 </div>
@@ -86,6 +122,59 @@
   }
 
 
+
+  // Toggle login/registro
+  function mostrarRegistro() {
+    document.getElementById('formLogin').classList.add('d-none');
+    document.getElementById('formRegistro').classList.remove('d-none');
+    ocultarAlerta();
+  }
+
+  function mostrarLogin() {
+    document.getElementById('formRegistro').classList.add('d-none');
+    document.getElementById('formLogin').classList.remove('d-none');
+    ocultarAlerta();
+  }
+
+  function mostrarAlerta(mensaje, tipo) {
+    const alerta = document.getElementById('alertaAuth');
+    alerta.className = `alert alert-${tipo} mb-2 small py-2`;
+    alerta.textContent = mensaje;
+  }
+
+  function ocultarAlerta() {
+    document.getElementById('alertaAuth').className = 'alert d-none mb-2 small py-2';
+  }
+
+  // Registro con email/contraseña
+  async function registrarUsuario(event) {
+    event.preventDefault();
+
+    if (!_supabase) return alert("Error: Cliente Supabase no inicializado.");
+
+    const nombre = document.getElementById('regNombre').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const passwordConf = document.getElementById('regPasswordConf').value;
+
+    if (password !== passwordConf) {
+      mostrarAlerta("Las contraseñas no coinciden.", "danger");
+      return;
+    }
+
+    const { error } = await _supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: nombre } }
+    });
+
+    if (error) {
+      mostrarAlerta(error.message, "danger");
+    } else {
+      mostrarAlerta("Cuenta creada. Revisa tu correo para confirmar tu registro antes de iniciar sesión.", "success");
+      document.getElementById('formRegistro').reset();
+    }
+  }
 
   // Ojito
   const btnVerPassword = document.getElementById('btnVerPassword');

@@ -1,102 +1,272 @@
 <%- include("../template/cabecera", {tituloWeb: "Auditoría Financiera - FDFF"}) %>
 
-<div class="container my-5">
-    <div class="card shadow-lg border-0 p-4" style="border-radius: 20px;">
-        <h4 class="fw-bold mb-4"><i class="fas fa-search-dollar text-success"></i> Localizador de Recibos y Pagos</h4>
-        
-        <!-- Barra de Búsqueda -->
-        <form action="/admin/auditoria-pagos" method="GET" class="row g-2 mb-4">
-            <div class="col-md-9">
-                <input type="text" name="query" class="form-control form-control-lg" 
-                       placeholder="Buscar por Cédula, Nombre, ID FDFF o Empresa..." value="<%= query || '' %>">
-            </div>
-            <div class="col-md-3">
-                <button class="btn btn-dark btn-lg w-100 fw-bold">BUSCAR</button>
-            </div>
-        </form>
+<div class="container-fluid my-4 px-4">
 
-        <!-- Resultados -->
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Concepto / Pagador</th>
-                        <th>Monto</th>
-                        <th>Método</th>
-                        <th class="text-center">Soporte</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Pagos Administrativos (Membresías/Backstage) -->
-                    <% pagos.forEach(p => { %>
-                        <tr>
-                            <td class="small"><%= new Date(p.fecha_pago).toLocaleDateString() %></td>
-                            <td>
-                                <strong><%= p.tipo_pago.replace('_', ' ').toUpperCase() %></strong><br>
-                                <small class="text-muted"><%= p.profiles?.nombre %> (<%= p.profiles?.id_fdff %>)</small>
-                            </td>
-                            <td class="fw-bold">RD$ <%= p.monto.toLocaleString() %></td>
-                            <td><span class="badge bg-light text-dark border"><%= p.metodo_pago %></span></td>
-                            <td class="text-center">
-                                <% if(p.recibo_url) { %>
-                                    <a href="<%= p.recibo_url %>" target="_blank" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                <% } else { %>
-                                    <i class="fas fa-minus text-muted"></i>
-                                <% } %>
-                            </td>
-                        </tr>
-                    <% }) %>
-
-                    <!-- Inscripciones con Comprobante (Validación de Tickets) -->
-                    <% inscripciones.forEach(i => { %>
-                        <tr class="<%= i.pago_validado ? 'table-light' : 'table-warning' %>">
-                            <td class="small"><%= new Date(i.created_at).toLocaleDateString() %></td>
-                            <td>
-                                <strong>INSCRIPCIÓN EVENTO</strong><br>
-                                <small class="text-muted"><%= i.atletas?.nombre %> - <%= i.eventos?.nombre %></small>
-                            </td>
-                            <td class="fw-bold">VALIDACIÓN PEND.</td>
-                            <td><span class="badge bg-info text-dark border">TRANSFERENCIA</span></td>
-                            <td class="text-center">
-                                <% if (i.url_comprobante_pago && !i.pago_validado) { %>
-                                    <button onclick="abrirValidacion('<%= i.url_comprobante_pago %>', '<%= i.id %>', '<%= i.atleta_id %>')" class="btn btn-sm btn-warning fw-bold">
-                                        <i class="fas fa-search-dollar me-1"></i> VALIDAR PAGO
-                                    </button>
-                                <% } else if (i.pago_validado) { %>
-                                    <span class="badge bg-success"><i class="fas fa-check"></i> VALIDADO</span>
-                                <% } %>
-                            </td>
-                        </tr>
-                    <% }) %>
-
-                    <!-- Ingresos Extra (Patrocinios/Boletas) -->
-                    <% extras.forEach(e => { %>
-                        <tr class="table-info">
-                            <td class="small"><%= new Date(e.created_at).toLocaleDateString() %></td>
-                            <td>
-                                <strong><%= e.concepto %></strong><br>
-                                <small class="text-muted">Evento: <%= e.eventos?.nombre %></small>
-                            </td>
-                            <td class="fw-bold text-success">RD$ <%= e.monto.toLocaleString() %></td>
-                            <td><span class="badge bg-success">INGRESO EXTRA</span></td>
-                            <td class="text-center">
-                                <% if(e.recibo_url) { %>
-                                    <a href="<%= e.recibo_url %>" target="_blank" class="btn btn-sm btn-dark">
-                                        <i class="fas fa-file-invoice"></i> Ver
-                                    </a>
-                                <% } else { %>
-                                    <i class="fas fa-minus text-muted"></i>
-                                <% } %>
-                            </td>
-                        </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+    <!-- ENCABEZADO Y BÚSQUEDA -->
+    <div class="row g-3 mb-4 align-items-end">
+        <div class="col-lg-6">
+            <h4 class="fw-bold mb-1"><i class="fas fa-search-dollar text-success me-2"></i> Auditoría de Pagos</h4>
+            <small class="text-muted">Validación de comprobantes e historial financiero del evento</small>
+        </div>
+        <div class="col-lg-6">
+            <form action="/admin/auditoria-pagos" method="GET" class="d-flex gap-2">
+                <input type="text" name="query" class="form-control"
+                       placeholder="Buscar atleta, ID FDFF o concepto..." value="<%= query || '' %>">
+                <button class="btn btn-dark fw-bold px-4">Buscar</button>
+                <% if (query) { %>
+                    <a href="/admin/auditoria-pagos" class="btn btn-outline-secondary">✕</a>
+                <% } %>
+            </form>
         </div>
     </div>
+
+    <!-- TARJETAS RESUMEN -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3 <%= totalPendientes > 0 ? 'border-danger border-start border-4' : '' %>" style="border-radius:12px;">
+                <div class="display-6 fw-bold <%= totalPendientes > 0 ? 'text-danger' : 'text-success' %>">
+                    <%= totalPendientes %>
+                </div>
+                <small class="text-muted fw-bold text-uppercase">Comprobantes Pendientes</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3" style="border-radius:12px;">
+                <div class="display-6 fw-bold text-success"><%= validados.length %></div>
+                <small class="text-muted fw-bold text-uppercase">Pagos Validados</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3" style="border-radius:12px;">
+                <div class="display-6 fw-bold text-info"><%= extras.length %></div>
+                <small class="text-muted fw-bold text-uppercase">Ingresos Extra</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <ul class="nav nav-tabs mb-3" id="tabAuditoria">
+        <li class="nav-item">
+            <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#tabPendientes">
+                <i class="fas fa-clock text-warning me-1"></i> Pendientes
+                <% if (totalPendientes > 0) { %>
+                    <span class="badge bg-danger ms-1"><%= totalPendientes %></span>
+                <% } %>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#tabValidados">
+                <i class="fas fa-check-circle text-success me-1"></i> Validados (<%= validados.length %>)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#tabExtras">
+                <i class="fas fa-plus-circle text-info me-1"></i> Ingresos Extra (<%= extras.length %>)
+            </button>
+        </li>
+        <% if (pagos.length > 0) { %>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#tabAdminPagos">
+                <i class="fas fa-file-invoice-dollar me-1"></i> Membresías (<%= pagos.length %>)
+            </button>
+        </li>
+        <% } %>
+    </ul>
+
+    <div class="tab-content">
+
+        <!-- TAB: PENDIENTES -->
+        <div class="tab-pane fade show active" id="tabPendientes">
+            <div class="card border-0 shadow-sm" style="border-radius:15px; overflow:hidden;">
+                <% if (pendientes.length === 0) { %>
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-check-circle fa-3x text-success d-block mb-3"></i>
+                        <h5>¡Todo al día! No hay comprobantes pendientes de validar.</h5>
+                    </div>
+                <% } else { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="ps-3">Atleta</th>
+                                    <th>Evento</th>
+                                    <th>Subido</th>
+                                    <th class="text-center">Comprobante</th>
+                                    <th class="text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% pendientes.forEach(i => { %>
+                                    <tr class="<%= i.observaciones_pago ? 'table-danger' : '' %>">
+                                        <td class="ps-3 fw-bold">
+                                            <%= i.atletas?.nombre || '—' %>
+                                            <% if (i.atletas?.idfdff) { %>
+                                                <br><small class="text-muted">#<%= i.atletas.idfdff %></small>
+                                            <% } %>
+                                            <% if (i.observaciones_pago) { %>
+                                                <br><small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Rechazado previo: <%= i.observaciones_pago %></small>
+                                            <% } %>
+                                        </td>
+                                        <td class="small"><%= i.eventos?.nombre || '—' %></td>
+                                        <td class="small text-muted">
+                                            <%= i.fecha_subida_pago ? new Date(i.fecha_subida_pago).toLocaleDateString('es-DO') : new Date(i.created_at).toLocaleDateString('es-DO') %>
+                                        </td>
+                                        <td class="text-center">
+                                            <a href="<%= i.url_comprobante_pago %>" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-eye me-1"></i> Ver
+                                            </a>
+                                        </td>
+                                        <td class="text-center">
+                                            <button onclick="abrirValidacion('<%= i.url_comprobante_pago %>', '<%= i.id %>', '<%= i.atleta_id %>')"
+                                                    class="btn btn-warning btn-sm fw-bold px-3">
+                                                <i class="fas fa-check me-1"></i> VALIDAR
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- TAB: VALIDADOS -->
+        <div class="tab-pane fade" id="tabValidados">
+            <div class="card border-0 shadow-sm" style="border-radius:15px; overflow:hidden;">
+                <% if (validados.length === 0) { %>
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-inbox fa-3x d-block mb-3"></i>
+                        <h6>No hay pagos validados aún.</h6>
+                    </div>
+                <% } else { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Atleta</th>
+                                    <th>Evento</th>
+                                    <th>Fecha</th>
+                                    <th class="text-center">Comprobante</th>
+                                    <th class="text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% validados.forEach(i => { %>
+                                    <tr>
+                                        <td class="ps-3 fw-bold">
+                                            <%= i.atletas?.nombre || '—' %>
+                                            <% if (i.atletas?.idfdff) { %>
+                                                <br><small class="text-muted">#<%= i.atletas.idfdff %></small>
+                                            <% } %>
+                                        </td>
+                                        <td class="small"><%= i.eventos?.nombre || '—' %></td>
+                                        <td class="small text-muted"><%= new Date(i.created_at).toLocaleDateString('es-DO') %></td>
+                                        <td class="text-center">
+                                            <a href="<%= i.url_comprobante_pago %>" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                        <td class="text-center"><span class="badge bg-success px-3">VALIDADO</span></td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- TAB: INGRESOS EXTRA -->
+        <div class="tab-pane fade" id="tabExtras">
+            <div class="card border-0 shadow-sm" style="border-radius:15px; overflow:hidden;">
+                <% if (extras.length === 0) { %>
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-coins fa-3x d-block mb-3"></i>
+                        <h6>No hay ingresos extra registrados.</h6>
+                    </div>
+                <% } else { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Concepto</th>
+                                    <th>Evento</th>
+                                    <th>Fecha</th>
+                                    <th class="text-end pe-3">Monto</th>
+                                    <th class="text-center">Recibo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% let totalExtras = 0; extras.forEach(e => { totalExtras += parseFloat(e.monto || 0); %>
+                                    <tr>
+                                        <td class="ps-3 fw-bold"><%= e.concepto %></td>
+                                        <td class="small"><%= e.eventos?.nombre || '—' %></td>
+                                        <td class="small text-muted"><%= new Date(e.created_at).toLocaleDateString('es-DO') %></td>
+                                        <td class="text-end pe-3 fw-bold text-success">RD$ <%= parseFloat(e.monto).toLocaleString() %></td>
+                                        <td class="text-center">
+                                            <% if (e.recibo_url) { %>
+                                                <a href="<%= e.recibo_url %>" target="_blank" class="btn btn-sm btn-outline-dark">
+                                                    <i class="fas fa-file-invoice"></i>
+                                                </a>
+                                            <% } else { %><span class="text-muted">—</span><% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                                <tr class="table-success fw-bold">
+                                    <td colspan="3" class="ps-3 text-end">Total Ingresos Extra:</td>
+                                    <td class="text-end pe-3">RD$ <%= totalExtras.toLocaleString() %></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- TAB: MEMBRESÍAS / PAGOS ADMIN -->
+        <% if (pagos.length > 0) { %>
+        <div class="tab-pane fade" id="tabAdminPagos">
+            <div class="card border-0 shadow-sm" style="border-radius:15px; overflow:hidden;">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Fecha</th>
+                                <th>Concepto / Pagador</th>
+                                <th class="text-end">Monto</th>
+                                <th>Método</th>
+                                <th class="text-center">Soporte</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% pagos.forEach(p => { %>
+                                <tr>
+                                    <td class="ps-3 small"><%= new Date(p.fecha_pago).toLocaleDateString('es-DO') %></td>
+                                    <td>
+                                        <strong><%= p.tipo_pago.replace(/_/g, ' ').toUpperCase() %></strong><br>
+                                        <small class="text-muted"><%= p.profiles?.nombre %></small>
+                                    </td>
+                                    <td class="text-end fw-bold">RD$ <%= parseFloat(p.monto || 0).toLocaleString() %></td>
+                                    <td><span class="badge bg-light text-dark border"><%= p.metodo_pago %></span></td>
+                                    <td class="text-center">
+                                        <% if (p.recibo_url) { %>
+                                            <a href="<%= p.recibo_url %>" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        <% } else { %><span class="text-muted">—</span><% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+    </div><!-- /tab-content -->
 </div>
 
 <!-- Modal de Validación de Comprobante -->
@@ -112,10 +282,16 @@
                 <input type="hidden" id="competidorIdValidar">
                 <input type="hidden" id="atletaIdValidar">
             </div>
-            <div class="modal-footer bg-light">
-                <button type="button" onclick="rechazarPago()" class="btn btn-danger fw-bold">RECHAZAR PAGO</button>
-                <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" onclick="validarComprobante()" class="btn btn-success fw-bold px-4">CONFIRMAR VALIDACIÓN</button>
+            <div class="modal-footer bg-light justify-content-between">
+                <button type="button" onclick="rechazarPago()" class="btn btn-danger fw-bold">
+                    <i class="fas fa-times me-1"></i> RECHAZAR
+                </button>
+                <div>
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" onclick="validarComprobante()" class="btn btn-success fw-bold px-4">
+                        <i class="fas fa-check me-1"></i> CONFIRMAR VALIDACIÓN
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -136,32 +312,24 @@
     async function validarComprobante() {
         const id = document.getElementById('competidorIdValidar').value;
         const { error } = await _supabase.from('competidores').update({ pago_validado: true }).eq('id', id);
-        if(!error) {
-            alert("✅ Pago validado con éxito. El ticket QR del atleta ha sido activado.");
+        if (!error) {
+            alert("✅ Pago validado. El ticket QR del atleta ha sido activado.");
             location.reload();
         } else alert("Error: " + error.message);
     }
 
     async function rechazarPago() {
-        const competidorId = document.getElementById('competidorIdValidar').value;
+        const id = document.getElementById('competidorIdValidar').value;
         const motivo = prompt("Indique el motivo del rechazo (ej: Monto incompleto, imagen borrosa):");
         if (!motivo) return;
-
-        const { error } = await _supabase
-            .from('competidores')
-            .update({ 
-                url_comprobante_pago: null, // Permitimos que suba uno nuevo
-                observaciones_pago: motivo,
-                pago_validado: false,
-                fecha_revision_pago: new Date().toISOString()
-            })
-            .eq('id', competidorId);
-
-        if(!error) {
-            alert("Notificación enviada al atleta.");
-            // El sistema reflejará el cambio al recargar y el atleta lo verá en su perfil
-            location.reload();
-        } else alert("Error: " + error.message);
+        const { error } = await _supabase.from('competidores').update({
+            url_comprobante_pago: null,
+            observaciones_pago: motivo,
+            pago_validado: false,
+            fecha_revision_pago: new Date().toISOString()
+        }).eq('id', id);
+        if (!error) { alert("Notificación registrada."); location.reload(); }
+        else alert("Error: " + error.message);
     }
 </script>
 

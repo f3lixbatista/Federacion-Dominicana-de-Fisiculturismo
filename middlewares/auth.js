@@ -10,6 +10,9 @@ const attachUser = async (req, res, next) => {
     // Intentar obtener el token de la cookie primero, luego de los headers
     const token = req.cookies['sb-access-token'] || getTokenFromRequest(req);
 
+    // Exponer el token al cliente para consultas Supabase autenticadas en el navegador
+    res.locals.ACCESS_TOKEN = token || '';
+
     if (token) {
         try {
             const user = await getAuthenticatedUser(req);

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { checkRole, requireAuth } = require('../middlewares/auth');
-const { supabase } = require('../supabaseClient');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const atletasController = require('../controllers/atletasController');
@@ -14,9 +14,8 @@ router.get('/servicios', checkRole(['admin', 'estadistico', 'ejecutivo', 'prepar
     res.render('servicios', { titulo: 'Servicios BatWeb' });
 });
 
-router.get('/afiliacion', async (req, res) => {
+router.get('/afiliacion', requireAuth, async (req, res) => {
     try {
-        // 1. Traemos solo los preparadores validados por la federación
         const { data: arrayPreparadores, error } = await supabase
             .from('preparadores')
             .select('id, nombre_completo, gimnasio_labora')
@@ -25,34 +24,39 @@ router.get('/afiliacion', async (req, res) => {
 
         if (error) throw error;
 
-        // 2. Enviamos la lista de preparadores a la vista
         res.render('afiliacion', {
-            arrayPreparadores: arrayPreparadores || []
+            arrayPreparadores: arrayPreparadores || [],
+            nuevoPrepId: req.query.nuevo_prep_id || null,
+            nuevoPrepNombre: req.query.nuevo_prep_nombre || null
         });
     } catch (error) {
         console.error('Error cargando afiliación:', error.message);
-        res.render('afiliacion', { arrayPreparadores: [] });
+        res.render('afiliacion', { arrayPreparadores: [], nuevoPrepId: null, nuevoPrepNombre: null });
     }
 });
 
-router.get('/preparadores/registrar', (req, res) => {
+router.get('/afiliacion/nuevo-preparador', requireAuth, (req, res) => {
     res.render('afiliacionPreparador', { query: req.query });
 });
 
-router.post('/preparadores/registrar', async (req, res) => {
+router.post('/afiliacion/nuevo-preparador', requireAuth, async (req, res) => {
     const { nombre_completo, cedula, gimnasio } = req.body;
 
     try {
-        const { error } = await supabase.from('preparadores').insert([{
+        const { data: nuevoPrep, error } = await supabaseAdmin.from('preparadores').insert([{
             nombre_completo,
             cedula,
             gimnasio_labora: gimnasio,
-            estatus: 'pendiente'
-        }]);
+            estatus_afiliacion: 'pendiente'
+        }]).select('id').single();
 
         if (error) throw error;
 
-        res.redirect('/preparadores/registrar?success=1');
+        const params = new URLSearchParams({
+            nuevo_prep_id: nuevoPrep.id,
+            nuevo_prep_nombre: nombre_completo
+        });
+        res.redirect(`/afiliacion?${params.toString()}`);
     } catch (error) {
         console.error('Error registrando preparador:', error.message);
         res.render('afiliacionPreparador', {

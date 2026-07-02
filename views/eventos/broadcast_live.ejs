@@ -1,77 +1,434 @@
 <%- include("../template/cabecera", {tituloWeb: "Panel VMD - Broadcast"}) %>
-<div class="container-fluid my-4 px-4">
-    <div class="card bg-danger text-white mb-4 shadow">
-        <div class="card-body d-flex justify-content-between align-items-center">
-            <h2 class="mb-0"><i class="fas fa-desktop me-2"></i> PANEL DE CONTROL DE VIDEO (VMD)</h2>
-            <span class="badge bg-white text-danger fw-bold">BROADCAST MODO: ON-AIR</span>
+
+<style>
+  .on-air-badge { animation: pulso-red 1.5s infinite; }
+  @keyframes pulso-red { 0%,100% { box-shadow: 0 0 0 0 rgba(220,53,69,.7); } 50% { box-shadow: 0 0 0 8px rgba(220,53,69,0); } }
+
+  body, #main-content { background:#0d0d0d !important; color:#eee; }
+
+  .escena-btn { cursor:pointer; border-radius:12px; padding:1.2rem; text-align:center; transition:transform .15s,box-shadow .15s; }
+  .escena-btn:hover { transform:scale(1.03); box-shadow:0 4px 24px rgba(0,0,0,.5); }
+  .escena-btn.activa { outline:3px solid #ffc107; outline-offset:3px; }
+
+  .msg-preset { cursor:pointer; padding:.45rem .85rem; border-radius:8px; border:1px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.05); color:#ddd; margin:.25rem; display:inline-block; font-size:.83rem; transition:background .15s; }
+  .msg-preset:hover { background:rgba(255,255,255,.18); }
+
+  .atleta-card-vmd { transition:box-shadow .15s; }
+  .atleta-card-vmd:hover .inner { box-shadow:0 0 0 2px #ef4444 !important; }
+
+  .en-aire-panel { background:#181818; border:1px solid #333; border-radius:10px; padding:.85rem 1rem; min-height:66px; }
+
+  .podio-item { border-radius:10px; padding:1rem .75rem; text-align:center; }
+  .podio-1 { background:linear-gradient(135deg,#b8860b,#ffd700); color:#000; }
+  .podio-2 { background:linear-gradient(135deg,#5c5c5c,#c0c0c0); color:#000; }
+  .podio-3 { background:linear-gradient(135deg,#7c3d0a,#cd7f32); color:#fff; }
+
+  #vmdTabs .nav-link { color:#999; border-color:transparent; }
+  #vmdTabs .nav-link.active { color:#fff; background:#1e1e1e; border-color:#444 #444 #1e1e1e; }
+
+  .card-dark { background:#161616; border:1px solid #2a2a2a; }
+  .list-group-item-dark { background:#1a1a1a; border-color:#2a2a2a; color:#ccc; }
+  .list-group-item-dark:hover { background:#242424; color:#fff; }
+  .form-control-dark, .form-select-dark {
+    background:#1a1a1a; border-color:#333; color:#eee;
+  }
+  .form-control-dark:focus, .form-select-dark:focus {
+    background:#222; border-color:#555; color:#fff; box-shadow:none;
+  }
+</style>
+
+<div class="container-fluid px-3 py-3">
+
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+      <h4 class="mb-0 fw-bold text-white"><i class="fas fa-broadcast-tower text-danger me-2"></i>Panel VMD</h4>
+      <small class="text-muted"><%= evento.nombre %></small>
+    </div>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+      <span class="badge bg-danger on-air-badge px-3 py-2">● ON AIR</span>
+      <a href="/eventos/<%= evento.id %>/lower-third" target="_blank" class="btn btn-outline-info btn-sm">
+        <i class="fas fa-layer-group me-1"></i>Lower Third OBS
+      </a>
+      <a href="/eventos/<%= evento.id %>/monitor-mc" target="_blank" class="btn btn-outline-light btn-sm">
+        <i class="fas fa-microphone me-1"></i>Monitor MC
+      </a>
+      <a href="/eventos/centro-mando" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i>Centro de Mando
+      </a>
+    </div>
+  </div>
+
+  <!-- EN PANTALLA AHORA -->
+  <div class="mb-3">
+    <div class="en-aire-panel d-flex align-items-center gap-3">
+      <small class="text-muted text-nowrap">EN PANTALLA:</small>
+      <span class="badge bg-secondary" id="enAireTipo">VACÍO</span>
+      <span id="enAireTexto" class="text-white fw-bold text-truncate">Sin señal activa</span>
+      <button class="btn btn-outline-danger btn-sm ms-auto text-nowrap" onclick="limpiarPantalla()">
+        <i class="fas fa-times-circle me-1"></i>LIMPIAR
+      </button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <ul class="nav nav-tabs mb-3" id="vmdTabs">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabAtletas">
+      <i class="fas fa-user-shield me-1"></i><span class="d-none d-sm-inline">Atletas</span></button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabMensajes">
+      <i class="fas fa-comment-dots me-1"></i><span class="d-none d-sm-inline">Mensajes</span></button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabPodio">
+      <i class="fas fa-trophy me-1"></i><span class="d-none d-sm-inline">Podio</span></button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabEscenas">
+      <i class="fas fa-palette me-1"></i><span class="d-none d-sm-inline">Escenas</span></button></li>
+  </ul>
+
+  <div class="tab-content">
+
+    <!-- ═══ TAB ATLETAS ═══════════════════════════════════════════════ -->
+    <div class="tab-pane fade show active" id="tabAtletas">
+      <div class="row g-3">
+        <div class="col-md-4 col-lg-3">
+          <div class="card card-dark h-100">
+            <div class="card-header text-white small fw-bold border-0 pb-1">
+              <i class="fas fa-list me-1 text-warning"></i>Categorías Activas
+            </div>
+            <div class="list-group list-group-flush" id="listaCategorias" style="max-height:420px;overflow-y:auto">
+              <% (categoriasActivas || []).forEach(cat => { %>
+                <button class="list-group-item list-group-item-action list-group-item-dark"
+                        onclick="cargarAtletasDeCat('<%= cat.id %>', this)">
+                  <i class="fas fa-angle-right me-1 text-warning"></i>
+                  <strong><%= cat.categorias?.nombre %></strong>
+                </button>
+              <% }) %>
+              <% if (!categoriasActivas || categoriasActivas.length === 0) { %>
+                <div class="list-group-item list-group-item-dark text-muted small">Sin categorías activas</div>
+              <% } %>
+            </div>
+          </div>
         </div>
+        <div class="col-md-8 col-lg-9">
+          <div class="card card-dark">
+            <div class="card-header text-white small fw-bold border-0 d-flex align-items-center gap-2">
+              <i class="fas fa-users me-1 text-info"></i>
+              <span id="catActualNombre" class="text-warning">Seleccione una categoría</span>
+            </div>
+            <div class="card-body pt-2">
+              <input type="text" class="form-control form-control-sm form-control-dark mb-2"
+                     placeholder="Buscar por dorsal o nombre..." oninput="filtrarAtletas(this.value)">
+              <div id="atletaControlList" class="row g-2">
+                <p class="col-12 text-center text-muted small py-4">Seleccione una categoría</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-dark text-white fw-bold">1. Categorías Activas</div>
-                <div class="list-group list-group-flush">
-                    <% (categoriasActivas || []).forEach(cat => { %>
-                        <button class="list-group-item list-group-item-action" onclick="cargarAtletasDeCat('<%= cat.id %>')">
-                            <span class="fw-bold"><%= cat.categorias?.nombre %></span>
-                            <br><small class="text-muted"><%= cat.estatus_logistica %></small>
-                        </button>
-                    <% }) %>
-                </div>
+    <!-- ═══ TAB MENSAJES ══════════════════════════════════════════════ -->
+    <div class="tab-pane fade" id="tabMensajes">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card card-dark h-100">
+            <div class="card-header text-white small fw-bold border-0">
+              <i class="fas fa-bolt text-warning me-1"></i>Mensajes Rápidos
             </div>
-        </div>
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white fw-bold">2. Atletas en Tarima (Llamado a Pantalla LED)</div>
-                <div class="card-body">
-                    <div id="atletaControlList" class="row g-3">
-                        <p class="text-center text-muted py-5">Seleccione una categoría para listar atletas.</p>
-                    </div>
-                </div>
+            <div class="card-body">
+              <span class="msg-preset" onclick="usarPreset(this)">Por favor tomar asiento</span>
+              <span class="msg-preset" onclick="usarPreset(this)">El show comienza en breve</span>
+              <span class="msg-preset" onclick="usarPreset(this)">¡Bienvenidos al escenario FDFF!</span>
+              <span class="msg-preset" onclick="usarPreset(this)">Silencio en sala, por favor</span>
+              <span class="msg-preset" onclick="usarPreset(this)">Próxima categoría en tarima</span>
+              <span class="msg-preset" onclick="usarPreset(this)">¡Aplausos para nuestros atletas!</span>
+              <span class="msg-preset" onclick="usarPreset(this)">Gran Campeón Absoluto FDFF</span>
+              <span class="msg-preset" onclick="usarPreset(this)">Competencia finalizada · ¡Gracias!</span>
+              <span class="msg-preset" onclick="usarPreset(this)">Entrega de trofeos en curso</span>
+              <span class="msg-preset" onclick="usarPreset(this)">Federación Dominicana de Fisiculturismo</span>
             </div>
+          </div>
         </div>
+        <div class="col-md-6">
+          <div class="card card-dark h-100">
+            <div class="card-header text-white small fw-bold border-0">
+              <i class="fas fa-keyboard me-1"></i>Mensaje Personalizado
+            </div>
+            <div class="card-body d-flex flex-column gap-3">
+              <textarea id="textoMensaje" class="form-control form-control-dark" rows="4"
+                        placeholder="Escribe el texto para la pantalla LED..."></textarea>
+              <div class="d-flex gap-2">
+                <select id="estiloMensaje" class="form-select form-select-sm form-select-dark">
+                  <option value="info">Informativo (azul)</option>
+                  <option value="advertencia">Advertencia (dorado)</option>
+                  <option value="celebracion">Celebración (rojo)</option>
+                  <option value="neutro">Neutro (oscuro)</option>
+                </select>
+                <button class="btn btn-warning fw-bold text-nowrap" onclick="enviarMensaje()">
+                  <i class="fas fa-paper-plane me-1"></i>AL AIRE
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- ═══ TAB PODIO ═════════════════════════════════════════════════ -->
+    <div class="tab-pane fade" id="tabPodio">
+      <div class="row g-3">
+        <div class="col-md-4 col-lg-3">
+          <div class="card card-dark">
+            <div class="card-header text-white small fw-bold border-0">
+              <i class="fas fa-trophy text-warning me-1"></i>Categoría a Anunciar
+            </div>
+            <div class="card-body d-flex flex-column gap-2">
+              <select id="catPodioSelect" class="form-select form-select-dark">
+                <option value="">— Seleccione —</option>
+                <% (categoriasActivas || []).forEach(cat => { %>
+                  <option value="<%= cat.id %>"><%= cat.categorias?.nombre %></option>
+                <% }) %>
+              </select>
+              <button class="btn btn-outline-warning btn-sm" onclick="cargarPodio()">
+                <i class="fas fa-search me-1"></i>Cargar Resultados
+              </button>
+              <hr style="border-color:#333">
+              <button class="btn btn-warning fw-bold" id="btnAnunciarPodio" disabled onclick="anunciarPodioEnVivo()">
+                <i class="fas fa-trophy me-1"></i>ANUNCIAR PODIO
+              </button>
+              <small class="text-muted">Solo muestra categorías con resultados oficiales publicados</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-8 col-lg-9">
+          <div id="podioPreview" class="row g-3 align-items-stretch">
+            <div class="col-12 text-center text-muted py-5">
+              <i class="fas fa-trophy fa-3x mb-2 opacity-25"></i>
+              <p>Cargue los resultados de una categoría</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB ESCENAS ═══════════════════════════════════════════════ -->
+    <div class="tab-pane fade" id="tabEscenas">
+      <p class="text-muted small mb-3">Cambia el ambiente visual de la pantalla LED en tiempo real.</p>
+      <div class="row g-3">
+        <div class="col-6 col-md-3">
+          <div class="escena-btn" id="esc-apertura"
+               style="background:linear-gradient(135deg,#0d1b4b,#1a3a8f)"
+               onclick="enviarEscena('apertura')">
+            <i class="fas fa-flag fa-2x mb-2 text-warning d-block"></i>
+            <div class="fw-bold text-white">Apertura</div>
+            <small class="text-light opacity-75">Azul patriótico</small>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="escena-btn" id="esc-competencia"
+               style="background:linear-gradient(135deg,#3d0000,#8b0000)"
+               onclick="enviarEscena('competencia')">
+            <i class="fas fa-dumbbell fa-2x mb-2 text-warning d-block"></i>
+            <div class="fw-bold text-white">Competencia</div>
+            <small class="text-light opacity-75">Rojo intenso</small>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="escena-btn" id="esc-podio"
+               style="background:linear-gradient(135deg,#4a3500,#c8a800)"
+               onclick="enviarEscena('podio')">
+            <i class="fas fa-crown fa-2x mb-2 text-dark d-block"></i>
+            <div class="fw-bold text-dark">Premiación</div>
+            <small class="text-dark opacity-75">Dorado IFBB</small>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="escena-btn" id="esc-cierre"
+               style="background:#0a0a0a;border:1px solid #333"
+               onclick="enviarEscena('cierre')">
+            <i class="fas fa-power-off fa-2x mb-2 text-muted d-block"></i>
+            <div class="fw-bold text-white">Cierre</div>
+            <small class="text-muted">Negro total</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-content -->
 </div>
+
 <script src="/js/supabase.js"></script>
 <script>
-    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
-    const eventoId = "<%= evento.id %>";
-    let categoriaActualNombre = "";
+const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+const eventoId = "<%= evento.id %>";
+let _catActualNombre = "";
+let _atletasActuales = [];
+let _podioActual = null;
 
-    async function cargarAtletasDeCat(catId) {
-        const { data, error } = await _supabase.from('competidores')
-            .select('atleta_id, numero_atleta, musica_url, atletas(nombre), eventos_categorias(categorias(nombre))')
-            .eq('evento_cat_id', catId);
-        
-        categoriaActualNombre = data[0]?.eventos_categorias?.categorias?.nombre || "Competencia";
-        const container = document.getElementById('atletaControlList');
-        
-        container.innerHTML = data.map(c => `
-            <div class="col-md-6">
-                <div class="card border-danger shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <h5 class="fw-bold">#${c.numero_atleta} - ${c.atletas.nombre}</h5>
-                        <button onclick="lanzarAtletaLive('${c.atleta_id}', '${c.musica_url}', '${c.atletas.nombre}')" class="btn btn-danger w-100 fw-bold">
-                            <i class="fas fa-broadcast-tower"></i> LANZAR A TARIMA
-                        </button>
-                    </div>
-                </div>
-            </div>`).join('');
-    }
+function actualizarEnAire(tipo, texto) {
+    document.getElementById('enAireTipo').textContent = tipo.toUpperCase();
+    document.getElementById('enAireTexto').textContent = texto;
+}
 
-    async function lanzarAtletaLive(atletaId, musicaUrl, nombre) {
-        // Sincronización Realtime: Actualiza el estado del evento
-        await _supabase.from('eventos').update({
-            resultados_en_vivo: {
-                tipo: 'atleta_entrada',
-                atleta_id: atletaId,
-                musica_url: musicaUrl,
-                categoria_nombre: categoriaActualNombre,
-                nombre_atleta: nombre,
-                timestamp: Date.now()
-            }
-        }).eq('id', eventoId);
+// ─── ATLETAS ────────────────────────────────────────────────────────────────
+
+async function cargarAtletasDeCat(catId, btn) {
+    document.querySelectorAll('#listaCategorias button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _catActualNombre = btn.querySelector('strong')?.textContent || 'Categoría';
+    document.getElementById('catActualNombre').textContent = _catActualNombre;
+
+    const { data } = await _supabase.from('competidores')
+        .select('id, atleta_id, numero_atleta, musica_url, foto_atletica_url, atletas(nombre)')
+        .eq('evento_cat_id', catId)
+        .eq('estatus_pesaje', 'aprobado')
+        .order('numero_atleta', { ascending: true });
+
+    _atletasActuales = data || [];
+    renderizarAtletas(_atletasActuales);
+}
+
+function renderizarAtletas(lista) {
+    const c = document.getElementById('atletaControlList');
+    if (!lista.length) {
+        c.innerHTML = '<p class="col-12 text-muted small text-center py-4">Sin atletas aprobados</p>';
+        return;
     }
+    c.innerHTML = lista.map(a => `
+        <div class="col-6 col-sm-4 col-xl-3 atleta-card-vmd">
+          <div class="inner text-center p-2 rounded h-100"
+               style="background:#1c1c1c;border:1px solid #2d2d2d">
+            ${a.foto_atletica_url
+              ? `<img src="${a.foto_atletica_url}" style="height:64px;width:auto;object-fit:cover;border-radius:6px;margin-bottom:6px">`
+              : '<div style="height:64px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user fa-2x text-secondary"></i></div>'}
+            <div class="fw-bold text-warning small">#${a.numero_atleta}</div>
+            <div class="text-truncate" style="font-size:.75rem;color:#ccc">${a.atletas?.nombre || '—'}</div>
+            <button onclick="lanzarAtletaLive('${a.atleta_id}','${a.musica_url||''}','${(a.atletas?.nombre||'').replace(/'/g,"\\'")}','${a.numero_atleta}')"
+                    class="btn btn-danger btn-sm w-100 mt-1 fw-bold" style="font-size:.72rem">
+              <i class="fas fa-broadcast-tower me-1"></i>AL AIRE
+            </button>
+          </div>
+        </div>`).join('');
+}
+
+function filtrarAtletas(q) {
+    if (!q.trim()) { renderizarAtletas(_atletasActuales); return; }
+    const r = q.toLowerCase();
+    renderizarAtletas(_atletasActuales.filter(a =>
+        String(a.numero_atleta).includes(r) || (a.atletas?.nombre || '').toLowerCase().includes(r)
+    ));
+}
+
+async function lanzarAtletaLive(atletaId, musicaUrl, nombre, dorsal) {
+    await _supabase.from('eventos').update({
+        resultados_en_vivo: {
+            tipo: 'atleta_entrada',
+            atleta_id: atletaId,
+            musica_url: musicaUrl,
+            categoria_nombre: _catActualNombre,
+            nombre_atleta: nombre,
+            dorsal,
+            timestamp: Date.now()
+        }
+    }).eq('id', eventoId);
+    actualizarEnAire('atleta', `#${dorsal} — ${nombre}`);
+}
+
+// ─── MENSAJES ────────────────────────────────────────────────────────────────
+
+function usarPreset(el) {
+    document.getElementById('textoMensaje').value = el.textContent.trim();
+    // Activar tab de mensajes si no está activo
+    document.querySelector('[data-bs-target="#tabMensajes"]')?.click();
+}
+
+async function enviarMensaje() {
+    const texto = document.getElementById('textoMensaje').value.trim();
+    const estilo = document.getElementById('estiloMensaje').value;
+    if (!texto) return;
+    await _supabase.from('eventos').update({
+        resultados_en_vivo: { tipo: 'mensaje', texto, estilo, timestamp: Date.now() }
+    }).eq('id', eventoId);
+    actualizarEnAire('mensaje', texto);
+}
+
+// ─── PODIO ───────────────────────────────────────────────────────────────────
+
+async function cargarPodio() {
+    const catId = document.getElementById('catPodioSelect').value;
+    if (!catId) return;
+    const { data } = await _supabase.from('competidores')
+        .select('numero_atleta, posicion_final, atletas(nombre, provincia, preparador)')
+        .eq('evento_cat_id', catId)
+        .in('posicion_final', [1, 2, 3])
+        .order('posicion_final', { ascending: true });
+
+    _podioActual = data || [];
+    const container = document.getElementById('podioPreview');
+    if (!_podioActual.length) {
+        container.innerHTML = '<div class="col-12 text-center text-muted py-4"><i class="fas fa-exclamation-circle me-1"></i>Sin resultados oficiales publicados para esta categoría.</div>';
+        document.getElementById('btnAnunciarPodio').disabled = true;
+        return;
+    }
+    const clases = ['podio-1', 'podio-2', 'podio-3'];
+    const trofeos = ['🥇', '🥈', '🥉'];
+    container.innerHTML = _podioActual.map(c => `
+        <div class="col-md-4">
+          <div class="podio-item ${clases[(c.posicion_final || 1) - 1]} h-100">
+            <div style="font-size:2.5rem">${trofeos[(c.posicion_final || 1) - 1]}</div>
+            <div class="fw-bold fs-5">${c.posicion_final}° Lugar</div>
+            <div class="fw-bold mt-1">${c.atletas?.nombre || '—'}</div>
+            <div class="small">${c.atletas?.provincia || ''}</div>
+            ${c.atletas?.preparador ? `<div class="small opacity-75">Coach: ${c.atletas.preparador}</div>` : ''}
+          </div>
+        </div>`).join('');
+    document.getElementById('btnAnunciarPodio').disabled = false;
+}
+
+async function anunciarPodioEnVivo() {
+    if (!_podioActual?.length) return;
+    const catNombre = document.getElementById('catPodioSelect').selectedOptions[0]?.text || 'Categoría';
+    await _supabase.from('eventos').update({
+        resultados_en_vivo: {
+            tipo: 'podio',
+            categoria_nombre: catNombre,
+            top3: _podioActual.map(c => ({
+                posicion: c.posicion_final,
+                nombre: c.atletas?.nombre,
+                provincia: c.atletas?.provincia,
+                preparador: c.atletas?.preparador,
+                dorsal: c.numero_atleta
+            })),
+            timestamp: Date.now()
+        }
+    }).eq('id', eventoId);
+    actualizarEnAire('podio', catNombre + ' — Top 3');
+}
+
+// ─── LIMPIAR ─────────────────────────────────────────────────────────────────
+
+async function limpiarPantalla() {
+    await _supabase.from('eventos').update({
+        resultados_en_vivo: { tipo: 'limpiar', timestamp: Date.now() }
+    }).eq('id', eventoId);
+    actualizarEnAire('vacío', 'Sin señal activa');
+    document.getElementById('enAireTipo').textContent = 'VACÍO';
+}
+
+// ─── ESCENAS ─────────────────────────────────────────────────────────────────
+
+async function enviarEscena(nombre) {
+    const escenas = {
+        apertura:    { grad1:'#0d1b4b', grad2:'#1a3a8f' },
+        competencia: { grad1:'#3d0000', grad2:'#8b0000' },
+        podio:       { grad1:'#4a3500', grad2:'#c8a800' },
+        cierre:      { grad1:'#000000', grad2:'#070707' }
+    };
+    document.querySelectorAll('.escena-btn').forEach(b => b.classList.remove('activa'));
+    document.getElementById('esc-' + nombre)?.classList.add('activa');
+    await _supabase.from('eventos').update({
+        resultados_en_vivo: { tipo: 'escena', nombre, ...escenas[nombre], timestamp: Date.now() }
+    }).eq('id', eventoId);
+    actualizarEnAire('escena', nombre.charAt(0).toUpperCase() + nombre.slice(1));
+}
 </script>
 <%- include("../template/footer") %>

@@ -1,4 +1,4 @@
-const { supabase, supabaseAdmin } = require('../supabaseClient');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 
 const SESSION_COOKIE_NAME = process.env.SUPABASE_SESSION_COOKIE_NAME || 'supabase-token';
 

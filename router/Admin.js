@@ -2,6 +2,14 @@ const express = require('express');
 const router = express.Router();
 const { checkRole } = require('../middlewares/auth');
 const adminController = require('../controllers/adminController');
+const { supabaseAdmin } = require('../config/supabase');
+
+// Ruta para corregir foto atlética (Accesible por admin y estadístico)
+router.post('/corregir-foto-atletica', checkRole(['admin', 'estadistico']), async (req, res) => {
+    const { competidorId, nuevaUrl } = req.body;
+    await supabaseAdmin.from('competidores').update({ foto_atletica_url: nuevaUrl }).eq('id', competidorId);
+    res.json({ ok: true });
+});
 
 // Aplicamos protección de autenticación a todas las rutas de este archivo
 router.use(checkRole(['admin'])); // Solo administradores pueden acceder a estas rutas

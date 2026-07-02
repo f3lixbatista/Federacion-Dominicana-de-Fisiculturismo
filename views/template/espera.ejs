@@ -1,0 +1,14 @@
+<%- include("../template/cabecera", {tituloWeb: "Espera Técnica - Juez"}) %>
+<div class="container vh-100 d-flex flex-column justify-content-center align-items-center text-center">
+    <div class="spinner-grow text-primary mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
+    <h2 class="fw-bold">Esperando Asignación de Silla</h2>
+    <p class="text-muted">El Estadístico aún no ha configurado su posición en el panel.<br>
+    Esta pantalla se actualizará automáticamente.</p>
+    <div class="badge bg-light text-dark p-2 border">Juez: <%= user.nombre %></div>
+</div>
+
+<script>
+    // Refresco automático cada 15 segundos para detectar el panel
+    // Nota: Aunque el texto sugiere 30s, el script usa 15s para mayor agilidad en el evento
+    setTimeout(() => { location.reload(); }, 15000);
+</script>

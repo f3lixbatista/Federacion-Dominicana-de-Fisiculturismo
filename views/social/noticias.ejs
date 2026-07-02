@@ -1,50 +1,140 @@
 <%- include("../template/cabecera", {tituloWeb: "Noticias FDFF"}) %>
 
 <div class="container my-5">
-    <div class="text-center mb-5">
-        <h1 class="fw-bold display-4 text-dark">📰 Actualidad FDFF</h1>
-        <p class="text-muted">Comunicados oficiales y novedades del fisicoculturismo dominicano</p>
-        <hr class="w-25 mx-auto border-primary border-2">
-    </div>
-
-    <div class="row g-4 justify-content-center">
-        <% if (locals.noticias && noticias.length > 0) { %>
-            <% noticias.forEach(noticia => { %>
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
-                        <% if (noticia.imagen_url) { %>
-                            <img src="<%= noticia.imagen_url %>" class="card-img-top" style="height: 200px; object-fit: cover;" alt="Noticia FDFF">
-                        <% } else { %>
-                            <div class="bg-primary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <i class="fas fa-newspaper fa-4x opacity-50"></i>
-                            </div>
-                        <% } %>
-                        
-                        <div class="card-body p-4">
-                            <% if (noticia.es_destacada) { %>
-                                <span class="badge bg-danger mb-2"><i class="fas fa-star"></i> DESTACADO</span>
-                            <% } %>
-                            <h4 class="fw-bold mb-2 text-primary"><%= noticia.titulo %></h4>
-                            <p class="text-muted small mb-3">
-                                <i class="far fa-calendar-alt"></i> <%= (noticia && noticia.fecha_creacion) ? new Date(noticia.fecha_creacion).toLocaleDateString('es-DO') : 'Reciente' %>
-                            </p>
-                            <p class="card-text text-dark" style="overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4;">
-                                <%= noticia.contenido %>
-                            </p>
-                        </div>
-                        <div class="card-footer bg-white border-0 pb-4 px-4">
-                            <button class="btn btn-outline-primary btn-sm fw-bold w-100" onclick="alert('Funcionalidad de lectura completa próximamente.')">Leer más</button>
-                        </div>
-                    </div>
-                </div>
-            <% }) %>
-        <% } else { %>
-            <div class="text-center py-5">
-                <i class="fas fa-comment-slash display-1 text-light mb-3"></i>
-                <h3 class="text-muted">No hay noticias publicadas en este momento.</h3>
-            </div>
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div>
+            <h1 class="fw-bold display-5 text-dark mb-1"><i class="fas fa-newspaper text-primary me-2"></i> Actualidad FDFF</h1>
+            <p class="text-muted mb-0">Comunicados oficiales y novedades del fisicoculturismo dominicano</p>
+        </div>
+        <% if (locals.user && (user.role === 'admin' || user.role === 'ejecutivo')) { %>
+            <a href="/social/noticias/crear" class="btn btn-primary fw-bold">
+                <i class="fas fa-plus-circle me-1"></i> Nueva Noticia
+            </a>
         <% } %>
     </div>
+
+    <% if (locals.noticias && noticias.length > 0) { %>
+        <%
+        const destacadas = noticias.filter(n => n.es_destacada);
+        const normales   = noticias.filter(n => !n.es_destacada);
+        %>
+
+        <% if (destacadas.length > 0) { %>
+            <div class="mb-4">
+                <h6 class="text-uppercase text-muted fw-bold mb-3"><i class="fas fa-star text-warning me-1"></i> Destacadas</h6>
+                <div class="row g-4">
+                    <% destacadas.forEach(noticia => { %>
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 shadow" style="border-radius:16px;overflow:hidden;border-left:4px solid #dc3545 !important;">
+                                <% if (noticia.imagen_url) { %>
+                                    <img src="<%= noticia.imagen_url %>" class="card-img-top" style="height:220px;object-fit:cover;" alt="<%= noticia.titulo %>">
+                                <% } else { %>
+                                    <div class="bg-danger text-white d-flex align-items-center justify-content-center" style="height:220px;">
+                                        <i class="fas fa-star fa-4x opacity-50"></i>
+                                    </div>
+                                <% } %>
+                                <div class="card-body p-4">
+                                    <span class="badge bg-danger mb-2"><i class="fas fa-star"></i> DESTACADO</span>
+                                    <h4 class="fw-bold mb-2 text-dark"><%= noticia.titulo %></h4>
+                                    <p class="text-muted small mb-3">
+                                        <i class="far fa-calendar-alt"></i>
+                                        <%= noticia.fecha_creacion ? new Date(noticia.fecha_creacion).toLocaleDateString('es-DO', {year:'numeric',month:'long',day:'numeric'}) : 'Reciente' %>
+                                    </p>
+                                    <p class="card-text text-dark mb-0" style="overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;">
+                                        <%= noticia.contenido %>
+                                    </p>
+                                </div>
+                                <div class="card-footer bg-white border-0 pb-4 px-4">
+                                    <button class="btn btn-danger btn-sm fw-bold w-100"
+                                            onclick="abrirNoticia('<%= encodeURIComponent(noticia.titulo) %>', '<%= encodeURIComponent(noticia.contenido) %>', '<%= noticia.imagen_url || '' %>', '<%= noticia.fecha_creacion || '' %>')">
+                                        <i class="fas fa-book-open me-1"></i> Leer completo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+        <% } %>
+
+        <% if (normales.length > 0) { %>
+            <% if (destacadas.length > 0) { %>
+                <h6 class="text-uppercase text-muted fw-bold mb-3"><i class="fas fa-newspaper me-1"></i> Más noticias</h6>
+            <% } %>
+            <div class="row g-4">
+                <% normales.forEach(noticia => { %>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 border-0 shadow-sm" style="border-radius:15px;overflow:hidden;">
+                            <% if (noticia.imagen_url) { %>
+                                <img src="<%= noticia.imagen_url %>" class="card-img-top" style="height:180px;object-fit:cover;" alt="<%= noticia.titulo %>">
+                            <% } else { %>
+                                <div class="bg-primary text-white d-flex align-items-center justify-content-center" style="height:180px;">
+                                    <i class="fas fa-newspaper fa-3x opacity-50"></i>
+                                </div>
+                            <% } %>
+                            <div class="card-body p-4">
+                                <h5 class="fw-bold mb-2 text-dark"><%= noticia.titulo %></h5>
+                                <p class="text-muted small mb-3">
+                                    <i class="far fa-calendar-alt"></i>
+                                    <%= noticia.fecha_creacion ? new Date(noticia.fecha_creacion).toLocaleDateString('es-DO') : 'Reciente' %>
+                                </p>
+                                <p class="card-text text-secondary small mb-0" style="overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;">
+                                    <%= noticia.contenido %>
+                                </p>
+                            </div>
+                            <div class="card-footer bg-white border-0 pb-4 px-4">
+                                <button class="btn btn-outline-primary btn-sm fw-bold w-100"
+                                        onclick="abrirNoticia('<%= encodeURIComponent(noticia.titulo) %>', '<%= encodeURIComponent(noticia.contenido) %>', '<%= noticia.imagen_url || '' %>', '<%= noticia.fecha_creacion || '' %>')">
+                                    <i class="fas fa-book-open me-1"></i> Leer más
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } %>
+
+    <% } else { %>
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-newspaper fa-4x mb-3 d-block opacity-25"></i>
+            <h4>No hay noticias publicadas en este momento.</h4>
+            <% if (locals.user && (user.role === 'admin' || user.role === 'ejecutivo')) { %>
+                <a href="/social/noticias/crear" class="btn btn-primary mt-3 fw-bold">
+                    <i class="fas fa-plus-circle me-1"></i> Publicar la primera noticia
+                </a>
+            <% } %>
+        </div>
+    <% } %>
 </div>
+
+<!-- Modal: Leer noticia completa -->
+<div class="modal fade" id="modalNoticia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:20px;overflow:hidden;">
+            <img id="modalNoticiaImg" src="" alt="" style="max-height:300px;object-fit:cover;display:none;">
+            <div class="modal-body p-5">
+                <p class="text-muted small mb-2" id="modalNoticiaFecha"></p>
+                <h3 class="fw-bold text-dark mb-4" id="modalNoticiaTitulo"></h3>
+                <div id="modalNoticiaContenido" class="text-dark lh-lg" style="white-space:pre-wrap;"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirNoticia(titulo, contenido, imgUrl, fecha) {
+        document.getElementById('modalNoticiaTitulo').textContent  = decodeURIComponent(titulo);
+        document.getElementById('modalNoticiaContenido').textContent = decodeURIComponent(contenido);
+        const imgEl = document.getElementById('modalNoticiaImg');
+        if (imgUrl) { imgEl.src = imgUrl; imgEl.style.display = ''; }
+        else imgEl.style.display = 'none';
+        const fechaEl = document.getElementById('modalNoticiaFecha');
+        fechaEl.textContent = fecha ? new Date(fecha).toLocaleDateString('es-DO', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) : '';
+        new bootstrap.Modal(document.getElementById('modalNoticia')).show();
+    }
+</script>
 
 <%- include("../template/footer") %>

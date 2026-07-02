@@ -1,7 +1,7 @@
 <%- include("template/cabecera", {tituloWeb: "Crear/Editar Evento - FDFF"}) %>
 
 <div class="container" style="margin-top: -5vh;">
-    <form id="formMaster" method="post" action="/categorias/nuevoEvento" enctype="multipart/form-data">        
+    <form id="formMaster" method="post" action="<%= locals.evento ? '/eventos/editar/' + evento.id : '/categorias/nuevoEvento' %>" enctype="multipart/form-data">        
         <% if (locals.error) { %>
             <p class="alert alert-danger"><%= locals.mensaje %></p>
             <a href="/categorias" class="btn btn-warning btn-block mt-3">Volver</a>
@@ -35,13 +35,18 @@
                         </div>
                     </div>
 
+                    <div class="col-12">
+                        <label class="fs-5 fw-bold form-label">Descripción General del Evento:</label>
+                        <textarea class="form-control" name="descripcion" rows="3" placeholder="Escribe aquí los detalles, objetivos o una invitación general para los atletas..."><%= locals.evento ? evento.descripcion : '' %></textarea>
+                    </div>
+
                     <div class="col-4">
                         <label class="fs-5 fw-bold col-sm-12 form-label text-primary">1. Afiche Promocional (Social):</label>
                         <div class="col-12">
                             <input class="form-control" type="file" name="banner_evento" accept="image/*">
                             <small class="text-muted" style="font-size: 0.7rem;">Se recomienda imagen de 1200x400px.</small>
-                            <% if (locals.evento && evento.banner_url) { %>
-                                <img src="<%= evento.banner_url %>" alt="Banner Actual" class="img-thumbnail mt-2" style="max-width: 150px;">
+                            <% if (locals.evento && evento.url_afiche_evento) { %>
+                                <img src="<%= evento.url_afiche_evento %>" alt="Banner Actual" class="img-thumbnail mt-2" style="max-width: 150px;">
                             <% } %>
                         </div>
                     </div>
@@ -51,8 +56,8 @@
                         <div class="col-12">
                             <input class="form-control" type="file" name="banner_pesaje" accept="image/*">
                             <small class="text-muted" style="font-size: 0.7rem;">Imagen con croquis y pesos para atletas.</small>
-                            <% if (locals.evento && evento.afiche_pesaje_url) { %>
-                                <img src="<%= evento.afiche_pesaje_url %>" alt="Afiche Pesaje Actual" class="img-thumbnail mt-2" style="max-width: 150px;">
+                            <% if (locals.evento && evento.url_afiche_pesaje) { %>
+                                <img src="<%= evento.url_afiche_pesaje %>" alt="Afiche Pesaje Actual" class="img-thumbnail mt-2" style="max-width: 150px;">
                             <% } %>
                         </div>
                     </div>
@@ -88,10 +93,32 @@
                     <div class="col-12">
                         <label class="fs-5 fw-bold form-label">Instrucciones Adicionales de Pesaje:</label>
                         <textarea class="form-control" name="info_pesaje" rows="2" placeholder="Ej: Atletas deben traer vestimenta de competencia. No se aceptará efectivo..."><%= locals.evento ? evento.info_pesaje : '' %></textarea>
-                        </div>
                     </div>
+                </div>
+            </div>
 
-                
+            <!-- SECCIÓN DE OFERTA (Configuración de Early Bird) -->
+            <div class="container mt-4 p-4 bg-light border border-primary rounded shadow-sm" style="border-style: dashed !important; border-width: 2px;">
+                <h5 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-tag"></i> Configuración de Oferta (Inscripción Web Anticipada)
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="small fw-bold">Fecha Límite de Oferta:</label>
+                        <input type="datetime-local" name="fecha_limite_oferta" class="form-control" 
+                               value="<%= locals.evento && evento.fecha_limite_oferta ? new Date(evento.fecha_limite_oferta).toISOString().slice(0, 16) : '' %>">
+                        <small class="text-muted" style="font-size: 0.7rem;">Pasada esta fecha, el sistema aplicará precios normales.</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="small fw-bold">1ra Categoría (Oferta RD$):</label>
+                        <input type="number" name="costo_oferta_primera" class="form-control border-primary" 
+                               placeholder="Ej: 1500" value="<%= locals.evento ? evento.costo_oferta_primera : '' %>">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="small fw-bold">Cat. Adicionales (Oferta RD$):</label>
+                        <input type="number" name="costo_oferta_adicional" class="form-control border-primary" 
+                               placeholder="Ej: 800" value="<%= locals.evento ? evento.costo_oferta_adicional : '' %>">
+                    </div>
                 </div>
             </div>
             
@@ -111,7 +138,7 @@
                     <div class="row col-3 me-4">                      
                         <div class="row g-2 my-0 pt-0 p-0">
                             <div class="p-0  my-0 col-9">
-                                <p class="position-absolute top-50 end-0 translate-middle-y small p-0 pe-1 pb-0 my-0"><small class="text-end align-middle fw-bold">Costo 1ra Cat. (RD$)</small></p>
+                                <p class="position-absolute top-50 end-0 translate-middle-y small p-0 pe-1 pb-0 my-0"><small class="text-end align-middle fw-bold">Precio NORMAL 1ra (RD$)</small></p>
                             </div>   
                             <div class="p-0 my-0 col-3">
                                 <input type="number" name="costo_primera" class="form-control col-12 border-primary position-absolute top-50 end-0 translate-middle-y small p-0 pb-0 my-0" value="<%= locals.evento ? evento.costo_primera_cat : '' %>" required>
@@ -122,7 +149,7 @@
                     <div class="row col-3">
                         <div class="row g-2 my-0 pt-0 p-0">
                             <div class="p-0 my-0 col-9">
-                                <p class="position-absolute top-50 end-0 translate-middle-y small me-1 p-0 pe-1 pb-0 my-0"><small class="text-end align-middle fw-bold">Costo Cat. Adic. (RD$)</small></p>
+                                <p class="position-absolute top-50 end-0 translate-middle-y small me-1 p-0 pe-1 pb-0 my-0"><small class="text-end align-middle fw-bold">Precio NORMAL Adic. (RD$)</small></p>
                             </div>
                              <div class="p-0 my-0 col-3">
                                 <input type="number" name="costo_adicional" class="form-control col-12 border-primary position-absolute top-50 end-0 translate-middle-y small p-0 pb-0 height-2" value="<%= locals.evento ? evento.costo_adicional : '' %>" required>  

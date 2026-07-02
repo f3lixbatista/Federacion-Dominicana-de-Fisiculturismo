@@ -1,83 +1,294 @@
-<%- include("../template/cabecera", {tituloWeb: "Presidente de Mesa - Arbitraje"}) %>
+<%- include("../template/cabecera", {tituloWeb: "Presidente de Mesa"}) %>
 
-<div class="container-fluid my-4 px-5">
-    <div class="card shadow-lg border-0" style="border-radius: 20px;">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
-            <h4 class="mb-0 fw-bold"><i class="fas fa-gavel text-warning"></i> ARBITRAJE INTERNO: PRE-SELECCIÓN TOP 5</h4>
-            <span class="badge bg-danger animate-pulse">MONITOR EN VIVO</span>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered text-center align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 80px;">Dorsal</th>
-                            <th class="text-start">Nombre Atleta</th>
-                            <!-- Columnas para 7 jueces -->
-                            <% for(let i=1; i<=7; i++) { %> <th>Juez <%= i %></th> <% } %>
-                            <th class="bg-primary text-white">TOTAL X</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% competidores.forEach(comp => { 
-                            let totalX = 0;
-                        %>
-                            <tr id="fila-<%= comp.atleta_id %>">
-                                <td class="fw-bold fs-4"><%= comp.numero_atleta %></td>
-                                <td class="text-start fw-bold"><%= comp.atletas.nombre %></td>
-                                
-                                <% for(let i=1; i<=7; i++) { 
-                                    // Buscamos si este juez marcó a este atleta
-                                    const marcado = preSeleccion.find(p => p.atleta_id === comp.atleta_id && p.juez_numero === i);
-                                    if(marcado) totalX++;
-                                %>
-                                    <td class="fs-5">
-                                        <% if(marcado) { %>
-                                            <span class="text-danger fw-bold"><i class="fas fa-times"></i></span>
-                                        <% } %>
-                                    </td>
-                                <% } %>
+<%
+/*
+  MIGRACIÓN SUPABASE (ejecutar una vez en SQL Editor si no existe):
 
-                                <td class="fw-bold fs-4 bg-light"><%= totalX %></td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-            </div>
+  CREATE TABLE IF NOT EXISTS pre_seleccion_top5 (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    evento_cat_id UUID NOT NULL REFERENCES eventos_categorias(id) ON DELETE CASCADE,
+    juez_id UUID NOT NULL REFERENCES profiles(id),
+    atleta_id UUID NOT NULL REFERENCES atletas(id),
+    fase TEXT NOT NULL DEFAULT 'semifinal',
+    created_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(evento_cat_id, juez_id, atleta_id, fase)
+  );
 
-            <div class="alert alert-info mt-4">
-                <i class="fas fa-info-circle"></i> Los atletas con mayor cantidad de marcas (X) son la tendencia para el pódium. 
-                <strong>El Presidente debe dar el visto bueno para proceder a la votación de posiciones (1° al 15°).</strong>
-            </div>
+  ALTER TABLE competidores ADD COLUMN IF NOT EXISTS clasificado_fase BOOLEAN DEFAULT true;
+*/
+%>
 
-            <div class="d-grid gap-2">
-                <button onclick="habilitarVotacionFinal()" class="btn btn-success btn-lg fw-bold shadow">
-                    <i class="fas fa-unlock-alt me-2"></i> HABILITAR VOTACIÓN NUMÉRICA (1° AL 5°)
-                </button>
-            </div>
-        </div>
+<style>
+  .atleta-pm-card {
+    border: 2px solid #dee2e6; border-radius: 12px;
+    transition: border-color .2s, box-shadow .2s;
+    position: relative; overflow: hidden;
+  }
+  .atleta-pm-card.en-top5 { border-color: #ffc107; box-shadow: 0 0 0 3px rgba(255,193,7,.25); }
+  .votos-badge {
+    position: absolute; top: 7px; right: 7px;
+    background: #212529; color: #ffc107;
+    font-size: .82rem; font-weight: 900;
+    border-radius: 50%; width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid #555;
+  }
+  .votos-badge.destacado { background: #ffc107; color: #000; border-color: #ffc107; }
+  .top5-bar { height: 5px; background: #e9ecef; border-radius: 3px; }
+  .top5-bar-fill { height: 100%; background: #ffc107; border-radius: 3px; transition: width .4s; }
+  .row-elim { border-left: 4px solid #dc3545; opacity: .55; }
+  .row-clasif { border-left: 4px solid #198754; }
+  .fase-chip { font-size: .72rem; letter-spacing: 2px; text-transform: uppercase; }
+</style>
+
+<div class="container-fluid my-4 px-4">
+
+  <!-- ENCABEZADO -->
+  <div class="card bg-dark text-white shadow border-0 mb-4">
+    <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h3 class="mb-0 fw-bold"><i class="fas fa-gavel text-warning me-2"></i><%= categoriaNombre %></h3>
+        <small class="text-muted"><%= eventoNombre %></small>
+      </div>
+      <div class="d-flex gap-2 flex-wrap align-items-center">
+        <span class="badge fase-chip fs-6 px-3 py-2
+          <%= faseActual==='eliminatoria' ? 'bg-danger' : faseActual==='semifinal' ? 'bg-warning text-dark' : 'bg-success' %>">
+          FASE: <%= faseActual.toUpperCase() %>
+        </span>
+        <span class="badge bg-secondary"><%= competidores.length %> atletas</span>
+        <span class="badge bg-info text-dark"><%= totalJueces %> jueces</span>
+        <% if (faseActual !== 'final') { %>
+          <span class="badge bg-warning text-dark">Clasifica Top <%= limiteClasificacion %></span>
+        <% } %>
+        <a href="/estadisticas/mesa-computo/<%= catId %>" class="btn btn-outline-warning btn-sm fw-bold">
+          <i class="fas fa-calculator me-1"></i>Mesa de Cómputo
+        </a>
+      </div>
     </div>
+  </div>
+
+  <% if (requiereTop5) { %>
+  <!-- ══════ PANEL TOP 5 COMPARACIÓN ══════════════════════════════════════ -->
+  <div class="card border-warning shadow mb-4">
+    <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span><i class="fas fa-star me-2"></i>Comparación Top 5 — Consenso en Tiempo Real</span>
+      <div class="d-flex gap-2">
+        <a href="/estadisticas/comparacion/<%= catId %>?fase=<%= faseActual %>" target="_blank"
+           class="btn btn-sm btn-outline-dark fw-bold">
+          <i class="fas fa-tablet-alt me-1"></i>Vista Juez (Tablet)
+        </a>
+        <button class="btn btn-sm btn-dark fw-bold" onclick="llamarTop5AlFrente()">
+          <i class="fas fa-broadcast-tower me-1"></i>LLAMAR TOP 5 A ESCENA
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <p class="text-muted small mb-3">
+        Jueces abren la <strong>Vista Juez</strong> en sus tablets y marcan sus 5 favoritos.
+        La barra amarilla indica cuántos jueces eligieron a cada atleta (<%= totalJueces %> jueces en total).
+      </p>
+      <div class="row g-2" id="gridTop5">
+        <% competidores.forEach(c => {
+             const vObj = consenso[c.atleta_id] || { count: 0 };
+             const v    = vObj.count;
+             const pct  = totalJueces > 0 ? Math.round((v / totalJueces) * 100) : 0;
+        %>
+          <div class="col-4 col-sm-3 col-md-2" id="card-<%= c.atleta_id %>">
+            <div class="atleta-pm-card p-2 text-center h-100 <%= v > 0 ? 'en-top5' : '' %>">
+              <div class="votos-badge <%= v >= totalJueces && totalJueces > 0 ? 'destacado' : '' %>" id="badge-<%= c.atleta_id %>"><%= v %></div>
+              <% if (c.foto_url) { %>
+                <img src="<%= c.foto_url %>" style="height:72px;width:100%;object-fit:cover;border-radius:8px;margin-bottom:5px" alt="">
+              <% } else { %>
+                <div style="height:72px;display:flex;align-items:center;justify-content:center">
+                  <i class="fas fa-user fa-2x text-secondary"></i>
+                </div>
+              <% } %>
+              <div class="fw-bold text-warning small">#<%= c.dorsal %></div>
+              <div class="text-truncate" style="font-size:.73rem;font-weight:600"><%= c.nombre %></div>
+              <div class="top5-bar mt-1">
+                <div class="top5-bar-fill" style="width:<%= pct %>%" id="bar-<%= c.atleta_id %>"></div>
+              </div>
+              <small class="text-muted" style="font-size:.68rem" id="pct-<%= c.atleta_id %>"><%= v %>/<%= totalJueces %></small>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- ══════ PANEL DE CLASIFICADOS ════════════════════════════════════════ -->
+  <div class="card shadow border-0">
+    <div class="card-header bg-success text-white fw-bold d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span>
+        <i class="fas fa-check-double me-2"></i>
+        <%= faseActual === 'final' ? 'Resultados Finales — Enviar al MC' : `Confirmar Clasificados (Top ${limiteClasificacion})` %>
+      </span>
+      <button class="btn btn-warning btn-sm fw-bold" onclick="enviarClasificadosMC()">
+        <i class="fas fa-microphone me-1"></i>ENVIAR AL MC Y BACKSTAGE
+      </button>
+    </div>
+    <div class="card-body p-0">
+      <p class="text-muted small px-3 pt-2 mb-0">
+        <% if (faseActual === 'final') { %>
+          Tras oficializar en Mesa de Cómputo, envíe los resultados al MC en orden de dorsal y posición final.
+        <% } else { %>
+          Marque quiénes avanzan a la siguiente fase. La lista se enviará al MC en orden de dorsal.
+        <% } %>
+      </p>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small">
+            <tr>
+              <th class="ps-3" style="width:50px">
+                <% if (faseActual !== 'final') { %>Clasifica<% } else { %>✓<% } %>
+              </th>
+              <th style="width:60px">#</th>
+              <th>Atleta</th>
+              <th>Provincia</th>
+              <% if (requiereTop5) { %><th>Votos Top 5</th><% } %>
+            </tr>
+          </thead>
+          <tbody>
+            <% competidores.forEach((c, idx) => {
+                 const v             = consenso[c.atleta_id]?.count || 0;
+                 const defClasificado = faseActual === 'final' || idx < limiteClasificacion;
+            %>
+              <tr class="<%= defClasificado ? 'row-clasif' : 'row-elim' %>" id="row-<%= c.atleta_id %>">
+                <td class="ps-3">
+                  <input class="form-check-input check-clasif" type="checkbox"
+                         value="<%= c.atleta_id %>"
+                         <%= defClasificado ? 'checked' : '' %>
+                         onchange="toggleRow(this)">
+                </td>
+                <td class="fw-bold text-warning fs-5">#<%= c.dorsal %></td>
+                <td class="fw-bold"><%= c.nombre %></td>
+                <td class="text-muted small"><%= c.provincia || '—' %></td>
+                <% if (requiereTop5) { %>
+                  <td>
+                    <span class="badge <%= v > 0 ? 'bg-warning text-dark' : 'bg-light text-dark border' %>">
+                      <%= v %> voto<%= v !== 1 ? 's' : '' %>
+                    </span>
+                  </td>
+                <% } %>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script src="/js/supabase.js"></script>
 <script>
-    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+const _supabase   = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+const catId       = "<%= catId %>";
+const eventoId    = "<%= eventoId %>";
+const faseActual  = "<%= faseActual %>";
+const totalJueces = <%- totalJueces %>;
+const catNombre   = "<%= categoriaNombre.replace(/"/g,'\\\"') %>";
 
-    async function habilitarVotacionFinal() {
-        if(!confirm("¿Desea desbloquear las boletas de los jueces para la votación final?")) return;
-        
-        // Cambiamos el estatus de la categoría en Supabase
-        const { error } = await _supabase
-            .from('eventos_categorias')
-            .update({ estatus_votacion: 'final_abierta' })
-            .eq('id', '<%= catId %>');
+// ── Realtime Top 5 ────────────────────────────────────────────────────────────
+_supabase.channel('pm-top5')
+    .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'pre_seleccion_top5',
+        filter: `evento_cat_id=eq.${catId}`
+    }, () => refrescarTop5())
+    .subscribe();
 
-        if(!error) {
-            alert("¡Boletas desbloqueadas! Los jueces ya pueden asignar puestos.");
-            window.location.href = "/eventos/<%= competidores[0]?.id_evento %>/computo/<%= catId %>";
-        } else {
-            alert("Error al habilitar votación: " + error.message);
+async function refrescarTop5() {
+    const { data } = await _supabase
+        .from('pre_seleccion_top5')
+        .select('atleta_id')
+        .eq('evento_cat_id', catId)
+        .eq('fase', faseActual);
+
+    const conteo = {};
+    (data || []).forEach(v => { conteo[v.atleta_id] = (conteo[v.atleta_id] || 0) + 1; });
+
+    document.querySelectorAll('[id^="badge-"]').forEach(badge => {
+        const id   = badge.id.replace('badge-', '');
+        const v    = conteo[id] || 0;
+        const pct  = totalJueces > 0 ? Math.round((v / totalJueces) * 100) : 0;
+        badge.textContent = v;
+        badge.classList.toggle('destacado', v >= totalJueces && totalJueces > 0);
+
+        const bar = document.getElementById('bar-' + id);
+        if (bar) bar.style.width = pct + '%';
+        const pctEl = document.getElementById('pct-' + id);
+        if (pctEl) pctEl.textContent = `${v}/${totalJueces}`;
+
+        const card = document.getElementById('card-' + id)?.querySelector('.atleta-pm-card');
+        if (card) card.classList.toggle('en-top5', v > 0);
+    });
+}
+
+// ── Llamar Top 5 al frente ────────────────────────────────────────────────────
+async function llamarTop5AlFrente() {
+    const { data } = await _supabase
+        .from('pre_seleccion_top5')
+        .select('atleta_id')
+        .eq('evento_cat_id', catId)
+        .eq('fase', faseActual);
+
+    const conteo = {};
+    (data || []).forEach(v => { conteo[v.atleta_id] = (conteo[v.atleta_id] || 0) + 1; });
+
+    const top5 = Object.entries(conteo)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([atleta_id, votos]) => {
+            const row = document.getElementById('row-' + atleta_id);
+            return {
+                atleta_id,
+                dorsal: row?.cells[1]?.textContent?.trim() || '?',
+                nombre: row?.cells[2]?.textContent?.trim() || '?',
+                votos
+            };
+        });
+
+    if (!top5.length) { alert('No hay votos de comparación aún.'); return; }
+
+    await _supabase.from('eventos').update({
+        resultados_en_vivo: {
+            tipo_alerta: 'top5_comparacion',
+            categoria_nombre: catNombre,
+            fase_competencia: faseActual,
+            atletas: top5,
+            timestamp: Date.now()
         }
-    }
+    }).eq('id', eventoId);
+
+    alert(`Top 5 llamado al escenario:\n${top5.map(a => '#' + a.dorsal + ' ' + a.nombre).join('\n')}`);
+}
+
+// ── Rows clasificados ─────────────────────────────────────────────────────────
+function toggleRow(chk) {
+    const row = chk.closest('tr');
+    row.classList.toggle('row-clasif', chk.checked);
+    row.classList.toggle('row-elim', !chk.checked);
+}
+
+// ── Enviar al MC ──────────────────────────────────────────────────────────────
+async function enviarClasificadosMC() {
+    const marcados = Array.from(document.querySelectorAll('.check-clasif:checked')).map(c => c.value);
+    if (!marcados.length) { alert('Marque al menos un atleta.'); return; }
+    if (!confirm(`Enviar ${marcados.length} atletas al MC y Backstage?`)) return;
+
+    const r = await fetch('/estadisticas/enviar-clasificados-mc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            eventoCatId: catId,
+            categoriaNombre: catNombre,
+            fase: faseActual,
+            atletasIdsClasificados: marcados
+        })
+    });
+    const d = await r.json();
+    alert(d.ok ? `✅ Lista enviada al MC y Backstage (${marcados.length} atletas).` : 'Error: ' + d.mensaje);
+}
 </script>
 <%- include("../template/footer") %>

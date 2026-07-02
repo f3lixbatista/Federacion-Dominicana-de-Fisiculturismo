@@ -18,10 +18,20 @@
                     <div class="mb-3">
                         <label class="form-label small">Asignar Rol de Acceso</label>
                         <select name="role" class="form-select" required>
-                            <option value="staff">Staff General (Seguridad/Apoyo)</option>
-                            <option value="fotografo">Fotógrafo Oficial</option>
-                            <option value="estadistico">Estadístico / Cómputos</option>
-                            <option value="juez">Juez Oficial</option>
+                            <option value="" disabled selected>— Seleccionar rol —</option>
+                            <optgroup label="Gestión">
+                                <option value="ejecutivo">Ejecutivo (Gestión de eventos y atletas)</option>
+                                <option value="estadistico">Estadístico / Mesa de Cómputo</option>
+                            </optgroup>
+                            <optgroup label="Evento en vivo">
+                                <option value="juez">Juez Oficial</option>
+                                <option value="mc">Maestro de Ceremonias (MC)</option>
+                                <option value="backstage">Backstage / Portería</option>
+                            </optgroup>
+                            <optgroup label="Apoyo">
+                                <option value="fotografo">Fotógrafo Oficial</option>
+                                <option value="staff">Staff General (Seguridad/Apoyo)</option>
+                            </optgroup>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -48,12 +58,24 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <% personal.forEach(p => { %>
+                            <%
+                            const rolColor = { ejecutivo:'warning', estadistico:'primary', juez:'info', mc:'secondary', backstage:'dark', fotografo:'success', staff:'light' };
+                            personal.forEach(p => {
+                                const rol = p.profiles?.role || 'staff';
+                                const color = rolColor[rol] || 'secondary';
+                            %>
                                 <tr>
-                                    <td><strong><%= p.nombre_completo %></strong></td>
                                     <td>
-                                        <span class="badge bg-dark"><%= p.puesto_especifico %></span><br>
-                                        <small class="text-muted text-uppercase"><%= p.profiles?.role %></small>
+                                        <strong><%= p.nombre_completo %></strong><br>
+                                        <small class="text-muted"><%= p.profiles?.email || '' %></small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-<%= color %> <%= color === 'light' ? 'text-dark border' : '' %>">
+                                            <%= rol.toUpperCase() %>
+                                        </span>
+                                        <% if (p.puesto_especifico) { %>
+                                            <br><small class="text-muted"><%= p.puesto_especifico %></small>
+                                        <% } %>
                                     </td>
                                     <td><span class="badge bg-success">ACTIVO</span></td>
                                     <td>

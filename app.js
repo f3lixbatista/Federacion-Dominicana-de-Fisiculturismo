@@ -4,8 +4,9 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const { attachUser, checkRole } = require('./middlewares/auth');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
-const { supabaseAdmin } = require('./supabaseClient');
+const { supabaseAdmin } = require('./config/supabase');
 const webpush = require('web-push');
+const seedCatalogoCategorias = require('./seeds/catalogoCategorias');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -39,6 +40,9 @@ if (faltanVariables) {
     process.exit(1);
 }
 
+// Necesario para que las cookies funcionen a través de ngrok / túneles HTTPS
+app.set('trust proxy', 1);
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -52,6 +56,7 @@ app.use((req, res, next) => {
     res.locals.SUPABASE_URL = process.env.SUPABASE_URL;
     res.locals.SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
     res.locals.VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+    res.locals.KIOSKO_PIN = process.env.KIOSKO_PIN || '20241234';
     next();
 });
 
@@ -79,12 +84,14 @@ app.get('/admin/recaudacion', (req, res) => {
 app.use('/', require('./router/auth'));
 app.use('/eventos', require('./router/Eventos'));
 app.use('/inscripcion', require('./router/Inscripcion'));
-app.use('/atletas', require('./router/Atletas'));
 app.use('/categorias', checkRole(['ejecutivo', 'admin']), require('./router/Categoria'));
 app.use('/social', require('./router/Social')); // Registro del módulo social y noticias
 app.use('/admin', require('./router/Admin')); // Nuevo router para funciones administrativas
 app.use('/estadisticas', checkRole(['estadistico', 'admin']), require('./router/Estadisticas'));
 app.use('/preparadores', require('./router/Preparadores'));
+app.use('/dj', require('./router/DJ'));
+app.use('/fotografo', require('./router/Fotografo'));
+app.use('/atletas', require('./router/Atletas'));
 app.use('/', require('./router/rutasBat'));
 
 app.use(notFound);
@@ -101,4 +108,7 @@ app.listen(port, '0.0.0.0', async () => {
     } catch (err) {
         console.error('❌ ERROR DE CONEXIÓN A SUPABASE:', err.message);
     }
+
+    // Seed automático del catálogo de disciplinas/divisiones
+    await seedCatalogoCategorias();
 });

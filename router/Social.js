@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { supabase, supabaseAdmin } = require('../supabaseClient');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 const { requireAuth, checkRole } = require('../middlewares/auth');
 const webpush = require('web-push');
 const multer = require('multer');
@@ -31,15 +31,25 @@ router.get('/muro', async (req, res) => {
             .from('publicaciones_muro')
             .select(`
                 *,
-                profiles:atleta_id (nombre),
-                eventos:evento_id (nombre)
+                profiles!atleta_id (nombre),
+                atletas!atleta_id ( nombre, foto_url ),
+                eventos:evento_id (nombre),
+                publicacion_likes!publicacion_id ( user_id ),
+                publicacion_comentarios!publicacion_id ( *, profiles!user_id ( nombre ) )
             `)
             .order('fecha_publicacion', { ascending: false });
 
         if (error) throw error;
 
+        const usuarioId = res.locals.user?.id;
+        const postsProcesados = (publicaciones || []).map(p => ({
+            ...p,
+            likesCount: p.publicacion_likes?.length || 0,
+            userLiked: usuarioId ? p.publicacion_likes?.some(l => l.user_id === usuarioId) : false
+        }));
+
         res.render('social/muro', { 
-            publicaciones: publicaciones || [],
+            publicaciones: postsProcesados,
             user: res.locals.user 
         });
     } catch (error) {

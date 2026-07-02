@@ -3,7 +3,7 @@
 <div class="container my-4">
     <!-- BANNER Y TITULO -->
     <div class="card border-0 shadow-lg mb-4 overflow-hidden" style="border-radius: 20px;">
-        <img src="<%= evento.banner_url || '/img/default-event.jpg' %>" class="w-100" style="height: 300px; object-fit: cover;">
+        <img src="<%= evento.url_afiche_evento || '/img/default-event.jpg' %>" class="w-100" style="height: 300px; object-fit: cover;">
         <div class="card-body p-4 bg-white">
             <div class="d-flex justify-content-between align-items-center">
                 <h1 class="fw-bold mb-0"><%= evento.nombre %></h1>
@@ -32,7 +32,7 @@
             <div class="row mt-4">
                 <div class="col-md-6">
                     <!-- Afiche que se subió en Nuevo Evento o Edición -->
-                    <img src="<%= evento.afiche_url || '/img/default-pesaje.jpg' %>" class="img-fluid rounded shadow" alt="Afiche Pesaje">
+                    <img src="<%= evento.url_afiche_pesaje || '/img/default-pesaje.jpg' %>" class="img-fluid rounded shadow" alt="Afiche Pesaje">
                 </div>
                 <div class="col-md-6 bg-light p-4 rounded border-start border-primary border-4">
                     <h3 class="fw-bold text-primary mb-3"><i class="fas fa-balance-scale"></i> Información de Pesaje</h3>
@@ -220,7 +220,10 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    window._supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+    const _token = "<%= ACCESS_TOKEN || '' %>";
+    window._supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>", {
+        global: { headers: _token ? { Authorization: `Bearer ${_token}` } : {} }
+    });
     const modalPaneles = new bootstrap.Modal(document.getElementById('modalPanelesJueces'));
     let listaJuecesFDFF = []; // Arreglo de jueces traídos de profiles para los selectores
     const idEventoActual = "<%= evento.id %>";

@@ -1,19 +1,25 @@
 <%- include("../template/cabecera", {tituloWeb: "Inscripción y Pesaje"}) %>
 
 <div class="container my-5">
-    <!-- PANEL DE CONTROL: CIERRE DE INSCRIPCIONES WEB -->
-    <div class="card border-danger mb-5 shadow-sm">
-        <div class="card-body d-flex justify-content-between align-items-center bg-light">
+    <!-- PANEL DE ESTADO DEL EVENTO -->
+    <div class="card border-0 mb-4 shadow-sm">
+        <div class="card-body d-flex justify-content-between align-items-center bg-light flex-wrap gap-3">
             <div>
-                <h4 class="fw-bold mb-0 text-danger"><i class="fas fa-lock"></i> Fase de Evento: <%= eventoActual.nombre %></h4>
-                <p class="small text-muted mb-0">Estado actual: <strong><%= eventoActual.estado.toUpperCase() %></strong></p>
+                <h4 class="fw-bold mb-0"><i class="fas fa-weight me-2 text-primary"></i> Pesaje Asistido — <%= eventoActual.nombre %></h4>
+                <p class="small text-muted mb-0">
+                    Estado: <strong><%= eventoActual.estado?.toUpperCase() %></strong>
+                    <% if (eventoActual.estado === 'inscripcion') { %>
+                        &nbsp;·&nbsp;<span class="text-success fw-bold">Inscripciones web abiertas</span>
+                        — el pesaje puede realizarse simultáneamente.
+                    <% } %>
+                </p>
             </div>
             <% if (eventoActual.estado === 'inscripcion') { %>
-                <button class="btn btn-danger btn-lg fw-bold" onclick="cerrarInscripcionesWeb('<%= eventoActual.id %>')">
-                    CERRAR INSCRIPCIONES WEB
+                <button class="btn btn-outline-danger fw-bold" onclick="cerrarInscripcionesWeb('<%= eventoActual.id %>')">
+                    <i class="fas fa-lock me-1"></i> Cerrar inscripciones web
                 </button>
-            <% } else { %>
-                <span class="badge bg-dark p-3 fs-6">INSCRIPCIONES WEB CERRADAS</span>
+            <% } else if (eventoActual.estado === 'pesaje') { %>
+                <span class="badge bg-secondary p-2 fs-6"><i class="fas fa-lock me-1"></i> Inscripciones web cerradas</span>
             <% } %>
         </div>
     </div>
@@ -93,7 +99,7 @@
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
             <div class="modal-header bg-primary text-white py-3">
                 <h5 class="modal-title fw-bold"><i class="fas fa-clipboard-list me-2"></i> Selección para: <span id="spanNombreAtleta"></span></h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" onclick="cerrarModal()"></button>
             </div>
             <div class="modal-body p-4">
                 <div class="alert alert-warning small mb-3">
@@ -124,10 +130,13 @@
                             <i class="fas fa-music me-2"></i> Audio de Presentación (DJ Virtual)
                         </div>
                         <div class="card-body">
-                            <div id="playerAudio" class="mb-3 d-none">
+                            <div id="playerAudio" class="mb-3" style="display:none">
                                 <audio id="audioElement" controls class="w-100"></audio>
                             </div>
-                            
+                            <div id="sinMusica" class="alert alert-secondary py-2 small mb-3">
+                                <i class="fas fa-music me-1"></i> Este atleta aún no ha subido su música.
+                            </div>
+
                             <div class="input-group">
                                 <input type="file" id="fileMusica" class="form-control" accept=".mp3,.wav">
                                 <button type="button" onclick="subirMusicaAsistida()" class="btn btn-dark" id="btnSubirMusica">
@@ -190,7 +199,7 @@
                 </form>
             </div>
             <div class="modal-footer bg-light py-3">
-                <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary fw-bold" onclick="cerrarModal()">Cancelar</button>
                 <button type="button" class="btn btn-primary btn-lg fw-bold px-4" onclick="guardarInscripcionOficial()">
                     OFICIALIZAR Y GUARDAR
                 </button>
@@ -200,13 +209,14 @@
 </div>
 
 <!-- SECCIÓN DE INYECCIÓN DE DATOS (Para evitar errores de sintaxis en el editor) -->
-<div id="config-evento" class="d-none" 
-     data-url="<%= SUPABASE_URL %>" 
+<div id="config-evento" class="d-none"
+     data-url="<%= SUPABASE_URL %>"
      data-anon="<%= SUPABASE_ANON_KEY %>"
      data-id="<%= eventoActual?.id || '' %>"
      data-nombre="<%= eventoActual?.nombre || '' %>"
-     data-costo1="<%= eventoActual?.costo_primera_cat || 0 %>"
-     data-costo-adic="<%= eventoActual?.costo_adicional || 0 %>">
+     data-costo1="<%= precioEfectivoPrimera || 0 %>"
+     data-costo-adic="<%= precioEfectivoAdicional || 0 %>"
+     data-es-oferta="<%= esPrecioOferta ? '1' : '0' %>">
 </div>
 <script id="data-categorias" type="application/json"><%- JSON.stringify(arrayCategorias || []) %></script>
 <script id="data-atletas" type="application/json"><%- JSON.stringify(arrayAtletas || []) %></script>
@@ -231,11 +241,15 @@
     document.addEventListener('DOMContentLoaded', () => {
         const modalEl = document.getElementById('modalInscripcion');
         if (modalEl && typeof bootstrap !== 'undefined') {
-            myModal = new bootstrap.Modal(modalEl);
+            myModal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
         } else if (typeof bootstrap === 'undefined') {
             console.error("Bootstrap no se cargó correctamente. Verifique su conexión o use una copia local.");
         }
     });
+
+    function cerrarModal() {
+        if (myModal) myModal.hide();
+    }
 
     // Función puente para manejar los datos del botón
     function abrirModalDesdeBoton(btn) {
@@ -244,12 +258,10 @@
     }
 
 async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso, cedula) {
-        // TRADUCCIÓN DE LA LÓGICA VBA [Páginas 22-26]
         if (!nombre) return alert("Falta Nombre");
         if (!sexo) return alert("Falta Sexo");
         if (!fechaNac) return alert("Falta Fecha Nacimiento");
-        
-        // Validamos el formato de sexo como lo hacía el Excel
+
         const sexoNormalizado = sexo.toLowerCase();
         if (sexoNormalizado !== 'm' && sexoNormalizado !== 'f') {
             return alert("Sexo Incorrecto");
@@ -258,43 +270,58 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
         if (!estatura || estatura <= 0) return alert("Falta estatura");
         if (sexoNormalizado === 'm' && (!peso || peso <= 0)) return alert("Falta Peso");
 
-        // Si pasa las validaciones del "Viejo Código", procedemos
         document.getElementById('atletaIdIns').value = id;
         document.getElementById('spanNombreAtleta').innerText = nombre;
         document.getElementById('signNombre').innerText = nombre;
         document.getElementById('signCedula').innerText = cedula || 'Sin especificar';
-        document.getElementById('checkDescargo').checked = false; // Reset del checkbox para cada atleta
+        document.getElementById('checkDescargo').checked = false;
 
-        // Reset de Música con comprobación de existencia de elementos
         const player = document.getElementById('playerAudio');
         const audio = document.getElementById('audioElement');
         const fileMusica = document.getElementById('fileMusica');
+        const selectPrep = document.getElementById('selectPreparador');
 
-        if (player) player.classList.add('d-none');
-        if (audio) {
-            audio.pause();
-            audio.src = '';
-        }
+        const sinMusica = document.getElementById('sinMusica');
+        if (player) player.style.display = 'none';
+        if (sinMusica) sinMusica.style.display = 'block';
+        if (audio) { audio.pause(); audio.src = ''; }
         if (fileMusica) fileMusica.value = '';
+        if (selectPrep) selectPrep.value = '';
 
-        const { data: compData } = await _supabase
-            .from('competidores')
-            .select('musica_url')
-            .eq('atleta_id', id)
-            .eq('id_evento', configEl.id)
-            .limit(1);
+        const esOferta = configEl.esOferta === '1';
+        document.getElementById('detallePrecios').innerText =
+            `${esOferta ? '🏷️ PRECIO OFERTA — ' : ''}1ra Cat: RD$ ${costos.primera.toLocaleString()} | Adic: RD$ ${costos.adicional.toLocaleString()}`;
 
-        if (compData && compData.length > 0 && compData[0].musica_url && player && audio) {
-            audio.src = compData[0].musica_url;
-            player.classList.remove('d-none');
+        // Cargamos datos del atleta desde el servidor (evita bloqueo RLS del cliente anónimo)
+        let yaInscritosIds = [];
+        try {
+            const resp = await fetch(`/inscripcion/ficha-atleta?atletaId=${id}&eventoId=${configEl.id}`);
+            if (resp.ok) {
+                const ficha = await resp.json();
+                yaInscritosIds = ficha.categoriasInscritas || [];
+
+                if (ficha.preparador_id && selectPrep) {
+                    selectPrep.value = ficha.preparador_id;
+                }
+                if (ficha.musicaUrl && player && audio) {
+                    audio.src = ficha.musicaUrl;
+                    player.style.display = 'block';
+                    if (sinMusica) sinMusica.style.display = 'none';
+                }
+            }
+        } catch (e) {
+            console.error('Error cargando ficha atleta:', e);
         }
-        
-        // Inyectamos el costo desde el evento actual
-        document.getElementById('detallePrecios').innerText = 
-            `1ra Cat: RD$ ${costos.primera.toLocaleString()} | Adic: RD$ ${costos.adicional.toLocaleString()}`;
-        
-        renderizarCategorias(sexoNormalizado); // Aquí aplicaremos el bloqueo de afinidad
-        
+
+        // Calcular edad precisa del atleta
+        const _hoy = new Date();
+        const _nac = new Date(fechaNac);
+        let _edad = _hoy.getFullYear() - _nac.getFullYear();
+        const _mDiff = _hoy.getMonth() - _nac.getMonth();
+        if (_mDiff < 0 || (_mDiff === 0 && _hoy.getDate() < _nac.getDate())) _edad--;
+
+        renderizarCategorias(sexoNormalizado, yaInscritosIds, _edad);
+
         if (myModal) {
             myModal.show();
         } else {
@@ -302,95 +329,232 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
         }
     }
 
-    function renderizarCategorias(sexoAtleta) {
+    let _sexoAtletaActual = 'm';
+
+    function renderizarCategorias(sexoAtleta, yaInscritosIds = [], edadAtleta = null) {
+        _sexoAtletaActual = (sexoAtleta || 'm').toLowerCase();
         const contenedor = document.getElementById('listaCategoriasAfines');
         if (!contenedor) return;
         contenedor.innerHTML = '';
 
-        // Filtrado por Sexo con protección contra nulos
+        // Banner si el atleta ya pre-inscribió categorías vía web
+        if (yaInscritosIds.length > 0) {
+            contenedor.insertAdjacentHTML('beforeend', `
+                <div class="alert alert-info py-2 small mb-2 d-flex align-items-center gap-2">
+                    <i class="fas fa-globe fa-lg"></i>
+                    <span>Pre-seleccionó <strong>${yaInscritosIds.length}</strong> categoría(s) vía web. Puedes añadir o quitar.</span>
+                </div>`);
+        }
+
+        // Filtrado por sexo y edad
+        const sexoUp = sexoAtleta.toUpperCase();
         const filtradas = categoriasDelEvento.filter(rel => {
-            const sexoCat = rel.categorias?.sexo || 'Unisex';
-            return sexoCat === sexoAtleta || sexoCat === 'Unisex';
+            const cat = rel.categorias || {};
+            const sexoCat = (cat.sexo || '').toUpperCase();
+
+            // Filtro sexo
+            if (sexoCat !== sexoUp && sexoCat !== 'F-M' && sexoCat !== '' && sexoCat !== 'UNISEX') return false;
+
+            // Filtro edad
+            if (edadAtleta !== null && !isNaN(edadAtleta)) {
+                const modalidad = (cat.modalidad || '').toLowerCase();
+                const emin = (cat.edad_min != null && cat.edad_min > 0) ? cat.edad_min : null;
+                const emax = (cat.edad_max != null) ? cat.edad_max : null;
+
+                // Reglas FDFF por modalidad (se aplican siempre, edad_min de la BD refina si existe)
+                if (modalidad === 'master') {
+                    const piso = emin ?? (sexoCat === 'F' ? 35 : 40);
+                    if (edadAtleta < piso) return false;
+                } else if (modalidad === 'junior') {
+                    const piso = emin ?? 16;
+                    const techo = (emax != null && emax < 200) ? emax : 23;
+                    if (edadAtleta < piso || edadAtleta > techo) return false;
+                } else if (modalidad === 'children') {
+                    const techo = (emax != null && emax < 200) ? emax : 15;
+                    if (edadAtleta > techo) return false;
+                } else {
+                    // Senior / Open: si tiene edad_min/max en BD los respetamos
+                    if (emin != null && edadAtleta < emin) return false;
+                    if (emax != null && emax < 200 && edadAtleta > emax) return false;
+                }
+            }
+
+            return true;
         });
 
         if (filtradas.length === 0) {
-            contenedor.innerHTML = '<div class="alert alert-warning">No hay categorías disponibles.</div>';
+            contenedor.insertAdjacentHTML('beforeend', '<div class="alert alert-warning">No hay categorías disponibles para este perfil.</div>');
             return;
         }
 
         filtradas.forEach(rel => {
+            const yaInscrito = yaInscritosIds.includes(rel.id);
             const item = `
-                <div class="list-group-item d-flex justify-content-between align-items-center cat-item py-3" 
-                     data-modalidad="${rel.categorias?.modalidad || ''}" id="item-${rel.id}">
+                <div class="list-group-item d-flex justify-content-between align-items-center cat-item py-3 ${yaInscrito ? 'border-start border-3 border-primary bg-primary bg-opacity-10' : ''}"
+                     data-modalidad="${rel.categorias?.modalidad || ''}"
+                     data-disciplina="${rel.categorias?.disciplina || ''}"
+                     data-division="${rel.categorias?.division || ''}"
+                     id="item-${rel.id}">
                     <div class="form-check w-100 cursor-pointer">
-                        <input class="form-check-input check-cat me-3" type="checkbox" 
-                               value="${rel.id}" id="check-${rel.id}" onchange="validarAfinidad(this)">
+                        <input class="form-check-input check-cat me-3" type="checkbox"
+                               value="${rel.id}" id="check-${rel.id}"
+                               ${yaInscrito ? 'checked' : ''}
+                               onchange="validarAfinidad(this)">
                         <label class="form-check-label w-100" for="check-${rel.id}">
-                            <span class="fw-bold d-block">${rel.categorias?.nombre || 'S/N'}</span>
+                            <span class="fw-bold d-block">
+                                ${rel.categorias?.nombre || 'S/N'}
+                                ${yaInscrito ? '<span class="badge bg-primary ms-2 fw-normal" style="font-size:0.65rem;">WEB</span>' : ''}
+                            </span>
                             <span class="small text-muted">${rel.categorias?.disciplina || ''} | ${rel.categorias?.modalidad || ''} | ${rel.categorias?.division || ''}</span>
                         </label>
                     </div>
                 </div>`;
             contenedor.insertAdjacentHTML('beforeend', item);
         });
+
+        // Aplicar reglas de afinidad si ya hay categorías pre-marcadas
+        if (yaInscritosIds.length > 0) {
+            const primeroChecked = contenedor.querySelector('.check-cat:checked');
+            if (primeroChecked) validarAfinidad(primeroChecked);
+        }
+
         calcularCobro();
     }
 
-    // 1. EL CEREBRO DE REGLAS (Los 7 grupos oficiales de la FDFF)
+    // ── Grupos de afinidad FDFF ─────────────────────────────────────────────────
+    // Wellness va antes que Bikini para que Women’s Fit Model (presente en ambos)
+    // resuelva al grupo Bikini por defecto (el último en escribir al mapa gana).
+    // Pairs (Fit Pairs / Mixed Pairs) son sex-aware: se manejan fuera del mapa.
     const GRUPOS_AFINIDAD = {
-        "Bikini": ["Bikini", "Womans Fitmodel", "Fit Pairs", "Woman's Artistic Fitness"],
-        "Wellness": ["Wellness", "Woman's Fit Model", "Woman's Acrobatic Fitness"],
-        "Bodyfitness": ["Bodyfitness"],
-        "Woman's Physique": ["Woman's Physique"],
-        "Men's Physique": ["Men's Physique", "Mens Fitmodel", "Fit Pair"], // No incluimos "Clasico" aquí para evitar choque con el Grupo 7
-        "Muscular Men's Physique": ["Muscular Men's Physique"],
-        "Culturismo": ["Fisiculturismo", "Culturismo", "Classic Physique", "Game's Classic"] 
-        // Nota: He agrupado "Fisiculturismo" y "Culturismo" como sinónimos técnicos
+        "culturismo_m":  ["Men’s Bodybuilding", "Men’s Classic Bodybuilding", "Men’s Classic Physique", "Men’s Games Classic"],
+        "physique_m":    ["Men’s Physique", "Men’s Fit Model", "Men’s Fitness"],
+        "muscular_m":    ["Muscular Men’s Physique"],
+        "wellness_f":    ["Women’s Wellness", "Women’s Fit Model"],
+        "bikini_f":      ["Women’s Bikini", "Women’s Fit Model", "Women’s Artistic Fitness"],
+        "bodyfitness_f": ["Women’s Bodyfitness", "Women’s Acrobatic Fitness"],
+        "physique_f":    ["Women’s Physique"],
+        "children_m":    ["Male Children Fitness"],
+        "children_f":    ["Female Children Fitness"]
     };
 
-    // 2. FUNCIÓN DE BLOQUEO DINÁMICO MEJORADA
+    // Normaliza strings: minúsculas + apóstrofes uniformes
+    function _normDisc(s) {
+        return (s || ‘’).toLowerCase()
+            .replace(/[‘’ʼ`´]/g, "’")
+            .trim();
+    }
+
+    // Mapa normalizado: _normDisc(disciplina) → lista normalizada de su grupo
+    const _AFINIDAD_NORM = {};
+    for (const discs of Object.values(GRUPOS_AFINIDAD)) {
+        const normas = discs.map(_normDisc);
+        for (const nd of normas) {
+            _AFINIDAD_NORM[nd] = normas;
+        }
+    }
+
+    const _FIT_PAIRS_N   = _normDisc("Fit Pairs");
+    const _MIXED_PAIRS_N = _normDisc("Mixed Pairs");
+
+    // Devuelve la lista de disciplinas normalizadas permitidas para la disciplina
+    // principal, incluyendo los Pairs correctos según el sexo del atleta.
+    function _getPermitidas(normPrincipal) {
+        const sexo = _sexoAtletaActual;
+
+        // Pairs como punto de partida: buscar su grupo natural según sexo
+        if (normPrincipal === _FIT_PAIRS_N) {
+            const grupoKey = sexo === ‘f’ ? "bikini_f" : "physique_m";
+            const base = _AFINIDAD_NORM[_normDisc(GRUPOS_AFINIDAD[grupoKey][0])] || [normPrincipal];
+            return [...base, _FIT_PAIRS_N];
+        }
+        if (normPrincipal === _MIXED_PAIRS_N) {
+            const grupoKey = sexo === ‘f’ ? "physique_f" : "culturismo_m";
+            const base = _AFINIDAD_NORM[_normDisc(GRUPOS_AFINIDAD[grupoKey][0])] || [normPrincipal];
+            return [...base, _MIXED_PAIRS_N];
+        }
+
+        const grupo = _AFINIDAD_NORM[normPrincipal] || [normPrincipal];
+
+        // Agregar Pairs si el grupo del atleta los habilita
+        const extra = [];
+        if (sexo === ‘m’) {
+            if (grupo.includes(_normDisc("Men’s Physique")))     extra.push(_FIT_PAIRS_N);
+            if (grupo.includes(_normDisc("Men’s Bodybuilding"))) extra.push(_MIXED_PAIRS_N);
+        } else {
+            if (grupo.includes(_normDisc("Women’s Bikini")))    extra.push(_FIT_PAIRS_N);
+            if (grupo.includes(_normDisc("Women’s Physique"))) extra.push(_MIXED_PAIRS_N);
+        }
+        return [...grupo, ...extra];
+    }
+
     function validarAfinidad(checkbox) {
-        const todosLosChecks = document.querySelectorAll('.check-cat');
-        const marcados = document.querySelectorAll('.check-cat:checked');
-        
+        const todosLosChecks = document.querySelectorAll(‘.check-cat’);
+        const marcados       = Array.from(document.querySelectorAll(‘.check-cat:checked’));
+
         if (marcados.length > 0) {
-            // 1. Identificamos el grupo de la PRIMERA categoría que se marcó
-            const nombrePrimeraCat = marcados[0].closest('.cat-item').querySelector('.fw-bold').innerText;
-            
-            let grupoActivoKey = null;
-            
-            // Buscamos a qué "familia" pertenece según las palabras clave
-            for (const familia in GRUPOS_AFINIDAD) {
-                const coincidencias = GRUPOS_AFINIDAD[familia];
-                if (coincidencias.some(palabra => nombrePrimeraCat.toLowerCase().includes(palabra.toLowerCase()))) {
-                    grupoActivoKey = familia;
-                    break;
-                }
-            }
+            const normPrincipal  = _normDisc(marcados[0].closest(‘.cat-item’).dataset.disciplina || ‘’);
+            const permitidasNorm = _getPermitidas(normPrincipal);
 
-            const permitidos = grupoActivoKey ? GRUPOS_AFINIDAD[grupoActivoKey] : [nombrePrimeraCat];
+            // Modalidades ya marcadas (Junior/Master)
+            const modalidadesMarcadas = new Set(
+                marcados.map(cb => (cb.closest(‘.cat-item’).dataset.modalidad || ‘’).toLowerCase())
+            );
+            const tieneJunior = modalidadesMarcadas.has(‘junior’);
+            const tieneMaster = modalidadesMarcadas.has(‘master’);
 
-            // 2. EJECUTAMOS EL BLOQUEO
+            // División seleccionada por (disciplina + modalidad): bloquea divisiones
+            // hermanas solo dentro de la misma modalidad, no entre Junior y Senior.
+            const divPorDiscModal = {};
+            marcados.forEach(cb => {
+                const item = cb.closest(‘.cat-item’);
+                const key = _normDisc(item.dataset.disciplina || ‘’) + ‘|’ + (item.dataset.modalidad || ‘’).toLowerCase();
+                const div = (item.dataset.division || ‘’).toLowerCase();
+                if (!divPorDiscModal[key]) divPorDiscModal[key] = new Set();
+                divPorDiscModal[key].add(div);
+            });
+
             todosLosChecks.forEach(cb => {
-                const item = cb.closest('.cat-item');
-                const nombreItem = item.querySelector('.fw-bold').innerText;
+                const item          = cb.closest(‘.cat-item’);
+                const normItem      = _normDisc(item.dataset.disciplina || ‘’);
+                const modalidadItem = (item.dataset.modalidad || ‘’).toLowerCase();
+                const divItem       = (item.dataset.division || ‘’).toLowerCase();
 
-                // REGLA: Si el nombre del item no contiene ninguna de las palabras permitidas del grupo
-                const esValida = permitidos.some(p => nombreItem.toLowerCase().includes(p.toLowerCase()));
-                
-                if (!esValida && !cb.checked) {
-                    cb.disabled = true;
-                    item.classList.add('opacity-50', 'bg-light');
-                } else {
+                if (cb.checked) {
                     cb.disabled = false;
-                    item.classList.remove('opacity-50', 'bg-light');
+                    item.classList.remove(‘opacity-50’, ‘bg-light’);
+                    item.style.order = ‘0’;
+                    return;
                 }
+
+                // Regla 1: grupo de disciplina
+                const esGrupoValido = permitidasNorm.includes(normItem);
+
+                // Regla 2: modalidad (solo 1 Junior, solo 1 Master, nunca ambos)
+                let esModalidadValida = true;
+                if (modalidadItem === ‘junior’)     esModalidadValida = !tieneJunior && !tieneMaster;
+                else if (modalidadItem === ‘master’) esModalidadValida = !tieneMaster && !tieneJunior;
+                else if (modalidadItem === ‘children’) esModalidadValida = false;
+
+                // Regla 3: división — dentro de la misma disciplina y modalidad, solo una división
+                const _divKey = normItem + '|' + modalidadItem;
+                let esDivisionValida = true;
+                if (divPorDiscModal[_divKey]) {
+                    esDivisionValida = divPorDiscModal[_divKey].has(divItem);
+                }
+
+                const esValida = esGrupoValido && esModalidadValida && esDivisionValida;
+                cb.disabled = !esValida;
+                item.classList.toggle(‘opacity-50’, !esValida);
+                item.classList.toggle(‘bg-light’,   !esValida);
+                // Agrupación visual: disponibles arriba, bloqueadas abajo
+                item.style.order = esValida ? ‘0’ : ‘1’;
             });
         } else {
-            // RESET: Si desmarcan todo, habilitamos todas las opciones
             todosLosChecks.forEach(cb => {
+                const item = cb.closest(‘.cat-item’);
                 cb.disabled = false;
-                cb.closest('.cat-item').classList.remove('opacity-50', 'bg-light');
+                item.classList.remove(‘opacity-50’, ‘bg-light’);
+                item.style.order = ‘’;
             });
         }
         calcularCobro();
@@ -449,28 +613,9 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
             const resultado = await respuesta.json();
 
             if (resultado.estado) {
-                // Capturamos la información del juez/estadístico actual (si está disponible)
-                const sesionActual = await _supabase.auth.getSession();
-                const juezId = sesionActual?.data?.session?.user?.id || null;
-                
-                // Al guardar, actualizamos la tabla atletas con información completa de firma
-                const { error: updateError } = await _supabase.from('atletas')
-                    .update({ 
-                        descargo_firmado: true,
-                        fecha_firma_descargo: new Date().toISOString(),
-                        juez_firma_id: juezId
-                    })
-                    .eq('id', atletaId);
-                
-                if (updateError) {
-                    console.error('Error actualizando descargo:', updateError);
-                    alert('⚠️ Inscripción guardada pero hubo un error registrando la firma digital.');
-                } else {
-                    alert('✅ ' + resultado.mensaje + '\n📝 Firma digital registrada en timestamp.');
-                }
-                
+                alert('✅ ' + resultado.mensaje + '\n📝 Firma digital registrada.');
                 myModal.hide();
-                window.location.reload(); // Recargamos para actualizar las tablas
+                window.location.reload();
             } else {
                 alert('❌ Error: ' + resultado.mensaje);
             }
@@ -602,8 +747,13 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
     
     async function cerrarInscripcionesWeb(eventoId) {
         if (!confirm("¿Cerrar autoinscripciones web?")) return;
-        const { error } = await _supabase.from('eventos').update({ estado: 'pesaje' }).eq('id', eventoId);
-        if (error) alert(error.message);
+        const r = await fetch('/inscripcion/cerrar-web', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventoId })
+        });
+        const d = await r.json();
+        if (!d.ok) alert('Error: ' + d.mensaje);
         else location.reload();
     }
 
@@ -611,35 +761,32 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
         const atletaId = document.getElementById('atletaIdIns').value;
         const file = document.getElementById('fileMusica').files[0];
         const idEvento = configEl.id;
-        
-        if(!file) return alert("Elija un archivo de audio.");
-        
+
+        if (!file) return alert("Elija un archivo de audio.");
+        if (!atletaId) return alert("No hay atleta seleccionado.");
+
         const btn = document.getElementById('btnSubirMusica');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-        const filePath = `${atletaId}/pose_${Date.now()}.mp3`;
-        
         try {
-            const { data, error } = await _supabase.storage
-                .from('musica_atletas')
-                .upload(filePath, file, { upsert: true });
+            const formData = new FormData();
+            formData.append('musica', file);
+            formData.append('atletaId', atletaId);
+            formData.append('eventoId', idEvento);
 
-            if(error) throw error;
+            const resp = await fetch('/inscripcion/subir-musica', { method: 'POST', body: formData });
+            const result = await resp.json();
 
-            const { data: { publicUrl } } = _supabase.storage.from('musica_atletas').getPublicUrl(filePath);
-            
-            await _supabase.from('competidores')
-                .update({ musica_url: publicUrl })
-                .eq('atleta_id', atletaId)
-                .eq('id_evento', idEvento);
-                
-            alert("Música vinculada al dorsal correctamente.");
-            
+            if (!resp.ok || result.error) throw new Error(result.error || 'Error desconocido');
+
             const player = document.getElementById('playerAudio');
             const audio = document.getElementById('audioElement');
-            audio.src = publicUrl;
-            player.classList.remove('d-none');
+            const sinMusica = document.getElementById('sinMusica');
+            audio.src = result.url;
+            player.style.display = 'block';
+            if (sinMusica) sinMusica.style.display = 'none';
+            alert("Música vinculada al dorsal correctamente.");
         } catch (err) {
             alert("Error al procesar audio: " + err.message);
         } finally {

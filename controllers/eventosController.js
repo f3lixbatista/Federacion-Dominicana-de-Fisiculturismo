@@ -1,4 +1,4 @@
-const { supabase, supabaseAdmin } = require('../supabaseClient');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 const QRCode = require('qrcode');
 const webpush = require('web-push'); // Import web-push
 const { z } = require('zod');
@@ -49,7 +49,7 @@ async function subirAStorage(file, bucketName, folderName) {
 
 const listarEventos = async (req, res) => {
     try {
-        const { data: eventos, error } = await supabase
+        const { data: eventos, error } = await supabaseAdmin
             .from('eventos')
             .select('*')
             .order('fecha_inicio', { ascending: false });
@@ -252,47 +252,64 @@ const verMonitorMC = async (req, res) => {
     try {
         const { data: evento, error: errEv } = await supabaseAdmin
             .from('eventos')
-            .select('id, nombre, cronograma_mc')
+            .select('*')
             .eq('id', id)
             .single();
 
-        if (errEv || !evento) return res.redirect('/eventos');
-        
-        const { data: todasLasSillas, error: errSillas } = await supabaseAdmin
-            .from('panel_sillas_jueces')
-            .select(`
-                numero_silla,
-                paneles_jueces ( id, numero_panel ),
-                profiles ( id, nombre )
-            `)
-            .eq('paneles_jueces.id_evento', id);
+        if (errEv || !evento) return res.redirect('/eventos/competencias');
 
-        const sillasPanel1 = (todasLasSillas || [])
-            .filter(s => s.paneles_jueces && s.paneles_jueces.numero_panel === 1)
-            .sort((a, b) => a.numero_silla - b.numero_silla)
-            .map(s => ({
-                silla: s.numero_silla,
-                nombre: s.profiles?.nombre || 'Juez no asignado',
-                id: s.profiles?.id
-            }));
+        // Traer paneles del evento primero, luego sus sillas
+        const { data: paneles, error: errPaneles } = await supabaseAdmin
+            .from('paneles_jueces')
+            .select('id, numero_panel')
+            .eq('id_evento', id);
 
-        const idsJuecesPanel1 = sillasPanel1.map(j => j.id); // Esto es para evitar duplicados en jueces de relevo
-        const setJuecesAlternos = new Set();
-        (todasLasSillas || []).forEach(s => {
-            if (s.paneles_jueces && s.paneles_jueces.numero_panel > 1 && s.profiles) {
-                if (!idsJuecesPanel1.includes(s.profiles.id)) {
+        if (errPaneles) console.error('⚠️ paneles_jueces error (no bloquea):', errPaneles.message);
+
+        let sillasPanel1 = [];
+        let setJuecesAlternos = new Set();
+
+        if (paneles && paneles.length > 0) {
+            const panelIds = paneles.map(p => p.id);
+
+            const { data: todasLasSillas, error: errSillas } = await supabaseAdmin
+                .from('panel_sillas_jueces')
+                .select(`
+                    numero_silla,
+                    panel_id,
+                    profiles ( id, nombre )
+                `)
+                .in('panel_id', panelIds);
+
+            if (errSillas) console.error('⚠️ panel_sillas_jueces error (no bloquea):', errSillas.message);
+
+            const panelMap = Object.fromEntries(paneles.map(p => [p.id, p.numero_panel]));
+
+            sillasPanel1 = (todasLasSillas || [])
+                .filter(s => panelMap[s.panel_id] === 1)
+                .sort((a, b) => a.numero_silla - b.numero_silla)
+                .map(s => ({
+                    silla: s.numero_silla,
+                    nombre: s.profiles?.nombre || 'Juez no asignado',
+                    id: s.profiles?.id
+                }));
+
+            const idsPanel1 = new Set(sillasPanel1.map(j => j.id));
+            (todasLasSillas || []).forEach(s => {
+                if (panelMap[s.panel_id] > 1 && s.profiles && !idsPanel1.has(s.profiles.id)) {
                     setJuecesAlternos.add(s.profiles.nombre);
                 }
-            }
-        });
+            });
+        }
 
-        res.render('eventos/monitor_mc', { 
-            evento, 
-            panelPrincipal: sillasPanel1, 
-            juecesRelevo: Array.from(setJuecesAlternos) 
+        res.render('eventos/monitor_mc', {
+            evento,
+            panelPrincipal: sillasPanel1,
+            juecesRelevo: Array.from(setJuecesAlternos)
         });
     } catch (error) {
-        res.redirect('/eventos');
+        console.error('❌ EXCEPCIÓN en verMonitorMC:', error.message, error.stack);
+        res.redirect('/eventos/competencias');
     }
 };
 
@@ -352,7 +369,7 @@ const verBoletaJuez = async (req, res) => {
             .eq('paneles_jueces.id_evento', eventoId)
             .single();
 
-        if (!asiento) return res.send("Juez no asignado.");
+        if (!asiento) return res.render('jueces/espera', { user: res.locals.user });
 
         const { data: catActiva } = await supabase
             .from('eventos_categorias')
@@ -440,26 +457,36 @@ const verReporteOficial = async (req, res) => {
 const verDashboardEvento = async (req, res) => {
     const { id } = req.params;
     try {
-        const { data: evento } = await supabase.from('eventos').select(`*, eventos_categorias(id, categorias!inner(*))`).eq('id', id).single();
+        // Usamos supabaseAdmin para garantizar que el Dashboard siempre muestre la info oficial sin bloqueos de RLS
+        const { data: evento } = await supabaseAdmin.from('eventos').select(`*, eventos_categorias(id, categorias(*))`).eq('id', id).single();
         if (!evento) return res.redirect('/eventos');
 
         let listadoPublico = [];
         if (['en_progreso', 'finalizado'].includes(evento.estado)) {
-            const { data: cats } = await supabase
+            const { data: cats } = await supabaseAdmin
                 .from('eventos_categorias')
-                .select('id, orden_secuencia_categoria, categorias(nombre)')
+                .select('id, orden_secuencia_categoria, categorias!inner(nombre)')
                 .eq('evento_id', id)
                 .in('estatus_logistica', ['abierta activa', 'abierta exhibicion', 'exhibicion'])
                 .order('orden_secuencia_categoria', { ascending: true });
 
             for (const cat of (cats || [])) {
-                const { data: comps } = await supabase.from('competidores').select('numero_atleta, nombre, gimnasio').eq('evento_cat_id', cat.id).order('numero_atleta', { ascending: true });
+                const { data: comps } = await supabaseAdmin
+                    .from('competidores')
+                    .select('numero_atleta, atletas(nombre, gimnasio)')
+                    .eq('evento_cat_id', cat.id)
+                    .order('numero_atleta', { ascending: true });
+
                 listadoPublico.push({
                     id: cat.id,
                     nombre: cat.categorias?.nombre,
                     orden: cat.orden_secuencia_categoria,
                     total: (comps || []).length,
-                    atletas: (comps || []).map(a => ({ dorsal: a.numero_atleta, nombre: a.nombre, team: a.gimnasio }))
+                    atletas: (comps || []).map(a => ({ 
+                        dorsal: a.numero_atleta, 
+                        nombre: a.atletas?.nombre || 'N/A', 
+                        team: a.atletas?.gimnasio || 'Independiente' 
+                    }))
                 });
             }
         }
@@ -495,15 +522,31 @@ const verDiplomaAtleta = async (req, res) => {
 const verBackstage = async (req, res) => {
     const { id } = req.params;
     try {
-        const { data: evento } = await supabase
-            .from('eventos')
-            .select('id, nombre, cronograma_mc, orden_backstage')
-            .eq('id', id)
-            .single();
+        const [{ data: evento, error }, { data: competidores }] = await Promise.all([
+            supabaseAdmin.from('eventos').select('*').eq('id', id).single(),
+            supabaseAdmin.from('competidores')
+                .select(`
+                    numero_atleta,
+                    estatus_pesaje,
+                    salida,
+                    atletas ( nombre, foto_url ),
+                    eventos_categorias ( categorias ( nombre ) )
+                `)
+                .eq('id_evento', id)
+                .eq('estatus_pesaje', 'aprobado')
+                .order('numero_atleta', { ascending: true })
+        ]);
 
-        res.render('eventos/backstage', { evento });
+        if (error) {
+            console.error('❌ Supabase error en backstage:', error.message);
+            return res.status(500).send(`Error de base de datos: ${error.message}`);
+        }
+        if (!evento) return res.redirect('/eventos/competencias');
+
+        res.render('eventos/backstage', { evento, competidores: competidores || [] });
     } catch (e) {
-        res.redirect('/eventos');
+        console.error('❌ Excepción en verBackstage:', e.message);
+        res.status(500).send(`Error interno: ${e.message}`);
     }
 };
 
@@ -718,8 +761,8 @@ const crearNuevoEvento = async (req, res) => {
                 fecha_limite_oferta: fecha_limite_oferta || null,
                 costo_oferta_primera: parseFloat(costo_oferta_primera) || 0,
                 costo_oferta_adicional: parseFloat(costo_oferta_adicional) || 0,
-                banner_url: bannerEventoUrl, // Promotional banner
-                afiche_pesaje_url: bannerPesajeUrl, // Technical pesaje banner
+                url_afiche_evento: bannerEventoUrl || '', // Sincronizado con el Trigger de la DB
+                url_afiche_pesaje: bannerPesajeUrl, // Sincronizado con el Trigger de la DB
                 info_pesaje: info_pesaje, // Pesaje description
                 estado: 'inscripcion'
             }])
@@ -728,12 +771,15 @@ const crearNuevoEvento = async (req, res) => {
 
         if (evError) throw evError;
 
-        // 3. Vincular Categorías (If Categorias is an array of IDs)
-        if (Categorias && Array.isArray(Categorias)) {
-            const vinculos = Categorias.map(catId => ({
+        // 3. Vincular Categorías (Limpieza de duplicados del body)
+        if (Categorias) {
+            const ids = Array.isArray(Categorias) ? Categorias : [Categorias];
+            const idsUnicos = [...new Set(ids)];
+
+            const vinculos = idsUnicos.map(catId => ({
                 evento_id: nuevoEv.id,
                 categoria_id: catId,
-                orden_secuencia_categoria: 0 // Default order, can be updated later
+                orden_secuencia_categoria: 0
             }));
 
             const { error: errVin } = await supabaseAdmin
@@ -741,16 +787,6 @@ const crearNuevoEvento = async (req, res) => {
                 .insert(vinculos);
 
             if (errVin) console.error('Error vinculando categorías:', errVin.message);
-        } else if (Categorias) { // Handle single category case if not an array
-             const vinculos = [{
-                evento_id: nuevoEv.id,
-                categoria_id: Categorias,
-                orden_secuencia_categoria: 0
-            }];
-            const { error: errVin } = await supabaseAdmin
-                .from('eventos_categorias')
-                .insert(vinculos);
-            if (errVin) console.error('Error vinculando categoría única:', errVin.message);
         }
 
 
@@ -791,33 +827,65 @@ const crearNuevoEvento = async (req, res) => {
     }
 };
 
+const verEditarEvento = async (req, res) => {
+    const { id } = req.params;
+    try {
+        // 1. Obtener datos del evento
+        const { data: evento, error: errEv } = await supabaseAdmin
+            .from('eventos')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (errEv || !evento) throw new Error("Evento no encontrado");
+
+        // 2. Obtener todas las categorías disponibles para el listado
+        const { data: arrayCategorias } = await supabaseAdmin
+            .from('categorias')
+            .select('*')
+            .order('nombre', { ascending: true });
+
+        // 3. Obtener IDs de categorías ya vinculadas para pre-marcarlas
+        const { data: vinculadas } = await supabaseAdmin
+            .from('eventos_categorias')
+            .select('categoria_id')
+            .eq('evento_id', id);
+
+        const categoriasPreseleccionadas = (vinculadas || []).map(v => v.categoria_id);
+
+        res.render('nuevoEvento', { 
+            evento, 
+            arrayCategorias: arrayCategorias || [], 
+            categoriasPreseleccionadas,
+            error: false 
+        });
+    } catch (error) {
+        console.error("🔥 Error al cargar edición de evento:", error.message);
+        res.redirect('/eventos/competencias');
+    }
+};
+
 const actualizarEvento = async (req, res) => {
     const { id } = req.params;
     const { 
-        NombreEvento, Fecha, Lugar, direccion, info_pesaje, costo_primera, costo_adicional, estado,
-        fecha_limite_oferta, costo_oferta_primera, costo_oferta_adicional
+        NombreEvento, Fecha, Lugar, direccion, 
+        fecha_pesaje, lugar_pesaje, direccion_pesaje, // Agregamos campos de logística
+        info_pesaje, costo_primera, costo_adicional, estado,
+        fecha_limite_oferta, costo_oferta_primera, costo_oferta_adicional 
     } = req.body;
 
     try {
-        let bannerUrl = null;
+        let bannerEventoUrl = null;
+        let bannerPesajeUrl = null;
 
-        // 1. Procesar el Banner si se adjunta uno nuevo (Multer + Supabase Storage)
-        if (req.file) {
-            const fileName = `${Date.now()}_banner_${id}.jpg`;
-            const { error: uploadError } = await supabaseAdmin.storage
-                .from('eventos-banners')
-                .upload(`banners/${fileName}`, req.file.buffer, {
-                    contentType: req.file.mimetype,
-                    upsert: true
-                });
-
-            if (uploadError) throw uploadError;
-
-            const { data: urlData } = supabaseAdmin.storage
-                .from('eventos-banners')
-                .getPublicUrl(`banners/${fileName}`);
-            
-            bannerUrl = urlData.publicUrl;
+        // 1. Procesar Banners si se adjuntan nuevos
+        if (req.files) {
+            if (req.files['banner_evento']) {
+                bannerEventoUrl = await subirAStorage(req.files['banner_evento'][0], 'eventos-banners', 'banners');
+            }
+            if (req.files['banner_pesaje']) {
+                bannerPesajeUrl = await subirAStorage(req.files['banner_pesaje'][0], 'eventos-banners', 'afiches_pesaje');
+            }
         }
 
         // 2. Preparar objeto de actualización
@@ -826,6 +894,9 @@ const actualizarEvento = async (req, res) => {
             fecha_inicio: Fecha,
             lugar: Lugar,
             direccion,
+            fecha_pesaje,
+            lugar_pesaje,
+            direccion_pesaje,
             info_pesaje,
             costo_primera_cat: parseFloat(costo_primera) || 0,
             costo_adicional: parseFloat(costo_adicional) || 0,
@@ -835,7 +906,8 @@ const actualizarEvento = async (req, res) => {
             costo_oferta_adicional: parseFloat(costo_oferta_adicional) || 0,
         };
 
-        if (bannerUrl) updateData.banner_url = bannerUrl;
+        if (bannerEventoUrl) updateData.url_afiche_evento = bannerEventoUrl;
+        if (bannerPesajeUrl) updateData.url_afiche_pesaje = bannerPesajeUrl;
 
         const { error } = await supabaseAdmin
             .from('eventos')
@@ -843,6 +915,25 @@ const actualizarEvento = async (req, res) => {
             .eq('id', id);
 
         if (error) throw error;
+
+        // Actualizar categorías vinculadas al evento
+        const { Categorias } = req.body;
+        if (Categorias !== undefined) {
+            const ids = Array.isArray(Categorias) ? Categorias : [Categorias];
+            const idsUnicos = [...new Set(ids.filter(Boolean))];
+
+            await supabaseAdmin.from('eventos_categorias').delete().eq('evento_id', id);
+
+            if (idsUnicos.length > 0) {
+                const vinculos = idsUnicos.map(catId => ({
+                    evento_id: id,
+                    categoria_id: catId,
+                    orden_secuencia_categoria: 0
+                }));
+                const { error: errVin } = await supabaseAdmin.from('eventos_categorias').insert(vinculos);
+                if (errVin) console.error('Error actualizando categorías:', errVin.message);
+            }
+        }
 
         res.redirect(`/eventos/${id}/centro-mando`);
     } catch (error) {
@@ -979,6 +1070,51 @@ const verBackstageSeguridad = async (req, res) => {
     }
 };
 
+const validarAccesoAtleta = async (req, res) => {
+    const { id: idEvento, idAtleta } = req.params;
+    try {
+        const [{ data: atleta }, { data: competidores }] = await Promise.all([
+            supabaseAdmin.from('atletas')
+                .select('nombre, foto_url, estatus_afiliacion, cedula')
+                .eq('id', idAtleta).single(),
+            supabaseAdmin.from('competidores')
+                .select(`numero_atleta, estatus_pesaje, pago_validado,
+                    eventos_categorias ( categorias ( nombre ) )`)
+                .eq('atleta_id', idAtleta)
+                .eq('id_evento', idEvento)
+        ]);
+
+        if (!atleta) return res.status(404).json({ ok: false, mensaje: 'Atleta no encontrado en el sistema.' });
+
+        const inscrito = competidores && competidores.length > 0;
+        const pesajeOk = inscrito && competidores.every(c => c.estatus_pesaje === 'aprobado');
+        const pagoOk   = inscrito && competidores.some(c => c.pago_validado);
+
+        let acceso = false;
+        let mensaje = '';
+        if (!inscrito)     mensaje = 'No está inscrito en este evento.';
+        else if (!pagoOk)  mensaje = 'Pago pendiente de validación.';
+        else if (!pesajeOk) mensaje = 'Pesaje pendiente de aprobación.';
+        else { acceso = true; mensaje = 'Acceso autorizado.'; }
+
+        res.json({
+            ok: true,
+            acceso,
+            mensaje,
+            atleta: { nombre: atleta.nombre, foto_url: atleta.foto_url, cedula: atleta.cedula },
+            participaciones: (competidores || []).map(c => ({
+                dorsal:    c.numero_atleta,
+                categoria: c.eventos_categorias?.categorias?.nombre || '—',
+                pesaje:    c.estatus_pesaje,
+                pago:      c.pago_validado
+            }))
+        });
+    } catch (e) {
+        console.error('❌ Error validarAccesoAtleta:', e.message);
+        res.status(500).json({ ok: false, mensaje: e.message });
+    }
+};
+
 const verDJConsola = async (req, res) => {
     const { id } = req.params;
     try {
@@ -1008,6 +1144,39 @@ const verDJConsola = async (req, res) => {
     }
 };
 
+const verGestionFotografia = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data: evento, error: errEv } = await supabaseAdmin
+            .from('eventos')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (errEv || !evento) throw new Error("Evento no encontrado");
+
+        // Traer competidores aprobados para gestionar sus fotos atléticas
+        const { data: competidores, error: errComp } = await supabaseAdmin
+            .from('competidores')
+            .select(`
+                id,
+                numero_atleta,
+                foto_atletica_url,
+                atletas ( nombre )
+            `)
+            .eq('id_evento', id)
+            .eq('estatus_pesaje', 'aprobado')
+            .order('numero_atleta', { ascending: true });
+
+        if (errComp) throw errComp;
+
+        res.render('eventos/gestion_fotos', { evento, competidores: competidores || [], user: res.locals.user });
+    } catch (error) {
+        console.error("❌ Error en verGestionFotografia:", error.message);
+        res.status(500).send("Error interno al cargar la gestión de fotos.");
+    }
+};
+
 const verBroadcastLive = async (req, res) => {
     const { id } = req.params;
     try {
@@ -1028,6 +1197,17 @@ const verBroadcastLive = async (req, res) => {
     }
 };
 
+const verLowerThird = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data: evento, error } = await supabaseAdmin.from('eventos').select('id, nombre').eq('id', id).single();
+        if (error || !evento) throw new Error('Evento no encontrado');
+        res.render('eventos/broadcast/lower_third', { eventoId: id, evento });
+    } catch (e) {
+        res.status(500).send('Error: ' + e.message);
+    }
+};
+
 module.exports = {
     listarEventos,
     prepararEventoPage,
@@ -1045,11 +1225,15 @@ module.exports = {
     verHistorico,
     verResultadosPublicos,
     crearNuevoEvento,
+    verEditarEvento,
     actualizarEvento,
     verAuditoriaRecaudacion,
     verBackstageSeguridad,
     verDJConsola,
+    verGestionFotografia,
     verBroadcastLive,
+    verLowerThird,
     registrarIngresoExtra,
-    registrarGastoOperativo
+    registrarGastoOperativo,
+    validarAccesoAtleta
 };

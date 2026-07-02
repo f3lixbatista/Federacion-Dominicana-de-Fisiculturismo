@@ -1,68 +1,119 @@
-<%- include('../template/cabecera', { tituloWeb: 'Gestión de Preparadores' }) %>
+<%- include('../template/cabecera', { tituloWeb: 'Gestión de Coaches - FDFF' }) %>
 
-<div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="fw-bold"><i class="fas fa-user-tie text-primary"></i> Gestión de Preparadores</h1>
-        <div class="badge bg-dark p-2">Total: <%= preparadores.length %></div>
+<div class="container my-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h4 class="fw-bold mb-0"><i class="fas fa-user-tie text-primary me-2"></i> Coaches y Preparadores</h4>
+            <small class="text-muted">Gestión de afiliación y estatus de coaches oficiales FDFF</small>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/preparadores/ranking-teams" class="btn btn-outline-warning fw-bold">
+                <i class="fas fa-trophy me-1"></i> Ranking Teams
+            </a>
+            <% if (locals.user && (user.role === 'admin' || user.role === 'ejecutivo')) { %>
+                <a href="/preparadores/registrar" class="btn btn-primary fw-bold">
+                    <i class="fas fa-plus-circle me-1"></i> Nuevo Coach
+                </a>
+            <% } %>
+        </div>
     </div>
 
-    <div class="card shadow-sm border-0" style="border-radius: 15px;">
-        <div class="card-body p-4">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle" id="tablaPrep">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Nombre Completo</th>
-                            <th>Cédula/Pass</th>
-                            <th>Gimnasio / Team</th>
-                            <th>Estatus</th>
-                            <th class="text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% preparadores.forEach(prep => { %>
-                            <tr>
-                                <td>
-                                    <div class="fw-bold"><%= prep.nombre_completo %></div>
-                                    <div class="small text-muted"><%= prep.email %></div>
-                                </td>
-                                <td><%= prep.cedula %></td>
-                                <td><span class="badge bg-outline-secondary text-dark border"><%= prep.gimnasio_labora || 'N/A' %></span></td>
-                                <td>
-                                    <span class="badge <%= prep.estatus_afiliacion === 'habilitado' ? 'bg-success' : 'bg-warning text-dark' %>">
-                                        <%= (prep.estatus_afiliacion || 'pendiente').toUpperCase() %>
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <% if (prep.estatus_afiliacion === 'pendiente') { %>
-                                        <button class="btn btn-primary btn-sm fw-bold" onclick="habilitarPreparador('<%= prep.id %>')">
-                                            <i class="fas fa-check"></i> HABILITAR
-                                        </button>
-                                    <% } else { %>
-                                        <button class="btn btn-outline-danger btn-sm" onclick="alert('Funcionalidad de suspensión en desarrollo')">
-                                            <i class="fas fa-ban"></i>
-                                        </button>
-                                    <% } %>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-            </div>
+    <%
+    const pendientes = preparadores.filter(p => p.estatus_afiliacion !== 'habilitado');
+    const habilitados = preparadores.filter(p => p.estatus_afiliacion === 'habilitado');
+    %>
+
+    <% if (pendientes.length > 0) { %>
+        <div class="alert alert-warning border-0 shadow-sm mb-4" style="border-radius:12px;">
+            <i class="fas fa-clock me-2"></i>
+            <strong><%= pendientes.length %> coach<%= pendientes.length > 1 ? 'es' : '' %> pendiente<%= pendientes.length > 1 ? 's' : '' %> de habilitación.</strong>
         </div>
+    <% } %>
+
+    <div class="card shadow-sm border-0" style="border-radius:15px;overflow:hidden;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="tablaPrep">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="ps-3">Coach</th>
+                        <th>Cédula</th>
+                        <th>Gimnasio / Team</th>
+                        <th>Contacto</th>
+                        <th class="text-center">Estatus</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (preparadores.length === 0) { %>
+                        <tr><td colspan="6" class="text-center py-5 text-muted">No hay coaches registrados.</td></tr>
+                    <% } %>
+                    <% preparadores.forEach(prep => {
+                        const habilitado = prep.estatus_afiliacion === 'habilitado';
+                        const suspendido = prep.estatus_afiliacion === 'suspendido';
+                    %>
+                        <tr class="<%= !habilitado ? 'table-warning bg-opacity-25' : '' %>">
+                            <td class="ps-3">
+                                <div class="fw-bold"><%= prep.nombre_completo %></div>
+                                <small class="text-muted"><%= prep.email || '—' %></small>
+                            </td>
+                            <td class="small"><%= prep.cedula || '—' %></td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="fas fa-dumbbell me-1 text-secondary"></i><%= prep.gimnasio_labora || 'Independiente' %>
+                                </span>
+                            </td>
+                            <td class="small"><%= prep.telefono || '—' %></td>
+                            <td class="text-center">
+                                <span class="badge px-3 py-1
+                                    <%= habilitado ? 'bg-success' : suspendido ? 'bg-danger' : 'bg-warning text-dark' %>">
+                                    <%= (prep.estatus_afiliacion || 'pendiente').toUpperCase() %>
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <% if (!habilitado) { %>
+                                    <button class="btn btn-success btn-sm fw-bold"
+                                            onclick="cambiarEstatus('<%= prep.id %>', 'habilitar', '<%= prep.nombre_completo %>')">
+                                        <i class="fas fa-check me-1"></i> HABILITAR
+                                    </button>
+                                <% } else { %>
+                                    <button class="btn btn-outline-danger btn-sm"
+                                            onclick="cambiarEstatus('<%= prep.id %>', 'suspender', '<%= prep.nombre_completo %>')">
+                                        <i class="fas fa-ban me-1"></i> Suspender
+                                    </button>
+                                <% } %>
+                                <a href="/preparadores/panel?id=<%= prep.id %>" class="btn btn-outline-primary btn-sm ms-1" title="Ver panel">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="text-muted small mt-3">
+        <i class="fas fa-info-circle me-1"></i>
+        Total: <strong><%= preparadores.length %></strong> coaches —
+        Habilitados: <strong class="text-success"><%= habilitados.length %></strong> —
+        Pendientes: <strong class="text-warning"><%= pendientes.length %></strong>
     </div>
 </div>
 
 <script>
-async function habilitarPreparador(id) {
-    if (!confirm('¿Desea habilitar a este preparador oficialmente?')) return;
+async function cambiarEstatus(id, accion, nombre) {
+    const verbo = accion === 'habilitar' ? 'habilitar' : 'suspender';
+    if (!confirm(`¿Confirmas ${verbo} al coach ${nombre}?`)) return;
 
     try {
-        const res = await fetch(`/preparadores/habilitar/${id}`, { method: 'POST' });
+        const res = await fetch(`/preparadores/habilitar/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accion })
+        });
         const data = await res.json();
-
         if (data.estado) {
-            alert(data.mensaje);
             location.reload();
         } else {
             alert('Error: ' + data.mensaje);
@@ -70,14 +121,6 @@ async function habilitarPreparador(id) {
     } catch (err) {
         alert('Error de red: ' + err.message);
     }
-}
-
-if (window.jQuery && $.fn.DataTable) {
-    $(document).ready(function() {
-        $('#tablaPrep').DataTable({
-            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' }
-        });
-    });
 }
 </script>
 

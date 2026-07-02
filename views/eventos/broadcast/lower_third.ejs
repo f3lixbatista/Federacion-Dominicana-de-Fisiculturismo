@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lower Third OBS — FDFF</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="/js/supabase.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: transparent !important; overflow: hidden; width: 100vw; height: 100vh; font-family: 'Segoe UI', sans-serif; }
+
+    /* ── Lower third de atleta ── */
+    #ltAtleta {
+      position: fixed;
+      bottom: 40px; left: 50%;
+      transform: translateX(-50%);
+      width: 88%;
+      background: linear-gradient(90deg, rgba(0,45,114,.94) 0%, rgba(206,17,38,.94) 100%);
+      color: white;
+      padding: 16px 22px;
+      border-radius: 13px;
+      border-left: 10px solid #f1c40f;
+      box-shadow: 0 8px 32px rgba(0,0,0,.65);
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #ltAtleta.visible {
+      display: flex;
+      animation: slideUp .7s cubic-bezier(.22,1,.36,1);
+    }
+    #ltNombre { font-weight: 900; font-size: clamp(1.1rem,2.5vw,2rem); text-transform: uppercase; }
+    #ltOrigen { font-size: clamp(.8rem,1.5vw,1.1rem); opacity: .75; margin-top: 2px; }
+    #ltDorsal { background: #ffc107; color: #000; font-weight: 900; border-radius: 6px; padding: 4px 12px; font-size: clamp(.9rem,1.8vw,1.4rem); white-space: nowrap; }
+    #ltCategoria { font-size: clamp(.7rem,1.2vw,.95rem); opacity: .7; margin-top: 3px; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ── Lower third de mensaje ── */
+    #ltMensaje {
+      position: fixed;
+      bottom: 40px; left: 50%;
+      transform: translateX(-50%);
+      width: 88%;
+      color: white;
+      padding: 18px 26px;
+      border-radius: 13px;
+      border-left: 10px solid #f1c40f;
+      box-shadow: 0 8px 32px rgba(0,0,0,.7);
+      display: none;
+      text-align: center;
+      font-size: clamp(1rem,2.5vw,1.8rem);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    #ltMensaje.visible { display: block; animation: slideUp .7s cubic-bezier(.22,1,.36,1); }
+    #ltMensaje.estilo-info        { background: linear-gradient(90deg,rgba(0,62,133,.96),rgba(0,100,230,.94)); }
+    #ltMensaje.estilo-advertencia { background: linear-gradient(90deg,rgba(90,60,0,.96),rgba(200,140,0,.96)); color:#000; }
+    #ltMensaje.estilo-celebracion { background: linear-gradient(90deg,rgba(140,0,0,.96),rgba(206,17,38,.96)); }
+    #ltMensaje.estilo-neutro      { background: linear-gradient(90deg,rgba(10,10,10,.97),rgba(30,30,30,.96)); }
+
+    /* ── Cinta de categoría (top right) ── */
+    #ltCategoriaBand {
+      position: fixed;
+      top: 30px; right: 0;
+      background: rgba(0,0,0,.9);
+      color: #f1c40f;
+      padding: 8px 40px 8px 18px;
+      font-weight: 900;
+      text-transform: uppercase;
+      border-left: 6px solid #f1c40f;
+      font-size: clamp(.8rem,1.5vw,1.2rem);
+      letter-spacing: 2px;
+      display: none;
+    }
+    #ltCategoriaBand.visible { display: block; animation: slideRight .6s cubic-bezier(.22,1,.36,1); }
+
+    /* ── Podio lower band ── */
+    #ltPodio {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.92) 30%,rgba(10,8,0,.97) 100%);
+      padding: 2rem 5%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    #ltPodio.visible { display: flex; animation: fadeIn .5s ease; }
+    #ltPodioTitulo { color: #ffd700; font-size: clamp(1rem,2vw,1.6rem); font-weight: 900; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 1rem; }
+    .lt-podio-row { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .lt-podio-item { border-radius: 10px; padding: .7rem 1.2rem; text-align: center; min-width: 140px; }
+    .lt-podio-item.pos-1 { background: linear-gradient(135deg,#b8860b,#ffd700); color:#000; }
+    .lt-podio-item.pos-2 { background: linear-gradient(135deg,#5c5c5c,#c0c0c0); color:#000; }
+    .lt-podio-item.pos-3 { background: linear-gradient(135deg,#7c3d0a,#cd7f32); color:#fff; }
+    .lt-podio-pos { font-size: 1.4rem; }
+    .lt-podio-nombre { font-weight: 900; font-size: .9rem; }
+    .lt-podio-det { font-size: .74rem; opacity: .75; }
+
+    @keyframes slideUp {
+      from { transform: translate(-50%, 60px); opacity: 0; }
+      to   { transform: translate(-50%, 0);    opacity: 1; }
+    }
+    @keyframes slideRight {
+      from { transform: translateX(100%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <!-- Cinta superior de categoría -->
+  <div id="ltCategoriaBand"></div>
+
+  <!-- Lower third de atleta -->
+  <div id="ltAtleta">
+    <div>
+      <div id="ltNombre">—</div>
+      <div id="ltOrigen"></div>
+      <div id="ltCategoria"></div>
+    </div>
+    <div class="text-end" style="text-align:right">
+      <div id="ltDorsal">FDFF LIVE</div>
+    </div>
+  </div>
+
+  <!-- Lower third de mensaje libre -->
+  <div id="ltMensaje" class="estilo-info"></div>
+
+  <!-- Podio band -->
+  <div id="ltPodio">
+    <div id="ltPodioTitulo">Resultados Oficiales</div>
+    <div class="lt-podio-row" id="ltPodioGrid"></div>
+  </div>
+
+<script>
+const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+const eventoId = "<%= eventoId %>";
+
+function ocultarTodo() {
+    document.getElementById('ltAtleta').classList.remove('visible');
+    document.getElementById('ltMensaje').classList.remove('visible');
+    document.getElementById('ltPodio').classList.remove('visible');
+    document.getElementById('ltCategoriaBand').classList.remove('visible');
+}
+
+async function manejarAtleta(data) {
+    const { data: c } = await _supabase
+        .from('competidores')
+        .select('numero_atleta, atletas(nombre, provincia, preparador, peso, estatura)')
+        .eq('id_evento', eventoId)
+        .eq('atleta_id', data.atleta_id)
+        .single();
+
+    if (!c) return;
+    const atl = c.atletas;
+
+    document.getElementById('ltNombre').textContent = atl?.nombre || '—';
+    document.getElementById('ltOrigen').textContent = `${atl?.provincia || ''} | ${atl?.preparador || 'Independiente'}`;
+    document.getElementById('ltDorsal').textContent = `DORSAL ${c.numero_atleta || '00'}`;
+    document.getElementById('ltCategoria').textContent = data.categoria_nombre || '';
+    document.getElementById('ltCategoriaBand').textContent = data.categoria_nombre || '';
+
+    ocultarTodo();
+    setTimeout(() => {
+        document.getElementById('ltAtleta').classList.add('visible');
+        if (data.categoria_nombre) document.getElementById('ltCategoriaBand').classList.add('visible');
+    }, 50);
+}
+
+function manejarMensaje(data) {
+    const el = document.getElementById('ltMensaje');
+    el.className = 'estilo-' + (data.estilo || 'info');
+    el.textContent = data.texto || '';
+    ocultarTodo();
+    setTimeout(() => el.classList.add('visible'), 50);
+}
+
+function manejarPodio(data) {
+    document.getElementById('ltPodioTitulo').textContent = data.categoria_nombre || 'Resultados Oficiales';
+    const trofeos = { 1:'🥇', 2:'🥈', 3:'🥉' };
+    const clases  = { 1:'pos-1', 2:'pos-2', 3:'pos-3' };
+    document.getElementById('ltPodioGrid').innerHTML = (data.top3 || []).map(p => `
+        <div class="lt-podio-item ${clases[p.posicion] || ''}">
+            <div class="lt-podio-pos">${trofeos[p.posicion] || '🏅'}</div>
+            <div class="lt-podio-nombre">${p.nombre || '—'}</div>
+            <div class="lt-podio-det">${p.provincia || ''}</div>
+        </div>`).join('');
+    ocultarTodo();
+    setTimeout(() => document.getElementById('ltPodio').classList.add('visible'), 50);
+}
+
+_supabase.channel('lower-third')
+    .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'eventos',
+        filter: `id=eq.${eventoId}`
+    }, ({ new: row }) => {
+        const d = row.resultados_en_vivo;
+        if (!d) return;
+        switch (d.tipo) {
+            case 'atleta_entrada': manejarAtleta(d);  break;
+            case 'mensaje':        manejarMensaje(d); break;
+            case 'podio':          manejarPodio(d);   break;
+            case 'limpiar':        ocultarTodo();     break;
+        }
+    }).subscribe();
+</script>
+</body>
+</html>

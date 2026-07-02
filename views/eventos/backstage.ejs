@@ -1,45 +1,121 @@
-<%- include("../template/cabecera", {tituloWeb: "Panel Backstage - FDFF"}) %>
+<%- include("../template/cabecera", {tituloWeb: "Backstage — " + evento.nombre}) %>
 
-<div class="container-fluid my-4 px-4">
-    <div class="row g-4">
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 15px;">
-                <h4 class="fw-bold mb-3 text-dark border-bottom pb-2">
-                    <i class="fas fa-list-ol text-primary"></i> Programa del Evento
-                </h4>
-                <div class="list-group list-group-flush overflow-auto" style="max-height: 75vh;">
-                    <% (evento.cronograma_mc || []).forEach((bloque) => { %>
-                        <div class="list-group-item py-3">
-                            <span class="badge <%= bloque.tipo === 'Categoría' ? 'bg-primary' : 'bg-secondary' %> mb-1">
-                                <%= bloque.tipo %>
-                            </span>
-                            <h6 class="mb-0 fw-bold <%= bloque.tipo === 'Categoría' ? 'text-dark' : 'text-muted' %>">
-                                <%= bloque.nombre %>
-                            </h6>
+<style>
+    body, #main-content { background: #0a0a0a; color: #f0f0f0; }
+    .bs-card { background: #161616; border-radius: 16px; border: 1px solid #2a2a2a; }
+    .atleta-row { border-bottom: 1px solid #222; padding: .65rem .75rem; transition: background .15s; cursor: default; }
+    .atleta-row:hover { background: #1e1e1e; }
+    .atleta-row.en-escena { background: #0d1a0d; border-left: 4px solid #28a745; }
+    .dorsal-num { font-size: 1.4rem; font-weight: 900; min-width: 3rem; text-align: center; color: #ffc107; font-family: monospace; }
+    .cat-label  { font-size: .7rem; color: #888; }
+    .nombre-atleta { font-size: .95rem; font-weight: 600; }
+    #panelClasificados .atleta-card { background: #1a2a1a; border-radius: 12px; padding: .75rem 1rem; border: 1px solid #2d4a2d; }
+    #panelClasificados .d-badge  { font-size: 1.8rem; font-weight: 900; color: #ffc107; }
+    .pulse-live { animation: pulse-red 1.5s infinite; }
+    @keyframes pulse-red { 0%,100%{opacity:1;} 50%{opacity:.4;} }
+    .search-dark { background: #1e1e1e; border: 1px solid #333; color: #fff; border-radius: 10px; }
+    .search-dark:focus { background: #252525; border-color: #555; color: #fff; box-shadow: none; }
+    .search-dark::placeholder { color: #666; }
+    .fase-badge { font-size: .75rem; letter-spacing: .1em; }
+    .tab-btn { border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #aaa; padding: .5rem 1.25rem; cursor: pointer; transition: all .2s; }
+    .tab-btn.activo { background: #ffc107; color: #000; border-color: #ffc107; font-weight: 700; }
+</style>
+
+<div class="container-fluid py-3 px-3">
+
+    <!-- TOPBAR BACKSTAGE -->
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div>
+            <h4 class="fw-bold mb-0 text-warning"><i class="fas fa-running me-2"></i> BACKSTAGE</h4>
+            <small class="text-secondary"><%= evento.nombre %></small>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <span id="badgeLive" class="badge bg-danger pulse-live px-3 py-2">● EN VIVO</span>
+            <span class="text-secondary small" id="totalAprobados"><%= competidores.length %> clasificados</span>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="d-flex gap-2 mb-3">
+        <button class="tab-btn activo" id="tab-lista"    onclick="mostrarTab('lista')">
+            <i class="fas fa-list-ol me-1"></i> Lista
+        </button>
+        <button class="tab-btn"        id="tab-llamado"  onclick="mostrarTab('llamado')">
+            <i class="fas fa-bullhorn me-1"></i> Llamado
+        </button>
+        <button class="tab-btn"        id="tab-programa" onclick="mostrarTab('programa')">
+            <i class="fas fa-calendar-alt me-1"></i> Programa
+        </button>
+    </div>
+
+    <!-- TAB: LISTA DE COMPETIDORES -->
+    <div id="panelLista">
+        <div class="bs-card p-3 mb-3">
+            <input type="text" id="buscadorAtleta" class="form-control search-dark mb-3"
+                   placeholder="🔍  Buscar por dorsal o nombre...">
+            <div id="listaAtletas">
+                <% if (competidores.length === 0) { %>
+                    <div class="text-center py-5 text-secondary">
+                        <i class="fas fa-user-clock fa-2x mb-3 d-block"></i>
+                        Sin competidores aprobados en este evento todavía.
+                    </div>
+                <% } else { %>
+                    <% competidores.forEach(comp => { %>
+                        <div class="atleta-row d-flex align-items-center"
+                             data-dorsal="<%= comp.numero_atleta %>"
+                             data-nombre="<%= (comp.atletas?.nombre || '').toLowerCase() %>">
+                            <div class="dorsal-num me-3">#<%= comp.numero_atleta || '?' %></div>
+                            <div class="flex-grow-1">
+                                <div class="nombre-atleta"><%= comp.atletas?.nombre || '—' %></div>
+                                <div class="cat-label"><%= comp.eventos_categorias?.categorias?.nombre || '—' %></div>
+                            </div>
+                            <% if (comp.salida) { %>
+                                <span class="badge bg-success ms-2 small">En Escena</span>
+                            <% } %>
                         </div>
                     <% }) %>
-                </div>
+                <% } %>
             </div>
         </div>
+    </div>
 
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-lg p-4 bg-dark text-white" style="border-radius: 15px; min-height: 80vh;">
-                <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-3 mb-4">
-                    <h2 class="fw-bold mb-0 text-warning">
-                        <i class="fas fa-running me-2"></i> LLAMADO A TARIMA
-                    </h2>
-                    <div id="statusLive" class="badge bg-danger animate-pulse">EN VIVO</div>
-                </div>
-
-                <div id="contenedorClasificados">
-                    <div class="text-center py-5 opacity-50" id="msgEspera">
-                        <i class="fas fa-broadcast-tower display-1 mb-4"></i>
-                        <h3>Esperando lista de clasificados...</h3>
-                    </div>
+    <!-- TAB: LLAMADO A TARIMA (tiempo real) -->
+    <div id="panelLlamado" style="display:none;">
+        <div class="bs-card p-4" style="min-height:60vh;">
+            <div id="contenedorClasificados">
+                <div class="text-center py-5 opacity-50" id="msgEspera">
+                    <i class="fas fa-broadcast-tower fa-3x mb-4 text-warning d-block"></i>
+                    <h4 class="text-secondary">Esperando clasificados del MC...</h4>
+                    <p class="small text-secondary">El sistema mostrará aquí los atletas cuando sean enviados a tarima.</p>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- TAB: PROGRAMA / CRONOGRAMA -->
+    <div id="panelPrograma" style="display:none;">
+        <div class="bs-card p-3">
+            <% if (evento.cronograma_mc && evento.cronograma_mc.length > 0) { %>
+                <% evento.cronograma_mc.forEach((bloque, i) => { %>
+                    <div class="atleta-row d-flex align-items-center">
+                        <span class="text-secondary me-3 fw-bold" style="min-width:1.5rem;"><%= i+1 %></span>
+                        <span class="badge <%= bloque.tipo === 'Categoría' ? 'bg-primary' : 'bg-secondary' %> me-2 fase-badge">
+                            <%= bloque.tipo %>
+                        </span>
+                        <span class="fw-semibold <%= bloque.tipo === 'Categoría' ? 'text-white' : 'text-secondary' %>">
+                            <%= bloque.nombre %>
+                        </span>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="text-center py-5 text-secondary">
+                    <i class="fas fa-clipboard-list fa-2x mb-3 d-block"></i>
+                    El programa del evento aún no ha sido definido.
+                </div>
+            <% } %>
+        </div>
+    </div>
+
 </div>
 
 <script src="/js/supabase.js"></script>
@@ -47,47 +123,76 @@
     window._supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
     const idEvento = "<%= evento.id %>";
 
-    async function actualizarBackstage() {
-        const { data } = await _supabase.from('eventos').select('orden_backstage').eq('id', idEvento).single();
-
-        if (data?.orden_backstage?.atletas?.length > 0) {
-            const backstage = data.orden_backstage;
-            document.getElementById('msgEspera').classList.add('d-none');
-            
-            let html = `
-                <div class="alert alert-info py-2 fw-bold text-center text-uppercase fs-4">
-                    FASE: ${backstage.fase} - CLASIFICADOS
-                </div>
-                <div class="row g-3 mt-2">
-            `;
-
-            backstage.atletas.sort((a,b) => a.dorsal - b.dorsal).forEach(atleta => {
-                html += `
-                    <div class="col-md-6 col-xl-4">
-                        <div class="card bg-secondary bg-opacity-25 border-light p-3 h-100">
-                            <div class="d-flex align-items-center">
-                                <div class="badge bg-warning text-dark fs-2 me-3" style="min-width: 70px;">
-                                    ${atleta.dorsal}
-                                </div>
-                                <div class="fw-bold fs-5">${atleta.nombre}</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            html += `</div>`;
-            document.getElementById('contenedorClasificados').innerHTML = html;
-            new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3').play().catch(() => {});
-        }
+    // ── TABS ─────────────────────────────────────────────
+    function mostrarTab(tab) {
+        ['lista','llamado','programa'].forEach(t => {
+            document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = t === tab ? '' : 'none';
+            document.getElementById('tab-' + t).classList.toggle('activo', t === tab);
+        });
     }
 
-    _supabase.channel('backstage-live').on('postgres_changes', { 
-        event: 'UPDATE', schema: 'public', table: 'eventos', filter: `id=eq.${idEvento}` 
-    }, () => {
-        actualizarBackstage();
-    }).subscribe();
+    // ── BUSCADOR ──────────────────────────────────────────
+    document.getElementById('buscadorAtleta').addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        document.querySelectorAll('#listaAtletas .atleta-row').forEach(row => {
+            const dorsal = (row.dataset.dorsal || '').toLowerCase();
+            const nombre = (row.dataset.nombre || '').toLowerCase();
+            row.style.display = (!q || dorsal.includes(q) || nombre.includes(q)) ? '' : 'none';
+        });
+    });
 
-    actualizarBackstage();
+    // ── REALTIME: CLASIFICADOS / LLAMADO ──────────────────
+    async function actualizarLlamado() {
+        const { data } = await _supabase.from('eventos').select('orden_backstage').eq('id', idEvento).single();
+
+        const contenedor = document.getElementById('contenedorClasificados');
+        if (!data?.orden_backstage?.atletas?.length) {
+            document.getElementById('msgEspera').style.display = '';
+            return;
+        }
+
+        const backstage = data.orden_backstage;
+        document.getElementById('msgEspera').style.display = 'none';
+
+        let html = `
+            <div class="alert py-2 fw-bold text-center text-uppercase fs-5 mb-3"
+                 style="background:#1a2a1a;border:1px solid #28a745;color:#7dff7d;border-radius:12px;">
+                📣 FASE: ${backstage.fase} — CLASIFICADOS
+            </div>
+            <div class="row g-3">`;
+
+        backstage.atletas.sort((a, b) => a.dorsal - b.dorsal).forEach(atleta => {
+            html += `
+                <div class="col-6 col-md-4 col-xl-3">
+                    <div class="p-3 text-center" style="background:#1a1a1a;border-radius:14px;border:1px solid #2d4a2d;">
+                        <div class="fw-bold text-warning" style="font-size:2.5rem;font-family:monospace;">#${atleta.dorsal}</div>
+                        <div class="fw-semibold text-white" style="font-size:.85rem;">${atleta.nombre}</div>
+                    </div>
+                </div>`;
+        });
+
+        html += `</div>`;
+        contenedor.innerHTML = html;
+
+        // Sonido de alerta
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            [440, 550, 660].forEach((f, i) => {
+                const o = ctx.createOscillator();
+                o.connect(ctx.destination);
+                o.frequency.value = f;
+                o.start(ctx.currentTime + i * 0.12);
+                o.stop(ctx.currentTime + i * 0.12 + 0.1);
+            });
+        } catch(e) {}
+    }
+
+    _supabase.channel('backstage-live')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'eventos', filter: `id=eq.${idEvento}` },
+            () => { actualizarLlamado(); })
+        .subscribe();
+
+    actualizarLlamado();
 </script>
+
 <%- include("../template/footer") %>

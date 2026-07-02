@@ -1,4 +1,4 @@
-const { supabase, supabaseAdmin } = require('../supabaseClient');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 const webpush = require('web-push'); // webpush is configured globally in app.js
 
 const testPush = async (req, res) => {
@@ -77,15 +77,15 @@ const registrarPagoManual = async (req, res) => {
 
 const verRegistroStaff = async (req, res) => {
     try {
-        // Traemos el personal unido con su rol desde la tabla profiles
         const { data: staff, error } = await supabaseAdmin
             .from('staff')
             .select(`
                 id,
                 nombre_completo,
                 puesto_especifico,
-                profiles ( role )
-            `);
+                profiles ( role, email )
+            `)
+            .order('nombre_completo', { ascending: true });
 
         if (error) throw error;
 
@@ -145,40 +145,52 @@ const eliminarStaff = async (req, res) => {
 
 const verReporteCaja = async (req, res) => {
     try {
-        const hoy = new Date().toISOString().split('T')[0];
-        
-        // Consultamos los pagos del día incluyendo el nombre de quien registró
-        const { data: pagos, error } = await supabaseAdmin
-            .from('pagos_globales')
-            .select(`
-                monto,
-                tipo_pago,
-                profiles:registrado_por ( nombre )
-            `)
-            .gte('created_at', hoy);
+        const { fecha } = req.query;
+        const diaFiltro = fecha || new Date().toISOString().split('T')[0];
+        const diaFiltroFin = diaFiltro + 'T23:59:59';
+
+        const [{ data: pagos, error }, { data: inscripcionesHoy }] = await Promise.all([
+            supabaseAdmin.from('pagos_globales')
+                .select('monto, tipo_pago, profiles:registrado_por ( nombre )')
+                .gte('created_at', diaFiltro)
+                .lte('created_at', diaFiltroFin),
+            supabaseAdmin.from('competidores')
+                .select(`
+                    atleta_id, id_evento, pago_validado,
+                    atletas ( nombre ),
+                    eventos ( nombre, costo_primera_cat, costo_adicional, costo_oferta_primera, costo_oferta_adicional, fecha_limite_oferta )
+                `)
+                .eq('pago_validado', true)
+                .not('url_comprobante_pago', 'is', null)
+                .gte('created_at', diaFiltro)
+                .lte('created_at', diaFiltroFin)
+        ]);
 
         if (error) throw error;
 
-        // Agrupamos la data para el reporte (Staff + Tipo Pago)
+        // Agrupar pagos globales por staff/tipo
         const agrupado = (pagos || []).reduce((acc, p) => {
             const staffNombre = p.profiles?.nombre || 'Admin/Sistema';
-            const clave = `${staffNombre}-${p.tipo_pago}`;
-            
-            if (!acc[clave]) {
-                acc[clave] = {
-                    staff_nombre: staffNombre,
-                    tipo_pago: p.tipo_pago,
-                    cantidad_transacciones: 0,
-                    total_recaudado: 0
-                };
-            }
-            
+            const clave = `${staffNombre}|${p.tipo_pago}`;
+            if (!acc[clave]) acc[clave] = { staff_nombre: staffNombre, tipo_pago: p.tipo_pago, cantidad_transacciones: 0, total_recaudado: 0 };
             acc[clave].cantidad_transacciones++;
-            acc[clave].total_recaudado += p.monto;
+            acc[clave].total_recaudado += parseFloat(p.monto || 0);
             return acc;
         }, {});
 
-        res.render('admin/reporte_caja', { resumen: Object.values(agrupado) });
+        // Agrupar inscripciones por evento (estimado de monto según precio de 1ra categoría)
+        const inscripcionesAgrupadas = (inscripcionesHoy || []).reduce((acc, c) => {
+            const eventoNombre = c.eventos?.nombre || 'Evento';
+            if (!acc[eventoNombre]) acc[eventoNombre] = { evento: eventoNombre, cantidad: 0 };
+            acc[eventoNombre].cantidad++;
+            return acc;
+        }, {});
+
+        res.render('admin/reporte_caja', {
+            resumen: Object.values(agrupado),
+            inscripciones: Object.values(inscripcionesAgrupadas),
+            fecha: diaFiltro
+        });
     } catch (error) {
         console.error("Error en reporte de caja:", error.message);
         res.status(500).send("Error al generar el reporte de caja.");
@@ -195,37 +207,51 @@ const verAuditoriaPagos = async (req, res) => {
         `);
 
         if (query) {
-            // Buscador inteligente: Filtra por el tipo de pago o método de pago
             consulta = consulta.or(`tipo_pago.ilike.%${query}%, metodo_pago.ilike.%${query}%`);
         }
 
-        const { data: pagos, error: errPagos } = await consulta.order('fecha_pago', { ascending: false });
+        const [
+            { data: pagos, error: errPagos },
+            { data: todasInscripciones },
+            { data: extras }
+        ] = await Promise.all([
+            consulta.order('fecha_pago', { ascending: false }),
+            supabaseAdmin.from('competidores')
+                .select(`
+                    id, atleta_id, id_evento, created_at,
+                    url_comprobante_pago, pago_validado, observaciones_pago,
+                    fecha_subida_pago,
+                    atletas!inner ( nombre, idfdff ),
+                    eventos ( id, nombre, costo_primera_cat, costo_adicional, costo_oferta_primera, costo_oferta_adicional, fecha_limite_oferta )
+                `)
+                .not('url_comprobante_pago', 'is', null)
+                .order('pago_validado', { ascending: true })
+                .order('fecha_subida_pago', { ascending: false }),
+            supabaseAdmin.from('evento_ingresos_extra')
+                .select('*, eventos(nombre)')
+                .ilike('concepto', `%${query || ''}%`)
+                .order('created_at', { ascending: false })
+        ]);
+
         if (errPagos) throw errPagos;
 
-        // Traemos las inscripciones de eventos que tienen comprobante de pago subido
-        const { data: inscripciones } = await supabaseAdmin
-            .from('competidores')
-            .select(`
-                id, atleta_id, created_at, url_comprobante_pago, pago_validado,
-                atletas!inner ( nombre, idfdff ),
-                eventos ( nombre )
-            `)
-            .not('url_comprobante_pago', 'is', null)
-            .order('created_at', { ascending: false });
+        // Filtrar inscripciones por nombre/idfdff si hay búsqueda
+        const inscripciones = query
+            ? (todasInscripciones || []).filter(i =>
+                (i.atletas?.nombre || '').toLowerCase().includes(query.toLowerCase()) ||
+                String(i.atletas?.idfdff || '').includes(query))
+            : (todasInscripciones || []);
 
-        // También traemos los ingresos extras para el buscador
-        const { data: extras, error: errExtras } = await supabaseAdmin
-            .from('evento_ingresos_extra')
-            .select('*, eventos(nombre)')
-            .ilike('concepto', `%${query || ''}%`);
-        
-        if (errExtras) throw errExtras;
+        const pendientes = inscripciones.filter(i => !i.pago_validado);
+        const validados  = inscripciones.filter(i => i.pago_validado);
 
-        res.render('admin/auditoria_pagos', { 
-            pagos: pagos || [], 
-            inscripciones: inscripciones || [],
+        res.render('admin/auditoria_pagos', {
+            pagos: pagos || [],
+            pendientes,
+            validados,
             extras: extras || [],
-            query 
+            totalPendientes: pendientes.length,
+            query
         });
     } catch (e) {
         console.error("🔥 Error en auditoría de pagos:", e.message);

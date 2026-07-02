@@ -1,105 +1,82 @@
+<!-- ── LOGO EN SIDEBAR ──────────────────────────────────────────────── -->
+<div class="sb-logo">
+    <img src="/img/fdff.svg" alt="FDFF" onerror="this.style.display='none'">
+    <div class="sb-logo-text">
+        FEDERACIÓN DOMINICANA
+        <small>DE FISICULTURISMO · IFBB</small>
+    </div>
+</div>
 
+<!-- ── SECCIÓN PÚBLICA ─────────────────────────────────────────────── -->
+<div class="sb-section">
+    <div class="sb-section-title">General</div>
+    <a class="sb-link" href="/"><i class="fas fa-home"></i><span class="sb-link-text">Inicio</span></a>
+    <a class="sb-link" href="/eventos/competencias"><i class="fas fa-trophy"></i><span class="sb-link-text">Competencias</span></a>
+    <a class="sb-link" href="/eventos/historico"><i class="fas fa-award"></i><span class="sb-link-text">Salón de la Fama</span></a>
+    <a class="sb-link" href="/jueces"><i class="fas fa-gavel"></i><span class="sb-link-text">Comité de Jueces</span></a>
+    <a class="sb-link" href="/preparadores/ranking-teams"><i class="fas fa-trophy"></i><span class="sb-link-text">Ranking Teams</span></a>
+</div>
 
-<nav class="navbar navbar-expand-md py-0 navbar-dark bg-dark">
-<!-- <% console.log("DEPURACIÓN NAVBAR - Usuario:", locals.user) %>
-  <pre class="text-white small">Rol detectado: <%= locals.user ? user.role : 'Nadie logueado' %></pre>
-  -->
-  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+<% if (locals.user) { %>
 
-  <div class="collapse navbar-collapse mx-2" id="navbarSupportedContent">
-    <ul class="navbar-nav w-100 d-flex justify-content-between align-items-center">
-      
-      <!-- INICIO: Visible siempre -->
-      <li class="nav-item">
-        <a class="navbar-brand py-0" href="/"><strong>Inicio</strong></a>
-      </li>
+<!-- ── MI CUENTA ──────────────────────────────────────────────────── -->
+<div class="sb-divider"></div>
+<div class="sb-section">
+    <div class="sb-section-title">Mi Cuenta</div>
+    <a class="sb-link" href="/social/muro"><i class="fas fa-comments"></i><span class="sb-link-text">Muro Social</span></a>
+    <a class="sb-link" href="/social/noticias"><i class="fas fa-newspaper"></i><span class="sb-link-text">Noticias</span></a>
 
-      <!-- Ejemplo de enlace en Navbar -->
-<li class="nav-item">
-    <a class="nav-link fw-bold" href="/eventos/competencias">
-        <i class="fas fa-calendar-star"></i> COMPETENCIAS
-    </a>
-</li>
-      
-      <!-- Sección Pública (Visible para todos) -->
-      <li class="nav-item">
-          <a class="nav-link fw-bold text-primary" href="/eventos/historico">
-              <i class="fas fa-award"></i> SALÓN DE LA FAMA
-          </a>
-      </li>
+    <% if (locals.user.role === 'atleta' || locals.user.role === 'admin') { %>
+        <a class="sb-link" href="/atletas/perfil"><i class="fas fa-user-circle text-warning"></i><span class="sb-link-text">Mi Perfil</span></a>
+        <a class="sb-link" href="/servicios"><i class="fas fa-concierge-bell"></i><span class="sb-link-text">Servicios</span></a>
+    <% } %>
 
-      <li class="nav-item">
-          <a class="nav-link fw-bold" href="/jueces">
-              <i class="fas fa-gavel"></i> COMITÉ DE JUECES
-          </a>
-      </li>
+    <% if (locals.user.role === 'general' || locals.user.role === 'admin') { %>
+        <a class="sb-link" href="/afiliacion"><i class="fas fa-id-card text-info"></i><span class="sb-link-text">Afiliación</span></a>
+    <% } %>
+</div>
 
+<!-- ── PANEL DE CONTROL (Admin / Ejecutivo) ───────────────────────── -->
+<% if (locals.user.role === 'admin' || locals.user.role === 'ejecutivo') { %>
+<div class="sb-divider"></div>
+<div class="sb-section">
+    <div class="sb-section-title">Gestión</div>
 
-      <% if (locals.user) { %>
-        <!-- PÚBLICO / GENERAL (Logueados) -->
-        <li class="nav-item"><a class="nav-link" href="/social/muro"><strong>Muro Social</strong></a></li>
-        <li class="nav-item"><a class="nav-link" href="/social/noticias"><strong>Noticias</strong></a></li>
+    <a class="sb-link" href="/admin/registro_staff"><i class="fas fa-user-shield"></i><span class="sb-link-text">Personal</span></a>
+    <a class="sb-link" href="/atletas"><i class="fas fa-users"></i><span class="sb-link-text">Atletas</span></a>
+    <a class="sb-link" href="/preparadores"><i class="fas fa-user-tie"></i><span class="sb-link-text">Coaches</span></a>
+    <a class="sb-link" href="/categorias"><i class="fas fa-tags"></i><span class="sb-link-text">Categorías</span></a>
+    <a class="sb-link" href="/categorias/nuevoEvento"><i class="fas fa-calendar-plus"></i><span class="sb-link-text">Crear Evento</span></a>
 
-        <!-- ATLETAS -->
-        <% if (user.role === 'atleta' || user.role === 'admin') { %>
-          <li class="nav-item">
-              <a class="nav-link text-warning" href="/atletas/perfil"><strong><i class="fas fa-user-circle"></i> Mi Perfil</strong></a>
-          </li>
-          <li class="nav-item"><a class="nav-link" href="/servicios"><strong>Servicios</strong></a></li>
-          <li class="nav-item"><a class="nav-link" href="/afiliacion"><strong>Afiliacion</strong></a></li>
-        <% } %>
+</div>
+<% } %>
 
-        <!-- Sección Administrativa (Solo Admin/Ejecutivo) -->
-        <% if (user && (user.role === 'admin' || user.role === 'ejecutivo')) { %>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle bg-dark text-white rounded px-3" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-shield-alt"></i> PANEL DE CONTROL
-                </a>
-                <ul class="dropdown-menu shadow-lg" aria-labelledby="adminMenu">
-                    <% if (locals.evento && evento.id) { %>
-                        <li><a class="dropdown-item fw-bold" href="/eventos/<%= evento.id %>/centro-mando"><i class="fas fa-broadcast-tower me-2"></i> CENTRO DE MANDO</a></li>
-                    <% } %>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="/admin/registro_staff"><i class="fas fa-user-shield me-2"></i> Gestión de Personal</a></li>
-                    <li><a class="dropdown-item" href="/atletas"><i class="fas fa-users me-2"></i> Gestión de Atletas</a></li>
-                    <li><a class="dropdown-item" href="/preparadores"><i class="fas fa-user-tie me-2"></i> Gestión de Coaches</a></li>
-                    <li><a class="dropdown-item" href="/categorias"><i class="fas fa-tags me-2"></i> Gestión de Categorías</a></li>
-                    <li><a class="dropdown-item" href="/categorias/nuevoEvento"><i class="fas fa-calendar-plus me-2"></i> Crear Evento</a></li>
-                </ul>
-            </li>
-        <% } %>
+<!-- ── JUECES ─────────────────────────────────────────────────────── -->
+<% if (locals.user.role === 'juez') { %>
+<div class="sb-divider"></div>
+<div class="sb-section">
+    <div class="sb-section-title">Jueces</div>
+    <a class="sb-link" href="/jueces"><i class="fas fa-gavel"></i><span class="sb-link-text">Panel de Jueces</span></a>
+</div>
+<% } %>
 
-        <!-- JUECES -->
-        <% if (user.role === 'juez') { %>
-          <li class="nav-item"><a class="nav-link" href="/jueces"><strong>Jueces</strong></a></li>
-        <% } %>
+<!-- ── PREPARADOR / COACH ─────────────────────────────────────────── -->
+<% if (locals.user.role === 'preparador') { %>
+<div class="sb-divider"></div>
+<div class="sb-section">
+    <div class="sb-section-title">Mi Team</div>
+    <a class="sb-link" href="/preparadores/panel"><i class="fas fa-clipboard-list text-primary"></i><span class="sb-link-text">Mi Panel</span></a>
+    <a class="sb-link" href="/preparadores/ranking-teams"><i class="fas fa-trophy text-warning"></i><span class="sb-link-text">Ranking Teams</span></a>
+</div>
+<% } %>
 
-        <!-- FOTÓGRAFO -->
-        <% if (user.role === 'fotografo') { %>
-            <li class="nav-item"><a class="nav-link" href="/fotografia/upload"><strong>Fotografía</strong></a></li>
-        <% } %>
+<!-- ── FOTÓGRAFO ──────────────────────────────────────────────────── -->
+<% if (locals.user.role === 'fotografo') { %>
+<div class="sb-divider"></div>
+<div class="sb-section">
+    <div class="sb-section-title">Fotografía</div>
+    <a class="sb-link" href="/fotografo/upload"><i class="fas fa-camera"></i><span class="sb-link-text">Subir Fotos</span></a>
+</div>
+<% } %>
 
-        <!-- BOTÓN SALIR -->
-        <li class="nav-item">
-          <a class="nav-link text-danger" href="/logout" title="Cerrar Sesión de <%= user.role %>">
-            <strong>Salir</strong>
-          </a>
-        </li>
-
-      <% } else { %>
-        <!-- SI NO HAY SESIÓN -->
-        <li class="nav-item">
-          <a class="nav-link text-info" href="/login"><strong>Entrar / Registrarse</strong></a>
-        </li>
-      <% } %>
-
-      <!-- BUSCADOR -->
-      <form class="form-inline my-2 my-lg-0 d-none d-lg-flex">
-        <input class="form-control form-control-sm mr-sm-2" type="search" placeholder="Buscar..." aria-label="Search">
-        <button class="btn btn-outline-success btn-sm my-2 my-sm-0" type="submit">Go</button>
-      </form>
-    </ul>
-  </div>
-</nav>
+<% } %>
