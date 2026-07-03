@@ -1,10 +1,22 @@
 <%- include("template/cabecera", {tituloWeb: "Pagina de Atletas"}) %>
 
 <style>
-    /* Forzar títulos blancos sobre el fondo oscuro, anulando estilos de DataTables */
-    #mydatatable thead th {
-        color: white !important;
+    #mydatatable thead tr:first-child th { color: white !important; }
+    #mydatatable thead tr.filter-row th,
+    #mydatatable thead tr.filter-row td { background: #343a40; padding: 4px 6px; }
+    #mydatatable thead tr.filter-row input {
+        width: 100%; font-size: .78rem; padding: 2px 5px;
+        border: 1px solid #6c757d; border-radius: 4px;
+        background: #495057; color: #fff;
     }
+    #mydatatable thead tr.filter-row input::placeholder { color: #adb5bd; }
+    /* Scrollbar superior sincronizado */
+    #scroll-bar-top {
+        overflow-x: scroll; overflow-y: hidden;
+        height: 14px; margin-bottom: 3px;
+        border-radius: 4px;
+    }
+    #scroll-bar-top-inner { height: 1px; }
 </style>
 
 <div class="p-2 divGeneral">
@@ -21,6 +33,9 @@
             </a>
         </div>
     </div>
+    <!-- Scrollbar superior sincronizado -->
+    <div id="scroll-bar-top"><div id="scroll-bar-top-inner"></div></div>
+
     <div class="table-responsive" id="mydatatable-container">
         <table class="records_list table table-striped table-bordered border-dark table-hover" id="mydatatable">
             <thead class="bg-dark shadow-sm">
@@ -41,12 +56,10 @@
                     <th scope="col">Pais</th>
                     <th scope="col">Provincia</th>
                     <th scope="col">Municipio</th>
-                    <!-- <th scope="col">Ciudad</th> -->
                     <th scope="col">Sector</th>
                     <th scope="col">Calle</th>
                     <th scope="col">Postal</th>
                     <th scope="col">Nacimiento</th>
-                     <!--  <th scope="col">Edad</th>-->
                     <th scope="col">Sexo</th>
                     <th scope="col">Peso</th>
                     <th scope="col">Estatura</th>
@@ -55,41 +68,38 @@
                     <th scope="col">Preparador</th>
                     <th scope="col">Cel Preparador</th>
                     <th scope="col">Email Preparador</th>
-            
+                </tr>
+                <tr class="filter-row">
+                    <td></td>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
+                    <th><input type="text" placeholder="Filtrar.."></th>
                 </tr>
             </thead>
-             <tfoot>
-                <tr>
-                    <td></td>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th class= "col col-md-8">Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                    <th>Filter..</th>
-                </tr>
-            </tfoot>
             <tbody>
                 <% if (arrayAtletas.length > 0) { %>
                     <% arrayAtletas.forEach(atleta => { %>
@@ -146,31 +156,48 @@
         </table>
     </div>
 
-    <!-- Scripts de DataTables (se mantienen igual) -->
     <script type="text/javascript">
         $(document).ready(function () {
-            $('#mydatatable tfoot th').each(function () {
-                $(this).html('<input type="text" placeholder="Filtrar.." />');
-            });
             var table = $('#mydatatable').DataTable({
                 "dom": 'B<"float-left"i><"float-right"f>t<"float-left"l><"float-right"p><"clearfix">',
                 "language": { "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json" },
                 "order": [[0, "desc"]],
-
+                "orderCellsTop": true,  // solo la fila 0 del thead activa el sort
                 "initComplete": function () {
-                    this.api().columns().every(function () {
-                        var that = this;
-    
-                        $('input', this.footer()).on('keyup change', function () {
-                            if (that.search() !== this.value) {
-                                that
-                                    .search(this.value)
-                                    .draw();
-                            }
-                        });
-                    })
+                    var api = this.api();
+                    var filterRow = $('#mydatatable thead tr.filter-row');
+
+                    api.columns().every(function () {
+                        var col = this;
+                        var idx = col.index();
+                        $('input', filterRow.children('th, td').eq(idx))
+                            .on('keyup change', function () {
+                                if (col.search() !== this.value) {
+                                    col.search(this.value).draw();
+                                }
+                            });
+                    });
                 },
                 "buttons": ['csv', 'excel', 'pdf', 'print']
+            });
+
+            // ── Scrollbar superior sincronizado ──────────────────────────────
+            var scrollTop   = document.getElementById('scroll-bar-top');
+            var scrollInner = document.getElementById('scroll-bar-top-inner');
+            var tableWrap   = document.getElementById('mydatatable-container');
+
+            function syncWidth() {
+                scrollInner.style.width = tableWrap.scrollWidth + 'px';
+            }
+            syncWidth();
+            $('#mydatatable').on('draw.dt', syncWidth);
+            window.addEventListener('resize', syncWidth);
+
+            scrollTop.addEventListener('scroll', function () {
+                tableWrap.scrollLeft = scrollTop.scrollLeft;
+            });
+            tableWrap.addEventListener('scroll', function () {
+                scrollTop.scrollLeft = tableWrap.scrollLeft;
             });
         });
     </script>
