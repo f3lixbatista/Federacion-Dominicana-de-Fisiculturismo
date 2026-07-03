@@ -1,6 +1,21 @@
 const { supabase, supabaseAdmin } = require('../config/supabase');
 const QRCode = require('qrcode');
 
+// Devuelve el siguiente IDFDFF disponible (FDFF-XXXX) buscando el máximo en BD
+async function siguienteIdfdff() {
+    const { data } = await supabaseAdmin
+        .from('atletas')
+        .select('idfdff')
+        .like('idfdff', 'FDFF-%');
+
+    const max = (data || []).reduce((acc, a) => {
+        const n = parseInt((a.idfdff || '').replace('FDFF-', '')) || 0;
+        return n > acc ? n : acc;
+    }, 2104); // piso: no bajar de FDFF-2104
+
+    return `FDFF-${max + 1}`;
+}
+
 const listarAtletas = async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -55,6 +70,9 @@ const crearAtleta = async (req, res) => {
     try {
         console.log("📩 Intento de creación de atleta recibido para:", email);
 
+        // Asignar IDFDFF automático si no viene del formulario
+        const idfdffFinal = (idfdff && idfdff.trim()) ? idfdff.trim() : await siguienteIdfdff();
+
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
             email,
             password,
@@ -66,11 +84,10 @@ const crearAtleta = async (req, res) => {
         const newUserId = authData.user.id;
         console.log("✅ Usuario creado en Supabase Auth con ID:", newUserId);
 
-
-        // 2. Crear Perfil (Upsert evita errores si un trigger ya creó el registro)
+        // 2. Crear Perfil
         const { error: errorProfile } = await supabaseAdmin
             .from('profiles')
-            .upsert({ id: newUserId, nombre, role: 'atleta', cedula, email, id_fdff: idfdff || null }, { onConflict: 'id' });
+            .upsert({ id: newUserId, nombre, role: 'atleta', cedula, email, id_fdff: idfdffFinal }, { onConflict: 'id' });
 
         if (errorProfile) throw new Error('Error en Profile: ' + errorProfile.message);
 
@@ -82,7 +99,7 @@ const crearAtleta = async (req, res) => {
                 nombre,
                 email,
                 cedula: cedula || null,
-                idfdff: idfdff || null,
+                idfdff: idfdffFinal,
                 estatus_afiliacion: 'habilitado',
                 fecha_ultima_renovacion: `${new Date().getFullYear()}-12-31`,
                 pasaporte,
@@ -178,6 +195,14 @@ const actualizarAtleta = async (req, res) => {
     delete datosRecibidos.id;
 
     try {
+        // Si llega un email real, actualizar también el usuario en Supabase Auth
+        // para que el atleta pueda loguarse con ese correo desde ese momento
+        const nuevoEmail = datosRecibidos.email?.trim();
+        if (nuevoEmail) {
+            await supabaseAdmin.auth.admin.updateUserById(id, { email: nuevoEmail, email_confirm: true });
+            await supabaseAdmin.from('profiles').update({ email: nuevoEmail }).eq('id', id);
+        }
+
         const { error } = await supabaseAdmin
             .from('atletas')
             .update(datosRecibidos)
@@ -198,9 +223,15 @@ const solicitarAfiliacion = async (req, res) => {
     if (!usuarioId) return res.status(401).json({ estado: false, mensaje: "Sesión expirada" });
 
     try {
+        // Verificar si ya tiene IDFDFF asignado; si no, asignar el siguiente
+        const { data: atletaExistente } = await supabaseAdmin
+            .from('atletas').select('idfdff').eq('id', usuarioId).maybeSingle();
+
+        const idfdff = atletaExistente?.idfdff || await siguienteIdfdff();
+
         const { error } = await supabaseAdmin
             .from('atletas')
-            .upsert({ ...req.body, id: usuarioId });
+            .upsert({ ...req.body, id: usuarioId, idfdff });
 
         if (error) throw error;
 
