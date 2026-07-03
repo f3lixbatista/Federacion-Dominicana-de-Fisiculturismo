@@ -30,5 +30,7 @@ router.post('/roles/permiso', adminController.actualizarPermiso);
 router.post('/roles/crear', adminController.crearRol);
 router.delete('/roles/:id', adminController.eliminarRol);
 router.post('/roles/recargar', adminController.recargarPermisos);
+router.get('/roles/usuarios', adminController.listarUsuariosConRol);
+router.post('/roles/usuarios/cambiar-rol', adminController.cambiarRolUsuario);
 
 module.exports = router;

@@ -358,6 +358,40 @@ const recargarPermisos = async (req, res) => {
     }
 };
 
+const listarUsuariosConRol = async (req, res) => {
+    try {
+        const { data: usuarios, error } = await supabaseAdmin
+            .from('profiles')
+            .select('id, nombre, email, role, cedula, id_fdff')
+            .order('nombre', { ascending: true })
+            .limit(500);
+
+        if (error) throw error;
+        res.json({ ok: true, usuarios: usuarios || [] });
+    } catch (err) {
+        res.status(500).json({ ok: false, error: err.message });
+    }
+};
+
+const cambiarRolUsuario = async (req, res) => {
+    const { user_id, nuevo_rol } = req.body;
+    const rolesValidos = getRoles().map(r => r.nombre);
+    if (!rolesValidos.includes(nuevo_rol))
+        return res.status(400).json({ ok: false, error: 'Rol inválido' });
+
+    try {
+        const { error } = await supabaseAdmin
+            .from('profiles')
+            .update({ role: nuevo_rol })
+            .eq('id', user_id);
+
+        if (error) throw error;
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ ok: false, error: err.message });
+    }
+};
+
 module.exports = {
     testPush,
     verRecaudacionGeneral,
@@ -372,4 +406,6 @@ module.exports = {
     crearRol,
     eliminarRol,
     recargarPermisos,
+    listarUsuariosConRol,
+    cambiarRolUsuario,
 };

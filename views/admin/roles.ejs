@@ -14,6 +14,8 @@
         position:fixed; bottom:1.5rem; right:1.5rem; z-index:9999;
         min-width:220px;
     }
+    #tabla-usuarios tbody td { vertical-align:middle; }
+    #tabla-usuarios .form-select-sm { font-size:.82rem; }
 </style>
 
 <div class="p-3 divGeneral">
@@ -25,6 +27,7 @@
             <small class="text-muted">Los cambios se aplican en tiempo real sin reiniciar el servidor.</small>
         </div>
         <div class="d-flex gap-2">
+            <div class="spinner-border spinner-border-sm text-secondary saving-spinner" id="global-spinner" role="status"></div>
             <button class="btn btn-outline-secondary btn-sm" onclick="recargarCache()">
                 <i class="fas fa-sync-alt me-1"></i>Recargar caché
             </button>
@@ -34,80 +37,158 @@
         </div>
     </div>
 
-    <%# ─── TARJETAS DE ROLES ─────────────────────────────────────────────── %>
-    <div class="d-flex flex-wrap gap-2 mb-4" id="roles-tabs">
-        <% roles.forEach((rol, i) => { %>
-            <div class="card rol-tab px-3 py-2 <%= i===0 ? 'activo' : '' %>"
-                 data-rol-id="<%= rol.id %>"
-                 data-rol-nombre="<%= rol.nombre %>"
-                 onclick="seleccionarRol(this)">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-<%= rol.color_badge %>"><%= rol.nombre %></span>
-                    <% if (rol.es_sistema) { %>
-                        <span class="badge bg-secondary badge-sistema"><i class="fas fa-lock"></i> sistema</span>
-                    <% } else { %>
-                        <button class="btn btn-link btn-sm text-danger p-0 ms-1"
-                                onclick="eliminarRol(event,'<%= rol.id %>','<%= rol.nombre %>')"
-                                title="Eliminar rol">
-                            <i class="fas fa-times-circle"></i>
-                        </button>
-                    <% } %>
-                </div>
-                <% if (rol.descripcion) { %>
-                    <small class="text-muted d-block mt-1" style="font-size:.72rem;max-width:180px"><%= rol.descripcion %></small>
-                <% } %>
-            </div>
-        <% }) %>
-    </div>
+    <%# ─── PESTAÑAS PRINCIPALES ─────────────────────────────────────────── %>
+    <ul class="nav nav-pills mb-3 border-bottom pb-2" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="btn-tab-permisos"
+                    data-bs-toggle="pill" data-bs-target="#tab-permisos"
+                    type="button" role="tab">
+                <i class="fas fa-lock me-1"></i>Permisos por Rol
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="btn-tab-usuarios"
+                    data-bs-toggle="pill" data-bs-target="#tab-usuarios"
+                    type="button" role="tab">
+                <i class="fas fa-users me-1"></i>Usuarios y Roles
+            </button>
+        </li>
+    </ul>
 
-    <%# ─── TABLA DE PERMISOS DEL ROL SELECCIONADO ───────────────────────── %>
-    <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center gap-2">
-            <i class="fas fa-table me-1"></i>
-            <span id="titulo-rol">Cargando…</span>
-            <span class="badge" id="badge-rol-sel"></span>
-            <div class="ms-auto spinner-border spinner-border-sm text-secondary saving-spinner" id="global-spinner" role="status"></div>
-        </div>
-        <div class="card-body p-0">
+    <div class="tab-content">
+
+        <%# ══════════════════════════════════════════════════════════════════ %>
+        <%# TAB 1 — PERMISOS POR ROL                                         %>
+        <%# ══════════════════════════════════════════════════════════════════ %>
+        <div class="tab-pane fade show active" id="tab-permisos" role="tabpanel">
+
+            <%# ─── TARJETAS DE ROLES ──────────────────────────────────────── %>
+            <div class="d-flex flex-wrap gap-2 mb-4" id="roles-tabs">
+                <% roles.forEach((rol, i) => { %>
+                    <div class="card rol-tab px-3 py-2 <%= i===0 ? 'activo' : '' %>"
+                         data-rol-id="<%= rol.id %>"
+                         data-rol-nombre="<%= rol.nombre %>"
+                         onclick="seleccionarRol(this)">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-<%= rol.color_badge %>"><%= rol.nombre %></span>
+                            <% if (rol.es_sistema) { %>
+                                <span class="badge bg-secondary badge-sistema"><i class="fas fa-lock"></i> sistema</span>
+                            <% } else { %>
+                                <button class="btn btn-link btn-sm text-danger p-0 ms-1"
+                                        onclick="eliminarRol(event,'<%= rol.id %>','<%= rol.nombre %>')"
+                                        title="Eliminar rol">
+                                    <i class="fas fa-times-circle"></i>
+                                </button>
+                            <% } %>
+                        </div>
+                        <% if (rol.descripcion) { %>
+                            <small class="text-muted d-block mt-1" style="font-size:.72rem;max-width:180px"><%= rol.descripcion %></small>
+                        <% } %>
+                    </div>
+                <% }) %>
+            </div>
+
+            <%# ─── TABLA DE PERMISOS DEL ROL SELECCIONADO ─────────────────── %>
+            <div class="card shadow-sm">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class="fas fa-table me-1"></i>
+                    <span id="titulo-rol">Cargando…</span>
+                    <span class="badge" id="badge-rol-sel"></span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered perm-table mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="min-width:190px">Área</th>
+                                    <th><i class="fas fa-eye me-1"></i>Ver</th>
+                                    <th><i class="fas fa-plus me-1"></i>Crear</th>
+                                    <th><i class="fas fa-pen me-1"></i>Editar</th>
+                                    <th><i class="fas fa-trash me-1"></i>Eliminar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="perm-tbody">
+                                <% AREAS.forEach(area => { %>
+                                <tr data-area="<%= area.key %>">
+                                    <td>
+                                        <i class="<%= area.icono %> me-2 text-secondary"></i>
+                                        <strong><%= area.label %></strong>
+                                        <small class="text-muted ms-1" style="font-size:.7rem;opacity:.6"><%= area.key %></small>
+                                    </td>
+                                    <% ['ver','crear','editar','eliminar'].forEach(accion => { %>
+                                    <td>
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input perm-check"
+                                                   type="checkbox"
+                                                   id="perm_<%= area.key %>_<%= accion %>"
+                                                   data-area="<%= area.key %>"
+                                                   data-accion="<%= accion %>"
+                                                   onchange="guardarPermiso(this)">
+                                        </div>
+                                    </td>
+                                    <% }) %>
+                                </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div><%# fin #tab-permisos %>
+
+        <%# ══════════════════════════════════════════════════════════════════ %>
+        <%# TAB 2 — USUARIOS Y ROLES                                          %>
+        <%# ══════════════════════════════════════════════════════════════════ %>
+        <div class="tab-pane fade" id="tab-usuarios" role="tabpanel">
+
+            <%# Resumen rápido por rol %>
+            <div class="d-flex flex-wrap gap-2 mb-3" id="resumen-roles">
+                <span class="text-muted small"><i class="fas fa-info-circle me-1"></i>Cargando resumen…</span>
+            </div>
+
+            <%# Filtros %>
+            <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+                <input type="text" class="form-control form-control-sm" id="filtro-usuario"
+                       placeholder="Buscar nombre, cédula, ID FDFF o email…"
+                       oninput="filtrarUsuarios()"
+                       style="max-width:320px">
+                <select class="form-select form-select-sm" id="filtro-rol-usu"
+                        onchange="filtrarUsuarios()"
+                        style="max-width:150px">
+                    <option value="">Todos los roles</option>
+                    <% roles.forEach(r => { %>
+                    <option value="<%= r.nombre %>"><%= r.nombre %></option>
+                    <% }) %>
+                </select>
+                <small class="text-muted" id="contador-usuarios"></small>
+            </div>
+
+            <%# Tabla %>
             <div class="table-responsive">
-                <table class="table table-bordered perm-table mb-0">
+                <table class="table table-hover table-sm" id="tabla-usuarios">
                     <thead class="table-dark">
                         <tr>
-                            <th style="min-width:160px">Área</th>
-                            <th><i class="fas fa-eye me-1"></i>Ver</th>
-                            <th><i class="fas fa-plus me-1"></i>Crear</th>
-                            <th><i class="fas fa-pen me-1"></i>Editar</th>
-                            <th><i class="fas fa-trash me-1"></i>Eliminar</th>
+                            <th>Nombre</th>
+                            <th>ID FDFF / Cédula</th>
+                            <th>Email</th>
+                            <th>Rol actual</th>
+                            <th style="min-width:160px">Cambiar rol</th>
                         </tr>
                     </thead>
-                    <tbody id="perm-tbody">
-                        <% AREAS.forEach(area => { %>
-                        <tr data-area="<%= area.key %>">
-                            <td>
-                                <i class="<%= area.icono %> me-2 text-secondary"></i>
-                                <strong><%= area.label %></strong>
-                            </td>
-                            <% ['ver','crear','editar','eliminar'].forEach(accion => { %>
-                            <td>
-                                <div class="form-check d-flex justify-content-center">
-                                    <input class="form-check-input perm-check"
-                                           type="checkbox"
-                                           id="perm_<%= area.key %>_<%= accion %>"
-                                           data-area="<%= area.key %>"
-                                           data-accion="<%= accion %>"
-                                           onchange="guardarPermiso(this)">
-                                </div>
-                            </td>
-                            <% }) %>
-                        </tr>
-                        <% }) %>
+                    <tbody id="tbody-usuarios">
+                        <tr><td colspan="5" class="text-center text-muted py-4" id="msg-usuarios-inicial">
+                            <i class="fas fa-users me-1"></i>Cargando usuarios…
+                        </td></tr>
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
 
-</div>
+        </div><%# fin #tab-usuarios %>
+
+    </div><%# fin .tab-content %>
+
+</div><%# fin .divGeneral %>
 
 <%# ─── MODAL NUEVO ROL ──────────────────────────────────────────────────── %>
 <div class="modal fade" id="modalNuevoRol" tabindex="-1">
@@ -157,14 +238,15 @@
 </div>
 
 <script>
-// ── Datos ──────────────────────────────────────────────────────────────────────
+// ── Datos globales ──────────────────────────────────────────────────────────
 const _ROLES    = <%- JSON.stringify(roles) %>;
 const _PERMISOS = <%- JSON.stringify(permisos) %>;
 let _rolActual  = _ROLES[0] || null;
+let _usuarios   = null;   // null = no cargado aún
 
-const toastEl   = document.getElementById('toast-perm');
-const bsToast   = toastEl ? new bootstrap.Toast(toastEl, { delay: 2200 }) : null;
-const spinner   = document.getElementById('global-spinner');
+const toastEl  = document.getElementById('toast-perm');
+const bsToast  = toastEl ? new bootstrap.Toast(toastEl, { delay: 2400 }) : null;
+const spinner  = document.getElementById('global-spinner');
 
 function mostrarToast(msg, ok = true) {
     if (!bsToast) return;
@@ -173,7 +255,10 @@ function mostrarToast(msg, ok = true) {
     bsToast.show();
 }
 
-// ── Selección de rol ──────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// TAB 1 — PERMISOS POR ROL
+// ══════════════════════════════════════════════════════════════════════════════
+
 function seleccionarRol(el) {
     document.querySelectorAll('.rol-tab').forEach(t => t.classList.remove('activo'));
     el.classList.add('activo');
@@ -196,18 +281,15 @@ function renderizarPermisos(rolNombre) {
         const area   = chk.dataset.area;
         const accion = chk.dataset.accion;
         chk.checked  = esAdmin ? true : !!(p[area]?.[accion]);
-        chk.disabled = esAdmin; // admin siempre tiene todo — no editable
+        chk.disabled = esAdmin;
     });
 }
 
-// Renderizar el primer rol al cargar
 if (_rolActual) renderizarPermisos(_rolActual.nombre);
 
-// ── Guardar permiso ────────────────────────────────────────────────────────────
 async function guardarPermiso(chk) {
     if (!_rolActual) return;
     spinner.classList.add('show');
-
     try {
         const res = await fetch('/admin/roles/permiso', {
             method: 'POST',
@@ -222,7 +304,6 @@ async function guardarPermiso(chk) {
         const json = await res.json();
         if (!json.ok) throw new Error(json.error);
 
-        // Actualizar caché local
         if (!_PERMISOS[_rolActual.nombre]) _PERMISOS[_rolActual.nombre] = {};
         if (!_PERMISOS[_rolActual.nombre][chk.dataset.area])
             _PERMISOS[_rolActual.nombre][chk.dataset.area] = {};
@@ -230,14 +311,13 @@ async function guardarPermiso(chk) {
 
         mostrarToast(`${chk.dataset.area}.${chk.dataset.accion} → ${chk.checked ? 'activado' : 'desactivado'}`);
     } catch (e) {
-        chk.checked = !chk.checked; // revertir
+        chk.checked = !chk.checked;
         mostrarToast('Error: ' + e.message, false);
     } finally {
         spinner.classList.remove('show');
     }
 }
 
-// ── Recargar caché ────────────────────────────────────────────────────────────
 async function recargarCache() {
     try {
         const res = await fetch('/admin/roles/recargar', { method: 'POST' });
@@ -249,11 +329,9 @@ async function recargarCache() {
     }
 }
 
-// ── Crear nuevo rol ────────────────────────────────────────────────────────────
 async function guardarNuevoRol() {
     const nombre = document.getElementById('nr-nombre').value.trim();
     if (!nombre) return alert('El nombre es requerido');
-
     try {
         const res = await fetch('/admin/roles/crear', {
             method: 'POST',
@@ -273,11 +351,9 @@ async function guardarNuevoRol() {
     }
 }
 
-// ── Eliminar rol ──────────────────────────────────────────────────────────────
 async function eliminarRol(evt, id, nombre) {
     evt.stopPropagation();
     if (!confirm(`¿Eliminar el rol "${nombre}"? Esta acción no se puede deshacer.`)) return;
-
     try {
         const res = await fetch(`/admin/roles/${id}`, { method: 'DELETE' });
         const json = await res.json();
@@ -287,6 +363,151 @@ async function eliminarRol(evt, id, nombre) {
     } catch (e) {
         mostrarToast('Error: ' + e.message, false);
     }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TAB 2 — USUARIOS Y ROLES
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Carga lazy al activar la pestaña
+document.getElementById('btn-tab-usuarios').addEventListener('shown.bs.tab', () => {
+    if (_usuarios === null) cargarUsuarios();
+});
+
+async function cargarUsuarios() {
+    const tbody = document.getElementById('tbody-usuarios');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Cargando usuarios…</td></tr>';
+
+    try {
+        const res  = await fetch('/admin/roles/usuarios');
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error);
+
+        _usuarios = json.usuarios;
+        actualizarResumenRoles();
+        renderizarUsuarios(_usuarios);
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-danger text-center py-3">
+            <i class="fas fa-exclamation-triangle me-1"></i>${escHtml(e.message)}</td></tr>`;
+    }
+}
+
+function actualizarResumenRoles() {
+    const conteo = {};
+    (_usuarios || []).forEach(u => { conteo[u.role] = (conteo[u.role] || 0) + 1; });
+
+    const el = document.getElementById('resumen-roles');
+    const chips = _ROLES
+        .filter(r => conteo[r.nombre])
+        .map(r => `<span class="badge bg-${r.color_badge} me-1">${r.nombre}: ${conteo[r.nombre]}</span>`)
+        .join('');
+    el.innerHTML = chips || '<span class="text-muted small">Sin usuarios cargados</span>';
+}
+
+function filtrarUsuarios() {
+    if (_usuarios === null) return;
+    const texto = (document.getElementById('filtro-usuario').value || '').toLowerCase().trim();
+    const rol   = document.getElementById('filtro-rol-usu').value;
+
+    const lista = _usuarios.filter(u => {
+        const matchTexto = !texto ||
+            (u.nombre  || '').toLowerCase().includes(texto) ||
+            (u.email   || '').toLowerCase().includes(texto) ||
+            (u.cedula  || '').toLowerCase().includes(texto) ||
+            String(u.id_fdff || '').toLowerCase().includes(texto);
+        const matchRol = !rol || u.role === rol;
+        return matchTexto && matchRol;
+    });
+
+    renderizarUsuarios(lista);
+}
+
+function renderizarUsuarios(lista) {
+    const tbody = document.getElementById('tbody-usuarios');
+    const total = (_usuarios || []).length;
+    document.getElementById('contador-usuarios').textContent =
+        total ? `${lista.length} de ${total} usuario${total !== 1 ? 's' : ''}` : '';
+
+    if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center py-3">Sin resultados para el filtro aplicado.</td></tr>';
+        return;
+    }
+
+    const opcionesRol = _ROLES.map(r =>
+        `<option value="${escHtml(r.nombre)}">${escHtml(r.nombre)}</option>`
+    ).join('');
+
+    tbody.innerHTML = lista.map(u => {
+        const rolObj = _ROLES.find(r => r.nombre === u.role) || { color_badge: 'secondary', nombre: u.role || '—' };
+        const opts   = _ROLES.map(r =>
+            `<option value="${escHtml(r.nombre)}"${r.nombre === u.role ? ' selected' : ''}>${escHtml(r.nombre)}</option>`
+        ).join('');
+
+        const idFdff = u.id_fdff ? `<span class="fw-bold">${escHtml(String(u.id_fdff))}</span>` : '';
+        const cedula = u.cedula  ? `<span class="text-muted">${escHtml(u.cedula)}</span>` : '';
+        const sep    = idFdff && cedula ? ' / ' : '';
+
+        return `<tr>
+            <td>${escHtml(u.nombre || '(sin nombre)')}</td>
+            <td class="small">${idFdff}${sep}${cedula}</td>
+            <td class="small text-muted">${escHtml(u.email || '')}</td>
+            <td><span class="badge bg-${escHtml(rolObj.color_badge)}" id="badge-u-${u.id}">${escHtml(rolObj.nombre)}</span></td>
+            <td>
+                <select class="form-select form-select-sm"
+                        onchange="cambiarRolUsuario('${u.id}', this)"
+                        data-rol-actual="${escHtml(u.role || '')}">
+                    ${opts}
+                </select>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function cambiarRolUsuario(userId, selectEl) {
+    const nuevoRol    = selectEl.value;
+    const rolAnterior = selectEl.dataset.rolActual;
+    if (nuevoRol === rolAnterior) return;
+
+    spinner.classList.add('show');
+    try {
+        const res  = await fetch('/admin/roles/usuarios/cambiar-rol', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, nuevo_rol: nuevoRol })
+        });
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error);
+
+        // Actualizar caché local
+        const u = (_usuarios || []).find(u => u.id === userId);
+        if (u) u.role = nuevoRol;
+        selectEl.dataset.rolActual = nuevoRol;
+
+        // Actualizar badge en la fila sin re-renderizar
+        const rolObj = _ROLES.find(r => r.nombre === nuevoRol) || { color_badge: 'secondary' };
+        const badge  = document.getElementById('badge-u-' + userId);
+        if (badge) {
+            badge.className   = `badge bg-${rolObj.color_badge}`;
+            badge.textContent = nuevoRol;
+        }
+
+        actualizarResumenRoles();
+        mostrarToast(`Rol cambiado a "${nuevoRol}"`);
+    } catch (e) {
+        selectEl.value = rolAnterior;
+        mostrarToast('Error: ' + e.message, false);
+    } finally {
+        spinner.classList.remove('show');
+    }
+}
+
+function escHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 }
 </script>
 
