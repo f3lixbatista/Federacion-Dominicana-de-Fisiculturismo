@@ -2,9 +2,10 @@ const envResult = require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const { attachUser, checkRole } = require('./middlewares/auth');
+const { attachUser, checkRole, checkPermiso } = require('./middlewares/auth');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 const { supabaseAdmin } = require('./config/supabase');
+const { cargarPermisos } = require('./services/permisosService');
 const webpush = require('web-push');
 const seedCatalogoCategorias = require('./seeds/catalogoCategorias');
 
@@ -84,10 +85,10 @@ app.get('/admin/recaudacion', (req, res) => {
 app.use('/', require('./router/auth'));
 app.use('/eventos', require('./router/Eventos'));
 app.use('/inscripcion', require('./router/Inscripcion'));
-app.use('/categorias', checkRole(['ejecutivo', 'admin']), require('./router/Categoria'));
-app.use('/social', require('./router/Social')); // Registro del módulo social y noticias
-app.use('/admin', require('./router/Admin')); // Nuevo router para funciones administrativas
-app.use('/estadisticas', checkRole(['estadistico', 'admin']), require('./router/Estadisticas'));
+app.use('/categorias', checkPermiso('categorias', 'ver'), require('./router/Categoria'));
+app.use('/social', require('./router/Social'));
+app.use('/admin', require('./router/Admin'));
+app.use('/estadisticas', checkPermiso('estadisticas', 'ver'), require('./router/Estadisticas'));
 app.use('/preparadores', require('./router/Preparadores'));
 app.use('/dj', require('./router/DJ'));
 app.use('/fotografo', require('./router/Fotografo'));
@@ -99,7 +100,7 @@ app.use(errorHandler);
 
 app.listen(port, '0.0.0.0', async () => {
     console.log(`🚀 Servidor FDFF activo en el puerto: ${port}`);
-    
+
     // Prueba de conexión a Supabase
     try {
         const { data, error } = await supabaseAdmin.from('eventos').select('count', { count: 'exact', head: true });
@@ -108,6 +109,9 @@ app.listen(port, '0.0.0.0', async () => {
     } catch (err) {
         console.error('❌ ERROR DE CONEXIÓN A SUPABASE:', err.message);
     }
+
+    // Carga la matriz de roles y permisos en memoria
+    await cargarPermisos();
 
     // Seed automático del catálogo de disciplinas/divisiones
     await seedCatalogoCategorias();

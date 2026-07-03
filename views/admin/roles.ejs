@@ -1,0 +1,293 @@
+<%- include("../template/cabecera", {tituloWeb: "Gestión de Roles y Permisos"}) %>
+
+<style>
+    .rol-tab { cursor:pointer; transition:all .18s; border:2px solid transparent; }
+    .rol-tab.activo { border-color: var(--bs-primary)!important; transform:scale(1.03); }
+    .perm-table th { font-size:.8rem; text-align:center; vertical-align:middle; }
+    .perm-table td { vertical-align:middle; }
+    .perm-table td:not(:first-child) { text-align:center; }
+    .form-check-input { width:1.3em; height:1.3em; cursor:pointer; }
+    .badge-sistema { font-size:.65rem; }
+    .saving-spinner { display:none; width:14px; height:14px; }
+    .saving-spinner.show { display:inline-block; }
+    #toast-perm {
+        position:fixed; bottom:1.5rem; right:1.5rem; z-index:9999;
+        min-width:220px;
+    }
+</style>
+
+<div class="p-3 divGeneral">
+
+    <%# ─── CABECERA ─────────────────────────────────────────────────────── %>
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div>
+            <h4 class="mb-0"><i class="fas fa-shield-alt me-2 text-danger"></i>Roles y Permisos</h4>
+            <small class="text-muted">Los cambios se aplican en tiempo real sin reiniciar el servidor.</small>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" onclick="recargarCache()">
+                <i class="fas fa-sync-alt me-1"></i>Recargar caché
+            </button>
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoRol">
+                <i class="fas fa-plus me-1"></i>Nuevo rol
+            </button>
+        </div>
+    </div>
+
+    <%# ─── TARJETAS DE ROLES ─────────────────────────────────────────────── %>
+    <div class="d-flex flex-wrap gap-2 mb-4" id="roles-tabs">
+        <% roles.forEach((rol, i) => { %>
+            <div class="card rol-tab px-3 py-2 <%= i===0 ? 'activo' : '' %>"
+                 data-rol-id="<%= rol.id %>"
+                 data-rol-nombre="<%= rol.nombre %>"
+                 onclick="seleccionarRol(this)">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-<%= rol.color_badge %>"><%= rol.nombre %></span>
+                    <% if (rol.es_sistema) { %>
+                        <span class="badge bg-secondary badge-sistema"><i class="fas fa-lock"></i> sistema</span>
+                    <% } else { %>
+                        <button class="btn btn-link btn-sm text-danger p-0 ms-1"
+                                onclick="eliminarRol(event,'<%= rol.id %>','<%= rol.nombre %>')"
+                                title="Eliminar rol">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    <% } %>
+                </div>
+                <% if (rol.descripcion) { %>
+                    <small class="text-muted d-block mt-1" style="font-size:.72rem;max-width:180px"><%= rol.descripcion %></small>
+                <% } %>
+            </div>
+        <% }) %>
+    </div>
+
+    <%# ─── TABLA DE PERMISOS DEL ROL SELECCIONADO ───────────────────────── %>
+    <div class="card shadow-sm">
+        <div class="card-header d-flex align-items-center gap-2">
+            <i class="fas fa-table me-1"></i>
+            <span id="titulo-rol">Cargando…</span>
+            <span class="badge" id="badge-rol-sel"></span>
+            <div class="ms-auto spinner-border spinner-border-sm text-secondary saving-spinner" id="global-spinner" role="status"></div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered perm-table mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="min-width:160px">Área</th>
+                            <th><i class="fas fa-eye me-1"></i>Ver</th>
+                            <th><i class="fas fa-plus me-1"></i>Crear</th>
+                            <th><i class="fas fa-pen me-1"></i>Editar</th>
+                            <th><i class="fas fa-trash me-1"></i>Eliminar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="perm-tbody">
+                        <% AREAS.forEach(area => { %>
+                        <tr data-area="<%= area.key %>">
+                            <td>
+                                <i class="<%= area.icono %> me-2 text-secondary"></i>
+                                <strong><%= area.label %></strong>
+                            </td>
+                            <% ['ver','crear','editar','eliminar'].forEach(accion => { %>
+                            <td>
+                                <div class="form-check d-flex justify-content-center">
+                                    <input class="form-check-input perm-check"
+                                           type="checkbox"
+                                           id="perm_<%= area.key %>_<%= accion %>"
+                                           data-area="<%= area.key %>"
+                                           data-accion="<%= accion %>"
+                                           onchange="guardarPermiso(this)">
+                                </div>
+                            </td>
+                            <% }) %>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<%# ─── MODAL NUEVO ROL ──────────────────────────────────────────────────── %>
+<div class="modal fade" id="modalNuevoRol" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Rol</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label class="form-label form-label-sm">Nombre (clave interna)</label>
+                    <input type="text" class="form-control form-control-sm" id="nr-nombre"
+                           placeholder="ej: moderador" maxlength="40">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label form-label-sm">Descripción</label>
+                    <input type="text" class="form-control form-control-sm" id="nr-desc" placeholder="Descripción breve">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label form-label-sm">Color badge</label>
+                    <select class="form-select form-select-sm" id="nr-color">
+                        <option value="secondary">Gris (secondary)</option>
+                        <option value="primary">Azul (primary)</option>
+                        <option value="success">Verde (success)</option>
+                        <option value="info">Celeste (info)</option>
+                        <option value="warning">Amarillo (warning)</option>
+                        <option value="danger">Rojo (danger)</option>
+                        <option value="dark">Oscuro (dark)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success btn-sm" onclick="guardarNuevoRol()">Crear Rol</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%# ─── TOAST DE CONFIRMACIÓN ────────────────────────────────────────────── %>
+<div id="toast-perm" class="toast align-items-center border-0" role="alert">
+    <div class="d-flex">
+        <div class="toast-body" id="toast-msg">Guardado</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+</div>
+
+<script>
+// ── Datos ──────────────────────────────────────────────────────────────────────
+const _ROLES    = <%- JSON.stringify(roles) %>;
+const _PERMISOS = <%- JSON.stringify(permisos) %>;
+let _rolActual  = _ROLES[0] || null;
+
+const toastEl   = document.getElementById('toast-perm');
+const bsToast   = toastEl ? new bootstrap.Toast(toastEl, { delay: 2200 }) : null;
+const spinner   = document.getElementById('global-spinner');
+
+function mostrarToast(msg, ok = true) {
+    if (!bsToast) return;
+    toastEl.className = `toast align-items-center border-0 text-bg-${ok ? 'success' : 'danger'}`;
+    document.getElementById('toast-msg').textContent = msg;
+    bsToast.show();
+}
+
+// ── Selección de rol ──────────────────────────────────────────────────────────
+function seleccionarRol(el) {
+    document.querySelectorAll('.rol-tab').forEach(t => t.classList.remove('activo'));
+    el.classList.add('activo');
+    const rolId     = el.dataset.rolId;
+    const rolNombre = el.dataset.rolNombre;
+    _rolActual = _ROLES.find(r => r.id === rolId) || null;
+    renderizarPermisos(rolNombre);
+}
+
+function renderizarPermisos(rolNombre) {
+    const p = _PERMISOS[rolNombre] || {};
+    document.getElementById('titulo-rol').textContent = rolNombre;
+    const badgeEl = document.getElementById('badge-rol-sel');
+    const rol = _ROLES.find(r => r.nombre === rolNombre);
+    badgeEl.className = `badge bg-${rol?.color_badge || 'secondary'}`;
+    badgeEl.textContent = rol?.es_sistema ? 'sistema' : 'personalizado';
+
+    const esAdmin = rolNombre === 'admin';
+    document.querySelectorAll('.perm-check').forEach(chk => {
+        const area   = chk.dataset.area;
+        const accion = chk.dataset.accion;
+        chk.checked  = esAdmin ? true : !!(p[area]?.[accion]);
+        chk.disabled = esAdmin; // admin siempre tiene todo — no editable
+    });
+}
+
+// Renderizar el primer rol al cargar
+if (_rolActual) renderizarPermisos(_rolActual.nombre);
+
+// ── Guardar permiso ────────────────────────────────────────────────────────────
+async function guardarPermiso(chk) {
+    if (!_rolActual) return;
+    spinner.classList.add('show');
+
+    try {
+        const res = await fetch('/admin/roles/permiso', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                rol_id: _rolActual.id,
+                area:   chk.dataset.area,
+                accion: chk.dataset.accion,
+                valor:  chk.checked
+            })
+        });
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error);
+
+        // Actualizar caché local
+        if (!_PERMISOS[_rolActual.nombre]) _PERMISOS[_rolActual.nombre] = {};
+        if (!_PERMISOS[_rolActual.nombre][chk.dataset.area])
+            _PERMISOS[_rolActual.nombre][chk.dataset.area] = {};
+        _PERMISOS[_rolActual.nombre][chk.dataset.area][chk.dataset.accion] = chk.checked;
+
+        mostrarToast(`${chk.dataset.area}.${chk.dataset.accion} → ${chk.checked ? 'activado' : 'desactivado'}`);
+    } catch (e) {
+        chk.checked = !chk.checked; // revertir
+        mostrarToast('Error: ' + e.message, false);
+    } finally {
+        spinner.classList.remove('show');
+    }
+}
+
+// ── Recargar caché ────────────────────────────────────────────────────────────
+async function recargarCache() {
+    try {
+        const res = await fetch('/admin/roles/recargar', { method: 'POST' });
+        const json = await res.json();
+        if (json.ok) mostrarToast('Caché recargado correctamente');
+        else throw new Error(json.error);
+    } catch (e) {
+        mostrarToast('Error: ' + e.message, false);
+    }
+}
+
+// ── Crear nuevo rol ────────────────────────────────────────────────────────────
+async function guardarNuevoRol() {
+    const nombre = document.getElementById('nr-nombre').value.trim();
+    if (!nombre) return alert('El nombre es requerido');
+
+    try {
+        const res = await fetch('/admin/roles/crear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nombre,
+                descripcion: document.getElementById('nr-desc').value.trim(),
+                color_badge: document.getElementById('nr-color').value
+            })
+        });
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error);
+        mostrarToast(`Rol "${nombre}" creado. Recargando…`);
+        setTimeout(() => location.reload(), 1200);
+    } catch (e) {
+        mostrarToast('Error: ' + e.message, false);
+    }
+}
+
+// ── Eliminar rol ──────────────────────────────────────────────────────────────
+async function eliminarRol(evt, id, nombre) {
+    evt.stopPropagation();
+    if (!confirm(`¿Eliminar el rol "${nombre}"? Esta acción no se puede deshacer.`)) return;
+
+    try {
+        const res = await fetch(`/admin/roles/${id}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error);
+        mostrarToast(`Rol "${nombre}" eliminado. Recargando…`);
+        setTimeout(() => location.reload(), 1200);
+    } catch (e) {
+        mostrarToast('Error: ' + e.message, false);
+    }
+}
+</script>
+
+<%- include("../template/footer") %>

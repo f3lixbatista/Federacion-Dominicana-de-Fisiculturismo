@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const { supabase, supabaseAdmin } = require('../config/supabase');
-const { checkRole } = require('../middlewares/auth');
+const { checkPermiso } = require('../middlewares/auth');
 const multer = require('multer');
 const eventosController = require('../controllers/eventosController');
-const upload = multer({ storage: multer.memoryStorage() }); // Guardamos en memoria para subir a Supabase
+const upload = multer({ storage: multer.memoryStorage() });
 
 
 
-// 1. LISTAR CATEGORÍAS (Acceso: Ejecutivo y Admin)
-router.get('/', checkRole(['ejecutivo', 'admin']), async (req, res) => {
+// 1. LISTAR CATEGORÍAS
+router.get('/', checkPermiso('categorias', 'ver'), async (req, res) => {
     try {
         const { data: arrayCategorias, error } = await supabase
             .from('categorias')
@@ -28,12 +28,12 @@ router.get('/', checkRole(['ejecutivo', 'admin']), async (req, res) => {
 });
 
 // 2. VISTA CREAR CATEGORÍA (Acceso: Ejecutivo y Admin)
-router.get('/crearCategoria', checkRole(['ejecutivo', 'admin']), (req, res) => {
+router.get('/crearCategoria', checkPermiso('categorias', 'ver'), (req, res) => {
     res.render('crearCategoria'); // Ajustado a la subcarpeta categorias
 });
 
 // 3. PROCESAR CREACIÓN DE CATEGORÍA (Backend)
-router.post('/crear', checkRole(['ejecutivo', 'admin']), async (req, res) => {
+router.post('/crear', checkPermiso('categorias', 'crear'), async (req, res) => {
     try {
         const { data, error } = await supabaseAdmin
             .from('categorias')
@@ -50,7 +50,7 @@ router.post('/crear', checkRole(['ejecutivo', 'admin']), async (req, res) => {
 });
 
 // 3. VISTA NUEVO EVENTO (Acceso: Ejecutivo y Admin)
-router.get('/nuevoEvento', checkRole(['ejecutivo', 'admin']), async (req, res) => {
+router.get('/nuevoEvento', checkPermiso('categorias', 'ver'), async (req, res) => {
     try {
         const { data: arrayCategoryDB, error } = await supabase
             .from('categorias')
@@ -74,7 +74,7 @@ router.get('/nuevoEvento', checkRole(['ejecutivo', 'admin']), async (req, res) =
 });
 
 // 4. PROCESAR NUEVO EVENTO (Estructura Relacional)
-router.post('/nuevoEvento', upload.fields([
+router.post('/nuevoEvento', checkPermiso('eventos', 'crear'), upload.fields([
     { name: 'banner_evento', maxCount: 1 },
     { name: 'banner_pesaje', maxCount: 1 }
 ]), eventosController.crearNuevoEvento);
@@ -82,7 +82,7 @@ router.post('/nuevoEvento', upload.fields([
 // ── API CATÁLOGO ──────────────────────────────────────────────────────────────
 
 // GET /categorias/api/disciplinas?sexo=M|F|F-M&modalidad=Children|Junior|Senior|Master
-router.get('/api/disciplinas', checkRole(['ejecutivo', 'admin']), async (req, res) => {
+router.get('/api/disciplinas', checkPermiso('categorias', 'ver'), async (req, res) => {
     const { sexo, modalidad } = req.query;
     let query = supabaseAdmin.from('disciplinas').select('*').order('nombre');
     // Filtro estricto por sexo: M→solo M, F→solo F, F-M→solo F-M
@@ -100,7 +100,7 @@ router.get('/api/disciplinas', checkRole(['ejecutivo', 'admin']), async (req, re
 });
 
 // POST /categorias/api/disciplinas  { nombre, sexo, divisionIds[] }
-router.post('/api/disciplinas', checkRole(['ejecutivo', 'admin']), async (req, res) => {
+router.post('/api/disciplinas', checkPermiso('categorias', 'crear'), async (req, res) => {
     const { nombre, sexo, grupo_afinidad, divisionIds } = req.body;
     try {
         const { data: disc, error } = await supabaseAdmin
@@ -116,7 +116,7 @@ router.post('/api/disciplinas', checkRole(['ejecutivo', 'admin']), async (req, r
 });
 
 // GET /categorias/api/divisiones?disciplinaId=xxx  (sin param → devuelve todas)
-router.get('/api/divisiones', checkRole(['ejecutivo', 'admin']), async (req, res) => {
+router.get('/api/divisiones', checkPermiso('categorias', 'ver'), async (req, res) => {
     const { disciplinaId } = req.query;
     try {
         if (disciplinaId) {
@@ -132,7 +132,7 @@ router.get('/api/divisiones', checkRole(['ejecutivo', 'admin']), async (req, res
 });
 
 // POST /categorias/api/divisiones  { nombre, parametro, disciplinaId? }
-router.post('/api/divisiones', checkRole(['ejecutivo', 'admin']), async (req, res) => {
+router.post('/api/divisiones', checkPermiso('categorias', 'crear'), async (req, res) => {
     const { nombre, parametro, disciplinaId } = req.body;
     try {
         const { data: div, error } = await supabaseAdmin
@@ -147,7 +147,7 @@ router.post('/api/divisiones', checkRole(['ejecutivo', 'admin']), async (req, re
 });
 
 // POST /categorias/api/disciplina-division  { disciplinaId, divisionId }
-router.post('/api/disciplina-division', checkRole(['ejecutivo', 'admin']), async (req, res) => {
+router.post('/api/disciplina-division', checkPermiso('categorias', 'crear'), async (req, res) => {
     const { disciplinaId, divisionId } = req.body;
     try {
         await supabaseAdmin.from('disciplina_divisiones')
@@ -157,7 +157,7 @@ router.post('/api/disciplina-division', checkRole(['ejecutivo', 'admin']), async
 });
 
 // DELETE /categorias/todas  — borra todas las categorias (admin solamente)
-router.delete('/todas', checkRole(['admin']), async (req, res) => {
+router.delete('/todas', checkPermiso('categorias', 'eliminar'), async (req, res) => {
     const { error } = await supabaseAdmin.from('categorias').delete().gte('id', '00000000-0000-0000-0000-000000000000');
     if (error) return res.status(500).json({ error: error.message });
     res.json({ ok: true });

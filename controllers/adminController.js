@@ -1,5 +1,6 @@
 const { supabase, supabaseAdmin } = require('../config/supabase');
-const webpush = require('web-push'); // webpush is configured globally in app.js
+const { cargarPermisos, getRoles, getCache, AREAS } = require('../services/permisosService');
+const webpush = require('web-push');
 
 const testPush = async (req, res) => {
     const { mensaje } = req.body;
@@ -259,6 +260,104 @@ const verAuditoriaPagos = async (req, res) => {
     }
 };
 
+// ── GESTIÓN DE ROLES Y PERMISOS ──────────────────────────────────────────────
+
+const verDashboardRoles = async (req, res) => {
+    try {
+        const roles = getRoles();
+        const permisos = getCache();
+        res.render('admin/roles', { roles, permisos, AREAS });
+    } catch (error) {
+        console.error('Error al cargar dashboard de roles:', error.message);
+        res.status(500).send('Error al cargar roles.');
+    }
+};
+
+const actualizarPermiso = async (req, res) => {
+    const { rol_id, area, accion, valor } = req.body;
+    const accionesValidas = ['ver', 'crear', 'editar', 'eliminar'];
+    if (!accionesValidas.includes(accion))
+        return res.status(400).json({ ok: false, error: 'Acción inválida' });
+
+    const campo = `puede_${accion}`;
+    const boolValor = valor === true || valor === 'true' || valor === 1 || valor === '1';
+
+    try {
+        const { data: existing } = await supabaseAdmin
+            .from('rol_permisos')
+            .select('id')
+            .eq('rol_id', rol_id)
+            .eq('area', area)
+            .maybeSingle();
+
+        if (existing) {
+            await supabaseAdmin.from('rol_permisos')
+                .update({ [campo]: boolValor })
+                .eq('rol_id', rol_id)
+                .eq('area', area);
+        } else {
+            await supabaseAdmin.from('rol_permisos')
+                .insert([{ rol_id, area, [campo]: boolValor }]);
+        }
+
+        await cargarPermisos();
+        res.json({ ok: true });
+    } catch (error) {
+        console.error('Error al actualizar permiso:', error.message);
+        res.status(500).json({ ok: false, error: error.message });
+    }
+};
+
+const crearRol = async (req, res) => {
+    const { nombre, descripcion, color_badge } = req.body;
+    if (!nombre) return res.status(400).json({ ok: false, error: 'El nombre es requerido' });
+
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('roles')
+            .insert([{
+                nombre: nombre.toLowerCase().trim(),
+                descripcion: descripcion || '',
+                color_badge: color_badge || 'secondary',
+                es_sistema: false
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        await cargarPermisos();
+        res.json({ ok: true, rol: data });
+    } catch (error) {
+        res.status(500).json({ ok: false, error: error.message });
+    }
+};
+
+const eliminarRol = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data: rol } = await supabaseAdmin
+            .from('roles').select('es_sistema').eq('id', id).maybeSingle();
+
+        if (rol?.es_sistema)
+            return res.status(403).json({ ok: false, error: 'No se puede eliminar un rol del sistema.' });
+
+        await supabaseAdmin.from('roles').delete().eq('id', id);
+        await cargarPermisos();
+        res.json({ ok: true });
+    } catch (error) {
+        res.status(500).json({ ok: false, error: error.message });
+    }
+};
+
+const recargarPermisos = async (req, res) => {
+    try {
+        await cargarPermisos();
+        res.json({ ok: true });
+    } catch (error) {
+        res.status(500).json({ ok: false, error: error.message });
+    }
+};
+
 module.exports = {
     testPush,
     verRecaudacionGeneral,
@@ -267,5 +366,10 @@ module.exports = {
     guardarStaff,
     eliminarStaff,
     verReporteCaja,
-    verAuditoriaPagos
+    verAuditoriaPagos,
+    verDashboardRoles,
+    actualizarPermiso,
+    crearRol,
+    eliminarRol,
+    recargarPermisos,
 };

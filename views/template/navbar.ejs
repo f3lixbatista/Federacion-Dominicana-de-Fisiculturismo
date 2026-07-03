@@ -51,6 +51,9 @@
     <a class="sb-link" href="/preparadores"><i class="fas fa-user-tie"></i><span class="sb-link-text">Coaches</span></a>
     <a class="sb-link" href="/categorias"><i class="fas fa-tags"></i><span class="sb-link-text">Categorías</span></a>
     <a class="sb-link" href="/categorias/nuevoEvento"><i class="fas fa-calendar-plus"></i><span class="sb-link-text">Crear Evento</span></a>
+    <% if (locals.user.role === 'admin') { %>
+    <a class="sb-link" href="/admin/roles"><i class="fas fa-shield-alt text-danger"></i><span class="sb-link-text">Roles y Permisos</span></a>
+    <% } %>
 
 </div>
 <% } %>
