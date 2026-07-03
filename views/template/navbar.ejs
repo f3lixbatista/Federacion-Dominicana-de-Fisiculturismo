@@ -7,19 +7,9 @@
     </div>
 </div>
 
-<!-- ── SECCIÓN PÚBLICA (accesible sin login) ────────────────────── -->
-<div class="sb-section">
-    <div class="sb-section-title">General</div>
-    <a class="sb-link" href="/social/muro"><i class="fas fa-comments"></i><span class="sb-link-text">Muro Social</span></a>
-    <a class="sb-link" href="/social/noticias"><i class="fas fa-newspaper"></i><span class="sb-link-text">Noticias</span></a>
-    <a class="sb-link" href="/eventos/historico"><i class="fas fa-award"></i><span class="sb-link-text">Salón de la Fama</span></a>
-    <a class="sb-link" href="/preparadores/ranking-teams"><i class="fas fa-trophy"></i><span class="sb-link-text">Ranking Teams</span></a>
-</div>
-
 <% if (locals.user) { %>
 
 <!-- ── MI CUENTA ──────────────────────────────────────────────────── -->
-<div class="sb-divider"></div>
 <div class="sb-section">
     <div class="sb-section-title">Mi Cuenta</div>
     <a class="sb-link" href="/"><i class="fas fa-home"></i><span class="sb-link-text">Inicio</span></a>
@@ -35,6 +25,20 @@
         <a class="sb-link" href="/afiliacion"><i class="fas fa-id-card text-info"></i><span class="sb-link-text">Afiliación</span></a>
     <% } %>
 </div>
+<div class="sb-divider"></div>
+
+<% } %>
+
+<!-- ── SECCIÓN PÚBLICA (accesible sin login) ────────────────────── -->
+<div class="sb-section">
+    <div class="sb-section-title">General</div>
+    <a class="sb-link" href="/social/muro"><i class="fas fa-comments"></i><span class="sb-link-text">Muro Social</span></a>
+    <a class="sb-link" href="/social/noticias"><i class="fas fa-newspaper"></i><span class="sb-link-text">Noticias</span></a>
+    <a class="sb-link" href="/eventos/historico"><i class="fas fa-award"></i><span class="sb-link-text">Salón de la Fama</span></a>
+    <a class="sb-link" href="/preparadores/ranking-teams"><i class="fas fa-trophy"></i><span class="sb-link-text">Ranking Teams</span></a>
+</div>
+
+<% if (locals.user) { %>
 
 <!-- ── PANEL DE CONTROL (Admin / Ejecutivo) ───────────────────────── -->
 <% if (locals.user.role === 'admin' || locals.user.role === 'ejecutivo') { %>
