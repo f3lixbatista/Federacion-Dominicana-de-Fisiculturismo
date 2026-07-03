@@ -30,8 +30,8 @@
                 %>
                 <div class="col-md-6 col-lg-3">
                     <div class="card border-0 shadow-sm h-100" style="border-radius:14px;overflow:hidden;">
-                        <% if (ev.banner_url) { %>
-                            <img src="<%= ev.banner_url %>" class="card-img-top" style="height:130px;object-fit:cover;" alt="<%= ev.nombre %>">
+                        <% if (ev.url_afiche_evento) { %>
+                            <img src="<%= ev.url_afiche_evento %>" class="card-img-top" style="height:130px;object-fit:cover;" alt="<%= ev.nombre %>">
                         <% } else { %>
                             <div class="bg-dark text-white d-flex align-items-center justify-content-center" style="height:130px;">
                                 <i class="fas fa-trophy fa-3x opacity-25"></i>

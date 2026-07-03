@@ -73,7 +73,7 @@ router.get('/noticias', async (req, res) => {
                 .order('fecha_creacion', { ascending: false }),
             supabaseAdmin
                 .from('eventos')
-                .select('id, nombre, fecha_inicio, lugar, estado, banner_url')
+                .select('id, nombre, fecha_inicio, lugar, estado, url_afiche_evento')
                 .not('estado', 'eq', 'cerrado')
                 .order('fecha_inicio', { ascending: false })
                 .limit(8)
