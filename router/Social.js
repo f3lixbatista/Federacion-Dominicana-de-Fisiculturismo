@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { supabase, supabaseAdmin } = require('../config/supabase');
-const { requireAuth, checkRole } = require('../middlewares/auth');
+const { requireAuth, checkRole, checkPermiso } = require('../middlewares/auth');
 const webpush = require('web-push');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
@@ -59,7 +59,7 @@ router.get('/muro', async (req, res) => {
 });
 
 // 1. Vista del Formulario (Solo accesible para Staff)
-router.get('/noticias/crear', requireAuth, checkRole(['admin', 'ejecutivo']), (req, res) => {
+router.get('/noticias/crear', requireAuth, checkPermiso('noticias', 'crear'), (req, res) => {
     res.render('social/admin_noticias', { user: res.locals.user });
 });
 
@@ -93,7 +93,7 @@ router.get('/noticias', async (req, res) => {
 });
 
 // 2. Proceso de Guardado (POST Protegido con subida de imagen)
-router.post('/noticias/guardar', requireAuth, checkRole(['admin', 'ejecutivo']), upload.single('imagen'), async (req, res) => {
+router.post('/noticias/guardar', requireAuth, checkPermiso('noticias', 'crear'), upload.single('imagen'), async (req, res) => {
     const { titulo, contenido, es_destacada, imagen_url_manual } = req.body;
     let imagenUrl = null;
 

@@ -11,21 +11,20 @@ router.post('/corregir-foto-atletica', checkRole(['admin', 'estadistico']), asyn
     res.json({ ok: true });
 });
 
-// Solo administradores a partir de aquí
-router.use(checkRole(['admin']));
-
-router.post('/test-push', adminController.testPush);
+// Notificaciones push (solo admin por defecto)
+router.post('/test-push', checkPermiso('notificaciones', 'crear'), adminController.testPush);
 
 // Gestión de Personal (Staff)
-router.get('/registro_staff', adminController.verRegistroStaff);
-router.post('/registro_staff/guardar', adminController.guardarStaff);
-router.delete('/registro_staff/:id', adminController.eliminarStaff);
+router.get('/registro_staff', checkPermiso('staff', 'ver'), adminController.verRegistroStaff);
+router.post('/registro_staff/guardar', checkPermiso('staff', 'crear'), adminController.guardarStaff);
+router.delete('/registro_staff/:id', checkPermiso('staff', 'eliminar'), adminController.eliminarStaff);
 
-// Reportes financieros
-router.get('/reporte-caja', adminController.verReporteCaja);
-router.get('/auditoria-pagos', adminController.verAuditoriaPagos);
+// Reportes financieros (delegables a ejecutivo/estadístico)
+router.get('/reporte-caja', checkPermiso('finanzas', 'ver'), adminController.verReporteCaja);
+router.get('/auditoria-pagos', checkPermiso('finanzas', 'ver'), adminController.verAuditoriaPagos);
 
-// ── GESTIÓN DINÁMICA DE ROLES Y PERMISOS ─────────────────────────────────────
+// ── GESTIÓN DINÁMICA DE ROLES Y PERMISOS — solo admin del sistema ─────────────
+router.use('/roles', checkRole(['admin']));
 router.get('/roles', adminController.verDashboardRoles);
 router.post('/roles/permiso', adminController.actualizarPermiso);
 router.post('/roles/crear', adminController.crearRol);

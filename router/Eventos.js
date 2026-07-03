@@ -21,11 +21,11 @@ routerEventos.get('/:id/resultados-publicos', eventosController.verResultadosPub
 // DASHBOARD DEL EVENTO
 routerEventos.get('/:id', checkPermiso('eventos', 'ver'), eventosController.verDashboardEvento);
 
-// CENTRO DE MANDO: admin, ejecutivo y estadístico (editar)
-routerEventos.get('/:id/centro-mando', checkPermiso('eventos', 'editar'), eventosController.verCentroMando);
+// CENTRO DE MANDO: programa de competencia
+routerEventos.get('/:id/centro-mando', checkPermiso('programa', 'ver'), eventosController.verCentroMando);
 
 // AUDITORÍA FINANCIERA
-routerEventos.get('/:id/recaudacion', checkPermiso('eventos', 'editar'), eventosController.verAuditoriaRecaudacion);
+routerEventos.get('/:id/recaudacion', checkPermiso('finanzas', 'ver'), eventosController.verAuditoriaRecaudacion);
 
 // EDITAR EVENTO
 routerEventos.get('/editar/:id', checkPermiso('eventos', 'editar'), eventosController.verEditarEvento);
@@ -34,30 +34,30 @@ routerEventos.post('/editar/:id', checkPermiso('eventos', 'editar'), upload.fiel
     { name: 'banner_pesaje', maxCount: 1 }
 ]), eventosController.actualizarEvento);
 
-// BROADCAST: Pantalla LED de entrada
-routerEventos.get('/:idEvento/entrada/:idAtleta', checkPermiso('broadcast', 'ver'), atletasController.verEntradaAtleta);
+// PRODUCCIÓN: Pantalla LED de entrada de atleta
+routerEventos.get('/:idEvento/entrada/:idAtleta', checkPermiso('produccion', 'ver'), atletasController.verEntradaAtleta);
 
 // PREPARACIÓN DE EVENTO
-routerEventos.get('/preparacion-evento/:id', checkPermiso('eventos', 'editar'), eventosController.prepararEventoPage);
+routerEventos.get('/preparacion-evento/:id', checkPermiso('preparacion', 'editar'), eventosController.prepararEventoPage);
 
 // MONITOR MC
-routerEventos.get('/:id/monitor-mc', checkPermiso('broadcast', 'ver'), eventosController.verMonitorMC);
+routerEventos.get('/:id/monitor-mc', checkPermiso('monitor_mc', 'ver'), eventosController.verMonitorMC);
 
-routerEventos.get('/:id/preparacion', checkPermiso('eventos', 'editar'), eventosController.prepararEventoPage);
-routerEventos.post('/preparacion/oficializar', checkPermiso('eventos', 'editar'), eventosController.oficializarPreparacion);
+routerEventos.get('/:id/preparacion', checkPermiso('preparacion', 'editar'), eventosController.prepararEventoPage);
+routerEventos.post('/preparacion/oficializar', checkPermiso('preparacion', 'editar'), eventosController.oficializarPreparacion);
 
-// MESA DE CÓMPUTO (vinculada a estadísticas)
-routerEventos.get('/:id/computo/:eventoCatId', checkPermiso('estadisticas', 'ver'), estadisticasController.verMesaComputo);
-routerEventos.get('/:id/mesa-tecnica-actual', checkPermiso('estadisticas', 'ver'), estadisticasController.verMesaComputoActual);
+// MESA DE CÓMPUTO
+routerEventos.get('/:id/computo/:eventoCatId', checkPermiso('computo', 'ver'), estadisticasController.verMesaComputo);
+routerEventos.get('/:id/mesa-tecnica-actual', checkPermiso('computo', 'ver'), estadisticasController.verMesaComputoActual);
 
 // INYECTAR JUECES AL MC
-routerEventos.post('/:id/inyectar-jueces-mc', checkPermiso('estadisticas', 'editar'), eventosController.inyectarJuecesMC);
+routerEventos.post('/:id/inyectar-jueces-mc', checkPermiso('computo', 'editar'), eventosController.inyectarJuecesMC);
 
 // VOTACIÓN: el juez accede a su boleta — se mantiene checkRole estático
 routerEventos.get('/:id/votacion', checkRole(['admin', 'juez']), eventosController.verBoletaJuez);
 
 // REPORTE OFICIAL
-routerEventos.get('/:id/reporte-oficial', checkPermiso('estadisticas', 'ver'), eventosController.verReporteOficial);
+routerEventos.get('/:id/reporte-oficial', checkPermiso('reportes', 'ver'), eventosController.verReporteOficial);
 
 // DIPLOMA DIGITAL (público por atleta)
 routerEventos.get('/atleta/:idAtleta/evento/:idEvento/diploma', eventosController.verDiplomaAtleta);
@@ -74,8 +74,8 @@ routerEventos.get('/:id/backstage-seguridad', checkPermiso('backstage', 'ver'), 
 routerEventos.get('/:id/validar-acceso/:idAtleta', checkPermiso('backstage', 'ver'), eventosController.validarAccesoAtleta);
 
 // DJ Y BROADCAST
-routerEventos.get('/:id/dj-consola', checkPermiso('broadcast', 'ver'), eventosController.verDJConsola);
-routerEventos.get('/:id/broadcast-live', checkPermiso('broadcast', 'editar'), eventosController.verBroadcastLive);
+routerEventos.get('/:id/dj-consola', checkPermiso('dj', 'ver'), eventosController.verDJConsola);
+routerEventos.get('/:id/broadcast-live', checkPermiso('vmd', 'ver'), eventosController.verBroadcastLive);
 
 // LOWER THIRD: Overlay para OBS/vMix (sin auth)
 routerEventos.get('/:id/lower-third', eventosController.verLowerThird);
@@ -84,7 +84,7 @@ routerEventos.get('/:id/lower-third', eventosController.verLowerThird);
 routerEventos.get('/fotografia/gestion-atletica/:id', checkPermiso('fotografo', 'ver'), eventosController.verGestionFotografia);
 
 // RUTAS FINANCIERAS
-routerEventos.post('/ingreso-extra', checkPermiso('eventos', 'editar'), eventosController.registrarIngresoExtra);
-routerEventos.post('/gasto-operativo', checkPermiso('eventos', 'editar'), upload.single('recibo_foto'), eventosController.registrarGastoOperativo);
+routerEventos.post('/ingreso-extra', checkPermiso('finanzas', 'crear'), eventosController.registrarIngresoExtra);
+routerEventos.post('/gasto-operativo', checkPermiso('finanzas', 'crear'), upload.single('recibo_foto'), eventosController.registrarGastoOperativo);
 
 module.exports = routerEventos;

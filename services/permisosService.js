@@ -90,6 +90,26 @@ const AREAS = [
     { key: 'broadcast',    label: 'Broadcast / DJ', icono: 'fas fa-broadcast-tower' },
     { key: 'backstage',    label: 'Backstage',      icono: 'fas fa-door-open' },
     { key: 'admin',        label: 'Administración', icono: 'fas fa-shield-alt' },
+    // ── Día del Evento ──────────────────────────────────────────────────
+    { key: 'pesaje',       label: 'Pesaje / Reg. Asistido',    icono: 'fas fa-weight' },
+    { key: 'panel_jueces', label: 'Panel de Jueces',            icono: 'fas fa-gavel' },
+    { key: 'preparacion',  label: 'Preparación Evento',         icono: 'fas fa-clipboard-check' },
+    { key: 'programa',     label: 'Programa de Competencia',    icono: 'fas fa-list-ol' },
+    // ── Mesa Técnica ─────────────────────────────────────────────────────
+    { key: 'computo',      label: 'Mesa Técnica / Cómputo',    icono: 'fas fa-calculator' },
+    { key: 'reportes',     label: 'Reportes y Diplomas',        icono: 'fas fa-file-alt' },
+    { key: 'cierre',       label: 'Cerrar Competencia',         icono: 'fas fa-flag-checkered' },
+    { key: 'finanzas',     label: 'Finanzas / Caja',            icono: 'fas fa-cash-register' },
+    // ── Producción de Espectáculo ────────────────────────────────────────
+    { key: 'produccion',   label: 'Producción',                 icono: 'fas fa-film' },
+    { key: 'dj',           label: 'DJ Virtual',                 icono: 'fas fa-music' },
+    { key: 'vmd',          label: 'Panel VMD',                  icono: 'fas fa-tv' },
+    { key: 'monitor_mc',   label: 'Monitor MC',                 icono: 'fas fa-microphone' },
+    // ── Comunicación y Gestión ───────────────────────────────────────────
+    { key: 'noticias',     label: 'Noticias Oficiales',         icono: 'fas fa-newspaper' },
+    { key: 'staff',        label: 'Gestión de Staff',           icono: 'fas fa-users-cog' },
+    { key: 'notificaciones', label: 'Notificaciones Push',      icono: 'fas fa-bell' },
+    { key: 'ranking',      label: 'Ranking Teams',              icono: 'fas fa-medal' },
 ];
 
 module.exports = { cargarPermisos, tienePermiso, getRoles, getCache, AREAS };

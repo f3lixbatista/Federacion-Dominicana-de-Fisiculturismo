@@ -4,7 +4,7 @@ const { supabase } = require('../config/supabase');
 const { requireAuth, checkPermiso } = require('../middlewares/auth');
 
 // Ruta para obtener el audio de un atleta (con fallback genérico al azar)
-router.get('/obtener-audio/:competidorId', requireAuth, checkPermiso('broadcast', 'ver'), async (req, res) => {
+router.get('/obtener-audio/:competidorId', requireAuth, checkPermiso('dj', 'ver'), async (req, res) => {
     try {
         const { data: comp, error: compError } = await supabase
             .from('competidores')
