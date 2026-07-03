@@ -207,7 +207,7 @@ INSERT INTO rol_permisos (rol_id, area, puede_ver, puede_crear, puede_editar, pu
   (r_juez,        'backstage', FALSE, FALSE, FALSE, FALSE),
   (r_atleta,      'backstage', FALSE, FALSE, FALSE, FALSE),
   (r_preparador,  'backstage', FALSE, FALSE, FALSE, FALSE),
-  (r_fotografo,   'fotografo', FALSE, FALSE, FALSE, FALSE),
+  (r_fotografo,   'backstage', FALSE, FALSE, FALSE, FALSE),
   (r_mc,          'backstage', TRUE, FALSE, FALSE, FALSE),
   (r_backstage,   'backstage', TRUE, FALSE, FALSE, FALSE),
   (r_general,     'backstage', FALSE, FALSE, FALSE, FALSE)
