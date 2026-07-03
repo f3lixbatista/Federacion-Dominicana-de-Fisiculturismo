@@ -448,9 +448,13 @@ const darLikePublicacion = async (req, res) => {
 };
 
 const subirPublicacion = async (req, res) => {
-    const usuarioId = res.locals.user?.id;
+    const user = res.locals.user;
+    const usuarioId = user?.id;
     const { descripcion } = req.body;
-    
+
+    if (!user || user.role === 'general')
+        return res.status(403).send("Tu rol no permite publicar en el muro.");
+
     try {
         if (!req.file) throw new Error("Debe seleccionar una imagen.");
 
@@ -488,8 +492,12 @@ const subirPublicacion = async (req, res) => {
 };
 
 const comentarPublicacion = async (req, res) => {
-    const usuarioId = res.locals.user?.id;
+    const user = res.locals.user;
+    const usuarioId = user?.id;
     const { publicacion_id, comentario } = req.body;
+
+    if (!user || user.role === 'general')
+        return res.status(403).json({ estado: false, mensaje: "Tu rol no permite comentar." });
 
     try {
         const { error } = await supabaseAdmin

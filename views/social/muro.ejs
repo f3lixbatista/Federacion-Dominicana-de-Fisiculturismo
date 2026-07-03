@@ -7,7 +7,7 @@
         <hr class="w-25 mx-auto border-primary border-2">
     </div>
 
-    <% if (locals.user && (user.role === 'atleta' || user.role === 'admin' || user.role === 'ejecutivo')) { %>
+    <% if (locals.user && user.role !== 'general') { %>
         <div class="text-center mb-5">
             <button class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPublicar">
                 <i class="fas fa-plus-circle me-2"></i> Publicar en el Muro
@@ -84,8 +84,8 @@
                                 <% } %>
                             </div>
 
-                            <!-- Input para Comentar (Solo Autenticados) -->
-                            <% if (locals.user) { %>
+                            <!-- Input para Comentar (roles con jerarquía) -->
+                            <% if (locals.user && user.role !== 'general') { %>
                                 <div class="input-group border-top pt-3 position-relative">
                                     <button class="btn btn-link p-2 text-decoration-none" type="button" onclick="toggleEmojiPickerGlobal('<%= post.id %>')">
                                         <i class="far fa-smile fs-5"></i>
@@ -96,7 +96,7 @@
                                     </button>
                                 </div>
                                 <div id="emoji-container-<%= post.id %>" class="d-none position-absolute" style="bottom: 55px; left: 0; z-index: 1000; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.2);"></div>
-                            <% } else { %>
+                            <% } else if (!locals.user) { %>
                                 <div class="text-center border-top pt-3">
                                     <a href="/login" class="small text-decoration-none">Inicia sesión para dar like o comentar</a>
                                 </div>
@@ -113,7 +113,7 @@
             <div class="text-center py-5 text-muted">
                 <i class="fas fa-images fa-3x mb-3 d-block opacity-25"></i>
                 <h5>El muro está vacío por ahora.</h5>
-                <% if (locals.user && (user.role === 'atleta' || user.role === 'admin')) { %>
+                <% if (locals.user && user.role !== 'general') { %>
                     <p class="small">¡Sé el primero en publicar!</p>
                 <% } %>
             </div>

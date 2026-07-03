@@ -13,6 +13,58 @@
         <% } %>
     </div>
 
+    <!-- EVENTOS ACTIVOS -->
+    <% if (locals.eventos && eventos.length > 0) { %>
+        <div class="mb-5">
+            <h6 class="text-uppercase text-muted fw-bold mb-3">
+                <i class="fas fa-calendar-alt text-success me-1"></i> Competencias y Eventos
+            </h6>
+            <div class="row g-3">
+                <% eventos.forEach(ev => {
+                    const estadoLabel = {
+                        inscripcion:  { txt: 'Inscripciones abiertas', cls: 'success' },
+                        pesaje:       { txt: 'En pesaje',              cls: 'warning' },
+                        en_progreso:  { txt: 'En curso',               cls: 'danger'  },
+                        finalizado:   { txt: 'Finalizado',             cls: 'secondary'}
+                    }[ev.estado] || { txt: ev.estado, cls: 'secondary' };
+                %>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius:14px;overflow:hidden;">
+                        <% if (ev.banner_url) { %>
+                            <img src="<%= ev.banner_url %>" class="card-img-top" style="height:130px;object-fit:cover;" alt="<%= ev.nombre %>">
+                        <% } else { %>
+                            <div class="bg-dark text-white d-flex align-items-center justify-content-center" style="height:130px;">
+                                <i class="fas fa-trophy fa-3x opacity-25"></i>
+                            </div>
+                        <% } %>
+                        <div class="card-body p-3">
+                            <span class="badge bg-<%= estadoLabel.cls %> mb-2"><%= estadoLabel.txt %></span>
+                            <h6 class="fw-bold text-dark mb-1" style="font-size:.9rem;"><%= ev.nombre %></h6>
+                            <% if (ev.fecha_inicio) { %>
+                                <p class="text-muted mb-1" style="font-size:.78rem;">
+                                    <i class="far fa-calendar-alt me-1"></i>
+                                    <%= new Date(ev.fecha_inicio).toLocaleDateString('es-DO', {year:'numeric',month:'long',day:'numeric'}) %>
+                                </p>
+                            <% } %>
+                            <% if (ev.lugar) { %>
+                                <p class="text-muted mb-0" style="font-size:.78rem;">
+                                    <i class="fas fa-map-marker-alt me-1"></i> <%= ev.lugar %>
+                                </p>
+                            <% } %>
+                        </div>
+                        <div class="card-footer bg-white border-0 pb-3 px-3">
+                            <a href="/eventos/historico" class="btn btn-outline-dark btn-sm w-100 fw-bold" style="font-size:.8rem;">
+                                <i class="fas fa-external-link-alt me-1"></i> Ver resultados
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <% }) %>
+            </div>
+        </div>
+        <hr class="mb-5">
+    <% } %>
+
     <% if (locals.noticias && noticias.length > 0) { %>
         <%
         const destacadas = noticias.filter(n => n.es_destacada);

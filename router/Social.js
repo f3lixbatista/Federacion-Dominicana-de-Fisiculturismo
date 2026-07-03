@@ -63,19 +63,28 @@ router.get('/noticias/crear', requireAuth, checkRole(['admin', 'ejecutivo']), (r
     res.render('social/admin_noticias', { user: res.locals.user });
 });
 
-// Ver el feed de noticias dinámico
+// Ver el feed de noticias dinámico (público)
 router.get('/noticias', async (req, res) => {
     try {
-        const { data: noticias, error } = await supabaseAdmin
-            .from('noticias')
-            .select('*')
-            .order('fecha_creacion', { ascending: false });
+        const [{ data: noticias, error }, { data: eventos }] = await Promise.all([
+            supabaseAdmin
+                .from('noticias')
+                .select('*')
+                .order('fecha_creacion', { ascending: false }),
+            supabaseAdmin
+                .from('eventos')
+                .select('id, nombre, fecha_inicio, lugar, estado, banner_url')
+                .not('estado', 'eq', 'cerrado')
+                .order('fecha_inicio', { ascending: false })
+                .limit(8)
+        ]);
 
         if (error) throw error;
 
-        res.render('social/noticias', { 
+        res.render('social/noticias', {
             noticias: noticias || [],
-            user: res.locals.user 
+            eventos: eventos || [],
+            user: res.locals.user
         });
     } catch (error) {
         console.error("🔥 Error cargando noticias:", error.message);
