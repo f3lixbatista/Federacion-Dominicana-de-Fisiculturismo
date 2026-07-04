@@ -23,6 +23,9 @@ router.post('/habilitar/:id', checkPermiso('preparadores', 'editar'), preparador
 // Panel del coach (preparador ve su propio dashboard)
 router.get('/panel', checkPermiso('preparadores', 'ver'), preparadoresController.verPanel);
 
+// Redirect al team propio (para el sidebar — no necesita ID en la URL)
+router.get('/mi-team', checkPermiso('preparadores', 'ver'), preparadoresController.verMiTeam);
+
 // Editar perfil del team (requiere auth + permiso preparadores:editar — el propio coach o admin)
 router.get('/team/:id/editar', checkPermiso('preparadores', 'editar'), preparadoresController.editarTeamPage);
 router.post('/team/:id/editar',

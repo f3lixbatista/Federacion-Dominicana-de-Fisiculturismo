@@ -215,6 +215,23 @@ const verRankingTeams = async (req, res) => {
     }
 };
 
+const verMiTeam = async (req, res) => {
+    const userEmail = res.locals.user?.email;
+    try {
+        const { data: prep } = await supabaseAdmin
+            .from('preparadores')
+            .select('id')
+            .eq('email', userEmail)
+            .maybeSingle();
+
+        if (!prep) return res.redirect('/preparadores/panel');
+        res.redirect(`/preparadores/team/${prep.id}`);
+    } catch (err) {
+        console.error('Error verMiTeam:', err.message);
+        res.redirect('/preparadores/panel');
+    }
+};
+
 const verTeam = async (req, res) => {
     const { id } = req.params;
     const userEmail = res.locals.user?.email;
@@ -392,6 +409,7 @@ module.exports = {
     habilitarPreparador,
     verPanel,
     verRankingTeams,
+    verMiTeam,
     verTeam,
     editarTeamPage,
     guardarTeam
