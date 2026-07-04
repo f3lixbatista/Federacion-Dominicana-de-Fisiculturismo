@@ -215,6 +215,38 @@ const verRankingTeams = async (req, res) => {
     }
 };
 
+const listarEquipos = async (req, res) => {
+    try {
+        const [{ data: equipos }, { data: atletasRaw }] = await Promise.all([
+            supabaseAdmin
+                .from('preparadores')
+                .select('id, nombre_completo, gimnasio_labora, nombre_team, foto_portada_url, foto_perfil_url')
+                .eq('estatus_afiliacion', 'habilitado')
+                .order('nombre_team', { ascending: true, nullsFirst: false }),
+            supabaseAdmin
+                .from('atletas')
+                .select('preparador_id')
+                .not('preparador_id', 'is', null)
+        ]);
+
+        const atletasPorPrep = {};
+        (atletasRaw || []).forEach(a => {
+            atletasPorPrep[a.preparador_id] = (atletasPorPrep[a.preparador_id] || 0) + 1;
+        });
+
+        res.render('preparadores/equipos', {
+            equipos: (equipos || []).map(e => ({
+                ...e,
+                displayName: e.nombre_team || e.nombre_completo,
+                totalAtletas: atletasPorPrep[e.id] || 0
+            }))
+        });
+    } catch (err) {
+        console.error('Error listarEquipos:', err.message);
+        res.status(500).send('Error al cargar los equipos');
+    }
+};
+
 const verMiTeam = async (req, res) => {
     const userEmail = res.locals.user?.email;
     try {
@@ -409,6 +441,7 @@ module.exports = {
     habilitarPreparador,
     verPanel,
     verRankingTeams,
+    listarEquipos,
     verMiTeam,
     verTeam,
     editarTeamPage,

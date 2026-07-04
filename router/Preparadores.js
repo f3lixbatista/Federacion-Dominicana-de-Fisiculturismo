@@ -5,10 +5,9 @@ const upload = multer({ storage: multer.memoryStorage() });
 const { requireAuth, checkPermiso } = require('../middlewares/auth');
 const preparadoresController = require('../controllers/preparadoresController');
 
-// Ranking de equipos — público (sin requireAuth)
+// Rutas públicas (sin requireAuth)
 router.get('/ranking-teams', preparadoresController.verRankingTeams);
-
-// Perfil público del team — accesible sin login
+router.get('/equipos', preparadoresController.listarEquipos);
 router.get('/team/:id', preparadoresController.verTeam);
 
 // El resto de rutas requiere autenticación
