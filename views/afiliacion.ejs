@@ -165,18 +165,81 @@
                 <input type="email" class="form-control" name="email_preparador">
             </div>
 
-            <div class="col-12 mt-4 p-3 bg-light border rounded">
-                <p class="small text-muted mb-0">
-                    <strong>Certificación:</strong> Con el envío de este formulario certifico que no tengo antecedentes penales ni asuntos pendientes con la justicia dominicana e internacional. 
-                    <br><em>Cualquier cambio o modificación se realizará el día del pesaje oficial.</em>
-                </p>
+            <div class="col-12 mt-4 p-3 border border-danger rounded bg-light">
+                <h6 class="fw-bold text-danger"><i class="fas fa-file-signature me-1"></i>Documento de Descargo y Consentimiento — FDFF / IFBB</h6>
+                <p class="small text-muted mb-2">Para poder participar como competidor en eventos de la FDFF, afirmo que entiendo y estoy de acuerdo con la constitución y las reglas de la <strong>IFBB/FDFF</strong>, el código de ética y las reglas antidopajes. Entiendo y concuerdo con las siguientes condiciones:</p>
+                <ol class="small text-muted ps-3 mb-2" style="line-height:1.5;">
+                    <li>Entiendo que para poder participar en eventos como competidor debo estar de acuerdo con todas las partes de este documento y que lo hago de manera voluntaria.</li>
+                    <li>Que concuerdo en descargar a la federación de cualquier reclamación por daños personales, muerte o daños a mi propiedad, incluyendo pero no limitándose a negligencia y/o aplicación de los estatutos por parte de la federación.</li>
+                    <li>Confirmo que estoy en buen estado de salud física y mental. Cualquier daño médico durante mi participación es totalmente mi responsabilidad, liberando a los organizadores y a la federación de la cobertura económica.</li>
+                    <li>Afirmo que nadie me obligó a participar y que lo hago por voluntad propia.</li>
+                    <li>Acuerdo respetar las reglas de la IFBB/FDFF y entiendo que si participo en competencias no avaladas, soy pasible de pruebas de dopaje costeadas por mi persona.</li>
+                    <li>Apruebo que fotos y videos tomadas durante eventos por fotógrafos acreditados puedan ser utilizadas por la federación sin requerir pago por derecho.</li>
+                    <li>Confirmo que soy mayor de edad y que he leído, entendido y aceptado todas las partes de este documento antes de enviarlo.</li>
+                </ol>
+                <p class="small mb-0"><em>Cualquier cambio o modificación de datos se realizará el día del pesaje oficial. El descargo completo con firma física se entrega al momento de la inscripción presencial.</em></p>
             </div>
 
             <button type="submit" class="btn btn-danger btn-lg my-5 col-md-4 shadow" id="btnEnviar">
                 SOLICITAR AFILIACIÓN
-            </button> 
+            </button>
 
         </form>
+
+        <%# ─── PANEL DE PAGO (oculto hasta que el formulario se envíe) ─── %>
+        <div id="panelPago" style="display:none" class="mt-4">
+            <div class="alert alert-success border-success border-2">
+                <h5 class="fw-bold"><i class="fas fa-check-circle me-1"></i>¡Solicitud enviada!</h5>
+                <p class="mb-0">Para completar su afiliación, realice la transferencia y suba el comprobante.</p>
+            </div>
+
+            <div class="card border-primary mb-4">
+                <div class="card-header bg-primary text-white fw-bold">
+                    <i class="fas fa-university me-1"></i> Datos para Transferencia Bancaria
+                </div>
+                <div class="card-body">
+                    <% if ((cuentasBancarias || []).length === 0) { %>
+                        <div class="alert alert-warning mb-0 small">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            No hay cuentas bancarias registradas. Contacte al administrador.
+                        </div>
+                    <% } else { %>
+                        <% cuentasBancarias.forEach(c => { %>
+                            <table class="table table-borderless mb-2 small">
+                                <tr><td class="fw-bold" style="width:140px;">Banco:</td><td><%= c.banco %></td></tr>
+                                <tr><td class="fw-bold">Titular:</td><td><%= c.titular %></td></tr>
+                                <tr><td class="fw-bold">Cuenta (<%= c.tipo_cuenta %>):</td><td><strong><%= c.numero_cuenta %></strong></td></tr>
+                                <tr><td class="fw-bold">RNC / Cédula:</td><td><%= c.identificacion %></td></tr>
+                                <tr><td class="fw-bold">Moneda:</td><td><span class="badge bg-secondary"><%= c.moneda %></span></td></tr>
+                            </table>
+                            <% if (cuentasBancarias.length > 1) { %><hr class="my-2"><% } %>
+                        <% }) %>
+                    <% } %>
+                    <p class="small text-muted mt-2 mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        En el concepto de la transferencia escriba su nombre completo y número de cédula.
+                    </p>
+                </div>
+            </div>
+
+            <form id="formComprobante">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-upload me-1"></i> Subir comprobante de transferencia
+                    </label>
+                    <input type="file" class="form-control" id="archivoComprobante"
+                           name="comprobante" accept="image/*,.pdf" required>
+                    <div class="form-text">Formatos aceptados: JPG, PNG, PDF. Máx. 5 MB.</div>
+                </div>
+                <button type="submit" class="btn btn-success" id="btnSubirComprobante">
+                    <i class="fas fa-paper-plane me-1"></i> Enviar Comprobante
+                </button>
+            </form>
+
+            <div id="msgComprobante" style="display:none" class="alert alert-info mt-3">
+                <i class="fas fa-clock me-1"></i> Su comprobante fue recibido. El staff lo revisará y le notificará la activación de su membresía.
+            </div>
+        </div>
     </div>
 </div>
 
@@ -265,11 +328,43 @@
                 if (!result.estado) throw new Error(result.mensaje);
 
                 sessionStorage.removeItem(STORAGE_KEY);
-                alert("¡Solicitud enviada correctamente!");
-                window.location.href = '/eventos/competencias';
+                // Mostrar panel de pago en lugar de redirigir
+                document.getElementById('formMembresia').style.display = 'none';
+                document.getElementById('panelPago').style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             } catch (err) {
                 alert("Error al registrar: " + err.message);
                 if (btn) btn.disabled = false;
+            }
+        });
+    }
+
+    // ── Subir comprobante de membresía ──────────────────────────────────────
+    const formComprobante = document.getElementById('formComprobante');
+    if (formComprobante) {
+        formComprobante.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const archivo = document.getElementById('archivoComprobante').files[0];
+            if (!archivo) return alert('Selecciona un archivo.');
+            if (archivo.size > 5 * 1024 * 1024) return alert('El archivo es demasiado grande (máx. 5 MB).');
+
+            const btn = document.getElementById('btnSubirComprobante');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Subiendo…';
+
+            const fd = new FormData();
+            fd.append('comprobante', archivo);
+
+            try {
+                const resp = await fetch('/atletas/subir-comprobante-membresia', { method: 'POST', body: fd });
+                const json = await resp.json();
+                if (!json.estado) throw new Error(json.mensaje);
+                formComprobante.style.display = 'none';
+                document.getElementById('msgComprobante').style.display = 'block';
+            } catch (err) {
+                alert('Error: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Enviar Comprobante';
             }
         });
     }

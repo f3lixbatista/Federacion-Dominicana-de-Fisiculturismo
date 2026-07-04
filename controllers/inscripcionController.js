@@ -50,6 +50,32 @@ const inscripcionPage = async (req, res) => {
             ? (evento.costo_oferta_adicional || evento.costo_adicional || 0)
             : (evento?.costo_adicional || 0);
 
+        // Comprobantes de pago web pendientes de validar para este evento
+        let comprobantesWeb = [];
+        let cuentasBancarias = [];
+        if (evento?.id) {
+            const [{ data: comps }, { data: cuentas }] = await Promise.all([
+                supabaseAdmin.from('competidores')
+                    .select('id, atleta_id, url_comprobante_pago, fecha_subida_pago, monto_total, atletas(nombre, idfdff)')
+                    .eq('id_evento', evento.id)
+                    .not('url_comprobante_pago', 'is', null)
+                    .eq('pago_validado', false)
+                    .order('fecha_subida_pago', { ascending: false }),
+                supabaseAdmin.from('cuentas_bancarias')
+                    .select('*')
+                    .eq('activa', true)
+                    .order('banco', { ascending: true })
+            ]);
+            // Agrupar por atleta_id (un registro por atleta)
+            const vistos = new Set();
+            comprobantesWeb = (comps || []).filter(c => {
+                if (vistos.has(c.atleta_id)) return false;
+                vistos.add(c.atleta_id);
+                return true;
+            });
+            cuentasBancarias = cuentas || [];
+        }
+
         res.render('eventos/inscripcion', {
             eventoActual: evento || { nombre: 'Sin evento activo', estado: 'cerrado', id: null },
             arrayAtletas: arrayAtletas || [],
@@ -57,7 +83,9 @@ const inscripcionPage = async (req, res) => {
             arrayPreparadores: arrayPreparadores || [],
             precioEfectivoPrimera,
             precioEfectivoAdicional,
-            esPrecioOferta: !!esPrecioOferta
+            esPrecioOferta: !!esPrecioOferta,
+            comprobantesWeb,
+            cuentasBancarias
         });
     } catch (error) {
         console.error('Error al cargar inscripción:', error.message);
@@ -140,20 +168,37 @@ const inscripcionAtletaPage = async (req, res) => {
             .eq('id', res.locals.user.id)
             .single();
 
-        // Categorías ya inscritas por este atleta en este evento
+        // Categorías inscritas + estado del comprobante
         const { data: yaInscritas } = await supabaseAdmin
             .from('competidores')
-            .select('evento_cat_id')
+            .select('evento_cat_id, url_comprobante_pago, pago_validado, fecha_subida_pago')
             .eq('atleta_id', res.locals.user.id)
             .eq('id_evento', evento);
 
         const categoriasInscritas = (yaInscritas || []).map(c => c.evento_cat_id);
 
+        // Estado del comprobante (tomar del primer registro que tenga URL)
+        const conComprobante = (yaInscritas || []).find(c => c.url_comprobante_pago);
+        const estadoPago = {
+            tieneComprobante: !!conComprobante,
+            pagoValidado:     conComprobante?.pago_validado || false,
+            urlComprobante:   conComprobante?.url_comprobante_pago || null,
+            fechaSubida:      conComprobante?.fecha_subida_pago || null
+        };
+
+        const { data: cuentasBancarias } = await supabaseAdmin
+            .from('cuentas_bancarias')
+            .select('*')
+            .eq('activa', true)
+            .order('banco', { ascending: true });
+
         res.render('eventos/InscripcionAtleta', {
             eventos: [eventoEspecifico],
             eventoId: evento,
             atleta: atleta || null,
-            categoriasInscritas
+            categoriasInscritas,
+            estadoPago,
+            cuentasBancarias: cuentasBancarias || []
         });
     } catch (error) {
         console.error('Error en InscripcionAtleta:', error.message);
@@ -381,6 +426,244 @@ const inscribirAtleta = async (req, res) => {
     res.json({ ok: true });
 };
 
+// Sube el comprobante de pago de una inscripción web
+const subirComprobanteWeb = async (req, res) => {
+    const atletaId = res.locals.user?.id;
+    if (!atletaId) return res.status(401).json({ ok: false, error: 'Sesión expirada' });
+    if (!req.file) return res.status(400).json({ ok: false, error: 'No se recibió ningún archivo' });
+
+    const { eventoId } = req.body;
+    if (!eventoId) return res.status(400).json({ ok: false, error: 'Falta eventoId' });
+
+    try {
+        const ext  = req.file.originalname.split('.').pop() || 'jpg';
+        const path = `inscripcion_${atletaId}_${eventoId}_${Date.now()}.${ext}`;
+
+        const { error: storageErr } = await supabaseAdmin.storage
+            .from('comprobantes-pago')
+            .upload(path, req.file.buffer, { contentType: req.file.mimetype, upsert: true });
+
+        if (storageErr) throw storageErr;
+
+        const { data: { publicUrl } } = supabaseAdmin.storage
+            .from('comprobantes-pago').getPublicUrl(path);
+
+        // Actualizar todos los competidores del atleta en ese evento
+        const { error: dbErr } = await supabaseAdmin.from('competidores').update({
+            url_comprobante_pago: publicUrl,
+            fecha_subida_pago:    new Date().toISOString(),
+            pago_validado:        false
+        }).eq('atleta_id', atletaId).eq('id_evento', eventoId);
+
+        if (dbErr) throw dbErr;
+
+        // Notificar al atleta
+        const { data: atleta } = await supabaseAdmin
+            .from('atletas').select('nombre, email').eq('id', atletaId).single();
+        const { data: evento } = await supabaseAdmin
+            .from('eventos').select('nombre').eq('id', eventoId).single();
+        const { notificarComprobanteRecibido } = require('../services/emailService');
+        notificarComprobanteRecibido({
+            email: atleta?.email,
+            nombre: atleta?.nombre,
+            concepto: `Inscripción — ${evento?.nombre || 'Evento'}`
+        }).catch(() => {});
+
+        res.json({ ok: true, url: publicUrl });
+    } catch (err) {
+        console.error('Error subiendo comprobante web:', err.message);
+        res.status(500).json({ ok: false, error: err.message });
+    }
+};
+
+// ── DESCARGO IMPRIMIBLE ─────────────────────────────────────────────────────
+const descargoAtleta = async (req, res) => {
+    const { atletaId, eventoId } = req.query;
+    if (!atletaId || !eventoId) return res.status(400).send('Faltan parámetros');
+
+    try {
+        const [{ data: atleta }, { data: evento }, { data: inscripciones }] = await Promise.all([
+            supabaseAdmin.from('atletas')
+                .select('nombre, cedula, pasaporte, pais, municipio, preparador, peso, estatura, email')
+                .eq('id', atletaId).single(),
+            supabaseAdmin.from('eventos')
+                .select('id, nombre, lugar, fecha_inicio')
+                .eq('id', eventoId).single(),
+            supabaseAdmin.from('competidores')
+                .select('numero_atleta, monto_total, eventos_categorias(categorias(nombre))')
+                .eq('atleta_id', atletaId)
+                .eq('id_evento', eventoId)
+        ]);
+
+        const totalPagado = (inscripciones || []).reduce((s, c) => s + (c.monto_total || 0), 0);
+        const fechaDisplay = evento?.fecha_inicio
+            ? new Date(evento.fecha_inicio).toLocaleDateString('es-DO', { year: 'numeric', month: 'long', day: 'numeric' })
+            : '';
+
+        res.render('atleta_vistas/descargo_print', {
+            atleta: atleta || {},
+            evento: { ...evento, fecha_display: fechaDisplay },
+            inscripciones: inscripciones || [],
+            totalPagado
+        });
+    } catch (err) {
+        console.error('Error descargo:', err.message);
+        res.status(500).send('Error generando descargo: ' + err.message);
+    }
+};
+
+// ── LISTADO OFICIAL DE ATLETAS / POSICIONES ──────────────────────────────────
+const _buildListado = async (eventoId, tipo) => {
+    const [{ data: evento }, { data: comps }] = await Promise.all([
+        supabaseAdmin.from('eventos').select('id, nombre, lugar, fecha_inicio').eq('id', eventoId).single(),
+        supabaseAdmin.from('competidores')
+            .select(`
+                numero_atleta, monto_total, posicion_final,
+                atletas(nombre, municipio, preparador, peso, estatura, fecha_nacimiento),
+                eventos_categorias!inner(
+                    id,
+                    categorias(id, nombre, disciplina, modalidad, parametro:divisiones(parametro))
+                )
+            `)
+            .eq('id_evento', eventoId)
+            .eq('estatus_pesaje', 'aprobado')
+            .order('numero_atleta', { ascending: true })
+    ]);
+
+    // Agrupar por categoría
+    const catMap = new Map();
+    (comps || []).forEach(c => {
+        const catId  = c.eventos_categorias?.id;
+        const catNom = c.eventos_categorias?.categorias?.nombre || 'Sin categoría';
+        const modalidad = c.eventos_categorias?.categorias?.modalidad || '';
+        const parametro = (c.eventos_categorias?.categorias?.parametro || [])[0]?.parametro || 'ninguno';
+
+        if (!catMap.has(catId)) {
+            catMap.set(catId, { nombre: catNom, modalidad, parametro, atletas: [] });
+        }
+
+        const atl = c.atletas || {};
+        const edad = atl.fecha_nacimiento
+            ? Math.floor((Date.now() - new Date(atl.fecha_nacimiento)) / (365.25 * 24 * 3600 * 1000))
+            : null;
+
+        let param = '';
+        if (parametro === 'peso')        param = atl.peso ? atl.peso + ' kg' : '';
+        else if (parametro === 'estatura') param = atl.estatura ? atl.estatura + ' cm' : '';
+        else if (parametro === 'ambos')  param = [atl.estatura ? atl.estatura + ' cm' : '', atl.peso ? atl.peso + ' kg' : ''].filter(Boolean).join('/');
+        else if (edad)                   param = edad + ' años';
+
+        let columna_param = 'Peso/Talla/Edad (Kg/Cm/Años)';
+        if (parametro === 'peso')        columna_param = 'Peso (kg)';
+        else if (parametro === 'estatura') columna_param = 'Estatura (cm)';
+        else if (parametro === 'ambos')  columna_param = 'Talla / Peso';
+
+        catMap.get(catId).atletas.push({
+            numero:  c.numero_atleta,
+            dorsal:  c.numero_atleta,
+            nombre:  atl.nombre || '—',
+            ciudad:  atl.municipio || '—',
+            team:    atl.preparador || 'Independiente',
+            param,
+            posicion: c.posicion_final || null
+        });
+        catMap.get(catId).columna_param = columna_param;
+    });
+
+    // Si es posiciones, ordenar por posicion_final dentro de cada categoría
+    if (tipo === 'posiciones') {
+        catMap.forEach(cat => {
+            cat.atletas.sort((a, b) => (a.posicion || 999) - (b.posicion || 999));
+        });
+    }
+
+    const categorias = [...catMap.values()];
+    const totalAtletas = categorias.reduce((s, c) => s + c.atletas.length, 0);
+    return { evento, categorias, totalAtletas };
+};
+
+const listadoAtletas = async (req, res) => {
+    const eventoId = req.params.eventoId || req.query.eventoId;
+    if (!eventoId) return res.status(400).send('Falta eventoId');
+    try {
+        const { evento, categorias, totalAtletas } = await _buildListado(eventoId, 'atletas');
+        res.render('eventos/listado_oficial', {
+            tipo: 'atletas', evento, categorias, totalAtletas, puedePublicar: true
+        });
+    } catch (err) {
+        console.error('Error listado atletas:', err.message);
+        res.status(500).send('Error: ' + err.message);
+    }
+};
+
+const listadoPosiciones = async (req, res) => {
+    const eventoId = req.params.eventoId || req.query.eventoId;
+    if (!eventoId) return res.status(400).send('Falta eventoId');
+    try {
+        const { evento, categorias, totalAtletas } = await _buildListado(eventoId, 'posiciones');
+        res.render('eventos/listado_oficial', {
+            tipo: 'posiciones', evento, categorias, totalAtletas, puedePublicar: true
+        });
+    } catch (err) {
+        console.error('Error listado posiciones:', err.message);
+        res.status(500).send('Error: ' + err.message);
+    }
+};
+
+const publicarListado = async (req, res) => {
+    const { evento_id, tipo } = req.body;
+    if (!evento_id || !tipo) return res.status(400).json({ ok: false, error: 'Faltan parámetros' });
+
+    try {
+        const { evento, categorias, totalAtletas } = await _buildListado(evento_id, tipo);
+
+        const esPos = tipo === 'posiciones';
+        const titulo = esPos
+            ? `Resultado Oficial por Categorías — ${evento.nombre}`
+            : `Atletas Inscritos por Categorías en el ${evento.nombre}`;
+
+        // Construir HTML para el contenido de la noticia
+        let html = `<p><strong>Total de participantes: ${totalAtletas}</strong></p>`;
+        categorias.forEach((cat, idx) => {
+            html += `<h5 style="margin-top:12px;background:#c00;color:#fff;padding:4px 8px;">${idx + 1}. ${cat.nombre}</h5>`;
+            html += `<table style="width:100%;border-collapse:collapse;font-size:0.9rem;">`;
+            html += `<thead><tr style="background:#333;color:#fff;"><th style="padding:4px 8px;text-align:left;">No.</th><th style="padding:4px 8px;">Nombre y Apellido</th><th style="padding:4px 8px;">Ciudad</th><th style="padding:4px 8px;">Team</th><th style="padding:4px 8px;">${esPos ? 'Posición' : cat.columna_param}</th></tr></thead><tbody>`;
+            cat.atletas.forEach((a, i) => {
+                const bg = i % 2 === 0 ? '#fff' : '#f7f7f7';
+                const val = esPos ? (a.posicion ? a.posicion + '°' : '—') : (a.param || '—');
+                html += `<tr style="background:${bg};"><td style="padding:3px 8px;text-align:center;font-weight:bold;">${a.dorsal || (i + 1)}</td><td style="padding:3px 8px;font-weight:bold;">${a.nombre}</td><td style="padding:3px 8px;">${a.ciudad}</td><td style="padding:3px 8px;">${a.team}</td><td style="padding:3px 8px;text-align:center;font-weight:bold;">${val}</td></tr>`;
+            });
+            html += `</tbody></table><p style="text-align:right;font-size:0.8rem;color:#777;">Σ = ${cat.atletas.length}</p>`;
+        });
+
+        // Insertar en tabla noticias
+        const { error } = await supabaseAdmin.from('noticias').insert({
+            titulo,
+            contenido:    html,
+            es_destacada: esPos,
+            autor_id:     req.user?.id || null,
+            evento_ref_id: evento_id   // columna opcional para vincular al evento
+        });
+
+        if (error && error.message.includes('evento_ref_id')) {
+            // Si la columna no existe, publicar sin ella
+            await supabaseAdmin.from('noticias').insert({
+                titulo,
+                contenido:    html,
+                es_destacada: esPos,
+                autor_id:     req.user?.id || null
+            });
+        } else if (error) {
+            throw error;
+        }
+
+        res.json({ ok: true });
+    } catch (err) {
+        console.error('Error publicarListado:', err.message);
+        res.status(500).json({ ok: false, error: err.message });
+    }
+};
+
 const cerrarInscripcionesWeb = async (req, res) => {
     const { eventoId } = req.body;
     if (!eventoId) return res.status(400).json({ ok: false, mensaje: 'Falta eventoId' });
@@ -403,7 +686,12 @@ module.exports = {
     detalleInscripcion,
     guardarInscripcionAsistida,
     inscribirAtleta,
+    subirComprobanteWeb,
     fichaAtleta,
     subirMusicaAsistida,
-    cerrarInscripcionesWeb
+    cerrarInscripcionesWeb,
+    descargoAtleta,
+    listadoAtletas,
+    listadoPosiciones,
+    publicarListado
 };

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= tipo === 'posiciones' ? 'Resultado Oficial' : 'Listado Oficial de Atletas' %> — <%= evento.nombre %></title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; font-size: 10pt; color: #111; background: #fff; }
+
+        /* ── Controles (no se imprimen) ── */
+        .controles {
+            background: #1a1a2e; color: #fff; padding: 12px 20px;
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        }
+        .controles h5 { flex: 1; margin: 0; font-size: 13pt; }
+        .controles button, .controles a {
+            padding: 7px 18px; border: none; border-radius: 5px; font-size: 10pt;
+            cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block;
+        }
+        .btn-imprimir { background: #28a745; color: #fff; }
+        .btn-publicar { background: #ffc107; color: #000; }
+        .btn-cerrar   { background: #6c757d; color: #fff; }
+        @media print { .controles { display: none !important; } }
+
+        /* ── Documento ── */
+        .documento { max-width: 900px; margin: 0 auto; padding: 14px 18px; }
+
+        /* ── Cabecera ── */
+        .cabecera { display: flex; align-items: center; border-bottom: 3px solid #c00; padding-bottom: 10px; margin-bottom: 10px; }
+        .cabecera img { width: 72px; height: auto; margin-right: 14px; }
+        .cabecera-texto h2 { font-size: 14pt; color: #c00; font-weight: bold; text-transform: uppercase; }
+        .cabecera-texto h3 { font-size: 11pt; margin: 2px 0; }
+        .cabecera-texto p  { font-size: 9pt; color: #555; }
+
+        /* ── Título del listado ── */
+        .titulo-listado {
+            text-align: center; margin: 10px 0 14px;
+            border: 2px solid #111; padding: 8px 12px; background: #111; color: #fff;
+        }
+        .titulo-listado h4 { font-size: 14pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .titulo-listado p  { font-size: 9.5pt; margin: 4px 0 0; color: #ccc; }
+
+        /* ── Bloque por categoría ── */
+        .categoria-bloque { margin-bottom: 16px; }
+        .categoria-header {
+            display: flex; align-items: center; gap: 10px;
+            background: #c00; color: #fff; padding: 5px 10px; font-weight: bold; font-size: 10.5pt;
+        }
+        .categoria-num { background: #fff; color: #c00; border-radius: 3px; padding: 1px 7px; font-size: 10pt; font-weight: bold; }
+
+        /* ── Tabla de atletas ── */
+        .tabla-atletas { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+        .tabla-atletas thead tr { background: #333; color: #fff; }
+        .tabla-atletas th { padding: 4px 8px; text-align: left; font-weight: bold; }
+        .tabla-atletas td { padding: 4px 8px; border-bottom: 1px solid #ddd; }
+        .tabla-atletas tbody tr:nth-child(even) { background: #f7f7f7; }
+        .tabla-atletas .col-num { width: 40px; text-align: center; font-weight: bold; }
+        .tabla-atletas .col-pos { width: 60px; text-align: center; font-size: 12pt; font-weight: bold; color: #c00; }
+        .col-pos-1 { color: #c9a227 !important; } /* oro */
+        .col-pos-2 { color: #888 !important; }    /* plata */
+        .col-pos-3 { color: #a0522d !important; } /* bronce */
+
+        /* ── Total de la categoría ── */
+        .cat-total { text-align: right; font-size: 9pt; color: #555; padding: 3px 8px; border-bottom: 2px solid #111; margin-bottom: 4px; }
+
+        /* ── Pie ── */
+        .pie { text-align: center; font-size: 8pt; color: #888; margin-top: 18px; border-top: 1px solid #ddd; padding-top: 6px; }
+    </style>
+</head>
+<body>
+
+<!-- ── CONTROLES (NO se imprimen) ──────────────────────────── -->
+<div class="controles">
+    <h5>
+        <% if (tipo === 'posiciones') { %>
+            🏆 Resultado Oficial de Posiciones — <%= evento.nombre %>
+        <% } else { %>
+            📋 Listado Oficial de Atletas — <%= evento.nombre %>
+        <% } %>
+    </h5>
+    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir</button>
+    <% if (puedePublicar) { %>
+        <button class="btn-publicar" onclick="publicarListado()">
+            📢 Publicar en Noticias & Muro
+        </button>
+    <% } %>
+    <button class="btn-cerrar" onclick="window.close()">✕ Cerrar</button>
+</div>
+
+<!-- ── DOCUMENTO ─────────────────────────────────────────────── -->
+<div class="documento">
+
+    <!-- Cabecera institucional -->
+    <div class="cabecera">
+        <img src="/img/fdff3.jpg" alt="FDFF">
+        <div class="cabecera-texto">
+            <h2>Federación Dominicana de Fisiculturismo y Fitness</h2>
+            <h3><%= evento.nombre %></h3>
+            <p>
+                <%= evento.lugar || '' %>
+                <% if (evento.fecha_inicio) { %> &nbsp;|&nbsp; <%= new Date(evento.fecha_inicio).toLocaleDateString('es-DO', {year:'numeric',month:'long',day:'numeric'}) %> <% } %>
+            </p>
+        </div>
+    </div>
+
+    <!-- Título del listado -->
+    <div class="titulo-listado">
+        <h4>
+            <% if (tipo === 'posiciones') { %>
+                Resultado Final por Categoría
+            <% } else { %>
+                Atletas Inscritos por Categorías
+            <% } %>
+        </h4>
+        <p>Total de participantes: <%= totalAtletas %></p>
+    </div>
+
+    <!-- ── CATEGORÍAS ── -->
+    <% categorias.forEach((cat, idx) => { %>
+    <div class="categoria-bloque">
+        <div class="categoria-header">
+            <span class="categoria-num"><%= idx + 1 %></span>
+            <%= cat.nombre.toUpperCase() %>
+        </div>
+        <table class="tabla-atletas">
+            <thead>
+                <tr>
+                    <th class="col-num">No.</th>
+                    <th>Nombre y Apellido</th>
+                    <th>Ciudad</th>
+                    <th>Team</th>
+                    <th>
+                        <% if (tipo === 'posiciones') { %>
+                            Posición
+                        <% } else { %>
+                            <%= cat.columna_param %>
+                        <% } %>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <% cat.atletas.forEach(a => { %>
+                <tr>
+                    <td class="col-num"><%= a.dorsal || a.numero %></td>
+                    <td style="font-weight:bold;"><%= a.nombre %></td>
+                    <td><%= a.ciudad || '—' %></td>
+                    <td><%= a.team || 'Independiente' %></td>
+                    <td class="<%= tipo === 'posiciones' ? 'col-pos' : '' %> <%= tipo === 'posiciones' && a.posicion == 1 ? 'col-pos-1' : (a.posicion == 2 ? 'col-pos-2' : (a.posicion == 3 ? 'col-pos-3' : '')) %>">
+                        <% if (tipo === 'posiciones') { %>
+                            <%= a.posicion ? a.posicion + '°' : '—' %>
+                        <% } else { %>
+                            <%= a.param || '—' %>
+                        <% } %>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+        <div class="cat-total">Σ = <%= cat.atletas.length %></div>
+    </div>
+    <% }) %>
+
+    <div class="pie">
+        Federación Dominicana de Fisiculturismo y Fitness (FDFF) — Documento oficial &nbsp;|&nbsp;
+        Generado el <%= new Date().toLocaleDateString('es-DO', {year:'numeric',month:'long',day:'numeric'}) %>
+    </div>
+</div>
+
+<script>
+async function publicarListado() {
+    if (!confirm('¿Publicar este listado en Noticias, Muro Social y el evento correspondiente?')) return;
+    const btn = document.querySelector('.btn-publicar');
+    btn.disabled = true;
+    btn.textContent = '⏳ Publicando…';
+    try {
+        const resp = await fetch('/inscripcion/publicar-listado', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                evento_id: '<%= evento.id %>',
+                tipo: '<%= tipo %>'
+            })
+        });
+        const json = await resp.json();
+        if (json.ok) {
+            btn.textContent = '✅ Publicado';
+            btn.style.background = '#28a745';
+            btn.style.color = '#fff';
+            alert('Listado publicado correctamente en Noticias y Muro Social.');
+        } else {
+            throw new Error(json.error || 'Error desconocido');
+        }
+    } catch(e) {
+        alert('Error al publicar: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = '📢 Publicar en Noticias & Muro';
+    }
+}
+</script>
+</body>
+</html>

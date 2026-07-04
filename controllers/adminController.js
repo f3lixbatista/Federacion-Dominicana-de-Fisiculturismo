@@ -246,12 +246,21 @@ const verAuditoriaPagos = async (req, res) => {
         const pendientes = inscripciones.filter(i => !i.pago_validado);
         const validados  = inscripciones.filter(i => i.pago_validado);
 
+        // Membresías con comprobante de transferencia pendiente de validación
+        const { data: membresiasPendientes } = await supabaseAdmin
+            .from('atletas')
+            .select('id, nombre, idfdff, email, celular, url_comprobante_membresia, fecha_subida_membresia, estatus_afiliacion')
+            .not('url_comprobante_membresia', 'is', null)
+            .eq('estatus_afiliacion', 'pendiente')
+            .order('fecha_subida_membresia', { ascending: false });
+
         res.render('admin/auditoria_pagos', {
             pagos: pagos || [],
             pendientes,
             validados,
             extras: extras || [],
             totalPendientes: pendientes.length,
+            membresiasPendientes: membresiasPendientes || [],
             query
         });
     } catch (e) {
@@ -358,6 +367,183 @@ const recargarPermisos = async (req, res) => {
     }
 };
 
+// ── VALIDACIÓN DE COMPROBANTES DE PAGO ─────────────────────────────────────
+
+const validarPagoInscripcion = async (req, res) => {
+    const { competidor_id } = req.body;
+    if (!competidor_id) return res.status(400).json({ ok: false, error: 'Falta competidor_id' });
+
+    try {
+        // Obtener datos del competidor (atleta + evento)
+        const { data: comp, error: eComp } = await supabaseAdmin
+            .from('competidores')
+            .select('atleta_id, id_evento, uso_oferta, monto_total, fecha_subida_pago, atletas(nombre, email, celular), eventos(nombre, costo_primera_cat, costo_adicional, fecha_limite_oferta)')
+            .eq('id', competidor_id)
+            .single();
+
+        if (eComp || !comp) return res.status(404).json({ ok: false, error: 'Competidor no encontrado' });
+
+        const { atleta_id, id_evento } = comp;
+        const fechaSubida    = comp.fecha_subida_pago ? new Date(comp.fecha_subida_pago) : new Date();
+        const fechaLimite    = comp.eventos?.fecha_limite_oferta ? new Date(comp.eventos.fecha_limite_oferta) : null;
+        const precioAjustado = comp.uso_oferta && fechaLimite && fechaSubida > fechaLimite;
+
+        // Obtener todos los registros del atleta en ese evento (para actualizar todos)
+        const { data: todosComp } = await supabaseAdmin
+            .from('competidores')
+            .select('id, monto_total, uso_oferta')
+            .eq('atleta_id', atleta_id)
+            .eq('id_evento', id_evento);
+
+        let montoOriginalTotal = 0;
+        let montoNuevoTotal    = 0;
+
+        const actualizaciones = (todosComp || []).map((c, idx) => {
+            montoOriginalTotal += parseFloat(c.monto_total || 0);
+            const nuevoMonto = idx === 0
+                ? (comp.eventos?.costo_primera_cat || c.monto_total)
+                : (comp.eventos?.costo_adicional   || c.monto_total);
+            montoNuevoTotal += precioAjustado ? nuevoMonto : parseFloat(c.monto_total || 0);
+
+            return supabaseAdmin.from('competidores').update({
+                pago_validado: true,
+                ...(precioAjustado ? { uso_oferta: false, monto_total: nuevoMonto } : {})
+            }).eq('id', c.id);
+        });
+
+        await Promise.all(actualizaciones);
+
+        // Notificaciones por correo
+        const email  = comp.atletas?.email;
+        const nombre = comp.atletas?.nombre;
+        const eventoNombre = comp.eventos?.nombre;
+        const { notificarPrecioAjustado, notificarPagoValidado } = require('../services/emailService');
+
+        if (precioAjustado) {
+            notificarPrecioAjustado({
+                email, nombre, eventoNombre,
+                montoOriginal: montoOriginalTotal,
+                montoNuevo:    montoNuevoTotal,
+                celular:       comp.atletas?.celular
+            }).catch(() => {});
+        } else {
+            notificarPagoValidado({ email, nombre, eventoNombre }).catch(() => {});
+        }
+
+        res.json({
+            ok: true,
+            precioAjustado,
+            mensaje: precioAjustado
+                ? `Pago validado. ⚠️ Precio ajustado de RD$${montoOriginalTotal.toLocaleString()} a RD$${montoNuevoTotal.toLocaleString()} (fuera de la ventana de oferta).`
+                : '✅ Pago validado correctamente.'
+        });
+    } catch (err) {
+        console.error('Error en validarPagoInscripcion:', err.message);
+        res.status(500).json({ ok: false, error: err.message });
+    }
+};
+
+const rechazarPagoInscripcion = async (req, res) => {
+    const { competidor_id, motivo } = req.body;
+    if (!competidor_id) return res.status(400).json({ ok: false, error: 'Falta competidor_id' });
+
+    try {
+        const { data: comp } = await supabaseAdmin
+            .from('competidores').select('atleta_id, id_evento').eq('id', competidor_id).single();
+
+        await supabaseAdmin.from('competidores').update({
+            url_comprobante_pago: null,
+            pago_validado:        false,
+            observaciones_pago:   motivo || 'Rechazado por el staff'
+        }).eq('atleta_id', comp.atleta_id).eq('id_evento', comp.id_evento);
+
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ ok: false, error: err.message });
+    }
+};
+
+const validarPagoMembresia = async (req, res) => {
+    const { atleta_id } = req.body;
+    if (!atleta_id) return res.status(400).json({ ok: false, error: 'Falta atleta_id' });
+
+    try {
+        const { data: atleta } = await supabaseAdmin
+            .from('atletas').select('nombre, email').eq('id', atleta_id).single();
+
+        await supabaseAdmin.from('atletas').update({
+            estatus_afiliacion:       'habilitado',
+            fecha_ultima_renovacion:  new Date().getFullYear() + '-12-31'
+        }).eq('id', atleta_id);
+
+        const { notificarAfiliacionValidada } = require('../services/emailService');
+        notificarAfiliacionValidada({ email: atleta?.email, nombre: atleta?.nombre }).catch(() => {});
+
+        res.json({ ok: true, mensaje: '✅ Membresía activada correctamente.' });
+    } catch (err) {
+        res.status(500).json({ ok: false, error: err.message });
+    }
+};
+
+const rechazarPagoMembresia = async (req, res) => {
+    const { atleta_id, motivo } = req.body;
+    if (!atleta_id) return res.status(400).json({ ok: false, error: 'Falta atleta_id' });
+
+    try {
+        await supabaseAdmin.from('atletas').update({
+            url_comprobante_membresia: null,
+            fecha_subida_membresia:    null
+        }).eq('id', atleta_id);
+
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ ok: false, error: err.message });
+    }
+};
+
+// ── CUENTAS BANCARIAS ────────────────────────────────────────────────────────
+const listarCuentas = async (req, res) => {
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('cuentas_bancarias')
+            .select('*')
+            .order('activa', { ascending: false })
+            .order('banco', { ascending: true });
+        if (error) throw error;
+        res.json({ ok: true, cuentas: data || [] });
+    } catch (err) {
+        res.status(500).json({ ok: false, error: err.message });
+    }
+};
+
+const guardarCuenta = async (req, res) => {
+    const { id, banco, numero_cuenta, tipo_cuenta, titular, moneda, identificacion, activa } = req.body;
+    if (!banco || !numero_cuenta || !titular || !identificacion)
+        return res.status(400).json({ ok: false, error: 'Campos requeridos incompletos' });
+
+    const campos = { banco, numero_cuenta, tipo_cuenta: tipo_cuenta || 'corriente', titular, moneda: moneda || 'RD$', identificacion, activa: activa !== false };
+
+    try {
+        const { error } = id
+            ? await supabaseAdmin.from('cuentas_bancarias').update(campos).eq('id', id)
+            : await supabaseAdmin.from('cuentas_bancarias').insert(campos);
+        if (error) throw error;
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ ok: false, error: err.message });
+    }
+};
+
+const eliminarCuenta = async (req, res) => {
+    try {
+        const { error } = await supabaseAdmin.from('cuentas_bancarias').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ ok: false, error: err.message });
+    }
+};
+
 const listarUsuariosConRol = async (req, res) => {
     try {
         const { data: usuarios, error } = await supabaseAdmin
@@ -401,11 +587,18 @@ module.exports = {
     eliminarStaff,
     verReporteCaja,
     verAuditoriaPagos,
+    validarPagoInscripcion,
+    rechazarPagoInscripcion,
+    validarPagoMembresia,
+    rechazarPagoMembresia,
     verDashboardRoles,
     actualizarPermiso,
     crearRol,
     eliminarRol,
     recargarPermisos,
+    listarCuentas,
+    guardarCuenta,
+    eliminarCuenta,
     listarUsuariosConRol,
     cambiarRolUsuario,
 };

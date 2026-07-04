@@ -35,9 +35,15 @@
                         <% if (prep.email) { %>&nbsp;&nbsp;<i class="fas fa-envelope me-1"></i><%= prep.email %><% } %>
                     </p>
                 </div>
-                <div class="col-md-auto text-end">
-                    <a href="/preparadores/ranking-teams" class="btn btn-outline-warning fw-bold">
-                        <i class="fas fa-trophy me-1"></i> Ranking Teams
+                <div class="col-md-auto text-end d-flex flex-wrap gap-2 justify-content-end">
+                    <a href="/preparadores/team/<%= prep.id %>" class="btn btn-outline-primary fw-bold" target="_blank">
+                        <i class="fas fa-eye me-1"></i> Ver Team
+                    </a>
+                    <a href="/preparadores/team/<%= prep.id %>/editar" class="btn btn-warning fw-bold">
+                        <i class="fas fa-edit me-1"></i> Editar Team
+                    </a>
+                    <a href="/preparadores/ranking-teams" class="btn btn-outline-secondary fw-bold">
+                        <i class="fas fa-trophy me-1"></i> Ranking
                     </a>
                 </div>
             </div>

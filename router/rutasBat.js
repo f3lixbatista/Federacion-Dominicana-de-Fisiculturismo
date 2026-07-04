@@ -16,22 +16,26 @@ router.get('/servicios', checkRole(['admin', 'estadistico', 'ejecutivo', 'prepar
 
 router.get('/afiliacion', requireAuth, async (req, res) => {
     try {
-        const { data: arrayPreparadores, error } = await supabase
-            .from('preparadores')
-            .select('id, nombre_completo, gimnasio_labora')
-            .eq('estatus_afiliacion', 'habilitado')
-            .order('nombre_completo', { ascending: true });
-
-        if (error) throw error;
+        const [{ data: arrayPreparadores }, { data: cuentasBancarias }] = await Promise.all([
+            supabase.from('preparadores')
+                .select('id, nombre_completo, gimnasio_labora')
+                .eq('estatus_afiliacion', 'habilitado')
+                .order('nombre_completo', { ascending: true }),
+            supabaseAdmin.from('cuentas_bancarias')
+                .select('*')
+                .eq('activa', true)
+                .order('banco', { ascending: true })
+        ]);
 
         res.render('afiliacion', {
-            arrayPreparadores: arrayPreparadores || [],
-            nuevoPrepId: req.query.nuevo_prep_id || null,
+            arrayPreparadores:  arrayPreparadores  || [],
+            cuentasBancarias:   cuentasBancarias   || [],
+            nuevoPrepId:    req.query.nuevo_prep_id    || null,
             nuevoPrepNombre: req.query.nuevo_prep_nombre || null
         });
     } catch (error) {
         console.error('Error cargando afiliación:', error.message);
-        res.render('afiliacion', { arrayPreparadores: [], nuevoPrepId: null, nuevoPrepNombre: null });
+        res.render('afiliacion', { arrayPreparadores: [], cuentasBancarias: [], nuevoPrepId: null, nuevoPrepNombre: null });
     }
 });
 

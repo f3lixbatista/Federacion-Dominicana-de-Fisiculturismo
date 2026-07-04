@@ -11,6 +11,9 @@ router.post('/solicitar-afiliacion', atletasController.solicitarAfiliacion);
 // 2. Middleware de protección para el resto de rutas
 router.use(requireAuth);
 
+// Comprobante de membresía (afiliación web)
+router.post('/subir-comprobante-membresia', upload.single('comprobante'), atletasController.subirComprobanteMembresía);
+
 // Rutas de Perfil (Accesibles para el Atleta logueado)
 router.get('/perfil', atletasController.verPerfilPropio);
 router.post('/perfil/actualizar-team', atletasController.actualizarTeamPropio);

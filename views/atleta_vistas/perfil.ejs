@@ -72,6 +72,13 @@
                         ACTUALIZAR MI COACH
                     </button>
                 </form>
+                <% if (atleta.preparador_id) { %>
+                <div class="mt-2">
+                    <a href="/preparadores/team/<%= atleta.preparador_id %>" target="_blank" class="btn btn-outline-dark btn-sm w-100">
+                        <i class="fas fa-users me-1"></i> Ver Perfil del Team
+                    </a>
+                </div>
+                <% } %>
             </div>
         </div>
 

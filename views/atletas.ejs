@@ -106,12 +106,19 @@
                         <tr>
                             <!-- CAMBIO CLAVE: atleta.id en lugar de atleta._id -->
                              <!-- Cambiamos "atletas/crear/idfdff" por "atletas/id" -->
-                            <td>
-                                <a href="/atletas/<%= atleta.id %>" 
+                            <td class="text-center">
+                                <a href="/atletas/<%= atleta.id %>"
                                    class="btn btn-sm <%= atleta.estatus_afiliacion !== 'habilitado' ? 'btn-danger text-white fw-bold shadow' : 'btn-warning' %>"
                                 >
                                     <%= atleta.estatus_afiliacion !== 'habilitado' ? 'PENDIENTE' : 'Editar' %>
                                 </a>
+                                <% if (atleta.url_comprobante_membresia && atleta.estatus_afiliacion === 'pendiente') { %>
+                                    <button class="btn btn-sm btn-success ms-1 fw-bold"
+                                            onclick="verComprobanteMem('<%= atleta.url_comprobante_membresia %>','<%= atleta.id %>','<%= atleta.nombre.replace(/'/g,`\\'`) %>')"
+                                            title="Ver comprobante de transferencia">
+                                        <i class="fas fa-file-invoice-dollar"></i>
+                                    </button>
+                                <% } %>
                             </td>
                             <th scope="row"><%= atleta.idfdff %></th>
                             <td class="fw-bold">
@@ -202,4 +209,72 @@
         });
     </script>
 </div>
+
+<!-- MODAL: Comprobante de Membresía -->
+<div class="modal fade" id="modalComprobanteMem" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-success text-white py-3">
+                <h5 class="modal-title fw-bold"><i class="fas fa-file-invoice-dollar me-2"></i>Comprobante de Membresía</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <p class="fw-bold mb-3" id="memNombreAtleta"></p>
+                <img id="imgComprobanteMem" src="" alt="Comprobante"
+                     class="img-fluid rounded shadow mb-3" style="max-height:500px; border:1px solid #ddd;">
+                <input type="hidden" id="memAtletaId">
+            </div>
+            <div class="modal-footer bg-light justify-content-between">
+                <button type="button" onclick="rechazarMem()" class="btn btn-danger fw-bold">
+                    <i class="fas fa-times me-1"></i> RECHAZAR
+                </button>
+                <div>
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" onclick="validarMem()" class="btn btn-success fw-bold px-4">
+                        <i class="fas fa-check me-1"></i> ACTIVAR MEMBRESÍA
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const _modalMem = new bootstrap.Modal(document.getElementById('modalComprobanteMem'));
+
+    function verComprobanteMem(url, atletaId, nombre) {
+        document.getElementById('imgComprobanteMem').src = url;
+        document.getElementById('memAtletaId').value     = atletaId;
+        document.getElementById('memNombreAtleta').textContent = nombre;
+        _modalMem.show();
+    }
+
+    async function validarMem() {
+        const id = document.getElementById('memAtletaId').value;
+        if (!confirm('¿Activar la membresía y confirmar el pago?')) return;
+        const resp = await fetch('/admin/auditoria/validar-membresia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ atleta_id: id })
+        });
+        const json = await resp.json();
+        if (json.ok) { _modalMem.hide(); alert(json.mensaje); location.reload(); }
+        else alert('Error: ' + json.error);
+    }
+
+    async function rechazarMem() {
+        const id = document.getElementById('memAtletaId').value;
+        const motivo = prompt('Motivo del rechazo:');
+        if (!motivo) return;
+        const resp = await fetch('/admin/auditoria/rechazar-membresia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ atleta_id: id, motivo })
+        });
+        const json = await resp.json();
+        if (json.ok) { _modalMem.hide(); location.reload(); }
+        else alert('Error: ' + json.error);
+    }
+</script>
+
 <%- include("template/footer") %>

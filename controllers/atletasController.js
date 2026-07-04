@@ -223,7 +223,6 @@ const solicitarAfiliacion = async (req, res) => {
     if (!usuarioId) return res.status(401).json({ estado: false, mensaje: "Sesión expirada" });
 
     try {
-        // Verificar si ya tiene IDFDFF asignado; si no, asignar el siguiente
         const { data: atletaExistente } = await supabaseAdmin
             .from('atletas').select('idfdff').eq('id', usuarioId).maybeSingle();
 
@@ -235,17 +234,52 @@ const solicitarAfiliacion = async (req, res) => {
 
         if (error) throw error;
 
-        // Asignamos el rol de 'atleta' al usuario en el momento que envía su solicitud
-         // Sincronizamos el NOMBRE y el ROL en la tabla de perfiles
-        await supabaseAdmin.from('profiles').update({ 
+        await supabaseAdmin.from('profiles').update({
             nombre: req.body.nombre,
             email: req.body.email,
-            role: 'atleta' 
+            role: 'atleta'
         }).eq('id', usuarioId);
 
         res.json({ estado: true, mensaje: "Solicitud enviada correctamente" });
     } catch (error) {
         console.error("🔥 Error en solicitarAfiliacion:", error.message);
+        res.status(500).json({ estado: false, mensaje: error.message });
+    }
+};
+
+// Sube el comprobante de transferencia de la membresía (afiliación web)
+const subirComprobanteMembresía = async (req, res) => {
+    const usuarioId = res.locals.user?.id;
+    if (!usuarioId) return res.status(401).json({ estado: false, mensaje: "Sesión expirada" });
+    if (!req.file)  return res.status(400).json({ estado: false, mensaje: "No se recibió ningún archivo" });
+
+    try {
+        const ext  = req.file.originalname.split('.').pop() || 'jpg';
+        const path = `membresia_${usuarioId}_${Date.now()}.${ext}`;
+
+        const { error: storageErr } = await supabaseAdmin.storage
+            .from('comprobantes-membresia')
+            .upload(path, req.file.buffer, { contentType: req.file.mimetype, upsert: true });
+
+        if (storageErr) throw storageErr;
+
+        const { data: { publicUrl } } = supabaseAdmin.storage
+            .from('comprobantes-membresia').getPublicUrl(path);
+
+        await supabaseAdmin.from('atletas').update({
+            url_comprobante_membresia: publicUrl,
+            fecha_subida_membresia:    new Date().toISOString()
+        }).eq('id', usuarioId);
+
+        // Notificar al atleta que su comprobante fue recibido
+        const { data: atleta } = await supabaseAdmin
+            .from('atletas').select('nombre, email').eq('id', usuarioId).single();
+        const { notificarComprobanteRecibido } = require('../services/emailService');
+        notificarComprobanteRecibido({ email: atleta?.email, nombre: atleta?.nombre, concepto: 'Membresía FDFF' }).catch(() => {});
+
+        res.json({ estado: true, mensaje: "Comprobante subido. El staff lo revisará pronto." });
+    } catch (error) {
+        console.error("🔥 Error subiendo comprobante membresía:", error.message);
         res.status(500).json({ estado: false, mensaje: error.message });
     }
 };
@@ -769,6 +803,7 @@ module.exports = {
     actualizarTeamPropio,
     validarAfiliacion,
     solicitarAfiliacion,
+    subirComprobanteMembresía,
     subirPublicacion,
     darLikePublicacion,
     actualizarFotoPerfil,

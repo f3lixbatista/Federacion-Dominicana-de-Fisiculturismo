@@ -53,6 +53,13 @@
                 <i class="fas fa-users me-1"></i>Usuarios y Roles
             </button>
         </li>
+        <li class="nav-item">
+            <button class="nav-link" id="btn-tab-cuentas"
+                    data-bs-toggle="pill" data-bs-target="#tab-cuentas"
+                    type="button" role="tab">
+                <i class="fas fa-university me-1"></i>Cuentas Bancarias
+            </button>
+        </li>
     </ul>
 
     <div class="tab-content">
@@ -186,7 +193,111 @@
 
         </div><%# fin #tab-usuarios %>
 
+        <%# ══════════════════════════════════════════════════════════════════ %>
+        <%# TAB 3 — CUENTAS BANCARIAS                                         %>
+        <%# ══════════════════════════════════════════════════════════════════ %>
+        <div class="tab-pane fade" id="tab-cuentas" role="tabpanel">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="fw-bold mb-0"><i class="fas fa-university me-1 text-primary"></i>Cuentas para transferencias</h6>
+                    <small class="text-muted">Se muestran automáticamente en los formularios de afiliación e inscripción web.</small>
+                </div>
+                <button class="btn btn-success btn-sm fw-bold" onclick="abrirModalCuenta()">
+                    <i class="fas fa-plus me-1"></i>Nueva Cuenta
+                </button>
+            </div>
+
+            <div id="cuentas-loading" class="text-center py-4 text-muted">
+                <span class="spinner-border spinner-border-sm me-2"></span>Cargando…
+            </div>
+            <div id="cuentas-tabla" style="display:none">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Banco</th>
+                                <th>Número de Cuenta</th>
+                                <th>Tipo</th>
+                                <th>Titular</th>
+                                <th>Moneda</th>
+                                <th>Identificación</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center" style="width:100px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-cuentas"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="cuentas-vacio" style="display:none" class="text-center py-5 text-muted">
+                <i class="fas fa-university fa-3x mb-3 d-block opacity-25"></i>
+                No hay cuentas registradas. Agrega la primera con el botón "Nueva Cuenta".
+            </div>
+
+        </div><%# fin #tab-cuentas %>
+
     </div><%# fin .tab-content %>
+
+<!-- MODAL CUENTAS BANCARIAS -->
+<div class="modal fade" id="modalCuenta" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="modalCuentaTitulo"><i class="fas fa-university me-2"></i>Nueva Cuenta Bancaria</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="cuentaId">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-bold small">Institución Bancaria <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="cuentaBanco" placeholder="Ej: Banco Popular Dominicano">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold small">Número de Cuenta <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="cuentaNumero" placeholder="000-000000-0">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">Tipo de Cuenta</label>
+                        <select class="form-select" id="cuentaTipo">
+                            <option value="corriente">Corriente</option>
+                            <option value="ahorros">Ahorros</option>
+                            <option value="inversion">Inversión</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold small">Nombre del Titular <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="cuentaTitular" placeholder="Nombre completo o razón social">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Moneda</label>
+                        <select class="form-select" id="cuentaMoneda">
+                            <option value="RD$">RD$ — Peso Dominicano</option>
+                            <option value="USD">USD — Dólar Americano</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Cédula / RNC <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="cuentaIdentificacion" placeholder="0-00-00000-0">
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="cuentaActiva" checked>
+                            <label class="form-check-label fw-bold" for="cuentaActiva">Cuenta activa (visible en formularios)</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary fw-bold px-4" onclick="guardarCuenta()">
+                    <i class="fas fa-save me-1"></i>Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 </div><%# fin .divGeneral %>
 
@@ -523,6 +634,138 @@ function escHtml(str) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TAB 3 — CUENTAS BANCARIAS
+// ══════════════════════════════════════════════════════════════════════════════
+let _cuentas = null;
+let _cargandoCuentas = false;
+const _modalCuenta = new bootstrap.Modal(document.getElementById('modalCuenta'));
+
+(function() {
+    const btn = document.getElementById('btn-tab-cuentas');
+    function _intentarCargar() {
+        if (_cuentas === null && !_cargandoCuentas) cargarCuentas();
+    }
+    btn.addEventListener('click', function() { setTimeout(_intentarCargar, 80); });
+    btn.addEventListener('shown.bs.tab', _intentarCargar);
+})();
+
+async function cargarCuentas() {
+    _cargandoCuentas = true;
+    try {
+        const res = await fetch('/admin/roles/cuentas');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error);
+        _cuentas = json.cuentas;
+        renderizarCuentas();
+    } catch (e) {
+        _cargandoCuentas = false;
+        document.getElementById('cuentas-loading').innerHTML =
+            `<span class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>${escHtml(e.message)}
+             <button class="btn btn-sm btn-outline-danger ms-2" onclick="_cargandoCuentas=false;cargarCuentas()">Reintentar</button></span>`;
+    }
+}
+
+function renderizarCuentas() {
+    document.getElementById('cuentas-loading').style.display = 'none';
+    const tbody = document.getElementById('tbody-cuentas');
+    if (!_cuentas.length) {
+        document.getElementById('cuentas-vacio').style.display = 'block';
+        document.getElementById('cuentas-tabla').style.display = 'none';
+        return;
+    }
+    document.getElementById('cuentas-tabla').style.display = 'block';
+    document.getElementById('cuentas-vacio').style.display = 'none';
+
+    const tipoLabel = { corriente: 'Corriente', ahorros: 'Ahorros', inversion: 'Inversión' };
+    tbody.innerHTML = _cuentas.map(c => `
+        <tr class="${c.activa ? '' : 'table-secondary text-muted'}">
+            <td class="fw-bold">${escHtml(c.banco)}</td>
+            <td><code>${escHtml(c.numero_cuenta)}</code></td>
+            <td>${escHtml(tipoLabel[c.tipo_cuenta] || c.tipo_cuenta)}</td>
+            <td>${escHtml(c.titular)}</td>
+            <td><span class="badge bg-secondary">${escHtml(c.moneda)}</span></td>
+            <td class="small text-muted">${escHtml(c.identificacion)}</td>
+            <td class="text-center">
+                ${c.activa
+                    ? '<span class="badge bg-success">Activa</span>'
+                    : '<span class="badge bg-secondary">Inactiva</span>'}
+            </td>
+            <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalCuenta(${c.id})" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="eliminarCuenta(${c.id}, '${escHtml(c.banco)}')" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>`).join('');
+}
+
+function abrirModalCuenta(id) {
+    const c = id ? (_cuentas || []).find(x => x.id === id) : null;
+    document.getElementById('modalCuentaTitulo').innerHTML =
+        `<i class="fas fa-university me-2"></i>${c ? 'Editar' : 'Nueva'} Cuenta Bancaria`;
+    document.getElementById('cuentaId').value              = c ? c.id : '';
+    document.getElementById('cuentaBanco').value           = c ? c.banco : '';
+    document.getElementById('cuentaNumero').value          = c ? c.numero_cuenta : '';
+    document.getElementById('cuentaTipo').value            = c ? c.tipo_cuenta : 'corriente';
+    document.getElementById('cuentaTitular').value         = c ? c.titular : '';
+    document.getElementById('cuentaMoneda').value          = c ? c.moneda : 'RD$';
+    document.getElementById('cuentaIdentificacion').value  = c ? c.identificacion : '';
+    document.getElementById('cuentaActiva').checked        = c ? c.activa : true;
+    _modalCuenta.show();
+}
+
+async function guardarCuenta() {
+    const banco          = document.getElementById('cuentaBanco').value.trim();
+    const numero_cuenta  = document.getElementById('cuentaNumero').value.trim();
+    const titular        = document.getElementById('cuentaTitular').value.trim();
+    const identificacion = document.getElementById('cuentaIdentificacion').value.trim();
+    if (!banco || !numero_cuenta || !titular || !identificacion)
+        return alert('Completa los campos obligatorios.');
+
+    try {
+        const res = await fetch('/admin/roles/cuentas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id:             document.getElementById('cuentaId').value || undefined,
+                banco,
+                numero_cuenta,
+                tipo_cuenta:    document.getElementById('cuentaTipo').value,
+                titular,
+                moneda:         document.getElementById('cuentaMoneda').value,
+                identificacion,
+                activa:         document.getElementById('cuentaActiva').checked
+            })
+        });
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error);
+        _modalCuenta.hide();
+        _cuentas = null; _cargandoCuentas = false;
+        await cargarCuentas();
+        mostrarToast('Cuenta guardada correctamente');
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+async function eliminarCuenta(id, banco) {
+    if (!confirm(`¿Eliminar la cuenta de "${banco}"? Esta acción no se puede deshacer.`)) return;
+    try {
+        const res = await fetch(`/admin/roles/cuentas/${id}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error);
+        _cuentas = _cuentas.filter(c => c.id !== id);
+        renderizarCuentas();
+        mostrarToast('Cuenta eliminada');
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
 }
 </script>
 

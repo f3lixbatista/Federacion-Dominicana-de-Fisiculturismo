@@ -75,6 +75,48 @@
                                         <div class="alert alert-warning py-2 mb-0 small">
                                             <i class="fas fa-lock me-1"></i> Tu inscripción solo puede ser modificada por el <strong>Juez Estadístico</strong> durante el pesaje.
                                         </div>
+
+                                        <%# ── ESTADO DEL PAGO ── %>
+                                        <% const ep = locals.estadoPago || {}; %>
+                                        <% if (ep.pagoValidado) { %>
+                                            <div class="alert alert-success py-2 mt-3 mb-0">
+                                                <i class="fas fa-check-circle me-1"></i>
+                                                <strong>Pago confirmado.</strong> Tu inscripción está activa.
+                                            </div>
+                                        <% } else if (ep.tieneComprobante) { %>
+                                            <div class="alert alert-info py-2 mt-3 mb-0">
+                                                <i class="fas fa-clock me-1"></i>
+                                                Comprobante en revisión — subido el
+                                                <strong><%= ep.fechaSubida ? new Date(ep.fechaSubida).toLocaleDateString('es-DO') : '—' %></strong>.
+                                                Recibirás confirmación cuando sea validado.
+                                            </div>
+                                        <% } else { %>
+                                            <%# Sin comprobante: mostrar panel de pago %>
+                                            <div class="mt-3 p-3 border border-warning rounded">
+                                                <h6 class="fw-bold text-warning mb-2">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i> Pago pendiente
+                                                </h6>
+                                                <p class="small mb-2">Realiza la transferencia y sube tu comprobante para confirmar la inscripción:</p>
+                                                <% (cuentasBancarias || []).forEach(c => { %>
+                                                <table class="table table-sm table-borderless mb-1 small">
+                                                    <tr><td class="fw-bold" style="width:100px;">Banco:</td><td><%= c.banco %></td></tr>
+                                                    <tr><td class="fw-bold">Titular:</td><td><%= c.titular %></td></tr>
+                                                    <tr><td class="fw-bold">Cuenta:</td><td><strong><%= c.numero_cuenta %></strong> (<%= c.tipo_cuenta %>)</td></tr>
+                                                    <tr><td class="fw-bold">Moneda:</td><td><%= c.moneda %></td></tr>
+                                                </table>
+                                                <% }) %>
+                                                <form class="formSubirComprobante mt-2" data-evento-id="<%= evento.id %>">
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="file" class="form-control" name="comprobante"
+                                                               accept="image/*,.pdf" required>
+                                                        <button class="btn btn-success" type="submit">
+                                                            <i class="fas fa-upload me-1"></i> Subir
+                                                        </button>
+                                                    </div>
+                                                    <div class="form-text">JPG, PNG o PDF — máx. 5 MB</div>
+                                                </form>
+                                            </div>
+                                        <% } %>
                                     </div>
                                 </div>
                             <% } else { %>
@@ -150,8 +192,46 @@
                                     <% }) %>
                                     </div><!-- /lista-cats-web -->
 
-                                    <button type="submit" class="btn btn-primary mt-3 btn-sm">Confirmar Inscripción</button>
+                                    <div id="totalInscripcion" class="alert alert-light border mt-2 py-2 small">
+                                        Total a pagar: <strong>RD$ <span id="displayTotal">0</span></strong>
+                                        <% if (evento.fecha_limite_oferta && new Date() <= new Date(evento.fecha_limite_oferta)) { %>
+                                            <span class="badge bg-success ms-2">Precio preferencial activo</span>
+                                        <% } %>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary mt-1 btn-sm" id="btnConfirmar">
+                                        <i class="fas fa-check me-1"></i> Confirmar Inscripción
+                                    </button>
                                 </form>
+
+                                <%# Panel de pago (se muestra tras confirmar) %>
+                                <div id="panelPagoInscripcion" style="display:none" class="mt-3 p-3 border border-success rounded bg-white">
+                                    <h6 class="fw-bold text-success"><i class="fas fa-check-circle me-1"></i>¡Inscripción guardada!</h6>
+                                    <p class="small mb-2">Realiza la transferencia y sube el comprobante para confirmar:</p>
+                                    <% (cuentasBancarias || []).forEach(c => { %>
+                                    <table class="table table-sm table-borderless mb-1 small">
+                                        <tr><td class="fw-bold" style="width:100px;">Banco:</td><td><%= c.banco %></td></tr>
+                                        <tr><td class="fw-bold">Titular:</td><td><%= c.titular %></td></tr>
+                                        <tr><td class="fw-bold">Cuenta:</td><td><strong><%= c.numero_cuenta %></strong> (<%= c.tipo_cuenta %>)</td></tr>
+                                        <tr><td class="fw-bold">Moneda:</td><td><%= c.moneda %></td></tr>
+                                    </table>
+                                    <% }) %>
+                                    <p class="small fw-bold text-danger">Total a pagar: RD$ <span class="totalPagoPanel">0</span></p>
+                                    <form class="formSubirComprobante" data-evento-id="<%= evento.id %>">
+                                        <div class="input-group input-group-sm mt-2">
+                                            <input type="file" class="form-control" name="comprobante"
+                                                   accept="image/*,.pdf" required>
+                                            <button class="btn btn-success" type="submit">
+                                                <i class="fas fa-upload me-1"></i> Subir comprobante
+                                            </button>
+                                        </div>
+                                        <div class="form-text">JPG, PNG o PDF — máx. 5 MB</div>
+                                    </form>
+                                    <div class="msgComprobanteOk" style="display:none">
+                                        <div class="alert alert-info py-2 mt-2 small">
+                                            <i class="fas fa-clock me-1"></i> Comprobante recibido. El staff lo revisará pronto.
+                                        </div>
+                                    </div>
+                                </div>
                             <% } %>
                         </div>
                     </div>
@@ -162,36 +242,84 @@
         <div class="alert alert-info">No hay eventos abiertos para inscripción en este momento.</div>
     <% } %>
 <div class="alert alert-info mt-4">
-    <h6 class="fw-bold"><i class="fas fa-info-circle"></i> Aviso Importante:</h6>
-    <p class="small mb-0">Esta selección es una <strong>intención de inscripción</strong>. El monto total de <strong>RD$ <span id="displayTotal">0</span></strong> y las categorías elegidas serán validadas, modificadas y oficializadas por el Juez Estadístico el día del pesaje.</p>
+    <h6 class="fw-bold"><i class="fas fa-info-circle"></i> Aviso:</h6>
+    <p class="small mb-0">Las categorías elegidas serán validadas y oficializadas por el Juez Estadístico el día del pesaje.</p>
 </div>
 
 </div>
 
 <script src="/js/supabase.js"></script>
 <script>
+    // ── Confirmar inscripción ────────────────────────────────────────────────
     document.querySelectorAll('.formInscripcion').forEach(form => {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(form);
+            const formData    = new FormData(form);
             const catEventoIds = formData.getAll('cat_evento_id');
+            const eventoId    = formData.get('evento_id');
 
             if (catEventoIds.length === 0) return alert("Selecciona al menos una categoría.");
+
+            const btnConf = form.querySelector('#btnConfirmar');
+            if (btnConf) { btnConf.disabled = true; btnConf.textContent = 'Guardando…'; }
 
             const resp = await fetch('/inscripcion/inscribir', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ catEventoIds, eventoId: formData.get('evento_id') })
+                body: JSON.stringify({ catEventoIds, eventoId })
             });
 
             const result = await resp.json();
             if (!resp.ok || result.error) {
                 alert("Error: " + (result.error || 'Error desconocido'));
+                if (btnConf) { btnConf.disabled = false; btnConf.innerHTML = '<i class="fas fa-check me-1"></i> Confirmar Inscripción'; }
             } else {
-                alert("¡Inscripción guardada!");
-                window.location.reload();
+                // Ocultar form de categorías y mostrar panel de pago
+                form.style.display = 'none';
+                const panel = form.closest('.accordion-body').querySelector('#panelPagoInscripcion');
+                if (panel) {
+                    panel.style.display = 'block';
+                    // Mostrar el total calculado en el panel
+                    panel.querySelectorAll('.totalPagoPanel').forEach(s => { s.textContent = totalAPagar.toLocaleString('es-DO'); });
+                }
             }
         });
+    });
+
+    // ── Subir comprobante de inscripción ─────────────────────────────────────
+    document.addEventListener('submit', async (e) => {
+        if (!e.target.classList.contains('formSubirComprobante')) return;
+        e.preventDefault();
+
+        const form     = e.target;
+        const eventoId = form.dataset.eventoId;
+        const fileInput = form.querySelector('[name="comprobante"]');
+        const archivo  = fileInput?.files[0];
+
+        if (!archivo) return alert('Selecciona un archivo.');
+        if (archivo.size > 5 * 1024 * 1024) return alert('Archivo demasiado grande (máx. 5 MB).');
+
+        const btn = form.querySelector('button[type="submit"]');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Subiendo…'; }
+
+        const fd = new FormData();
+        fd.append('comprobante', archivo);
+        fd.append('eventoId', eventoId);
+
+        try {
+            const resp = await fetch('/inscripcion/subir-comprobante-web', { method: 'POST', body: fd });
+            const json = await resp.json();
+            if (!json.ok) throw new Error(json.error);
+
+            form.style.display = 'none';
+            const msgOk = form.closest('.formSubirComprobante')?.parentElement?.querySelector('.msgComprobanteOk')
+                        || form.parentElement.querySelector('.msgComprobanteOk');
+            if (msgOk) msgOk.style.display = 'block';
+            else alert('✅ Comprobante enviado. El staff lo revisará pronto.');
+        } catch (err) {
+            alert('Error: ' + err.message);
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload me-1"></i> Subir comprobante'; }
+        }
     });
 
     // --- 3. LÓGICA DE AFINIDAD Y COMPATIBILIDAD FDFF ---

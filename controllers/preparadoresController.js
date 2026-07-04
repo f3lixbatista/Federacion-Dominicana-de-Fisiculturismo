@@ -215,11 +215,184 @@ const verRankingTeams = async (req, res) => {
     }
 };
 
+const verTeam = async (req, res) => {
+    const { id } = req.params;
+    const userEmail = res.locals.user?.email;
+    const userRole  = res.locals.user?.role;
+
+    try {
+        const { data: prep, error: prepErr } = await supabaseAdmin
+            .from('preparadores')
+            .select('*')
+            .eq('id', id)
+            .maybeSingle();
+
+        if (prepErr || !prep) return res.status(404).send('Team no encontrado');
+
+        const { data: atletas } = await supabaseAdmin
+            .from('atletas')
+            .select('id, nombre, foto_url, categoria, sexo')
+            .eq('preparador_id', id)
+            .order('nombre', { ascending: true });
+
+        const atletaIds = (atletas || []).map(a => a.id);
+        let eventosData = [];
+        const logrosAtleta = {};
+        let totalOros = 0, totalPlatas = 0, totalBronces = 0, totalPuntos = 0, puntosAnio = 0;
+        const anioActual = new Date().getFullYear();
+
+        if (atletaIds.length > 0) {
+            const { data: participaciones } = await supabaseAdmin
+                .from('competidores')
+                .select(`
+                    posicion_final, es_ganador_absoluto, id_evento, atleta_id,
+                    atletas(nombre),
+                    eventos(id, nombre, fecha_inicio),
+                    eventos_categorias(categorias(nombre))
+                `)
+                .in('atleta_id', atletaIds)
+                .not('posicion_final', 'is', null);
+
+            (atletas || []).forEach(a => { logrosAtleta[a.id] = { oros: 0, platas: 0, bronces: 0, podios: 0 }; });
+
+            const eventoMap = {};
+            (participaciones || []).forEach(p => {
+                const evId = p.id_evento;
+                const ev   = p.eventos || {};
+                const anio = ev.fecha_inicio ? new Date(ev.fecha_inicio).getFullYear() : 0;
+                if (!eventoMap[evId]) {
+                    eventoMap[evId] = { id: evId, nombre: ev.nombre || '—', anio, oros: 0, platas: 0, bronces: 0, puntos: 0, resultados: [] };
+                }
+                const pos    = p.posicion_final;
+                const ptsEv  = (PUNTOS_MAP[pos] || 0) + (p.es_ganador_absoluto ? 11 : 0);
+                eventoMap[evId].puntos += ptsEv;
+                if (pos === 1)      eventoMap[evId].oros++;
+                else if (pos === 2) eventoMap[evId].platas++;
+                else if (pos === 3) eventoMap[evId].bronces++;
+                eventoMap[evId].resultados.push({
+                    atletaNombre:    p.atletas?.nombre || '—',
+                    categoriaNombre: p.eventos_categorias?.categorias?.nombre || '—',
+                    posicion: pos,
+                    esAbsoluto: p.es_ganador_absoluto,
+                    puntos: ptsEv
+                });
+
+                const lg = logrosAtleta[p.atleta_id];
+                if (lg) {
+                    if (pos === 1)      lg.oros++;
+                    else if (pos === 2) lg.platas++;
+                    else if (pos === 3) lg.bronces++;
+                    if (pos <= 3) lg.podios++;
+                }
+
+                totalOros    += pos === 1 ? 1 : 0;
+                totalPlatas  += pos === 2 ? 1 : 0;
+                totalBronces += pos === 3 ? 1 : 0;
+                totalPuntos  += ptsEv;
+                if (anio === anioActual) puntosAnio += ptsEv;
+            });
+
+            Object.values(eventoMap).forEach(ev => {
+                ev.resultados.sort((a, b) => (a.posicion || 99) - (b.posicion || 99));
+            });
+            eventosData = Object.values(eventoMap).sort((a, b) => b.anio - a.anio || b.id - a.id);
+        }
+
+        res.render('preparadores/team', {
+            prep,
+            atletas: atletas || [],
+            eventosData,
+            logrosAtleta,
+            totalOros, totalPlatas, totalBronces, totalPuntos,
+            totalEventos: eventosData.length,
+            puntosAnio,
+            anioActual,
+            puedeEditar: userRole === 'admin' || prep.email === userEmail
+        });
+    } catch (err) {
+        console.error('Error verTeam:', err.message);
+        res.status(500).send('Error al cargar el perfil del team');
+    }
+};
+
+const editarTeamPage = async (req, res) => {
+    const { id } = req.params;
+    const userEmail = res.locals.user?.email;
+    const userRole  = res.locals.user?.role;
+
+    try {
+        const { data: prep } = await supabaseAdmin
+            .from('preparadores').select('*').eq('id', id).maybeSingle();
+
+        if (!prep) return res.status(404).send('Preparador no encontrado');
+        if (userRole !== 'admin' && prep.email !== userEmail) return res.status(403).send('No autorizado');
+
+        res.render('preparadores/editar_team', { prep, error: null, exito: null });
+    } catch (err) {
+        console.error('Error editarTeamPage:', err.message);
+        res.status(500).send('Error al cargar el formulario');
+    }
+};
+
+const guardarTeam = async (req, res) => {
+    const { id } = req.params;
+    const userEmail = res.locals.user?.email;
+    const userRole  = res.locals.user?.role;
+    const { nombre_team, resena } = req.body;
+
+    try {
+        const { data: prep } = await supabaseAdmin
+            .from('preparadores').select('id, email').eq('id', id).maybeSingle();
+
+        if (!prep) return res.status(404).send('Preparador no encontrado');
+        if (userRole !== 'admin' && prep.email !== userEmail) return res.status(403).send('No autorizado');
+
+        const updates = {
+            nombre_team: nombre_team?.trim() || null,
+            resena:      resena?.trim()      || null
+        };
+
+        const fotoPortada = req.files?.foto_portada?.[0];
+        if (fotoPortada) {
+            const ext = fotoPortada.originalname.split('.').pop().toLowerCase();
+            const filePath = `portadas/${id}_${Date.now()}.${ext}`;
+            const { error: upErr } = await supabaseAdmin.storage.from('fotos-team')
+                .upload(filePath, fotoPortada.buffer, { contentType: fotoPortada.mimetype, upsert: true });
+            if (upErr) throw upErr;
+            const { data: urlData } = supabaseAdmin.storage.from('fotos-team').getPublicUrl(filePath);
+            updates.foto_portada_url = urlData.publicUrl;
+        }
+
+        const fotoPerfil = req.files?.foto_perfil?.[0];
+        if (fotoPerfil) {
+            const ext = fotoPerfil.originalname.split('.').pop().toLowerCase();
+            const filePath = `perfiles/${id}_${Date.now()}.${ext}`;
+            const { error: upErr } = await supabaseAdmin.storage.from('fotos-team')
+                .upload(filePath, fotoPerfil.buffer, { contentType: fotoPerfil.mimetype, upsert: true });
+            if (upErr) throw upErr;
+            const { data: urlData } = supabaseAdmin.storage.from('fotos-team').getPublicUrl(filePath);
+            updates.foto_perfil_url = urlData.publicUrl;
+        }
+
+        const { error } = await supabaseAdmin.from('preparadores').update(updates).eq('id', id);
+        if (error) throw error;
+
+        res.redirect(`/preparadores/team/${id}`);
+    } catch (err) {
+        console.error('Error guardarTeam:', err.message);
+        const { data: prepData } = await supabaseAdmin.from('preparadores').select('*').eq('id', id).maybeSingle();
+        res.render('preparadores/editar_team', { prep: prepData || { id }, error: err.message, exito: null });
+    }
+};
+
 module.exports = {
     listarPreparadores,
     mostrarFormularioRegistrar,
     registrarPreparador,
     habilitarPreparador,
     verPanel,
-    verRankingTeams
+    verRankingTeams,
+    verTeam,
+    editarTeamPage,
+    guardarTeam
 };

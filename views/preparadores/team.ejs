@@ -1,0 +1,295 @@
+<%- include('../template/cabecera', { tituloWeb: (prep.nombre_team || prep.nombre_completo) + ' — FDFF Team' }) %>
+
+<style>
+/* ── HERO ── */
+.team-hero {
+    position: relative; min-height: 320px; display: flex; align-items: flex-end;
+    background-size: cover; background-position: center;
+    background-color: #111;
+}
+.team-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,.25) 0%, rgba(0,0,0,.80) 100%);
+}
+.team-hero-content { position: relative; z-index: 1; padding: 28px 32px; color: #fff; width: 100%; }
+.team-foto-coach {
+    width: 90px; height: 90px; object-fit: cover;
+    border-radius: 50%; border: 4px solid #fff; box-shadow: 0 4px 16px rgba(0,0,0,.4);
+}
+.team-foto-coach-placeholder {
+    width: 90px; height: 90px; border-radius: 50%; border: 4px solid #fff;
+    background: #444; display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem; color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,.4);
+}
+/* ── ATLETA CARD ── */
+.atleta-card { border-radius: 14px; overflow: hidden; transition: transform .18s; }
+.atleta-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,.15)!important; }
+.atleta-foto { width: 100%; height: 160px; object-fit: cover; background: #e9ecef; }
+.atleta-foto-placeholder { width: 100%; height: 160px; background: #343a40; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #adb5bd; }
+/* ── MEDALLAS ── */
+.medal-oro    { color: #c9a227; }
+.medal-plata  { color: #888; }
+.medal-bronce { color: #a0522d; }
+/* ── PUNTOS TABLE ── */
+.puntos-table th { background: #212529; color: #fff; font-size: .8rem; }
+.puntos-table td { vertical-align: middle; }
+/* ── EDITAR BTN ── */
+.btn-editar-team { position: absolute; top: 14px; right: 16px; z-index: 2; }
+</style>
+
+<!-- ══ HERO / PORTADA ══════════════════════════════════════════════════ -->
+<div class="team-hero" style="background-image: url('<%= prep.foto_portada_url || '' %>');">
+    <!-- Botón editar (solo para el propio coach o admin) -->
+    <% if (puedeEditar) { %>
+        <a href="/preparadores/team/<%= prep.id %>/editar" class="btn btn-warning fw-bold btn-editar-team shadow">
+            <i class="fas fa-edit me-1"></i> Editar Team
+        </a>
+    <% } %>
+    <div class="team-hero-content">
+        <div class="d-flex align-items-end gap-3 flex-wrap">
+            <!-- Foto de perfil del coach -->
+            <% if (prep.foto_perfil_url) { %>
+                <img src="<%= prep.foto_perfil_url %>" class="team-foto-coach" alt="<%= prep.nombre_completo %>">
+            <% } else { %>
+                <div class="team-foto-coach-placeholder"><i class="fas fa-user-tie"></i></div>
+            <% } %>
+            <div>
+                <div class="mb-1">
+                    <img src="/img/fdff3.jpg" style="height:28px;opacity:.9;" alt="FDFF">
+                    <span class="badge bg-danger ms-2 px-3 small fw-bold">TEAM OFICIAL</span>
+                </div>
+                <h1 class="fw-bold mb-1" style="font-size:clamp(1.4rem,4vw,2.4rem);text-shadow:0 2px 8px rgba(0,0,0,.5);">
+                    <%= (prep.nombre_team || 'TEAM ' + prep.nombre_completo).toUpperCase() %>
+                </h1>
+                <p class="mb-0 opacity-90" style="font-size:.95rem;">
+                    <i class="fas fa-user-tie me-1"></i><strong><%= prep.nombre_completo %></strong>
+                    &nbsp;·&nbsp;<i class="fas fa-dumbbell me-1"></i><%= prep.gimnasio_labora || 'Independiente' %>
+                </p>
+            </div>
+        </div>
+
+        <!-- Badges de estadísticas rápidas -->
+        <div class="d-flex flex-wrap gap-2 mt-3">
+            <span class="badge bg-light text-dark px-3 py-2">
+                <i class="fas fa-users me-1 text-primary"></i> <%= atletas.length %> Atletas
+            </span>
+            <span class="badge bg-light text-dark px-3 py-2">
+                <i class="fas fa-calendar me-1 text-info"></i> <%= totalEventos %> Eventos
+            </span>
+            <span class="badge bg-warning text-dark px-3 py-2">
+                <i class="fas fa-medal me-1 medal-oro"></i> <%= totalOros %> Oros
+            </span>
+            <span class="badge bg-light text-dark px-3 py-2">
+                <i class="fas fa-trophy me-1 text-danger"></i> <%= totalPuntos %> Puntos
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- ══ CONTENIDO PRINCIPAL ════════════════════════════════════════════ -->
+<div class="container my-4">
+    <div class="row g-4">
+
+        <!-- ─ COLUMNA IZQUIERDA: BIO + PUNTOS ─ -->
+        <div class="col-lg-4">
+
+            <!-- Bio / Reseña -->
+            <% if (prep.resena) { %>
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold text-uppercase text-muted mb-3">
+                        <i class="fas fa-id-badge me-2 text-primary"></i>Acerca del Coach
+                    </h6>
+                    <p class="mb-0" style="line-height:1.65;white-space:pre-line;"><%= prep.resena %></p>
+                </div>
+            </div>
+            <% } %>
+
+            <!-- Contacto -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+                <div class="card-body p-3">
+                    <h6 class="fw-bold text-uppercase text-muted mb-2 small">
+                        <i class="fas fa-address-card me-1 text-secondary"></i>Contacto
+                    </h6>
+                    <% if (prep.telefono) { %>
+                        <p class="small mb-1"><i class="fas fa-phone me-2 text-success"></i><%= prep.telefono %></p>
+                    <% } %>
+                    <% if (prep.email) { %>
+                        <p class="small mb-1"><i class="fas fa-envelope me-2 text-info"></i><%= prep.email %></p>
+                    <% } %>
+                    <% if (prep.instagram) { %>
+                        <p class="small mb-0"><i class="fab fa-instagram me-2 text-danger"></i>@<%= prep.instagram %></p>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Resumen de puntos por evento -->
+            <div class="card border-0 shadow-sm" style="border-radius:14px;overflow:hidden;">
+                <div class="card-header bg-dark text-white py-2 px-3">
+                    <i class="fas fa-chart-bar me-1"></i>
+                    <span class="fw-bold small text-uppercase">Puntos por Evento</span>
+                </div>
+                <div class="card-body p-0">
+                    <% if (eventosData.length === 0) { %>
+                        <p class="text-center text-muted py-4 small">Sin resultados registrados</p>
+                    <% } else { %>
+                    <table class="table table-sm table-hover puntos-table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Evento</th>
+                                <th class="text-center">🥇</th>
+                                <th class="text-center">🥈</th>
+                                <th class="text-center">🥉</th>
+                                <th class="text-end pe-3">Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% eventosData.forEach(ev => { %>
+                            <tr>
+                                <td class="ps-3 small fw-bold" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<%= ev.nombre %>">
+                                    <%= ev.nombre %>
+                                    <br><span class="text-muted fw-normal" style="font-size:.72rem;"><%= ev.anio %></span>
+                                </td>
+                                <td class="text-center medal-oro fw-bold"><%= ev.oros || '—' %></td>
+                                <td class="text-center medal-plata fw-bold"><%= ev.platas || '—' %></td>
+                                <td class="text-center medal-bronce fw-bold"><%= ev.bronces || '—' %></td>
+                                <td class="text-end pe-3 fw-bold text-danger"><%= ev.puntos %></td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                        <tfoot class="table-dark">
+                            <tr>
+                                <td class="ps-3 fw-bold small">TOTAL ACUMULADO</td>
+                                <td class="text-center medal-oro fw-bold"><%= totalOros %></td>
+                                <td class="text-center medal-plata fw-bold"><%= totalPlatas %></td>
+                                <td class="text-center medal-bronce fw-bold"><%= totalBronces %></td>
+                                <td class="text-end pe-3 fw-bold text-warning"><%= totalPuntos %></td>
+                            </tr>
+                            <% if (puntosAnio > 0) { %>
+                            <tr class="table-secondary">
+                                <td class="ps-3 small text-muted" colspan="4">Año <%= anioActual %></td>
+                                <td class="text-end pe-3 fw-bold"><%= puntosAnio %></td>
+                            </tr>
+                            <% } %>
+                        </tfoot>
+                    </table>
+                    <% } %>
+                </div>
+            </div>
+
+        </div><!-- fin col-lg-4 -->
+
+        <!-- ─ COLUMNA DERECHA: ATLETAS + LOGROS ─ -->
+        <div class="col-lg-8">
+
+            <!-- ROSTER DE ATLETAS -->
+            <div class="mb-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-users me-2 text-primary"></i>Atletas del Team
+                    <span class="badge bg-primary ms-2"><%= atletas.length %></span>
+                </h5>
+                <% if (atletas.length === 0) { %>
+                    <div class="alert alert-light border text-center text-muted">
+                        <i class="fas fa-user-plus fa-2x d-block mb-2 opacity-50"></i>
+                        Aún no hay atletas vinculados a este team.
+                    </div>
+                <% } else { %>
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+                    <% atletas.forEach(a => { %>
+                    <div class="col">
+                        <div class="card border-0 shadow-sm atleta-card h-100">
+                            <% if (a.foto_url) { %>
+                                <img src="<%= a.foto_url %>" class="atleta-foto" alt="<%= a.nombre %>">
+                            <% } else { %>
+                                <div class="atleta-foto-placeholder"><i class="fas fa-user"></i></div>
+                            <% } %>
+                            <div class="card-body p-2 text-center">
+                                <p class="fw-bold small mb-0 lh-sm"><%= a.nombre %></p>
+                                <p class="text-muted" style="font-size:.72rem;"><%= a.categoria || 'Sin categoría' %></p>
+                                <% const logros = logrosAtleta[a.id] || {}; %>
+                                <% if (logros.oros > 0 || logros.podios > 0) { %>
+                                <div class="d-flex justify-content-center gap-1 mt-1 flex-wrap">
+                                    <% if (logros.oros)   { %><span class="badge" style="background:#f4d03f;color:#333;font-size:.65rem;">🥇 <%= logros.oros %></span><% } %>
+                                    <% if (logros.platas) { %><span class="badge bg-secondary" style="font-size:.65rem;">🥈 <%= logros.platas %></span><% } %>
+                                    <% if (logros.bronces){ %><span class="badge" style="background:#cd7f32;font-size:.65rem;">🥉 <%= logros.bronces %></span><% } %>
+                                </div>
+                                <% } %>
+                                <% if (a.id) { %>
+                                <a href="/social/perfil/<%= a.id %>" class="btn btn-outline-primary btn-sm w-100 mt-2" style="font-size:.72rem;">Ver Perfil</a>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+                </div>
+                <% } %>
+            </div>
+
+            <!-- COLECCIÓN DE LOGROS POR EVENTO -->
+            <% if (eventosData.length > 0) { %>
+            <div>
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-trophy me-2 text-warning"></i>Logros por Evento
+                </h5>
+                <div class="accordion" id="accordionLogros">
+                    <% eventosData.forEach((ev, idx) => { %>
+                    <div class="accordion-item border-0 shadow-sm mb-2" style="border-radius:12px;overflow:hidden;">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button <%= idx > 0 ? 'collapsed' : '' %> fw-bold"
+                                    type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#logro-<%= idx %>">
+                                <div class="d-flex align-items-center gap-3 w-100">
+                                    <span class="flex-fill"><%= ev.nombre %> <small class="text-muted fw-normal">(<%= ev.anio %>)</small></span>
+                                    <span class="badge bg-danger me-2"><%= ev.puntos %> pts</span>
+                                    <% if (ev.oros > 0) { %><span class="me-1">🥇×<%= ev.oros %></span><% } %>
+                                    <% if (ev.platas > 0) { %><span class="me-1">🥈×<%= ev.platas %></span><% } %>
+                                    <% if (ev.bronces > 0) { %><span>🥉×<%= ev.bronces %></span><% } %>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="logro-<%= idx %>" class="accordion-collapse collapse <%= idx === 0 ? 'show' : '' %>">
+                            <div class="accordion-body p-0">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th class="ps-3">Atleta</th>
+                                            <th>Categoría</th>
+                                            <th class="text-center">Pos.</th>
+                                            <th class="text-end pe-3">Pts</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% ev.resultados.forEach(r => { %>
+                                        <tr>
+                                            <td class="ps-3 fw-bold small"><%= r.atletaNombre %></td>
+                                            <td class="small text-muted"><%= r.categoriaNombre %></td>
+                                            <td class="text-center fw-bold">
+                                                <% if (r.posicion === 1) { %>
+                                                    <span class="medal-oro">🥇 1°</span>
+                                                <% } else if (r.posicion === 2) { %>
+                                                    <span class="medal-plata">🥈 2°</span>
+                                                <% } else if (r.posicion === 3) { %>
+                                                    <span class="medal-bronce">🥉 3°</span>
+                                                <% } else if (r.posicion) { %>
+                                                    <span class="text-muted"><%= r.posicion %>°</span>
+                                                <% } else { %><span class="text-muted">—</span><% } %>
+                                                <% if (r.esAbsoluto) { %><span class="badge bg-warning text-dark ms-1" style="font-size:.6rem;">ABSOLUTO</span><% } %>
+                                            </td>
+                                            <td class="text-end pe-3 fw-bold text-danger small"><%= r.puntos %></td>
+                                        </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+                </div>
+            </div>
+            <% } %>
+
+        </div><!-- fin col-lg-8 -->
+    </div><!-- fin row -->
+</div>
+
+<%- include('../template/footer') %>

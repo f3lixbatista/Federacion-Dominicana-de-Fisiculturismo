@@ -15,6 +15,13 @@ router.get('/ficha-atleta', checkPermiso('pesaje', 'ver'), inscripcionController
 router.post('/subir-musica', checkPermiso('pesaje', 'crear'), upload.single('musica'), inscripcionController.subirMusicaAsistida);
 router.get(['/InscripcionAtleta', '/IscripcionAtleta'], checkRole(['atleta', 'admin']), inscripcionController.inscripcionAtletaPage);
 router.post('/inscribir', checkRole(['atleta', 'admin']), inscripcionController.inscribirAtleta);
+router.post('/subir-comprobante-web', checkRole(['atleta', 'admin']), upload.single('comprobante'), inscripcionController.subirComprobanteWeb);
+// Descargo imprimible (abierto a admin/ejecutivo/juez que asisten el pesaje)
+router.get('/descargo', checkPermiso('pesaje', 'ver'), inscripcionController.descargoAtleta);
+// Listados oficiales
+router.get('/listado-atletas/:eventoId', checkPermiso('pesaje', 'ver'), inscripcionController.listadoAtletas);
+router.get('/listado-posiciones/:eventoId', checkPermiso('pesaje', 'ver'), inscripcionController.listadoPosiciones);
+router.post('/publicar-listado', checkPermiso('noticias', 'crear'), inscripcionController.publicarListado);
 router.put('/:id', inscripcionController.crearCompetidor);
 router.get('/pesaje', checkPermiso('pesaje', 'ver'), inscripcionController.pesajePage);
 router.get('/:id', inscripcionController.detalleInscripcion);

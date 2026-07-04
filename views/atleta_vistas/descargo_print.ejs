@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargo FDFF — <%= atleta.nombre %></title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; font-size: 10.5pt; color: #000; background: #fff; padding: 10mm; }
+        .no-print { margin-bottom: 12px; }
+        @media print { .no-print { display: none !important; } body { padding: 6mm; } }
+
+        /* ── Cabecera ── */
+        .header { display: flex; align-items: center; border-bottom: 3px solid #c00; padding-bottom: 8px; margin-bottom: 8px; }
+        .header img { width: 70px; height: auto; margin-right: 14px; }
+        .header-text { flex: 1; }
+        .header-text h2 { font-size: 13pt; color: #c00; text-transform: uppercase; margin: 0; }
+        .header-text h3 { font-size: 11pt; font-weight: bold; margin: 2px 0; }
+        .header-text p  { font-size: 9pt; color: #555; margin: 0; }
+
+        /* ── Título del descargo ── */
+        .titulo-descargo { text-align: center; margin: 10px 0 4px; }
+        .titulo-descargo h4 { font-size: 12pt; font-weight: bold; text-transform: uppercase; }
+        .titulo-descargo h5 { font-size: 10.5pt; font-weight: normal; }
+
+        /* ── Instrucción de lectura ── */
+        .leer { background: #fff3cd; border-left: 4px solid #f5a623; padding: 4px 8px; font-size: 9.5pt; margin: 8px 0; font-weight: bold; }
+
+        /* ── Cláusulas ── */
+        .clausulas { margin: 8px 0; }
+        .clausulas p { font-size: 9.5pt; text-align: justify; margin-bottom: 5px; line-height: 1.35; }
+
+        /* ── Datos del atleta ── */
+        .datos-atleta { border: 1.5px solid #555; border-radius: 4px; padding: 8px 10px; margin: 10px 0; }
+        .datos-atleta h6 { font-size: 10pt; font-weight: bold; border-bottom: 1px solid #ccc; margin-bottom: 6px; padding-bottom: 3px; }
+        .campo { display: flex; margin-bottom: 4px; font-size: 9.5pt; }
+        .campo .etiqueta { font-weight: bold; min-width: 130px; }
+        .campo .valor { border-bottom: 1px solid #aaa; flex: 1; min-height: 16px; padding: 0 4px; }
+
+        /* ── Declaración firmante ── */
+        .declaracion { font-size: 9.5pt; text-align: justify; margin: 8px 0; line-height: 1.35; }
+
+        /* ── Firmas ── */
+        .firmas { display: flex; gap: 30px; margin-top: 18px; }
+        .firma-box { flex: 1; text-align: center; }
+        .firma-box .linea-firma { border-top: 1.5px solid #000; margin: 40px 0 4px; }
+        .firma-box p { font-size: 9pt; font-weight: bold; }
+
+        /* ── Total ── */
+        .total-box { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin: 8px 0; }
+        .total-box .etiqueta { font-weight: bold; font-size: 11pt; }
+        .total-box .monto { font-size: 13pt; font-weight: bold; border: 2px solid #000; padding: 3px 12px; border-radius: 4px; min-width: 120px; text-align: right; }
+
+        /* ── Pie de página ── */
+        .pie { text-align: center; font-size: 8pt; color: #777; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <button onclick="window.print()" style="padding:8px 20px;background:#c00;color:#fff;border:none;border-radius:5px;font-size:12pt;cursor:pointer;">
+        🖨️ IMPRIMIR DESCARGO
+    </button>
+    &nbsp;
+    <button onclick="window.close()" style="padding:8px 16px;background:#555;color:#fff;border:none;border-radius:5px;font-size:12pt;cursor:pointer;">
+        ✕ Cerrar
+    </button>
+</div>
+
+<!-- ── CABECERA ─────────────────────────────────────────── -->
+<div class="header">
+    <img src="/img/fdff3.jpg" alt="FDFF">
+    <div class="header-text">
+        <h2>Federación Dominicana de Fisiculturismo y Fitness</h2>
+        <h3>Miembro Oficial de la International Federation of Bodybuilding (IFBB)</h3>
+        <p><%= evento.lugar || 'Santo Domingo, República Dominicana' %> &nbsp;|&nbsp; <%= evento.fecha_display || new Date().toLocaleDateString('es-DO', {year:'numeric',month:'long',day:'numeric'}) %></p>
+    </div>
+</div>
+
+<!-- ── TÍTULO ─────────────────────────────────────────────── -->
+<div class="titulo-descargo">
+    <h4>Documento de Descargo y Consentimiento</h4>
+    <h5>Convenio de Participación en la <strong><%= evento.nombre %></strong></h5>
+</div>
+
+<!-- ── INSTRUCCIÓN ────────────────────────────────────────── -->
+<div class="leer">⚠ Por favor lea detenidamente este documento antes de firmarlo.</div>
+
+<!-- ── CLÁUSULAS ──────────────────────────────────────────── -->
+<div class="clausulas">
+    <p>Para poder participar como competidor en este evento, como firmante de este documento afirmo que entiendo y estoy de acuerdo con la constitución y las reglas de la <strong>IFBB/FDFF</strong>, el código de ética de la IFBB/FDFF y las reglas antidopajes de la IFBB/FDFF. También acuerdo cooperar con la IFBB/FDFF y los organizadores del evento.</p>
+    <p><strong>Entiendo, acepto y concuerdo con las siguientes condiciones:</strong></p>
+    <p><strong>1.</strong> Entiendo que para poder participar en este evento como competidor debo estar de acuerdo con todas las partes de este documento y que lo hago de manera voluntaria.</p>
+    <p><strong>2.</strong> Que concuerdo en descargar a la federación de cualquier reclamación que tenga ahora o en un futuro sobre este evento y acuerdo nunca proceder legalmente contra la federación o el organizador de este evento, ni contra jueces, patrocinadores, colaboradores, hotel y su staff, por daños personales, muerte o daños a mi propiedad, gastos o pérdida durante mi participación en el evento, dado por cualquier causa incluyendo pero no limitándose a negligencia y/o aplicación de los estatutos por parte de la federación.</p>
+    <p><strong>3.</strong> Confirmo que estoy en buen estado de salud física y mental, a la vez que entiendo que cualquier daño médico o personal en mi persona, mientras compito en este evento, es totalmente mi responsabilidad, tanto por el daño como por el pago de cualquier gasto que pueda incurrir por el requerimiento de asistencia médica, y libero a los organizadores y a la federación de la cobertura económica que provenga de ello.</p>
+    <p><strong>4.</strong> Con este documento afirmo que nadie me obligó a participar en este evento y que lo hago por voluntad propia.</p>
+    <p><strong>5.</strong> Acuerdo que voy a respetar las reglas de la IFBB/FDFF y que entiendo que si participo en competencias no avaladas por la federación, soy pasible de ser sometido a pruebas de dopaje sin previo aviso, siendo esta prueba costeada por mi persona, y que debo resarcir a la federación antes de volver a competir en un evento IFBB/FDFF nacional o internacional.</p>
+    <p><strong>6.</strong> Apruebo que cualquier foto o video que me sean tomadas durante el evento por fotógrafos acreditados por la federación podrán ser utilizadas por la federación sin requerir el pago por derecho.</p>
+    <p><strong>7.</strong> Confirmo que soy mayor de edad y que he leído, entendido y aceptado todas las partes de este documento antes de firmarlo, y sé que este documento estará disponible para cualquier miembro, juez o colaborador de la federación en el momento que sea necesario.</p>
+</div>
+
+<!-- ── DATOS DEL ATLETA (llenar con letra de molde) ─────── -->
+<div class="datos-atleta">
+    <h6>LLENAR CON LETRA DE MOLDE — Datos del Atleta</h6>
+    <div class="campo">
+        <span class="etiqueta">NOMBRE:</span>
+        <span class="valor"><%= atleta.nombre %></span>
+    </div>
+    <div class="campo">
+        <span class="etiqueta">CÉDULA / PASAPORTE:</span>
+        <span class="valor"><%= atleta.cedula || atleta.pasaporte || '' %></span>
+    </div>
+    <div class="campo">
+        <span class="etiqueta">PAÍS / CIUDAD:</span>
+        <span class="valor"><%= [atleta.pais, atleta.municipio].filter(Boolean).join(' / ') %></span>
+    </div>
+    <div class="campo">
+        <span class="etiqueta">TEAM / PREPARADOR:</span>
+        <span class="valor"><%= atleta.preparador || 'Independiente' %></span>
+    </div>
+    <div class="campo">
+        <span class="etiqueta">PESO / ESTATURA:</span>
+        <span class="valor"><%= [(atleta.peso ? atleta.peso + ' kg' : null), (atleta.estatura ? atleta.estatura + ' cm' : null)].filter(Boolean).join(' / ') %></span>
+    </div>
+    <div class="campo">
+        <span class="etiqueta">E-MAIL:</span>
+        <span class="valor"><%= atleta.email || '' %></span>
+    </div>
+    <div class="campo">
+        <span class="etiqueta">CATEGORÍA(S):</span>
+        <span class="valor">
+            <% (inscripciones || []).forEach(ins => { %>
+                <span style="display:inline-block;margin-right:8px;font-weight:bold;">
+                    #<%= ins.numero_atleta || '—' %> &nbsp;<%= ins.eventos_categorias?.categorias?.nombre || '' %>
+                </span>
+            <% }) %>
+        </span>
+    </div>
+</div>
+
+<!-- ── TOTAL ──────────────────────────────────────────────── -->
+<div class="total-box">
+    <span class="etiqueta">Total a Pagar:</span>
+    <span class="monto">RD$ <%= (totalPagado || 0).toLocaleString() %></span>
+</div>
+
+<!-- ── DECLARACIÓN FINAL ──────────────────────────────────── -->
+<div class="declaracion">
+    Como atleta consciente de mi responsabilidad, afirmo que conozco y estoy de acuerdo de haberme inscrito en la(s) categoría(s) antes descritas y acepto íntegramente los términos y condiciones de este documento.
+</div>
+
+<!-- ── FIRMAS ─────────────────────────────────────────────── -->
+<div class="firmas">
+    <div class="firma-box">
+        <div class="linea-firma"></div>
+        <p>Firma del Atleta</p>
+        <p style="font-size:8pt;font-weight:normal;color:#555;"><%= atleta.nombre %></p>
+    </div>
+    <div class="firma-box">
+        <div class="linea-firma"></div>
+        <p>Firma del Juez de Pesaje</p>
+        <p style="font-size:8pt;font-weight:normal;color:#555;">FDFF — Mesa Técnica</p>
+    </div>
+</div>
+
+<!-- ── PIE ────────────────────────────────────────────────── -->
+<div class="pie">
+    Federación Dominicana de Fisiculturismo y Fitness (FDFF) — Miembro oficial de la IFBB International Federation of Bodybuilding &amp; Fitness<br>
+    Documento generado el <%= new Date().toLocaleDateString('es-DO', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) %> a las <%= new Date().toLocaleTimeString('es-DO', {hour:'2-digit',minute:'2-digit'}) %>
+</div>
+
+</body>
+</html>

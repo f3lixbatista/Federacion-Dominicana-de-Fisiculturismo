@@ -48,9 +48,17 @@
     <ul class="nav nav-tabs mb-3" id="tabAuditoria">
         <li class="nav-item">
             <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#tabPendientes">
-                <i class="fas fa-clock text-warning me-1"></i> Pendientes
+                <i class="fas fa-clock text-warning me-1"></i> Inscripciones Pendientes
                 <% if (totalPendientes > 0) { %>
                     <span class="badge bg-danger ms-1"><%= totalPendientes %></span>
+                <% } %>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#tabMembresías">
+                <i class="fas fa-id-card text-primary me-1"></i> Membresías
+                <% if ((membresiasPendientes || []).length > 0) { %>
+                    <span class="badge bg-danger ms-1"><%= membresiasPendientes.length %></span>
                 <% } %>
             </button>
         </li>
@@ -67,7 +75,7 @@
         <% if (pagos.length > 0) { %>
         <li class="nav-item">
             <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#tabAdminPagos">
-                <i class="fas fa-file-invoice-dollar me-1"></i> Membresías (<%= pagos.length %>)
+                <i class="fas fa-file-invoice-dollar me-1"></i> Historial (<%= pagos.length %>)
             </button>
         </li>
         <% } %>
@@ -120,6 +128,61 @@
                                             <button onclick="abrirValidacion('<%= i.url_comprobante_pago %>', '<%= i.id %>', '<%= i.atleta_id %>')"
                                                     class="btn btn-warning btn-sm fw-bold px-3">
                                                 <i class="fas fa-check me-1"></i> VALIDAR
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- TAB: MEMBRESÍAS CON COMPROBANTE WEB -->
+        <div class="tab-pane fade" id="tabMembresías">
+            <div class="card border-0 shadow-sm" style="border-radius:15px; overflow:hidden;">
+                <% if (!(membresiasPendientes || []).length) { %>
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-check-circle fa-3x text-success d-block mb-3"></i>
+                        <h5>No hay membresías con comprobante pendiente de validar.</h5>
+                    </div>
+                <% } else { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="ps-3">Atleta</th>
+                                    <th>ID FDFF</th>
+                                    <th>Fecha subida</th>
+                                    <th class="text-center">Comprobante</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% membresiasPendientes.forEach(a => { %>
+                                    <tr>
+                                        <td class="ps-3 fw-bold">
+                                            <%= a.nombre %>
+                                            <br><small class="text-muted"><%= a.email || '' %></small>
+                                        </td>
+                                        <td class="small"><%= a.idfdff || '—' %></td>
+                                        <td class="small text-muted">
+                                            <%= a.fecha_subida_membresia ? new Date(a.fecha_subida_membresia).toLocaleDateString('es-DO') : '—' %>
+                                        </td>
+                                        <td class="text-center">
+                                            <a href="<%= a.url_comprobante_membresia %>" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-eye me-1"></i> Ver
+                                            </a>
+                                        </td>
+                                        <td class="text-center d-flex gap-1 justify-content-center">
+                                            <button onclick="validarMembresia('<%= a.id %>','<%= a.nombre %>')"
+                                                    class="btn btn-success btn-sm fw-bold">
+                                                <i class="fas fa-check me-1"></i> Activar
+                                            </button>
+                                            <button onclick="rechazarMembresia('<%= a.id %>')"
+                                                    class="btn btn-danger btn-sm">
+                                                <i class="fas fa-times me-1"></i> Rechazar
                                             </button>
                                         </td>
                                     </tr>
@@ -297,9 +360,7 @@
     </div>
 </div>
 
-<script src="/js/supabase.js"></script>
 <script>
-    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
     const modalVal = new bootstrap.Modal(document.getElementById('modalValidarPago'));
 
     function abrirValidacion(url, id, atletaId) {
@@ -311,26 +372,61 @@
 
     async function validarComprobante() {
         const id = document.getElementById('competidorIdValidar').value;
-        const { error } = await _supabase.from('competidores').update({ pago_validado: true }).eq('id', id);
-        if (!error) {
-            alert("✅ Pago validado. El ticket QR del atleta ha sido activado.");
+        const resp = await fetch('/admin/auditoria/validar-pago', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ competidor_id: id })
+        });
+        const json = await resp.json();
+        if (json.ok) {
+            modalVal.hide();
+            alert(json.mensaje);
             location.reload();
-        } else alert("Error: " + error.message);
+        } else {
+            alert("Error: " + json.error);
+        }
     }
 
     async function rechazarPago() {
         const id = document.getElementById('competidorIdValidar').value;
-        const motivo = prompt("Indique el motivo del rechazo (ej: Monto incompleto, imagen borrosa):");
+        const motivo = prompt("Motivo del rechazo (ej: Monto incompleto, imagen borrosa):");
         if (!motivo) return;
-        const { error } = await _supabase.from('competidores').update({
-            url_comprobante_pago: null,
-            observaciones_pago: motivo,
-            pago_validado: false,
-            fecha_revision_pago: new Date().toISOString()
-        }).eq('id', id);
-        if (!error) { alert("Notificación registrada."); location.reload(); }
-        else alert("Error: " + error.message);
+        const resp = await fetch('/admin/auditoria/rechazar-pago', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ competidor_id: id, motivo })
+        });
+        const json = await resp.json();
+        if (json.ok) { modalVal.hide(); location.reload(); }
+        else alert("Error: " + json.error);
     }
+
+    // ── Membresías ───────────────────────────────────────────────────────────
+    async function validarMembresia(atletaId, nombre) {
+        if (!confirm(`¿Activar la membresía de "${nombre}"?`)) return;
+        const resp = await fetch('/admin/auditoria/validar-membresia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ atleta_id: atletaId })
+        });
+        const json = await resp.json();
+        if (json.ok) { alert(json.mensaje); location.reload(); }
+        else alert("Error: " + json.error);
+    }
+
+    async function rechazarMembresia(atletaId) {
+        const motivo = prompt("Motivo del rechazo:");
+        if (!motivo) return;
+        const resp = await fetch('/admin/auditoria/rechazar-membresia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ atleta_id: atletaId, motivo })
+        });
+        const json = await resp.json();
+        if (json.ok) location.reload();
+        else alert("Error: " + json.error);
+    }
+
 </script>
 
 <%- include("../template/footer") %>

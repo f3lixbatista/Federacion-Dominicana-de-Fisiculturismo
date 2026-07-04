@@ -1,0 +1,100 @@
+<%- include('../template/cabecera', { tituloWeb: 'Editar Perfil de Team — FDFF' }) %>
+
+<div class="container my-4" style="max-width:720px;">
+
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <div>
+            <h4 class="fw-bold mb-0"><i class="fas fa-edit me-2 text-primary"></i>Editar Perfil del Team</h4>
+            <small class="text-muted">Los cambios se reflejan en la página pública del team.</small>
+        </div>
+        <a href="/preparadores/team/<%= prep.id %>" class="btn btn-outline-secondary btn-sm fw-bold">
+            <i class="fas fa-eye me-1"></i> Ver Team
+        </a>
+    </div>
+
+    <% if (locals.error) { %>
+        <div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-1"></i><%= error %></div>
+    <% } %>
+    <% if (locals.exito) { %>
+        <div class="alert alert-success"><i class="fas fa-check-circle me-1"></i><%= exito %></div>
+    <% } %>
+
+    <form id="formEditarTeam" method="POST" action="/preparadores/team/<%= prep.id %>/editar" enctype="multipart/form-data">
+
+        <!-- NOMBRE DEL TEAM -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-uppercase text-muted mb-3 small"><i class="fas fa-tag me-1"></i>Identidad del Team</h6>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nombre del Team <span class="text-danger">*</span></label>
+                    <input type="text" name="nombre_team" class="form-control form-control-lg fw-bold"
+                           value="<%= prep.nombre_team || '' %>"
+                           placeholder="Ej: BEAST MODE TEAM, Team Beato, Fitness Elite...">
+                    <div class="form-text">Este nombre aparece en grande en la portada de tu team.</div>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label fw-bold">Reseña Personal / Profesional</label>
+                    <textarea name="resena" class="form-control" rows="5"
+                              placeholder="Cuéntanos sobre ti como coach, tu trayectoria, especialidad, logros como preparador..."
+                              style="resize:vertical;"><%= prep.resena || '' %></textarea>
+                    <div class="form-text">Máx. 1,000 caracteres. Se muestra en la sección "Acerca del Coach".</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOTO DE PORTADA -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;overflow:hidden;">
+            <div class="card-header bg-dark text-white py-2 px-4">
+                <i class="fas fa-image me-1"></i> <span class="fw-bold small text-uppercase">Foto de Portada del Team</span>
+            </div>
+            <div class="card-body p-4">
+                <% if (prep.foto_portada_url) { %>
+                    <div class="mb-3 position-relative" style="height:180px;overflow:hidden;border-radius:10px;background:#000;">
+                        <img src="<%= prep.foto_portada_url %>" class="w-100 h-100" style="object-fit:cover;opacity:.85;" alt="Portada actual">
+                        <span class="badge bg-success position-absolute bottom-0 end-0 m-2">Portada actual</span>
+                    </div>
+                <% } %>
+                <label class="form-label fw-bold">
+                    <%= prep.foto_portada_url ? 'Cambiar portada' : 'Subir foto de portada' %>
+                </label>
+                <input type="file" name="foto_portada" class="form-control" accept="image/jpeg,image/png,image/webp">
+                <div class="form-text">JPG, PNG o WebP — Mínimo 1200×400 px recomendado. Máx. 10 MB.</div>
+            </div>
+        </div>
+
+        <!-- FOTO DE PERFIL DEL COACH -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-uppercase text-muted mb-3 small"><i class="fas fa-user-circle me-1"></i>Foto de Perfil del Coach</h6>
+                <div class="d-flex align-items-center gap-4 mb-3">
+                    <% if (prep.foto_perfil_url) { %>
+                        <img src="<%= prep.foto_perfil_url %>" style="width:80px;height:80px;object-fit:cover;border-radius:50%;border:3px solid #dee2e6;" alt="Foto coach">
+                    <% } else { %>
+                        <div style="width:80px;height:80px;border-radius:50%;background:#343a40;display:flex;align-items:center;justify-content:center;font-size:2rem;color:#adb5bd;border:3px solid #dee2e6;">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                    <% } %>
+                    <div class="flex-fill">
+                        <label class="form-label fw-bold mb-1">
+                            <%= prep.foto_perfil_url ? 'Cambiar foto circular' : 'Subir foto de perfil' %>
+                        </label>
+                        <input type="file" name="foto_perfil" class="form-control" accept="image/jpeg,image/png,image/webp">
+                        <div class="form-text">Foto cuadrada recomendada — aparece como círculo sobre la portada.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTONES -->
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-primary btn-lg fw-bold flex-fill shadow-sm">
+                <i class="fas fa-save me-2"></i> Guardar Cambios
+            </button>
+            <a href="/preparadores/team/<%= prep.id %>" class="btn btn-outline-secondary btn-lg fw-bold">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<%- include('../template/footer') %>
