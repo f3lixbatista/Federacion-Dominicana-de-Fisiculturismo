@@ -493,18 +493,20 @@ const darLikePublicacion = async (req, res) => {
     if (!usuarioId) return res.status(401).json({ estado: false, mensaje: "Inicia sesión" });
 
     try {
-        const { data: existingLike } = await supabase
+        const { data: existingLike } = await supabaseAdmin
             .from('publicacion_likes')
-            .select('*')
+            .select('id')
             .eq('publicacion_id', publicacion_id)
             .eq('user_id', usuarioId)
-            .single();
+            .maybeSingle();
 
         if (existingLike) {
-            await supabase.from('publicacion_likes').delete().eq('id', existingLike.id);
+            const { error } = await supabaseAdmin.from('publicacion_likes').delete().eq('id', existingLike.id);
+            if (error) throw error;
             res.json({ estado: true, operacion: 'quitar' });
         } else {
-            await supabase.from('publicacion_likes').insert({ publicacion_id, user_id: usuarioId });
+            const { error } = await supabaseAdmin.from('publicacion_likes').insert({ publicacion_id, user_id: usuarioId });
+            if (error) throw error;
             res.json({ estado: true, operacion: 'dar' });
         }
     } catch (error) {
