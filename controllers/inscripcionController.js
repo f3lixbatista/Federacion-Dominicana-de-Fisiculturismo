@@ -151,13 +151,21 @@ const inscripcionAtletaPage = async (req, res) => {
         if (error) throw error;
 
         if (!eventoEspecifico) {
-            // Si Supabase no devuelve un evento (ej. no existe o no está en estado 'inscripcion')
             console.warn(`Evento ${evento} no encontrado o no está en estado 'inscripcion'.`);
             return res.render('eventos/InscripcionAtleta', {
-                eventos: [], // No se encontró el evento
-                eventoId: evento,
-                atleta: null,
+                eventos: [], eventoId: evento, atleta: null, categoriasInscritas: [],
+                estadoPago: {}, cuentasBancarias: [],
                 error: "El evento especificado no existe o no está abierto para inscripción."
+            });
+        }
+
+        // Verificar que la fecha del evento no haya pasado
+        const _hoyInsc = new Date().toISOString().split('T')[0];
+        if (eventoEspecifico.fecha_inicio && eventoEspecifico.fecha_inicio.slice(0, 10) < _hoyInsc) {
+            return res.render('eventos/InscripcionAtleta', {
+                eventos: [], eventoId: evento, atleta: null, categoriasInscritas: [],
+                estadoPago: {}, cuentasBancarias: [],
+                error: "Las inscripciones para este evento han cerrado (la fecha del evento ya pasó)."
             });
         }
 
@@ -290,6 +298,10 @@ const guardarInscripcionAsistida = async (req, res) => {
 
         if (errEv || !evento) throw new Error('Evento no encontrado para validación de costos.');
 
+        if (!['inscripcion', 'pesaje'].includes(evento.estado)) {
+            return res.status(403).json({ estado: false, mensaje: `No se puede inscribir: el evento está en estado "${evento.estado}".` });
+        }
+
         const ahora = new Date();
         const fechaLimite = evento.fecha_limite_oferta ? new Date(evento.fecha_limite_oferta) : null;
         const esPrecioOferta = fechaLimite && ahora <= fechaLimite;
@@ -340,6 +352,11 @@ const subirMusicaAsistida = async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No se recibió archivo' });
 
     try {
+        const { data: evMusica } = await supabaseAdmin.from('eventos').select('estado').eq('id', eventoId).single();
+        if (evMusica?.estado === 'cerrado') {
+            return res.status(403).json({ error: 'El evento está cerrado. No se puede modificar la música.' });
+        }
+
         const ext = (req.file.originalname.split('.').pop() || 'mp3').toLowerCase();
         const filePath = `${atletaId}/${eventoId}/musica.${ext}`;
 
@@ -394,10 +411,17 @@ const inscribirAtleta = async (req, res) => {
         return res.status(400).json({ error: 'Datos incompletos' });
     }
 
-    // Obtener precios del evento para calcular monto (Early Bird si aplica)
+    // Obtener estado + precios del evento
     const { data: evento } = await supabaseAdmin
-        .from('eventos').select('costo_primera_cat, costo_adicional, costo_oferta_primera, costo_oferta_adicional, fecha_limite_oferta')
+        .from('eventos').select('costo_primera_cat, costo_adicional, costo_oferta_primera, costo_oferta_adicional, fecha_limite_oferta, estado, fecha_inicio')
         .eq('id', eventoId).single();
+
+    // Validar que el evento siga abierto para inscripción web
+    const _hoyInscWeb = new Date().toISOString().split('T')[0];
+    if (!evento || evento.estado !== 'inscripcion' ||
+        (evento.fecha_inicio && evento.fecha_inicio.slice(0, 10) < _hoyInscWeb)) {
+        return res.status(403).json({ error: 'Las inscripciones para este evento están cerradas.' });
+    }
 
     const ahora = new Date();
     const esPrecioOferta = evento?.fecha_limite_oferta && ahora <= new Date(evento.fecha_limite_oferta);
@@ -436,6 +460,12 @@ const subirComprobanteWeb = async (req, res) => {
     if (!eventoId) return res.status(400).json({ ok: false, error: 'Falta eventoId' });
 
     try {
+        const { data: evComp } = await supabaseAdmin.from('eventos').select('estado, fecha_inicio').eq('id', eventoId).single();
+        const _hoyComp = new Date().toISOString().split('T')[0];
+        if (!evComp || evComp.estado === 'cerrado' || (evComp.fecha_inicio && evComp.fecha_inicio.slice(0, 10) < _hoyComp)) {
+            return res.status(403).json({ ok: false, error: 'Este evento ya está cerrado.' });
+        }
+
         const ext  = req.file.originalname.split('.').pop() || 'jpg';
         const path = `inscripcion_${atletaId}_${eventoId}_${Date.now()}.${ext}`;
 
