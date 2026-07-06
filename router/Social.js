@@ -26,20 +26,34 @@ router.get('/directiva', (req, res) => {
 
 router.get('/muro', async (req, res) => {
     try {
-        // Traemos las publicaciones unidas con los nombres de atletas y eventos
-        const { data: publicaciones, error } = await supabaseAdmin
-            .from('publicaciones_muro')
-            .select(`
-                *,
-                profiles!atleta_id (nombre),
-                atletas!atleta_id ( nombre, foto_url ),
-                eventos:evento_id (nombre),
-                publicacion_likes!publicacion_id ( user_id ),
-                publicacion_comentarios!publicacion_id ( *, profiles!user_id ( nombre ) )
-            `)
-            .order('fecha_publicacion', { ascending: false });
+        const hoy = new Date().toISOString().split('T')[0];
+
+        const [{ data: publicaciones, error }, { data: eventosRaw }] = await Promise.all([
+            supabaseAdmin
+                .from('publicaciones_muro')
+                .select(`
+                    *,
+                    profiles!atleta_id (nombre),
+                    atletas!atleta_id ( nombre, foto_url ),
+                    eventos:evento_id (nombre),
+                    publicacion_likes!publicacion_id ( user_id ),
+                    publicacion_comentarios!publicacion_id ( *, profiles!user_id ( nombre ) )
+                `)
+                .order('fecha_publicacion', { ascending: false }),
+            supabaseAdmin
+                .from('eventos')
+                .select('id, nombre, fecha_inicio, lugar, estado, url_afiche_evento, info_boletas')
+                .not('estado', 'eq', 'cerrado')
+                .order('fecha_inicio', { ascending: false })
+                .limit(6)
+        ]);
 
         if (error) throw error;
+
+        const eventosActivos = (eventosRaw || []).filter(ev => {
+            if (ev.estado === 'inscripcion' && ev.fecha_inicio && ev.fecha_inicio.slice(0, 10) < hoy) return false;
+            return true;
+        });
 
         const usuarioId = res.locals.user?.id;
         const postsProcesados = (publicaciones || []).map(p => ({
@@ -48,9 +62,10 @@ router.get('/muro', async (req, res) => {
             userLiked: usuarioId ? p.publicacion_likes?.some(l => l.user_id === usuarioId) : false
         }));
 
-        res.render('social/muro', { 
+        res.render('social/muro', {
             publicaciones: postsProcesados,
-            user: res.locals.user 
+            eventosActivos,
+            user: res.locals.user
         });
     } catch (error) {
         console.error("🔥 Error en muro:", error.message);
@@ -66,7 +81,7 @@ router.get('/noticias/crear', requireAuth, checkPermiso('noticias', 'crear'), (r
 // Ver el feed de noticias dinámico (público)
 router.get('/noticias', async (req, res) => {
     try {
-        const hoy = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
+        const hoy = new Date().toISOString().split('T')[0];
 
         const [{ data: noticias, error }, { data: eventosRaw }] = await Promise.all([
             supabaseAdmin
@@ -75,25 +90,33 @@ router.get('/noticias', async (req, res) => {
                 .order('fecha_creacion', { ascending: false }),
             supabaseAdmin
                 .from('eventos')
-                .select('id, nombre, fecha_inicio, lugar, estado, url_afiche_evento')
-                .not('estado', 'eq', 'cerrado')
+                .select('id, nombre, fecha_inicio, lugar, estado, url_afiche_evento, info_boletas')
                 .order('fecha_inicio', { ascending: false })
-                .limit(20)
+                .limit(24)
         ]);
-
-        // Excluir eventos en 'inscripcion' cuya fecha de inicio ya pasó
-        const eventos = (eventosRaw || []).filter(ev => {
-            if (ev.estado === 'inscripcion' && ev.fecha_inicio) {
-                return ev.fecha_inicio.slice(0, 10) >= hoy;
-            }
-            return true;
-        }).slice(0, 8);
 
         if (error) throw error;
 
+        const todos = eventosRaw || [];
+
+        // Activos: no cerrado y (no es inscripcion con fecha pasada)
+        const eventosActivos = todos.filter(ev => {
+            if (ev.estado === 'cerrado') return false;
+            if (ev.estado === 'inscripcion' && ev.fecha_inicio && ev.fecha_inicio.slice(0, 10) < hoy) return false;
+            return true;
+        }).slice(0, 6);
+
+        // Pasados: cerrado o inscripcion con fecha ya vencida
+        const eventosPasados = todos.filter(ev => {
+            if (ev.estado === 'cerrado') return true;
+            if (ev.estado === 'inscripcion' && ev.fecha_inicio && ev.fecha_inicio.slice(0, 10) < hoy) return true;
+            return false;
+        }).slice(0, 4);
+
         res.render('social/noticias', {
             noticias: noticias || [],
-            eventos: eventos || [],
+            eventosActivos,
+            eventosPasados,
             user: res.locals.user
         });
     } catch (error) {

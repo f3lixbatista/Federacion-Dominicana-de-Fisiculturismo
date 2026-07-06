@@ -97,6 +97,18 @@
                 </div>
             </div>
 
+            <!-- SECCIÓN: INFORMACIÓN PARA EL PÚBLICO -->
+            <div class="container col-12 mb-0 pt-4">
+                <h4 class="fw-bold border-bottom pb-2">Información para el Público</h4>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="fs-5 fw-bold form-label"><i class="fas fa-ticket-alt text-success me-1"></i> Información de Boletas / Entradas:</label>
+                        <textarea class="form-control" name="info_boletas" rows="3" placeholder="Ej: Boletas disponibles en Jumbo La Sirena. Precio: RD$500 general, RD$1,000 palco. Contacto: 809-555-1234. Presentar cédula en taquilla..."><%= locals.evento && evento.info_boletas ? evento.info_boletas : '' %></textarea>
+                        <small class="text-muted">Esta información aparece en el muro social, noticias y la galería de competencias para que el público pueda adquirir boletas de entrada.</small>
+                    </div>
+                </div>
+            </div>
+
             <!-- SECCIÓN DE OFERTA (Configuración de Early Bird) -->
             <div class="container mt-4 p-4 bg-light border border-primary rounded shadow-sm" style="border-style: dashed !important; border-width: 2px;">
                 <h5 class="fw-bold text-primary mb-3">

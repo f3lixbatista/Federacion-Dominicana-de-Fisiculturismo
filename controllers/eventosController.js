@@ -721,9 +721,9 @@ const verResultadosPublicos = async (req, res) => {
 };
 
 const crearNuevoEvento = async (req, res) => {
-    const { 
-        NombreEvento, Fecha, Lugar, direccion, fecha_pesaje, lugar_pesaje, direccion_pesaje, 
-        costo_primera, costo_adicional, info_pesaje, Categorias,
+    const {
+        NombreEvento, Fecha, Lugar, direccion, fecha_pesaje, lugar_pesaje, direccion_pesaje,
+        costo_primera, costo_adicional, info_pesaje, info_boletas, Categorias,
         fecha_limite_oferta, costo_oferta_primera, costo_oferta_adicional
     } = req.body;
     
@@ -763,7 +763,8 @@ const crearNuevoEvento = async (req, res) => {
                 costo_oferta_adicional: parseFloat(costo_oferta_adicional) || 0,
                 url_afiche_evento: bannerEventoUrl || '', // Sincronizado con el Trigger de la DB
                 url_afiche_pesaje: bannerPesajeUrl, // Sincronizado con el Trigger de la DB
-                info_pesaje: info_pesaje, // Pesaje description
+                info_pesaje: info_pesaje,
+                info_boletas: info_boletas || null,
                 estado: 'inscripcion'
             }])
             .select()
@@ -867,11 +868,11 @@ const verEditarEvento = async (req, res) => {
 
 const actualizarEvento = async (req, res) => {
     const { id } = req.params;
-    const { 
-        NombreEvento, Fecha, Lugar, direccion, 
-        fecha_pesaje, lugar_pesaje, direccion_pesaje, // Agregamos campos de logística
-        info_pesaje, costo_primera, costo_adicional, estado,
-        fecha_limite_oferta, costo_oferta_primera, costo_oferta_adicional 
+    const {
+        NombreEvento, Fecha, Lugar, direccion,
+        fecha_pesaje, lugar_pesaje, direccion_pesaje,
+        info_pesaje, info_boletas, costo_primera, costo_adicional, estado,
+        fecha_limite_oferta, costo_oferta_primera, costo_oferta_adicional
     } = req.body;
 
     try {
@@ -898,6 +899,7 @@ const actualizarEvento = async (req, res) => {
             lugar_pesaje,
             direccion_pesaje,
             info_pesaje,
+            info_boletas: info_boletas || null,
             costo_primera_cat: parseFloat(costo_primera) || 0,
             costo_adicional: parseFloat(costo_adicional) || 0,
             estado,
