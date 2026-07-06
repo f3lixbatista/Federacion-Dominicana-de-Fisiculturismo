@@ -66,7 +66,9 @@ router.get('/noticias/crear', requireAuth, checkPermiso('noticias', 'crear'), (r
 // Ver el feed de noticias dinámico (público)
 router.get('/noticias', async (req, res) => {
     try {
-        const [{ data: noticias, error }, { data: eventos }] = await Promise.all([
+        const hoy = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
+
+        const [{ data: noticias, error }, { data: eventosRaw }] = await Promise.all([
             supabaseAdmin
                 .from('noticias')
                 .select('*')
@@ -76,8 +78,16 @@ router.get('/noticias', async (req, res) => {
                 .select('id, nombre, fecha_inicio, lugar, estado, url_afiche_evento')
                 .not('estado', 'eq', 'cerrado')
                 .order('fecha_inicio', { ascending: false })
-                .limit(8)
+                .limit(20)
         ]);
+
+        // Excluir eventos en 'inscripcion' cuya fecha de inicio ya pasó
+        const eventos = (eventosRaw || []).filter(ev => {
+            if (ev.estado === 'inscripcion' && ev.fecha_inicio) {
+                return ev.fecha_inicio.slice(0, 10) >= hoy;
+            }
+            return true;
+        }).slice(0, 8);
 
         if (error) throw error;
 
