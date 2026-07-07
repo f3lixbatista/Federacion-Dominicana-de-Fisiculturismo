@@ -5,7 +5,10 @@ const { requireAuth } = require('../middlewares/auth');
 
 // Ruta para mostrar la vista de Login (si no existe en otro lado)
 routerAuth.get('/login', (req, res) => {
-    res.render('vistas_auth/login');
+    res.render('vistas_auth/login', {
+        SUPABASE_URL: process.env.SUPABASE_URL,
+        SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY
+    });
 });
 
 // Vista para procesar el callback de Supabase (Google, Recovery, etc)
