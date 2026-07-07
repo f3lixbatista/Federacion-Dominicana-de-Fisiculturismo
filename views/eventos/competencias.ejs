@@ -42,12 +42,17 @@ const eventosCerrados  = eventos.filter(ev => ev.estado === 'cerrado'  || (ev.es
                             <% } %>
 
                             <div class="d-grid gap-2">
+                                <% if (locals.user && ['admin','ejecutivo','estadistico'].includes(locals.user.role)) { %>
+                                    <a href="/eventos/<%= evento.id %>" class="btn btn-primary fw-bold">
+                                        <i class="fas fa-arrow-right me-1"></i> Gestionar Evento
+                                    </a>
+                                <% } %>
                                 <% if (evento.info_boletas) { %>
                                     <button class="btn btn-success fw-bold"
                                             onclick="verBoletas('<%= encodeURIComponent(evento.nombre) %>', '<%= encodeURIComponent(evento.info_boletas) %>')">
                                         <i class="fas fa-ticket-alt me-1"></i> Adquirir Boletas
                                     </button>
-                                <% } else { %>
+                                <% } else if (!locals.user || !['admin','ejecutivo','estadistico'].includes(locals.user.role)) { %>
                                     <span class="btn btn-outline-secondary disabled btn-sm">Información de boletas próximamente</span>
                                 <% } %>
                             </div>
