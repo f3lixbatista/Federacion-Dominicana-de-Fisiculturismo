@@ -1,0 +1,176 @@
+<%- include("../template/cabecera", {tituloWeb: "Cambiar Contraseña"}) %>
+
+<div class="container d-flex justify-content-center align-items-start py-5">
+    <div class="card border-0 shadow-sm" style="width:100%;max-width:440px;border-radius:16px;overflow:hidden;">
+
+        <div class="p-4 text-white text-center" style="background:#1a1a2e;">
+            <i class="fas fa-lock fa-2x mb-2"></i>
+            <h5 class="fw-bold mb-0">Cambiar Contraseña</h5>
+            <p class="small mb-0 opacity-75">Cuenta: <strong><%= user.email %></strong></p>
+        </div>
+
+        <div class="card-body p-4">
+            <div id="alertaCambio" style="display:none;" class="alert small py-2 mb-3"></div>
+
+            <form id="formCambio">
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Nueva contraseña</label>
+                    <div class="input-group">
+                        <input type="password" id="nuevaPass" class="form-control"
+                               placeholder="Mínimo 6 caracteres" minlength="6" required autocomplete="new-password">
+                        <button type="button" class="btn btn-outline-secondary" onclick="toggleVer('nuevaPass','ojo1')">
+                            <i id="ojo1" class="far fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold small">Confirmar nueva contraseña</label>
+                    <div class="input-group">
+                        <input type="password" id="confirmaPass" class="form-control"
+                               placeholder="Repite la contraseña" required autocomplete="new-password">
+                        <button type="button" class="btn btn-outline-secondary" onclick="toggleVer('confirmaPass','ojo2')">
+                            <i id="ojo2" class="far fa-eye"></i>
+                        </button>
+                    </div>
+                    <!-- Indicador de coincidencia -->
+                    <div id="matchIndicator" class="mt-1 small" style="display:none;"></div>
+                </div>
+
+                <!-- Indicador de fortaleza -->
+                <div class="mb-3">
+                    <div class="d-flex gap-1 mb-1" id="fortalezaBars">
+                        <div class="flex-grow-1 rounded" style="height:4px;background:#dee2e6;" id="b1"></div>
+                        <div class="flex-grow-1 rounded" style="height:4px;background:#dee2e6;" id="b2"></div>
+                        <div class="flex-grow-1 rounded" style="height:4px;background:#dee2e6;" id="b3"></div>
+                        <div class="flex-grow-1 rounded" style="height:4px;background:#dee2e6;" id="b4"></div>
+                    </div>
+                    <small id="fortalezaLabel" class="text-muted"></small>
+                </div>
+
+                <button type="submit" id="btnCambiar" class="btn btn-dark w-100 fw-bold">
+                    <i class="fas fa-key me-1"></i> Actualizar Contraseña
+                </button>
+            </form>
+
+            <hr class="my-3">
+            <div class="text-center">
+                <a href="/" class="btn btn-link btn-sm text-decoration-none text-muted">
+                    <i class="fas fa-arrow-left me-1"></i> Volver al inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/supabase.js"></script>
+<script>
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
+
+    // Ver/ocultar contraseña
+    function toggleVer(inputId, iconId) {
+        const inp = document.getElementById(inputId);
+        const ico = document.getElementById(iconId);
+        const mostrar = inp.type === 'password';
+        inp.type = mostrar ? 'text' : 'password';
+        ico.className = mostrar ? 'far fa-eye-slash' : 'far fa-eye';
+    }
+
+    // Indicador de fortaleza
+    document.getElementById('nuevaPass').addEventListener('input', function () {
+        const val = this.value;
+        let puntos = 0;
+        if (val.length >= 6) puntos++;
+        if (val.length >= 10) puntos++;
+        if (/[A-Z]/.test(val) && /[a-z]/.test(val)) puntos++;
+        if (/[0-9!@#$%^&*]/.test(val)) puntos++;
+
+        const colores = ['#dc3545', '#fd7e14', '#ffc107', '#198754'];
+        const etiquetas = ['Muy débil', 'Débil', 'Regular', 'Fuerte'];
+        const bars = ['b1','b2','b3','b4'];
+        bars.forEach((id, i) => {
+            document.getElementById(id).style.background = i < puntos ? colores[puntos - 1] : '#dee2e6';
+        });
+        document.getElementById('fortalezaLabel').textContent = val.length ? etiquetas[puntos - 1] || '' : '';
+
+        verificarCoincidencia();
+    });
+
+    document.getElementById('confirmaPass').addEventListener('input', verificarCoincidencia);
+
+    function verificarCoincidencia() {
+        const nueva = document.getElementById('nuevaPass').value;
+        const conf  = document.getElementById('confirmaPass').value;
+        const ind   = document.getElementById('matchIndicator');
+        if (!conf) { ind.style.display = 'none'; return; }
+        ind.style.display = '';
+        if (nueva === conf) {
+            ind.className = 'mt-1 small text-success';
+            ind.innerHTML = '<i class="fas fa-check-circle me-1"></i>Las contraseñas coinciden';
+        } else {
+            ind.className = 'mt-1 small text-danger';
+            ind.innerHTML = '<i class="fas fa-times-circle me-1"></i>No coinciden';
+        }
+    }
+
+    // Alerta
+    function mostrarAlerta(msg, tipo) {
+        const el = document.getElementById('alertaCambio');
+        el.className = `alert alert-${tipo} small py-2 mb-3`;
+        el.textContent = msg;
+        el.style.display = '';
+    }
+
+    // Envío
+    document.getElementById('formCambio').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nueva   = document.getElementById('nuevaPass').value;
+        const confirma = document.getElementById('confirmaPass').value;
+
+        if (nueva !== confirma) {
+            return mostrarAlerta('Las contraseñas no coinciden.', 'danger');
+        }
+
+        const btn = document.getElementById('btnCambiar');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Actualizando...';
+
+        // Sincronizar sesión Supabase con la cookie del servidor
+        const { data: { session } } = await _supabase.auth.getSession();
+
+        let sessionActiva = !!session;
+        if (!sessionActiva) {
+            // Intentar refrescar con el access token de la cookie
+            const cookieToken = document.cookie.split(';').find(c => c.trim().startsWith('sb-access-token='));
+            if (cookieToken) {
+                const token = cookieToken.split('=')[1];
+                const { data } = await _supabase.auth.setSession({ access_token: token, refresh_token: token });
+                sessionActiva = !!data?.session;
+            }
+        }
+
+        if (!sessionActiva) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-key me-1"></i> Actualizar Contraseña';
+            return mostrarAlerta('Sesión no disponible en el cliente Supabase. Usa la opción "¿Olvidaste tu contraseña?" en el login.', 'warning');
+        }
+
+        const { error } = await _supabase.auth.updateUser({ password: nueva });
+
+        if (error) {
+            mostrarAlerta('Error: ' + error.message, 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-key me-1"></i> Actualizar Contraseña';
+        } else {
+            mostrarAlerta('¡Contraseña actualizada correctamente!', 'success');
+            document.getElementById('formCambio').reset();
+            ['b1','b2','b3','b4'].forEach(id => document.getElementById(id).style.background = '#dee2e6');
+            document.getElementById('fortalezaLabel').textContent = '';
+            document.getElementById('matchIndicator').style.display = 'none';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-key me-1"></i> Actualizar Contraseña';
+        }
+    });
+</script>
+
+<%- include("../template/footer") %>

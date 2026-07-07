@@ -1,6 +1,7 @@
 const express = require('express');
 const routerAuth = express.Router();
 const { getSessionCookieName } = require('../services/authService');
+const { requireAuth } = require('../middlewares/auth');
 
 // Ruta para mostrar la vista de Login (si no existe en otro lado)
 routerAuth.get('/login', (req, res) => {
@@ -15,6 +16,14 @@ routerAuth.get('/auth/callback', (req, res) => {
 // Vista para resetear contraseña (protegida por el middleware en el cliente)
 routerAuth.get('/reset-password', (req, res) => {
     res.render('vistas_auth/reset-password');
+});
+
+// Cambiar contraseña (usuario autenticado)
+routerAuth.get('/cambiar-contrasena', requireAuth, (req, res) => {
+    res.render('vistas_auth/cambiar-contrasena', {
+        SUPABASE_URL: process.env.SUPABASE_URL,
+        SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY
+    });
 });
 
 // Ruta para guardar la sesión en una cookie segura
