@@ -198,77 +198,9 @@
         body.kiosko-active ::-webkit-scrollbar { width: 0; }
         body.kiosko-active #topbar { border-bottom-color: rgba(255,200,0,.25); }
 
-        /* PIN Modal */
-        .pin-dot {
-            width: 14px; height: 14px; border-radius: 50%;
-            border: 2px solid rgba(255,255,255,.3);
-            transition: background .12s, border-color .12s;
-        }
-        .pin-dot.filled { background: #ffc107; border-color: #ffc107; }
-        .pin-btn {
-            background: #262626; color: #fff; border: 1px solid #3a3a3a;
-            border-radius: 12px; width: 100%; padding: .7rem .5rem;
-            font-size: 1.35rem; font-weight: 700; cursor: pointer;
-            transition: background .1s, transform .07s; line-height: 1;
-        }
-        .pin-btn:hover { background: #333; }
-        .pin-btn:active { transform: scale(.88); }
-        .pin-btn.pin-del { font-size: .85rem; color: #ef5350; border-color: rgba(239,83,80,.3); }
-        .pin-btn.pin-ok  { background: #2e7d32; border-color: #388e3c; font-size: .85rem; }
-        @keyframes pin-shake {
-            0%,100% { transform: translateX(0); }
-            20%,60% { transform: translateX(-9px); }
-            40%,80% { transform: translateX(9px); }
-        }
-        .pin-shake { animation: pin-shake .45s ease; }
     </style>
 </head>
 <body>
-
-<!-- ── MODAL PIN KIOSKO ───────────────────────────────────────────────── -->
-<div class="modal fade" id="modalPinKiosko" tabindex="-1"
-     data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg"
-             style="background:#1a1a1a;color:#fff;border-radius:20px;overflow:hidden;">
-            <div class="modal-body p-4 text-center">
-                <i class="fas fa-lock fa-2x text-warning mb-2 d-block"></i>
-                <h5 class="fw-bold mb-0">Salir del Modo Kiosko</h5>
-                <p class="text-secondary small mt-1 mb-3">Introduce el PIN de operador</p>
-
-                <!-- Dots -->
-                <div id="pinDots" class="d-flex justify-content-center gap-3 mb-4"></div>
-
-                <!-- Pad numérico 3×4 -->
-                <div class="row g-2 mb-3">
-                    <div class="col-4"><button class="pin-btn" onclick="_pinPresionar(1)">1</button></div>
-                    <div class="col-4"><button class="pin-btn" onclick="_pinPresionar(2)">2</button></div>
-                    <div class="col-4"><button class="pin-btn" onclick="_pinPresionar(3)">3</button></div>
-                    <div class="col-4"><button class="pin-btn" onclick="_pinPresionar(4)">4</button></div>
-                    <div class="col-4"><button class="pin-btn" onclick="_pinPresionar(5)">5</button></div>
-                    <div class="col-4"><button class="pin-btn" onclick="_pinPresionar(6)">6</button></div>
-                    <div class="col-4"><button class="pin-btn" onclick="_pinPresionar(7)">7</button></div>
-                    <div class="col-4"><button class="pin-btn" onclick="_pinPresionar(8)">8</button></div>
-                    <div class="col-4"><button class="pin-btn" onclick="_pinPresionar(9)">9</button></div>
-                    <div class="col-4">
-                        <button class="pin-btn pin-del" onclick="_pinBorrar()">
-                            <i class="fas fa-backspace"></i>
-                        </button>
-                    </div>
-                    <div class="col-4"><button class="pin-btn" onclick="_pinPresionar(0)">0</button></div>
-                    <div class="col-4">
-                        <button class="pin-btn pin-ok" onclick="_pinConfirmar()">
-                            <i class="fas fa-check"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <button class="btn btn-outline-secondary btn-sm w-100"
-                        data-bs-dismiss="modal">Cancelar</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- ── TOPBAR ─────────────────────────────────────────────────────────── -->
 <div id="topbar">
@@ -324,8 +256,6 @@
 <div id="main-content">
 
 <script>
-    const _KIOSKO_PIN = "<%= locals.KIOSKO_PIN || '2024FDFF' %>";
-
     // ── Sidebar toggle ────────────────────────────────────────────────
     function toggleSidebar() {
         const isMobile = window.innerWidth <= 991;
@@ -353,8 +283,14 @@
 
     // ── Kiosko ───────────────────────────────────────────────────────
     async function toggleKiosko() {
-        const isKiosko = localStorage.getItem('modoKiosko') === 'true';
-        isKiosko ? _pinAbrir() : await activarKiosko();
+        if (localStorage.getItem('modoKiosko') === 'true') {
+            localStorage.setItem('modoKiosko', 'false');
+            document.body.classList.remove('kiosko-active');
+            if (typeof actualizarBotonKiosko === 'function') actualizarBotonKiosko(false);
+            if (document.fullscreenElement) await document.exitFullscreen();
+        } else {
+            await activarKiosko();
+        }
     }
     async function activarKiosko() {
         try { await document.documentElement.requestFullscreen(); }
@@ -362,60 +298,4 @@
         localStorage.setItem('modoKiosko', 'true');
         if (typeof activarInterfazKiosko === 'function') activarInterfazKiosko();
     }
-
-    // ── PIN Modal ────────────────────────────────────────────────────
-    let _pinActual = '';
-
-    function _pinAbrir() {
-        _pinActual = '';
-        const len = _KIOSKO_PIN.length;
-        const dots = document.getElementById('pinDots');
-        dots.innerHTML = Array.from({ length: len }, () => '<div class="pin-dot"></div>').join('');
-        new bootstrap.Modal(document.getElementById('modalPinKiosko')).show();
-    }
-
-    function _pinPresionar(d) {
-        if (_pinActual.length >= _KIOSKO_PIN.length) return;
-        _pinActual += String(d);
-        document.querySelectorAll('.pin-dot').forEach((dot, i) => {
-            dot.classList.toggle('filled', i < _pinActual.length);
-        });
-        if (_pinActual.length === _KIOSKO_PIN.length) _pinConfirmar();
-    }
-
-    function _pinBorrar() {
-        _pinActual = _pinActual.slice(0, -1);
-        document.querySelectorAll('.pin-dot').forEach((dot, i) => {
-            dot.classList.toggle('filled', i < _pinActual.length);
-        });
-    }
-
-    async function _pinConfirmar() {
-        if (_pinActual === _KIOSKO_PIN) {
-            bootstrap.Modal.getInstance(document.getElementById('modalPinKiosko')).hide();
-            localStorage.setItem('modoKiosko', 'false');
-            document.body.classList.remove('kiosko-active');
-            if (typeof actualizarBotonKiosko === 'function') actualizarBotonKiosko(false);
-            if (document.fullscreenElement) await document.exitFullscreen();
-        } else {
-            const dots = document.getElementById('pinDots');
-            dots.classList.add('pin-shake');
-            dots.querySelectorAll('.pin-dot').forEach(d => { d.style.borderColor='#ef5350'; d.style.background='rgba(239,83,80,.15)'; });
-            setTimeout(() => {
-                dots.classList.remove('pin-shake');
-                _pinActual = '';
-                dots.querySelectorAll('.pin-dot').forEach(d => { d.style.borderColor=''; d.style.background=''; d.classList.remove('filled'); });
-            }, 500);
-        }
-    }
-
-    // Soporte teclado físico en el modal (acepta cualquier carácter, no solo dígitos)
-    document.getElementById('modalPinKiosko').addEventListener('keydown', (e) => {
-        if (e.key === 'Backspace') { e.preventDefault(); _pinBorrar(); }
-        else if (e.key === 'Enter')  { e.preventDefault(); _pinConfirmar(); }
-        else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            const d = parseInt(e.key);
-            if (!isNaN(d)) _pinPresionar(d);
-        }
-    });
 </script>
