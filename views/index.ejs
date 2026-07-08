@@ -1,65 +1,411 @@
 <%- include("template/cabecera", {tituloWeb: "Inicio - FDFF"}) %>
 
-<div class="container mt-0 pt-0">
-    <div class="p-0 mb-0 bg-light rounded-1 border border-primary">
-        <div class="container-fluid text-center py-1">
-            <p class="col-md-12 fs-4">Sistema Central de Registro de Atletas, Inscripciones y Puntuación en Tiempo Real.</p>
-            <hr class="my-0">
-            <p class="mute">Bienvenido al portal oficial de la FDFF. Explora nuestros servicios y únete a nuestra comunidad fitness.</p>
+<style>
+/* ─── OVERRIDES GLOBALES PARA EL INICIO ─────────────────────────────── */
+#main-content {
+  background: #040D1E !important;
+  padding: 0 !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* ─── FONDO: BANDERA DOMINICANA (desactivado para prueba) ───────────── */
+
+/* ─── WRAPPER DE CONTENIDO ───────────────────────────────────────────── */
+.idx-wrap {
+  position: relative;
+  z-index: 1;
+  color: #EAE8F0;
+  min-height: calc(100vh - var(--topbar-h, 52px));
+}
+
+/* ─── HERO ───────────────────────────────────────────────────────────── */
+.idx-hero {
+  padding: 1rem 2rem .85rem;
+  border-bottom: 1px solid rgba(0,229,200,.08);
+}
+
+/* Fila de badges: FDFF ←──────────────→ IFBB */
+.idx-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .7rem;
+}
+
+/* Badge FDFF (izquierda) */
+.idx-fdff-badge {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+.idx-logo-circle {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(0,229,200,.11);
+  border: 1.5px solid rgba(0,229,200,.28);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; flex-shrink: 0;
+}
+.idx-logo-circle img {
+  width: 28px; height: 28px;
+  object-fit: contain;
+}
+.idx-fdff-text strong {
+  display: block;
+  font-size: .9rem;
+  font-weight: 800;
+  color: #EAE8F0;
+  letter-spacing: -.01em;
+}
+.idx-fdff-text small {
+  font-size: .62rem;
+  color: rgba(234,232,240,.45);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+/* Badge IFBB (derecha) */
+.idx-ifbb-badge {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .45rem .95rem .45rem .5rem;
+  border: 1px solid rgba(0,229,200,.22);
+  border-radius: 50px;
+  background: rgba(0,229,200,.06);
+  backdrop-filter: blur(4px);
+}
+.idx-ifbb-circle {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; flex-shrink: 0;
+}
+.idx-ifbb-circle img {
+  width: 24px; height: 24px;
+  object-fit: contain;
+}
+.idx-ifbb-label strong {
+  display: block;
+  font-size: .75rem;
+  font-weight: 900;
+  color: #00E5C8;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.idx-ifbb-label span {
+  display: block;
+  font-size: .58rem;
+  color: rgba(234,232,240,.4);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* Cuerpo del hero: título (izq) + CTA (der) */
+.idx-hero-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.75rem;
+  align-items: center;
+}
+.idx-h1 {
+  font-size: clamp(1.5rem, 2.4vw, 2.1rem);
+  font-weight: 900;
+  color: #EAE8F0;
+  line-height: 1.08;
+  letter-spacing: -.03em;
+  text-wrap: balance;
+}
+.idx-h1 em {
+  font-style: normal;
+  color: #00E5C8;
+}
+.idx-hero-right { display: flex; flex-direction: column; gap: .6rem; }
+.idx-sub {
+  font-size: .8rem;
+  color: rgba(234,232,240,.48);
+  line-height: 1.6;
+  max-width: 440px;
+}
+.idx-ctas { display: flex; gap: .65rem; flex-wrap: wrap; }
+.idx-btn-p {
+  background: #00E5C8; color: #040D1E;
+  border: none; border-radius: 7px;
+  padding: .48rem 1.1rem;
+  font-size: .78rem; font-weight: 800;
+  text-decoration: none; display: inline-block;
+  transition: opacity .15s;
+}
+.idx-btn-p:hover { opacity: .85; color: #040D1E; text-decoration: none; }
+.idx-btn-o {
+  background: rgba(0,229,200,.08); color: #00E5C8;
+  border: 1px solid rgba(0,229,200,.28); border-radius: 7px;
+  padding: .48rem 1.1rem;
+  font-size: .78rem; font-weight: 700;
+  text-decoration: none; display: inline-block;
+  transition: background .15s;
+}
+.idx-btn-o:hover { background: rgba(0,229,200,.14); color: #00E5C8; text-decoration: none; }
+
+/* ─── GRID PRINCIPAL: cards + actividad ─────────────────────────────── */
+.idx-main {
+  display: grid;
+  grid-template-columns: 1fr 255px;
+  gap: 1rem;
+  padding: .85rem 2rem 1rem;
+}
+
+/* Cards */
+.idx-cards {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: .6rem;
+}
+.idx-card {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(0,229,200,.1);
+  border-radius: 9px;
+  padding: .85rem;
+  text-decoration: none; color: inherit; display: block;
+  transition: border-color .2s, background .2s;
+}
+.idx-card:hover {
+  border-color: rgba(0,229,200,.26);
+  background: rgba(0,229,200,.05);
+  text-decoration: none; color: inherit;
+}
+.idx-card-ico {
+  width: 28px; height: 28px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; margin-bottom: .45rem;
+}
+.idx-card h3 {
+  font-size: .8rem; font-weight: 700; color: #EAE8F0; margin-bottom: .2rem;
+}
+.idx-card p {
+  font-size: .68rem; color: rgba(234,232,240,.42); line-height: 1.5; margin-bottom: .5rem;
+}
+.idx-card-link {
+  font-size: .64rem; color: #00E5C8; font-weight: 700; letter-spacing: .04em;
+}
+
+/* Panel de actividad reciente */
+.idx-activity {
+  background: #fff; border-radius: 9px; overflow: hidden;
+  border: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 2px 16px rgba(0,0,0,.2);
+  height: fit-content;
+}
+.idx-act-head {
+  padding: .55rem .9rem;
+  border-bottom: 1px solid #f0f2f5;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.idx-act-title {
+  font-size: .55rem; font-weight: 800; color: #374151;
+  text-transform: uppercase; letter-spacing: .1em;
+}
+.idx-act-link {
+  font-size: .6rem; color: #0d6efd; font-weight: 600; text-decoration: none;
+}
+.idx-act-link:hover { text-decoration: underline; }
+.idx-feed { list-style: none; margin: 0; padding: 0; }
+.idx-feed-item {
+  padding: .45rem .9rem;
+  border-bottom: 1px solid #f9fafb;
+  display: flex; gap: .55rem; align-items: flex-start;
+}
+.idx-feed-item:last-child { border-bottom: none; }
+.idx-feed-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: .3rem;
+}
+.idx-feed-text { font-size: .67rem; color: #374151; line-height: 1.4; }
+.idx-feed-text strong { font-weight: 700; }
+.idx-feed-time { font-size: .56rem; color: #9ca3af; margin-top: .1rem; }
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────────────── */
+@media (max-width: 991px) {
+  .idx-hero-body { grid-template-columns: 1fr; gap: 1rem; }
+  .idx-main { grid-template-columns: 1fr; }
+  .idx-activity { margin-top: 0; }
+}
+@media (max-width: 640px) {
+  .idx-cards { grid-template-columns: 1fr 1fr; }
+  .idx-badge-row { flex-wrap: wrap; gap: .75rem; }
+  .idx-hero { padding: 1.5rem 1.25rem 1.25rem; }
+  .idx-stats .idx-stat { padding: .9rem 1rem; }
+  .idx-main { padding: 1.25rem; }
+}
+</style>
+
+<!-- ── CONTENIDO PRINCIPAL ────────────────────────────────────────────── -->
+<div class="idx-wrap">
+
+  <!-- HERO -->
+  <section class="idx-hero">
+
+    <!-- Fila de badges: FDFF ← → IFBB -->
+    <div class="idx-badge-row">
+
+      <!-- Círculo FDFF + nombre -->
+      <div class="idx-fdff-badge">
+        <div class="idx-logo-circle">
+          <img src="/img/fdff.svg" alt="FDFF"
+               onerror="this.style.display='none';this.parentNode.innerHTML+='<span style=\'font-size:.68rem;font-weight:900;color:#00E5C8;letter-spacing:.06em\'>FDFF</span>'">
         </div>
+        <div class="idx-fdff-text">
+          <strong>Federación Dominicana</strong>
+          <small>de Fisiculturismo · IFBB</small>
+        </div>
+      </div>
+
+      <!-- Círculo IFBB + "Filial IFBB" -->
+      <div class="idx-ifbb-badge">
+        <div class="idx-ifbb-circle">
+          <img src="/img/ifbb.svg" alt="IFBB"
+               onerror="this.onerror=null;this.src='/img/ifbb.jpg'">
+        </div>
+        <div class="idx-ifbb-label">
+          <strong>IFBB</strong>
+          <span>Filial IFBB</span>
+        </div>
+      </div>
+
     </div>
 
-    <div class="row g-4 py-2 row-cols-1 row-cols-md-2 row-cols-lg-3 justify-content-center">
-        <!-- 1. Afiliación -->
-        <div class="feature col">
-            <div class="feature-icon bg-success bg-gradient text-white p-3 rounded-3 mb-3" style="width: fit-content;">
-                <i class="fas fa-user-plus fa-2x"></i>
-            </div>
-            <h2>Afiliación</h2>
-            <p>Forma parte de la federación. Consulta los preparadores habilitados y regístrate para obtener tu membresía oficial.</p>
-            <a href="/afiliacion" class="btn btn-primary">Afiliarse Ahora &raquo;</a>
+    <!-- Título + CTA -->
+    <div class="idx-hero-body">
+      <h1 class="idx-h1">
+        El deporte de la<br>
+        <em>fuerza y la forma.</em>
+      </h1>
+      <div class="idx-hero-right">
+        <p class="idx-sub">
+          Sistema centralizado de registro de atletas, inscripciones,
+          pesaje y puntuación en tiempo real para toda la federación.
+        </p>
+        <div class="idx-ctas">
+          <a href="/afiliacion" class="idx-btn-p">Afiliarme ahora</a>
+          <a href="/eventos/competencias" class="idx-btn-o">Ver competencias</a>
         </div>
-
-        <!-- 2. Competencias -->
-        <div class="feature col">
-            <div class="feature-icon bg-warning bg-gradient text-dark p-3 rounded-3 mb-3" style="width: fit-content;">
-                <i class="fas fa-trophy fa-2x"></i>
-            </div>
-            <h2>Competencias</h2>
-            <p>Mantente al tanto de los próximos eventos, calendarios de pesaje y resultados en vivo de nuestras competencias.</p>
-            <a href="/eventos/competencias" class="btn btn-primary">Ver Calendario &raquo;</a>
-        </div>
-
-        <!-- 3. Servicios -->
-        <div class="feature col">
-            <div class="feature-icon bg-info bg-gradient text-white p-3 rounded-3 mb-3" style="width: fit-content;">
-                <i class="fas fa-dumbbell fa-2x"></i>
-            </div>
-            <h2>Servicios</h2>
-            <p>Conoce los beneficios de estar federado, desde asesorías técnicas hasta acceso a seminarios exclusivos.</p>
-            <a href="/servicios" class="btn btn-outline-primary">Nuestros Servicios &raquo;</a>
-        </div>
-
-        <!-- 4. Noticias -->
-        <div class="feature col">
-            <div class="feature-icon bg-primary bg-gradient text-white p-3 rounded-3 mb-3" style="width: fit-content;">
-                <i class="fas fa-newspaper fa-2x"></i>
-            </div>
-            <h2>Noticias</h2>
-            <p>Las últimas novedades del fisiculturismo dominicano, eventos internacionales y comunicados oficiales.</p>
-            <a href="/noticias" class="btn btn-outline-primary">Leer Más &raquo;</a>
-        </div>
-
-        <!-- 5. Jueces -->
-        <div class="feature col">
-            <div class="feature-icon bg-secondary bg-gradient text-white p-3 rounded-3 mb-3" style="width: fit-content;">
-                <i class="fas fa-gavel fa-2x"></i>
-            </div>
-            <h2>Comité de Jueces</h2>
-            <p>Información sobre nuestro cuerpo de jueces calificados y reglamentación oficial de juzgamiento.</p>
-            <a href="/jueces" class="btn btn-outline-primary">Ver Comité &raquo;</a>
-        </div>
+      </div>
     </div>
+
+  </section>
+
+  <!-- GRID: cards + actividad -->
+  <div class="idx-main">
+
+    <!-- 6 cards de acceso rápido -->
+    <div class="idx-cards">
+
+      <a href="/afiliacion" class="idx-card">
+        <div class="idx-card-ico" style="background:rgba(25,135,84,.18)">💪</div>
+        <h3>Afiliación</h3>
+        <p>Obtén tu membresía oficial FDFF, accede a competencias y beneficios exclusivos para atletas federados.</p>
+        <span class="idx-card-link">Afiliarme ahora →</span>
+      </a>
+
+      <a href="/eventos/competencias" class="idx-card">
+        <div class="idx-card-ico" style="background:rgba(255,193,7,.14)">🏆</div>
+        <h3>Competencias</h3>
+        <p>Calendario de eventos, inscripciones abiertas y resultados en vivo de todas las competencias nacionales.</p>
+        <span class="idx-card-link">Ver calendario →</span>
+      </a>
+
+      <a href="/servicios" class="idx-card">
+        <div class="idx-card-ico" style="background:rgba(13,202,240,.13)">⚙️</div>
+        <h3>Servicios</h3>
+        <p>Asesorías técnicas, seminarios IFBB y beneficios exclusivos disponibles para atletas y preparadores.</p>
+        <span class="idx-card-link">Ver servicios →</span>
+      </a>
+
+      <a href="/social/noticias" class="idx-card">
+        <div class="idx-card-ico" style="background:rgba(13,110,253,.15)">📰</div>
+        <h3>Noticias</h3>
+        <p>Comunicados oficiales, resultados de eventos internacionales y novedades del fisiculturismo dominicano.</p>
+        <span class="idx-card-link">Leer noticias →</span>
+      </a>
+
+      <a href="/jueces" class="idx-card">
+        <div class="idx-card-ico" style="background:rgba(108,117,125,.18)">⚖️</div>
+        <h3>Comité de Jueces</h3>
+        <p>Directorio de jueces certificados y reglamentación oficial IFBB de juzgamiento por disciplina.</p>
+        <span class="idx-card-link">Ver comité →</span>
+      </a>
+
+      <a href="/social/muro" class="idx-card"
+         style="background:rgba(0,229,200,.05);border-color:rgba(0,229,200,.18)">
+        <div class="idx-card-ico" style="background:rgba(0,229,200,.15)">💬</div>
+        <h3>Muro Social</h3>
+        <p>Conecta con la comunidad del fisiculturismo dominicano. Comparte logros y novedades.</p>
+        <span class="idx-card-link">Ver muro →</span>
+      </a>
+
+    </div>
+
+    <!-- Panel de actividad reciente -->
+    <aside class="idx-activity">
+      <div class="idx-act-head">
+        <span class="idx-act-title">Actividad Reciente</span>
+        <a href="/social/noticias" class="idx-act-link">Ver todo</a>
+      </div>
+      <ul class="idx-feed">
+        <% if (locals.actividadReciente && actividadReciente.length > 0) { %>
+          <% actividadReciente.forEach(function(item) { %>
+          <li class="idx-feed-item">
+            <div class="idx-feed-dot" style="background:<%= item.color || '#10b981' %>"></div>
+            <div>
+              <div class="idx-feed-text"><%- item.texto %></div>
+              <div class="idx-feed-time"><%= item.tiempo %></div>
+            </div>
+          </li>
+          <% }); %>
+        <% } else { %>
+          <li class="idx-feed-item">
+            <div class="idx-feed-dot" style="background:#10b981"></div>
+            <div>
+              <div class="idx-feed-text">Nuevo atleta afiliado: <strong>Carlos Méndez</strong> — Bodybuilding</div>
+              <div class="idx-feed-time">Hace 2 horas</div>
+            </div>
+          </li>
+          <li class="idx-feed-item">
+            <div class="idx-feed-dot" style="background:#f0a500"></div>
+            <div>
+              <div class="idx-feed-text">Evento publicado: <strong>Clásico Nacional FDFF 2026</strong></div>
+              <div class="idx-feed-time">Hace 1 día</div>
+            </div>
+          </li>
+          <li class="idx-feed-item">
+            <div class="idx-feed-dot" style="background:#0d6efd"></div>
+            <div>
+              <div class="idx-feed-text">Noticia publicada: Resultados Abierto del Caribe</div>
+              <div class="idx-feed-time">Hace 2 días</div>
+            </div>
+          </li>
+          <li class="idx-feed-item">
+            <div class="idx-feed-dot" style="background:#6c757d"></div>
+            <div>
+              <div class="idx-feed-text">Preparador habilitado: <strong>Gym Power House</strong></div>
+              <div class="idx-feed-time">Hace 3 días</div>
+            </div>
+          </li>
+          <li class="idx-feed-item">
+            <div class="idx-feed-dot" style="background:#10b981"></div>
+            <div>
+              <div class="idx-feed-text">5 atletas inscriptos en Clásico Nacional</div>
+              <div class="idx-feed-time">Hace 4 días</div>
+            </div>
+          </li>
+        <% } %>
+      </ul>
+    </aside>
+
+  </div>
+
 </div>
 
 <%- include("template/footer") %>
