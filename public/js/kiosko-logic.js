@@ -27,13 +27,6 @@ function activarInterfazKiosko() {
 
     actualizarBotonKiosko(true);
 
-    // Redirigir desde páginas de entrada hacia el área operativa
-    const rutasDeEntrada = ['/', '/login', '/auth/callback'];
-    if (rutasDeEntrada.includes(window.location.pathname)) {
-        window.location.href = '/inscripcion/asistida';
-        return;
-    }
-
     // Tras cada navegación el navegador sale de fullscreen automáticamente.
     // Mostramos overlay táctil para restaurarlo con gesto del usuario.
     if (!document.fullscreenElement) {
