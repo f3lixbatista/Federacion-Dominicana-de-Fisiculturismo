@@ -190,7 +190,7 @@ monto_total, uso_oferta, musica_url, salida
 
 ### `preparadores`
 ```
-id, nombre_completo, gimnasio_labora, estatus (pendiente|habilitado), ...
+id, nombre_completo, gimnasio_labora, estatus_afiliacion (pendiente|habilitado), ...
 ```
 
 ---
