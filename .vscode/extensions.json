@@ -1,3 +1,17 @@
 {
-    "recommendations": []
+    "recommendations": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "digitalbrainstem.javascript-ejs-support",
+        "rangav.vscode-thunder-client",
+        "ms-vscode-remote.remote-ssh",
+        "usernamehw.errorlens",
+        "eamodio.gitlens",
+        "christian-kohler.path-intellisense",
+        "wayou.vscode-todo-highlight",
+        "humao.rest-client",
+        "ckolkman.vscode-postgres",
+        "redhat.vscode-yaml",
+        "ms-azuretools.vscode-docker"
+    ]
 }
