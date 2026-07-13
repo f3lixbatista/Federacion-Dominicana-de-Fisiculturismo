@@ -1,28 +1,28 @@
 const { supabase, supabaseAdmin } = require('../config/supabase');
 const QRCode = require('qrcode');
 
-// Devuelve el siguiente IDFDFF disponible (FDFF-XXXX) buscando el máximo en BD
+// Devuelve el siguiente IDFDFF disponible — la DB ordena y limita a 1 fila en vez de traer todos
 async function siguienteIdfdff() {
     const { data } = await supabaseAdmin
         .from('atletas')
         .select('idfdff')
-        .like('idfdff', 'FDFF-%');
+        .like('idfdff', 'FDFF-%')
+        .order('idfdff', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    const max = (data || []).reduce((acc, a) => {
-        const n = parseInt((a.idfdff || '').replace('FDFF-', '')) || 0;
-        return n > acc ? n : acc;
-    }, 2104); // piso: no bajar de FDFF-2104
-
-    return `FDFF-${max + 1}`;
+    const n = parseInt((data?.idfdff || '').replace('FDFF-', '')) || 2104;
+    return `FDFF-${n + 1}`;
 }
 
 const listarAtletas = async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('atletas')
-            .select('*')
-            .order('estatus_afiliacion', { ascending: false }) // 'pendiente' (p) aparecerá antes que 'habilitado' (h)
-            .order('nombre', { ascending: true });
+            .select('id, nombre, cedula, idfdff, estatus_afiliacion, foto_url, sexo, email, celular, gimnasio, provincia, preparador_id')
+            .order('estatus_afiliacion', { ascending: false })
+            .order('nombre', { ascending: true })
+            .limit(500);
 
         if (error) throw error;
 

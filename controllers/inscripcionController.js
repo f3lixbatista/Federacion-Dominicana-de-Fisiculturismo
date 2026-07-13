@@ -18,8 +18,9 @@ const inscripcionPage = async (req, res) => {
 
         const { data: arrayAtletas } = await supabaseAdmin
             .from('atletas')
-            .select('*')
-            .eq('estatus_afiliacion', 'habilitado');
+            .select('id, nombre, cedula, idfdff, sexo, fecha_nacimiento, estatura, peso, gimnasio, foto_url, preparador_id, celular, email')
+            .eq('estatus_afiliacion', 'habilitado')
+            .order('nombre', { ascending: true });
 
         const { data: arrayPreparadores } = await supabaseAdmin
             .from('preparadores')

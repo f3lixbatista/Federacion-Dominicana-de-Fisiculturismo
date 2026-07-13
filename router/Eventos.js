@@ -6,16 +6,17 @@ const estadisticasController = require('../controllers/estadisticasController');
 const atletasController = require('../controllers/atletasController');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
+const { cacheMiddleware } = require('../services/cache');
 
-// A. LISTADO GLOBAL: todos los roles con sesión pueden ver eventos
-routerEventos.get('/competencias', checkPermiso('eventos', 'ver'), eventosController.listarEventos);
+// A. LISTADO GLOBAL — cache 60 seg (cambia al crear/actualizar eventos)
+routerEventos.get('/competencias', checkPermiso('eventos', 'ver'), cacheMiddleware(60), eventosController.listarEventos);
 
 routerEventos.get('/', (req, res) => {
     res.redirect('/eventos/competencias');
 });
 
-// HISTÓRICO Y RESULTADOS PÚBLICOS (sin protección)
-routerEventos.get('/historico', eventosController.verHistorico);
+// HISTÓRICO — cache 30 min (solo añade datos al cerrar eventos)
+routerEventos.get('/historico', cacheMiddleware(1800), eventosController.verHistorico);
 routerEventos.get('/:id/resultados-publicos', eventosController.verResultadosPublicos);
 
 // DASHBOARD DEL EVENTO

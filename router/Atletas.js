@@ -4,6 +4,7 @@ const { requireAuth, checkRole, checkPermiso } = require('../middlewares/auth');
 const atletasController = require('../controllers/atletasController');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
+const { cacheMiddleware } = require('../services/cache');
 
 // 1. RUTA DE AFILIACIÓN (Fuera de requireAuth)
 router.post('/solicitar-afiliacion', atletasController.solicitarAfiliacion);
@@ -26,8 +27,8 @@ router.post('/perfil/comentar', atletasController.comentarPublicacion);
 router.get('/mi-comprobante/:idEvento', checkRole(['atleta', 'admin']), atletasController.verComprobanteInscripcion);
 router.post('/validar-afiliacion', checkPermiso('atletas', 'editar'), atletasController.validarAfiliacion);
 
-// Rutas Administrativas (dinámicas por rol_permisos)
-router.get('/', checkPermiso('atletas', 'ver'), atletasController.listarAtletas);
+// Rutas Administrativas — cache 60 seg para la lista (invalidar al crear/editar atleta)
+router.get('/', checkPermiso('atletas', 'ver'), cacheMiddleware(60), atletasController.listarAtletas);
 router.get('/crear', atletasController.mostrarFormularioCrear);
 router.post('/crear', checkPermiso('atletas', 'crear'), upload.none(), atletasController.crearAtleta);
 router.get('/:id', checkPermiso('atletas', 'ver'), atletasController.detalleAtleta);

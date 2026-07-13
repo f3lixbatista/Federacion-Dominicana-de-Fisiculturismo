@@ -51,8 +51,9 @@ const listarEventos = async (req, res) => {
     try {
         const { data: eventos, error } = await supabaseAdmin
             .from('eventos')
-            .select('*')
-            .order('fecha_inicio', { ascending: false });
+            .select('id, nombre, estado, fecha_inicio, lugar, url_afiche_evento, costo_primera_cat, costo_adicional, costo_oferta_primera, costo_oferta_adicional, fecha_limite_oferta')
+            .order('fecha_inicio', { ascending: false })
+            .limit(100);
 
         if (error) throw error;
         res.render('eventos/competencias', { eventos });
@@ -65,45 +66,31 @@ const prepararEventoPage = async (req, res) => {
     const eventoId = req.params.id;
 
     try {
-        const { data: evento, error: eventoError } = await supabaseAdmin
-            .from('eventos')
-            .select('id, nombre, estado')
-            .eq('id', eventoId)
-            .single();
+        // Paralelizar las 3 queries independientes
+        const [
+            { data: evento, error: eventoError },
+            { data: jueces, error: errJueces },
+            { data: relaciones, error: errRel }
+        ] = await Promise.all([
+            supabaseAdmin.from('eventos')
+                .select('id, nombre, estado')
+                .eq('id', eventoId)
+                .single(),
 
-        if (eventoError || !evento) {
-            throw eventoError || new Error('Evento no encontrado');
-        }
+            supabaseAdmin.from('profiles')
+                .select('id, nombre')
+                .eq('role', 'juez'),
 
-        // Traer jueces habilitados para el panel
-        const { data: jueces, error: errJueces } = await supabaseAdmin
-            .from('profiles')
-            .select('id, nombre')
-            .eq('role', 'juez');
+            supabaseAdmin.from('eventos_categorias')
+                .select(`id, orden_secuencia_categoria, estatus_logistica,
+                    categorias ( id, nombre, modalidad, sexo, disciplina, division )`)
+                .eq('evento_id', eventoId)
+                .order('orden_secuencia_categoria', { ascending: true })
+        ]);
 
+        if (eventoError || !evento) throw eventoError || new Error('Evento no encontrado');
         if (errJueces) throw errJueces;
-
-        const { data: relaciones, error: errRel } = await supabaseAdmin
-            .from('eventos_categorias')
-            .select(`
-                id,
-                orden_secuencia_categoria,
-                estatus_logistica,
-                categorias (
-                    id,
-                    nombre,
-                    modalidad,
-                    sexo,
-                    disciplina,
-                    division
-                )
-            `)
-            .eq('evento_id', eventoId)
-            .order('orden_secuencia_categoria', { ascending: true });
-
-        if (errRel) {
-            throw errRel;
-        }
+        if (errRel) throw errRel;
         
         const relIds = (relaciones || []).map(r => r.id);
         
@@ -210,27 +197,41 @@ const oficializarPreparacion = async (req, res) => {
             throw categoriasError;
         }
 
-        let contadorDorsal = 1;
-        for (const cat of categoriasOrdenadas || []) {
-            const { data: competidores, error: competidoresError } = await supabaseAdmin
+        if (categoriasOrdenadas && categoriasOrdenadas.length > 0) {
+            const catIds = categoriasOrdenadas.map(c => c.id);
+
+            // Una sola query para todos los competidores de todas las categorías
+            const { data: todosComps, error: errComps } = await supabaseAdmin
                 .from('competidores')
-                .select('id')
-                .eq('evento_cat_id', cat.id)
+                .select('id, evento_cat_id, created_at')
                 .eq('id_evento', eventoId)
+                .in('evento_cat_id', catIds)
                 .order('created_at', { ascending: true });
 
-            if (competidoresError) {
-                throw competidoresError;
+            if (errComps) throw errComps;
+
+            // Agrupar en memoria respetando orden created_at
+            const compsPorCat = {};
+            (todosComps || []).forEach(c => {
+                if (!compsPorCat[c.evento_cat_id]) compsPorCat[c.evento_cat_id] = [];
+                compsPorCat[c.evento_cat_id].push(c);
+            });
+
+            // Calcular todos los dorsales en memoria
+            const batchUpdates = [];
+            let contadorDorsal = 1;
+            for (const cat of categoriasOrdenadas) {
+                for (const comp of (compsPorCat[cat.id] || [])) {
+                    batchUpdates.push({ id: comp.id, numero_atleta: contadorDorsal++ });
+                }
             }
 
-            if (competidores && competidores.length > 0) {
-                for (const comp of competidores) {
-                    await supabaseAdmin
-                        .from('competidores')
-                        .update({ numero_atleta: contadorDorsal })
-                        .eq('id', comp.id);
-                    contadorDorsal++;
-                }
+            // Una sola llamada upsert para todos los dorsales
+            if (batchUpdates.length > 0) {
+                const { error: errUpdate } = await supabaseAdmin
+                    .from('competidores')
+                    .upsert(batchUpdates, { onConflict: 'id' });
+                if (errUpdate) throw errUpdate;
             }
         }
 
@@ -458,7 +459,10 @@ const verDashboardEvento = async (req, res) => {
     const { id } = req.params;
     try {
         // Usamos supabaseAdmin para garantizar que el Dashboard siempre muestre la info oficial sin bloqueos de RLS
-        const { data: evento } = await supabaseAdmin.from('eventos').select(`*, eventos_categorias(id, categorias(*))`).eq('id', id).single();
+        const { data: evento } = await supabaseAdmin
+            .from('eventos')
+            .select('id, nombre, estado, fecha_inicio, lugar, url_afiche_evento, eventos_categorias(id, categorias(id, nombre, modalidad, disciplina, sexo, division))')
+            .eq('id', id).single();
         if (!evento) return res.redirect('/eventos');
 
         let listadoPublico = [];
@@ -470,23 +474,35 @@ const verDashboardEvento = async (req, res) => {
                 .in('estatus_logistica', ['abierta activa', 'abierta exhibicion', 'exhibicion'])
                 .order('orden_secuencia_categoria', { ascending: true });
 
-            for (const cat of (cats || [])) {
-                const { data: comps } = await supabaseAdmin
+            if (cats && cats.length > 0) {
+                const catIds = cats.map(c => c.id);
+
+                // Una sola query para todos los competidores de todas las categorías activas
+                const { data: allComps } = await supabaseAdmin
                     .from('competidores')
-                    .select('numero_atleta, atletas(nombre, gimnasio)')
-                    .eq('evento_cat_id', cat.id)
+                    .select('evento_cat_id, numero_atleta, atletas(nombre, gimnasio)')
+                    .in('evento_cat_id', catIds)
                     .order('numero_atleta', { ascending: true });
 
-                listadoPublico.push({
-                    id: cat.id,
-                    nombre: cat.categorias?.nombre,
-                    orden: cat.orden_secuencia_categoria,
-                    total: (comps || []).length,
-                    atletas: (comps || []).map(a => ({ 
-                        dorsal: a.numero_atleta, 
-                        nombre: a.atletas?.nombre || 'N/A', 
-                        team: a.atletas?.gimnasio || 'Independiente' 
-                    }))
+                const compsByCat = {};
+                (allComps || []).forEach(c => {
+                    if (!compsByCat[c.evento_cat_id]) compsByCat[c.evento_cat_id] = [];
+                    compsByCat[c.evento_cat_id].push(c);
+                });
+
+                listadoPublico = cats.map(cat => {
+                    const comps = compsByCat[cat.id] || [];
+                    return {
+                        id:     cat.id,
+                        nombre: cat.categorias?.nombre,
+                        orden:  cat.orden_secuencia_categoria,
+                        total:  comps.length,
+                        atletas: comps.map(a => ({
+                            dorsal: a.numero_atleta,
+                            nombre: a.atletas?.nombre || 'N/A',
+                            team:   a.atletas?.gimnasio || 'Independiente'
+                        }))
+                    };
                 });
             }
         }

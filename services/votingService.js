@@ -31,15 +31,18 @@ const calcularPosicionesFinales = (votosPorAtleta) => {
         return { ...atleta, empateDetectado: empate };
     });
 
-    // Aplicamos el desempate técnico sugerido por la IFBB
+    // Pre-calcular histograma una sola vez por atleta (evita .filter() dentro del comparador)
+    resultadosFinales.forEach(r => {
+        const hist = new Uint8Array(16);
+        r.votosOriginales.forEach(v => { if (v >= 1 && v <= 15) hist[v]++; });
+        r._hist = hist;
+    });
+
+    // Relative Placement con histogramas pre-calculados — O(n log n × 15) sin I/O
     resultadosFinales.sort((a, b) => {
         if (a.puntos !== b.puntos) return a.puntos - b.puntos;
-        
-        // Comparación de boletas (Relative Placement)
         for (let i = 1; i <= 15; i++) {
-            const countA = a.votosOriginales.filter(v => v === i).length;
-            const countB = b.votosOriginales.filter(v => v === i).length;
-            if (countA !== countB) return countB - countA;
+            if (a._hist[i] !== b._hist[i]) return b._hist[i] - a._hist[i];
         }
         return 0;
     });

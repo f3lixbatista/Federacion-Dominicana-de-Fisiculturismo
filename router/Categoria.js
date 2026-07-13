@@ -5,11 +5,12 @@ const { checkPermiso } = require('../middlewares/auth');
 const multer = require('multer');
 const eventosController = require('../controllers/eventosController');
 const upload = multer({ storage: multer.memoryStorage() });
+const { cacheMiddleware, invalidarPrefijo } = require('../services/cache');
 
 
 
-// 1. LISTAR CATEGORÍAS
-router.get('/', checkPermiso('categorias', 'ver'), async (req, res) => {
+// 1. LISTAR CATEGORÍAS — cache 30 min (solo cambia al crear/editar categorías)
+router.get('/', checkPermiso('categorias', 'ver'), cacheMiddleware(1800), async (req, res) => {
     try {
         const { data: arrayCategorias, error } = await supabase
             .from('categorias')
