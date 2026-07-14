@@ -1,19 +1,21 @@
 <%- include("../template/cabecera", {tituloWeb: "Muro Social FDFF"}) %>
 
-<div class="container my-5">
-    <div class="text-center mb-4">
-        <h1 class="fw-bold display-5 text-dark"><i class="fas fa-camera-retro me-2 text-primary"></i> Muro de Atletas FDFF</h1>
-        <p class="text-muted">Galería oficial de publicaciones de nuestra comunidad</p>
-        <hr class="w-25 mx-auto border-primary border-2">
-    </div>
-
-    <% if (locals.user && user.role !== 'general') { %>
-        <div class="text-center mb-4">
-            <button class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPublicar">
-                <i class="fas fa-plus-circle me-2"></i> Publicar en el Muro
-            </button>
+<div class="fdff-page-header">
+    <div class="container">
+        <div>
+            <div class="fdff-ph-eyebrow">Federación Dominicana de Fisiculturismo · IFBB</div>
+            <h1 class="fdff-ph-title">Muro de Atletas</h1>
+            <p class="fdff-ph-subtitle">Galería oficial de publicaciones de nuestra comunidad</p>
         </div>
-    <% } %>
+        <% if (locals.user && user.role !== 'general') { %>
+            <button class="btn btn-fdff fw-bold px-4" data-bs-toggle="modal" data-bs-target="#modalPublicar">
+                <i class="fas fa-plus-circle me-2"></i> Publicar
+            </button>
+        <% } %>
+    </div>
+</div>
+
+<div class="container my-4">
 
     <!-- STRIP DE EVENTOS ACTIVOS -->
     <% if (locals.eventosActivos && eventosActivos.length > 0) { %>
@@ -60,15 +62,18 @@
                         
                         <!-- Cabecera del Post (Autor y Contexto) -->
                         <div class="card-header bg-white border-0 py-3 d-flex align-items-center px-4">
-                            <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 45px; height: 45px; overflow: hidden;">
+                            <%
+                                const nombreAutor = post.profiles?.nombre || post.atletas?.nombre || 'Miembro FDFF';
+                                const _initials = nombreAutor.split(' ').filter(Boolean).slice(0,2).map(w => w[0].toUpperCase()).join('') || 'M';
+                            %>
+                            <div class="rounded-circle me-3 shadow-sm flex-shrink-0" style="width:45px;height:45px;overflow:hidden;">
                                 <% if (post.atleta_id && post.atletas?.foto_url) { %>
-                                    <img src="<%= post.atletas.foto_url %>" class="w-100 h-100" style="object-fit: cover;">
+                                    <img src="<%= post.atletas.foto_url %>" class="w-100 h-100" style="object-fit:cover;" alt="<%= nombreAutor %>">
                                 <% } else { %>
-                                    <i class="fas fa-user"></i>
+                                    <div class="fdff-avatar-initials"><%= _initials %></div>
                                 <% } %>
                             </div>
                             <div>
-                                <% const nombreAutor = post.profiles?.nombre || post.atletas?.nombre || 'Miembro FDFF'; %>
                                 <h6 class="fw-bold mb-0 text-dark">
                                     <%= nombreAutor %>
                                 </h6>

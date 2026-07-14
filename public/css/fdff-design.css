@@ -1,0 +1,140 @@
+/* FDFF Design System — Julio 2026 */
+
+:root {
+  --fdff-cyan:   #00d4c8;
+  --fdff-cyan-d: #00a89f;
+  --fdff-navy:   #1a1d2b;
+}
+
+/* ── 1. ENCABEZADO DE PÁGINA ──────────────────────────────────────────── */
+.fdff-page-header {
+  background: var(--fdff-navy);
+  padding: 32px 0 28px;
+  margin-bottom: 0;
+}
+.fdff-page-header > .container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.fdff-ph-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--fdff-cyan);
+  margin-bottom: 6px;
+}
+.fdff-ph-title {
+  font-size: clamp(22px, 3vw, 34px);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+.fdff-ph-subtitle {
+  color: #9ca3af;
+  font-size: 14px;
+  margin-bottom: 0;
+}
+
+/* ── 2. BOTÓN PRIMARIO FDFF (cyan) ───────────────────────────────────── */
+.btn-fdff {
+  background-color: var(--fdff-cyan);
+  border-color: var(--fdff-cyan);
+  color: #0f1117;
+  font-weight: 700;
+}
+.btn-fdff:hover,
+.btn-fdff:focus {
+  background-color: var(--fdff-cyan-d);
+  border-color: var(--fdff-cyan-d);
+  color: #0f1117;
+}
+.btn-fdff:active {
+  background-color: var(--fdff-cyan-d);
+  border-color: var(--fdff-cyan-d);
+  color: #0f1117;
+}
+
+/* ── 3. ACTIVE DOT en sidebar ────────────────────────────────────────── */
+.sb-link.sb-active {
+  position: relative;
+}
+.sb-link.sb-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  border-radius: 0 3px 3px 0;
+  background: var(--fdff-cyan);
+}
+body.sb-collapsed .sb-link.sb-active::before { display: none; }
+
+/* ── 4. LABEL DE SECCIÓN SIDEBAR en cyan ─────────────────────────────── */
+.sb-section-title--accent {
+  color: var(--fdff-cyan) !important;
+  opacity: 1 !important;
+}
+
+/* ── 5. CARD IMAGE — aspect ratio consistente ────────────────────────── */
+.card-img-fdff {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+/* ── 6. EMPTY STATE ──────────────────────────────────────────────────── */
+.fdff-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 64px 24px;
+  gap: 12px;
+}
+.fdff-empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(0, 212, 200, .08);
+  border: 2px dashed rgba(0, 212, 200, .35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--fdff-cyan);
+  margin-bottom: 4px;
+}
+.fdff-empty-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #343a40;
+  margin-bottom: 2px;
+}
+.fdff-empty-body {
+  color: #6c757d;
+  font-size: 14px;
+  max-width: 380px;
+  margin-bottom: 0;
+}
+
+/* ── 7. AVATAR CON INICIALES ─────────────────────────────────────────── */
+.fdff-avatar-initials {
+  background: var(--fdff-cyan);
+  color: #0f1117;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: -.01em;
+  user-select: none;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
