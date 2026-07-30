@@ -1,5 +1,12 @@
 <%- include("template/cabecera", {tituloWeb: "Cálculos de Competencia"}) %>
 
+<% if (error || !datos) { %>
+<div class="p-5 text-center">
+    <div class="alert alert-danger fw-bold d-inline-block">
+        <%= typeof mensaje !== 'undefined' && mensaje ? mensaje : 'Evento no encontrado.' %>
+    </div>
+</div>
+<% } else { %>
 <div class="p-2 divGeneral">
     <div class="row g-2">
         <div class="col-6">
@@ -113,4 +120,5 @@ document.addEventListener('input', function (e) {
     
     </script>
 </div>
+<% } %>
 <%- include("template/footer") %>
