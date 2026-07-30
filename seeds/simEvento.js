@@ -195,8 +195,6 @@ async function main() {
       id_evento:      eventoId,
       estatus_pesaje: 'aprobado',
       salida:         0,
-      monto_total:    0,
-      uso_oferta:     false,
       numero_atleta:  dorsalGlobal++,
     }));
 
@@ -236,7 +234,6 @@ async function main() {
 
   const sillas = juezIds.map((jId, idx) => ({
     panel_id:    panel.id,
-    id_evento:   eventoId,
     numero_silla: idx + 1,
     juez_id:     jId,
     es_presidente: idx === 0,
