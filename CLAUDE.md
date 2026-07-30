@@ -171,10 +171,11 @@ disciplina_id, division_id
 
 ### `eventos`
 ```
-id, nombre, estado (inscripcion|pesaje|competencia|cerrado),
+id, nombre, estado (inscripcion|pesaje|competencia|en_progreso|cerrado),
 costo_primera_cat, costo_adicional, costo_oferta_primera, costo_oferta_adicional,
-fecha_limite_oferta, fecha_inicio, lugar, ...
+fecha_limite_oferta, fecha_inicio, lugar, cronograma_mc (jsonb), resultados_en_vivo (jsonb), ...
 ```
+- `cronograma_mc` (jsonb): arreglo de bloques `{tipo, nombre, orden, evento_cat_id?}` con categorías activas + actividades intercaladas, en orden. Lo escribe `oficializarPreparacion` y lo consumen `monitor_mc.ejs` y `backstage.ejs` (sección "Programa Oficial"). Antes del 2026-07-30 esta columna existía pero nunca se poblaba — las vistas la esperaban vacía para siempre.
 
 ### `eventos_categorias`
 ```
@@ -192,6 +193,33 @@ monto_total, uso_oferta, musica_url, salida
 ```
 id, nombre_completo, gimnasio_labora, estatus_afiliacion (pendiente|habilitado), ...
 ```
+
+### `paneles_jueces`
+```
+id, id_evento, numero_panel (integer), cantidad_jueces (integer), created_at
+```
+- Un evento puede tener varios paneles (numero_panel 1, 2, 3...). El **panel 1** es la mesa principal (la que genera el Presidente de Mesa).
+- Se crea/gestiona desde dos lugares que escriben a la misma tabla — no son sistemas distintos, son dos puntos de entrada:
+  - `views/eventos/dashboard.ejs` (modal "Configuración de Paneles de Jueces"): crea/edita **cualquier panel** (1, 2, 3...), pensado para logística general y jueces de relevo.
+  - `views/eventos/preparacion.ejs` (tarjeta "Configuración de Panel de Jueces"): solo crea/edita el **panel 1**, con la regla del Presidente de Mesa aplicada automáticamente (ver abajo).
+
+### `panel_sillas_jueces`
+```
+id, panel_id (FK → paneles_jueces.id), juez_id (FK → profiles.id), numero_silla (integer), es_presidente (boolean)
+```
+- **No tiene `id_evento` ni `panel_numero`** — para filtrar por evento hay que unir con `paneles_jueces` (`.select('..., paneles_jueces!inner(id_evento, numero_panel)')`). Antes de 2026-07-30 varias queries asumían columnas `id_evento`/`panel_numero` directas en esta tabla (no existen) y fallaban silenciosamente — ya corregido en `verCentroMando` y `guardarPanel()`.
+
+### `programa_actividades`
+```
+id, evento_id, tipo (premiacion|receso|protocolo|apertura|otro), descripcion, orden_secuencia (integer)
+```
+- Actividades intercaladas entre categorías en el programa del evento (premiaciones, recesos, protocolo, apertura). Se define en `preparacion.ejs` junto con el orden de las categorías.
+
+### `programa_invitados`
+```
+id, evento_id, categoria (juez_no_panel|staff|patrocinador|personalidad), nombre, detalle, orden
+```
+- Roster de invitados especiales a mencionar por el MC en la apertura. **Los jueces del panel principal NO se guardan aquí** — se leen en vivo desde `panel_sillas_jueces`/`paneles_jueces` al armar el guion o imprimir.
 
 ---
 
@@ -281,6 +309,26 @@ Cuando se bloquean categorías, las disponibles se ordenan visualmente al inicio
 - 1ra categoría paga `costo_primera_cat` (o `costo_oferta_primera`)
 - Categorías adicionales pagan `costo_adicional` (o `costo_oferta_adicional`)
 
+### Presidente de Mesa (silla central) — regla fija, no editable manualmente
+El Presidente de Mesa **siempre** es el juez sentado en la silla central del panel 1, según la cantidad de jueces del panel:
+
+| Cantidad de jueces | Silla central (Presidente) |
+|---|---|
+| 3 | 2 |
+| 5 | 3 |
+| 7 | 4 |
+| 9 | 5 |
+| 11 | 6 |
+
+Fórmula: `silla_presidente = Math.ceil(cantidad_jueces / 2)`. Se calcula en `views/eventos/preparacion.ejs` (tarjeta "Configuración de Panel de Jueces") — no hay radio/checkbox manual para elegir presidente, es automático y no se puede sobreescribir. Al guardar, `guardarPanel()` marca `es_presidente = true` solo para la silla central.
+
+### Programa Oficial vs Programa Resumido
+Dos documentos imprimibles generados desde el mismo dato (`eventos.cronograma_mc` + roster de jueces/invitados), servidos por `_construirPrograma()` en `eventosController.js`:
+- **Programa Oficial** (`/eventos/:id/programa-oficial`): incluye tabla de atletas (nombre, ciudad, team, dorsal) por cada categoría.
+- **Programa Resumido** (`/eventos/:id/programa-resumido`): mismo guion (categorías + actividades + roster de jueces/staff/patrocinadores/personalidades) pero **sin** la tabla de atletas — solo nombre de categoría y conteo/rango de dorsales.
+- Ambos requieren que el evento ya haya sido oficializado (`cronograma_mc` poblado) y usan el permiso `programa`/`ver` (incluye admin, ejecutivo, estadístico y mc).
+- Botones de acceso en `centro_mando.ejs`, habilitados solo cuando el evento salió de fase de preparación.
+
 ---
 
 ## Flujo de operación el día del evento
@@ -305,6 +353,9 @@ Cuando se bloquean categorías, las disponibles se ordenan visualmente al inicio
 | `/inscripcion/asistida` | admin/ejecutivo | Pesaje + inscripción admin |
 | `/eventos/InscripcionAtleta` | atleta | Inscripción web |
 | `/eventos/centro-mando` | admin/ejecutivo | Dashboard operativo del evento |
+| `/eventos/:id/preparacion` | admin/ejecutivo/estadístico | Orden de salida, panel de jueces, invitados especiales, oficializar |
+| `/eventos/:id/programa-oficial` | admin/ejecutivo/estadístico/mc | Guion imprimible completo (con atletas) |
+| `/eventos/:id/programa-resumido` | admin/ejecutivo/estadístico/mc | Guion imprimible sin atletas (solo estructura + roster) |
 | `/eventos/[id]/monitor-mc` | mc | Monitor del locutor |
 | `/estadisticas/mesa-computo/[id]` | estadistico/juez | Votación y cómputo |
 | `/estadisticas/gestion-absolutos` | estadistico | Campeones y puntos team |
@@ -336,3 +387,4 @@ Cuando se bloquean categorías, las disponibles se ordenan visualmente al inicio
 - [x] Módulo 12 — Modo Kiosko (pantalla completa, PIN de salida)
 - [x] Módulo 13 — Broadcast (lower thirds, TTS, efectos LED, panel VMD, overlay OBS)
 - [x] Módulo 14 — Presidente de Mesa (fases de competencia, Top 5 comparación, clasificados al MC)
+- [x] Módulo 15 — Programa del evento: orden de salida por posición (drag & drop, sin duplicados posibles), Presidente de Mesa automático por silla central, roster de invitados especiales (jueces no-panel/staff/patrocinadores/personalidades), Programa Oficial y Programa Resumido imprimibles

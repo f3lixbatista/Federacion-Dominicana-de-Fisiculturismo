@@ -52,34 +52,105 @@
 
         <!-- Vista de Configuración: "El Armado del Panel" -->
         <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-dark text-white fw-bold">
-                <i class="fas fa-th me-2"></i> Configuración de Panel de Jueces
+            <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-th me-2"></i> Configuración de Panel de Jueces</span>
+                <% if (panelActual) { %>
+                    <span class="badge bg-warning text-dark">Panel N° 1 — <%= panelActual.cantidad_jueces %> jueces</span>
+                <% } %>
             </div>
             <div class="card-body">
-                <div class="row text-center mb-4">
-                    <!-- SILLAS DEL PANEL -->
-                    <% for(let i=1; i<=7; i++) { %>
-                        <div class="col">
-                            <div class="p-3 border rounded bg-light">
-                                <label class="small fw-bold">SILLA <%= i %></label>
-                                <select class="form-select select-juez" data-silla="<%= i %>">
-                                    <option value="">-- Vacío --</option>
-                                    <% juecesDisponibles.forEach(juez => { %>
-                                        <option value="<%= juez.id %>"><%= juez.nombre %></option>
-                                    <% }) %>
-                                </select>
-                                <div class="form-check form-switch mt-2 d-flex justify-content-center">
-                                    <input class="form-check-input check-presidente" type="radio" 
-                                           name="radioPresidente" id="presi<%= i %>" data-silla="<%= i %>">
-                                    <label class="form-check-label ms-2 small" for="presi<%= i %>">Presidente</label>
+                <% if (!panelActual) { %>
+                    <p class="text-muted small">Aún no se ha creado el panel principal de este evento. Elija cuántos jueces tendrá la mesa — el juez de la silla central quedará marcado automáticamente como Presidente de Mesa.</p>
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold">Cantidad de Jueces en Mesa</label>
+                            <select id="selectCantidadJueces" class="form-select">
+                                <option value="3">3 Jueces</option>
+                                <option value="5">5 Jueces (Mínimo Oficial)</option>
+                                <option value="7" selected>7 Jueces (Campeonatos Nacionales)</option>
+                                <option value="9">9 Jueces (Copas Internacionales)</option>
+                                <option value="11">11 Jueces</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-warning fw-bold w-100" onclick="crearPanelUno()">
+                                <i class="fas fa-plus me-1"></i> Crear Panel
+                            </button>
+                        </div>
+                    </div>
+                <% } else {
+                    const _centro = Math.ceil(panelActual.cantidad_jueces / 2);
+                %>
+                    <div class="row text-center mb-4">
+                        <% for(let i=1; i<=panelActual.cantidad_jueces; i++) { const esCentro = (i === _centro); %>
+                            <div class="col">
+                                <div class="p-3 border rounded <%= esCentro ? 'bg-warning bg-opacity-25 border-warning border-2' : 'bg-light' %>">
+                                    <label class="small fw-bold">SILLA <%= i %></label>
+                                    <select class="form-select select-juez" data-silla="<%= i %>" data-es-centro="<%= esCentro %>">
+                                        <option value="">-- Vacío --</option>
+                                        <% juecesDisponibles.forEach(juez => { %>
+                                            <option value="<%= juez.id %>" <%= sillasPanel[i] === juez.id ? 'selected' : '' %>><%= juez.nombre %></option>
+                                        <% }) %>
+                                    </select>
+                                    <div class="mt-2 small fw-bold <%= esCentro ? 'text-warning' : 'text-muted' %>" style="min-height: 1.2em;">
+                                        <% if (esCentro) { %><i class="fas fa-crown"></i> Presidente de Mesa<% } %>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    <% } %>
+                        <% } %>
+                    </div>
+                    <button type="button" onclick="guardarPanel()" class="btn btn-primary fw-bold w-100">
+                        <i class="fas fa-save me-2"></i> GUARDAR PANEL Y POSICIONES
+                    </button>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- PANEL: INVITADOS ESPECIALES PARA MENCIÓN DEL MC -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white fw-bold">
+                <i class="fas fa-user-tie me-2"></i> Invitados Especiales (Apertura — Mención del MC)
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">Jueces que no están en el panel principal, staff, patrocinadores y personalidades a mencionar en la apertura. Los jueces del panel principal no se agregan aquí — se toman automáticamente.</p>
+                <div class="row g-2 align-items-end mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Categoría</label>
+                        <select id="selectCategoriaInvitado" class="form-select form-select-sm">
+                            <option value="juez_no_panel">Juez (fuera del panel)</option>
+                            <option value="staff">Staff</option>
+                            <option value="patrocinador">Patrocinador</option>
+                            <option value="personalidad">Personalidad</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Nombre</label>
+                        <input type="text" id="inputNombreInvitado" class="form-control form-control-sm" maxlength="120">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Detalle / Cargo</label>
+                        <input type="text" id="inputDetalleInvitado" class="form-control form-control-sm" placeholder="Ej: Presidente FDFF, Gimnasio X..." maxlength="120">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-warning fw-bold w-100 btn-sm" onclick="agregarInvitado()">
+                            <i class="fas fa-plus me-1"></i> Agregar
+                        </button>
+                    </div>
                 </div>
-                <button type="button" onclick="guardarPanel()" class="btn btn-primary fw-bold w-100">
-                    <i class="fas fa-save me-2"></i> OFICIALIZAR PANEL Y POSICIONES
-                </button>
+                <div id="listaInvitados" class="list-group">
+                    <% (invitados || []).forEach(inv => { %>
+                        <div class="list-group-item d-flex justify-content-between align-items-center invitado-item" data-id="<%= inv.id %>">
+                            <div>
+                                <span class="badge bg-secondary text-uppercase me-2" style="font-size:.65rem;"><%= inv.categoria.replace('_', ' ') %></span>
+                                <strong><%= inv.nombre %></strong>
+                                <% if (inv.detalle) { %><span class="text-muted small"> — <%= inv.detalle %></span><% } %>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarInvitado(this, '<%= inv.id %>')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    <% }) %>
+                </div>
             </div>
         </div>
 
@@ -470,34 +541,86 @@
         }
     }
 
-    async function guardarPanel() {
-        const filas = [];
-        const idEvento = "<%= evento.id %>";
-        
-        document.querySelectorAll('.select-juez').forEach(select => {
-            const silla = select.dataset.silla;
-            const juezId = select.value;
-            const esPresidente = document.getElementById(`presi${silla}`).checked;
+    async function crearPanelUno() {
+        const cant = parseInt(document.getElementById('selectCantidadJueces').value);
+        const idEvento = document.getElementById('idEvento').value;
 
-            if (juezId) {
-                filas.push({
-                    id_evento: idEvento,
-                    juez_id: juezId,
-                    numero_silla: parseInt(silla),
-                    es_presidente: esPresidente,
-                    panel_numero: 1 // Si manejas más de un panel, esto sería dinámico
-                });
-            }
+        const { error } = await _supabase.from('paneles_jueces').insert({
+            id_evento: idEvento,
+            numero_panel: 1,
+            cantidad_jueces: cant
         });
 
-        // Guardamos en bloque en Supabase
+        if (error) return alert('Error creando el panel: ' + error.message);
+        location.reload();
+    }
+
+    async function guardarPanel() {
+        const panelId = "<%= panelActual ? panelActual.id : '' %>";
+        if (!panelId) return alert('Primero cree el panel.');
+
+        const filas = [];
+        document.querySelectorAll('.select-juez').forEach(select => {
+            const juezId = select.value;
+            if (!juezId) return;
+            filas.push({
+                panel_id: panelId,
+                juez_id: juezId,
+                numero_silla: parseInt(select.dataset.silla),
+                es_presidente: select.dataset.esCentro === 'true'
+            });
+        });
+
+        if (filas.length === 0) return alert('Asigne al menos un juez antes de guardar.');
+
+        // Reemplazo total del panel para que quede limpio (mismo patrón que el modal de Centro de Mando)
+        await _supabase.from('panel_sillas_jueces').delete().eq('panel_id', panelId);
         const { error } = await _supabase.from('panel_sillas_jueces').insert(filas);
-        
-        if(!error) {
-            alert("Panel de Jueces configurado con éxito.");
+
+        if (!error) {
+            alert("Panel de Jueces configurado con éxito. La silla central quedó asignada como Presidente de Mesa.");
         } else {
             alert("Error al configurar el panel: " + error.message);
         }
+    }
+
+    async function agregarInvitado() {
+        const idEvento = document.getElementById('idEvento').value;
+        const categoria = document.getElementById('selectCategoriaInvitado').value;
+        const nombre = document.getElementById('inputNombreInvitado').value.trim();
+        const detalle = document.getElementById('inputDetalleInvitado').value.trim();
+        if (!nombre) return alert('Escriba un nombre.');
+
+        const { data, error } = await _supabase.from('programa_invitados')
+            .insert({ evento_id: idEvento, categoria, nombre, detalle })
+            .select('id, categoria, nombre, detalle')
+            .single();
+
+        if (error) return alert('Error agregando invitado: ' + error.message);
+
+        const row = document.createElement('div');
+        row.className = 'list-group-item d-flex justify-content-between align-items-center invitado-item';
+        row.dataset.id = data.id;
+        row.innerHTML = `
+            <div>
+                <span class="badge bg-secondary text-uppercase me-2" style="font-size:.65rem;">${data.categoria.replace('_', ' ')}</span>
+                <strong>${data.nombre}</strong>
+                ${data.detalle ? `<span class="text-muted small"> — ${data.detalle}</span>` : ''}
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarInvitado(this, '${data.id}')">
+                <i class="fas fa-trash-alt"></i>
+            </button>`;
+        document.getElementById('listaInvitados').appendChild(row);
+
+        document.getElementById('inputNombreInvitado').value = '';
+        document.getElementById('inputDetalleInvitado').value = '';
+    }
+
+    async function eliminarInvitado(btn, id) {
+        if (!confirm('¿Eliminar este invitado?')) return;
+        const { error } = await _supabase.from('programa_invitados').delete().eq('id', id);
+        if (error) return alert('Error eliminando: ' + error.message);
+        btn.closest('.invitado-item').remove();
     }
 </script>
 

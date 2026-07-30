@@ -66,11 +66,13 @@ const prepararEventoPage = async (req, res) => {
     const eventoId = req.params.id;
 
     try {
-        // Paralelizar las 3 queries independientes
+        // Paralelizar las queries independientes
         const [
             { data: evento, error: eventoError },
             { data: jueces, error: errJueces },
-            { data: relaciones, error: errRel }
+            { data: relaciones, error: errRel },
+            { data: panelUno },
+            { data: invitadosDB }
         ] = await Promise.all([
             supabaseAdmin.from('eventos')
                 .select('id, nombre, estado')
@@ -85,13 +87,34 @@ const prepararEventoPage = async (req, res) => {
                 .select(`id, orden_secuencia_categoria, estatus_logistica,
                     categorias ( id, nombre, modalidad, sexo, disciplina, division )`)
                 .eq('evento_id', eventoId)
-                .order('orden_secuencia_categoria', { ascending: true })
+                .order('orden_secuencia_categoria', { ascending: true }),
+
+            supabaseAdmin.from('paneles_jueces')
+                .select('id, cantidad_jueces')
+                .eq('id_evento', eventoId)
+                .eq('numero_panel', 1)
+                .maybeSingle(),
+
+            supabaseAdmin.from('programa_invitados')
+                .select('id, categoria, nombre, detalle, orden')
+                .eq('evento_id', eventoId)
+                .order('orden', { ascending: true })
         ]);
 
         if (eventoError || !evento) throw eventoError || new Error('Evento no encontrado');
         if (errJueces) throw errJueces;
         if (errRel) throw errRel;
-        
+
+        // Sillas ya asignadas del panel 1 (si existe), para precargar los selects
+        let sillasPanel = {};
+        if (panelUno) {
+            const { data: sillas } = await supabaseAdmin
+                .from('panel_sillas_jueces')
+                .select('numero_silla, juez_id')
+                .eq('panel_id', panelUno.id);
+            (sillas || []).forEach(s => { sillasPanel[s.numero_silla] = s.juez_id; });
+        }
+
         const relIds = (relaciones || []).map(r => r.id);
         
         const { data: allCompetidores, error: errComps } = await supabaseAdmin
@@ -152,7 +175,10 @@ const prepararEventoPage = async (req, res) => {
             arrayCategorias,
             actividades: actividadesDB || [],
             evento,
-            juecesDisponibles: jueces || []
+            juecesDisponibles: jueces || [],
+            panelActual: panelUno || null,
+            sillasPanel,
+            invitados: invitadosDB || []
         });
     } catch (error) {
         console.error('Error en preparación de evento:', error.message || error);
@@ -630,11 +656,12 @@ const verCentroMando = async (req, res) => {
 
         if (errEv || !evento) return res.redirect('/eventos');
 
-        // Buscamos quién es el presidente asignado en el panel
+        // Buscamos quién es el presidente asignado en el panel 1 (silla central)
         const { data: presidente } = await supabaseAdmin
             .from('panel_sillas_jueces')
-            .select('profiles(nombre)')
-            .eq('id_evento', id)
+            .select('profiles(nombre), paneles_jueces!inner(id_evento, numero_panel)')
+            .eq('paneles_jueces.id_evento', id)
+            .eq('paneles_jueces.numero_panel', 1)
             .eq('es_presidente', true)
             .limit(1)
             .single();
@@ -1301,47 +1328,99 @@ const verLowerThird = async (req, res) => {
     }
 };
 
-const verProgramaOficial = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const { data: evento, error } = await supabaseAdmin
-            .from('eventos')
-            .select('id, nombre, lugar, fecha_inicio, cronograma_mc')
-            .eq('id', id)
-            .single();
+const _construirPrograma = async (eventoId) => {
+    const { data: evento, error } = await supabaseAdmin
+        .from('eventos')
+        .select('id, nombre, lugar, fecha_inicio, cronograma_mc')
+        .eq('id', eventoId)
+        .single();
 
-        if (error || !evento) return res.status(404).send('Evento no encontrado.');
+    if (error || !evento) return null;
 
-        const bloques = evento.cronograma_mc || [];
-        const catIds = bloques.filter(b => b.tipo === 'Categoría' && b.evento_cat_id).map(b => b.evento_cat_id);
+    const bloques = evento.cronograma_mc || [];
+    const catIds = bloques.filter(b => b.tipo === 'Categoría' && b.evento_cat_id).map(b => b.evento_cat_id);
 
-        const dorsalesPorCat = {};
-        if (catIds.length > 0) {
-            const { data: comps } = await supabaseAdmin
-                .from('competidores')
-                .select('evento_cat_id, numero_atleta')
-                .in('evento_cat_id', catIds);
+    const dorsalesPorCat = {};
+    const atletasPorCat = {};
+    if (catIds.length > 0) {
+        const { data: comps } = await supabaseAdmin
+            .from('competidores')
+            .select('evento_cat_id, numero_atleta, atletas(nombre, municipio, preparador)')
+            .in('evento_cat_id', catIds)
+            .order('numero_atleta', { ascending: true });
 
-            (comps || []).forEach(c => {
-                if (!dorsalesPorCat[c.evento_cat_id]) dorsalesPorCat[c.evento_cat_id] = [];
-                if (c.numero_atleta) dorsalesPorCat[c.evento_cat_id].push(c.numero_atleta);
+        (comps || []).forEach(c => {
+            if (!dorsalesPorCat[c.evento_cat_id]) dorsalesPorCat[c.evento_cat_id] = [];
+            if (!atletasPorCat[c.evento_cat_id]) atletasPorCat[c.evento_cat_id] = [];
+            if (c.numero_atleta) dorsalesPorCat[c.evento_cat_id].push(c.numero_atleta);
+            atletasPorCat[c.evento_cat_id].push({
+                dorsal: c.numero_atleta,
+                nombre: c.atletas?.nombre || 'Sin nombre',
+                ciudad: c.atletas?.municipio || '—',
+                team: c.atletas?.preparador || 'Independiente'
             });
-        }
-
-        const programa = bloques.map(b => {
-            if (b.tipo !== 'Categoría') return { ...b, totalAtletas: null, dorsalMin: null, dorsalMax: null };
-            const dorsales = dorsalesPorCat[b.evento_cat_id] || [];
-            return {
-                ...b,
-                totalAtletas: dorsales.length,
-                dorsalMin: dorsales.length ? Math.min(...dorsales) : null,
-                dorsalMax: dorsales.length ? Math.max(...dorsales) : null
-            };
         });
+    }
 
-        res.render('eventos/programa_oficial', { evento, programa });
+    const programa = bloques.map(b => {
+        if (b.tipo !== 'Categoría') return { ...b, totalAtletas: null, dorsalMin: null, dorsalMax: null, atletas: [] };
+        const dorsales = dorsalesPorCat[b.evento_cat_id] || [];
+        return {
+            ...b,
+            totalAtletas: dorsales.length,
+            dorsalMin: dorsales.length ? Math.min(...dorsales) : null,
+            dorsalMax: dorsales.length ? Math.max(...dorsales) : null,
+            atletas: atletasPorCat[b.evento_cat_id] || []
+        };
+    });
+
+    // Roster: jueces del panel principal (silla central = presidente) + invitados manuales
+    const { data: panelUno } = await supabaseAdmin
+        .from('paneles_jueces')
+        .select('id, cantidad_jueces')
+        .eq('id_evento', eventoId)
+        .eq('numero_panel', 1)
+        .maybeSingle();
+
+    let juecesPanel = [];
+    if (panelUno) {
+        const { data: sillas } = await supabaseAdmin
+            .from('panel_sillas_jueces')
+            .select('numero_silla, es_presidente, profiles(nombre)')
+            .eq('panel_id', panelUno.id)
+            .order('numero_silla', { ascending: true });
+        juecesPanel = (sillas || [])
+            .filter(s => s.profiles)
+            .map(s => ({ nombre: s.profiles.nombre, esPresidente: !!s.es_presidente, silla: s.numero_silla }));
+    }
+
+    const { data: invitadosDB } = await supabaseAdmin
+        .from('programa_invitados')
+        .select('categoria, nombre, detalle')
+        .eq('evento_id', eventoId)
+        .order('orden', { ascending: true });
+
+    return { evento, programa, juecesPanel, invitados: invitadosDB || [] };
+};
+
+const verProgramaOficial = async (req, res) => {
+    try {
+        const datos = await _construirPrograma(req.params.id);
+        if (!datos) return res.status(404).send('Evento no encontrado.');
+        res.render('eventos/programa_oficial', { ...datos, resumido: false });
     } catch (e) {
         console.error('Error en Programa Oficial:', e.message);
+        res.status(500).send('Error: ' + e.message);
+    }
+};
+
+const verProgramaResumido = async (req, res) => {
+    try {
+        const datos = await _construirPrograma(req.params.id);
+        if (!datos) return res.status(404).send('Evento no encontrado.');
+        res.render('eventos/programa_oficial', { ...datos, resumido: true });
+    } catch (e) {
+        console.error('Error en Programa Resumido:', e.message);
         res.status(500).send('Error: ' + e.message);
     }
 };
@@ -1372,6 +1451,7 @@ module.exports = {
     verBroadcastLive,
     verLowerThird,
     verProgramaOficial,
+    verProgramaResumido,
     registrarIngresoExtra,
     registrarGastoOperativo,
     validarAccesoAtleta,

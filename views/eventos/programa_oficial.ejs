@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Programa Oficial — <%= evento.nombre %></title>
+    <title><%= resumido ? 'Programa Resumido' : 'Programa Oficial' %> — <%= evento.nombre %></title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; font-size: 10pt; color: #111; background: #fff; }
@@ -55,13 +55,25 @@
         .nombre-bloque { flex: 1; font-weight: bold; font-size: 10pt; }
         .detalle-cat { font-size: 8.5pt; color: #555; font-weight: normal; }
 
+        .tabla-atletas-cat { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin: 2px 0 8px; }
+        .tabla-atletas-cat th { background: #eee; text-align: left; padding: 3px 8px; }
+        .tabla-atletas-cat td { padding: 2px 8px; border-bottom: 1px solid #eee; }
+        .tabla-atletas-cat .col-dorsal { width: 40px; text-align: center; font-weight: bold; }
+
+        .roster { margin: 4px 0 16px; border: 1px solid #ccc; border-radius: 4px; padding: 8px 12px; }
+        .roster h5 { font-size: 9.5pt; text-transform: uppercase; color: #c00; margin-bottom: 6px; letter-spacing: .5px; }
+        .roster-grupo { font-size: 9pt; margin-bottom: 4px; }
+        .roster-grupo b { text-transform: uppercase; font-size: 7.5pt; color: #555; margin-right: 6px; }
+        .chip-invitado { display: inline-block; background: #f2f2f2; border-radius: 3px; padding: 1px 6px; margin: 1px 3px 1px 0; }
+        .chip-presidente { background: #c00; color: #fff; font-weight: bold; }
+
         .pie { text-align: center; font-size: 8pt; color: #888; margin-top: 18px; border-top: 1px solid #ddd; padding-top: 6px; }
     </style>
 </head>
 <body>
 
 <div class="controles">
-    <h5>📋 Programa Oficial del Evento — <%= evento.nombre %></h5>
+    <h5><%= resumido ? '📄 Programa Resumido' : '📋 Programa Oficial' %> del Evento — <%= evento.nombre %></h5>
     <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir</button>
     <button class="btn-cerrar" onclick="window.close()">✕ Cerrar</button>
 </div>
@@ -81,9 +93,34 @@
     </div>
 
     <div class="titulo-listado">
-        <h4>Programa Oficial y Aprobado</h4>
-        <p>Guion completo de tarima — categorías y actividades en orden de salida</p>
+        <h4><%= resumido ? 'Programa Resumido' : 'Programa Oficial y Aprobado' %></h4>
+        <p><%= resumido ? 'Estructura del evento sin listado de atletas — categorías, actividades e invitados' : 'Guion completo de tarima — categorías y actividades en orden de salida' %></p>
     </div>
+
+    <% if ((juecesPanel && juecesPanel.length > 0) || (invitados && invitados.length > 0)) { %>
+        <div class="roster">
+            <h5>Mesa de Jueces e Invitados Especiales</h5>
+            <% if (juecesPanel && juecesPanel.length > 0) { %>
+                <div class="roster-grupo"><b>Jueces del Panel</b>
+                    <% juecesPanel.forEach(j => { %>
+                        <span class="chip-invitado <%= j.esPresidente ? 'chip-presidente' : '' %>"><%= j.nombre %><%= j.esPresidente ? ' — Presidente de Mesa' : '' %></span>
+                    <% }) %>
+                </div>
+            <% } %>
+            <%
+            const _labelCat = { juez_no_panel: 'Jueces (fuera del panel)', staff: 'Staff', patrocinador: 'Patrocinadores', personalidad: 'Personalidades' };
+            const _gruposInv = {};
+            (invitados || []).forEach(inv => { (_gruposInv[inv.categoria] = _gruposInv[inv.categoria] || []).push(inv); });
+            %>
+            <% Object.keys(_gruposInv).forEach(cat => { %>
+                <div class="roster-grupo"><b><%= _labelCat[cat] || cat %></b>
+                    <% _gruposInv[cat].forEach(inv => { %>
+                        <span class="chip-invitado"><%= inv.nombre %><%= inv.detalle ? ' — ' + inv.detalle : '' %></span>
+                    <% }) %>
+                </div>
+            <% }) %>
+        </div>
+    <% } %>
 
     <% if (programa && programa.length > 0) { %>
         <% programa.forEach(bloque => { %>
@@ -101,6 +138,21 @@
                     <% } %>
                 </span>
             </div>
+            <% if (!resumido && bloque.tipo === 'Categoría' && bloque.atletas && bloque.atletas.length > 0) { %>
+                <table class="tabla-atletas-cat">
+                    <thead><tr><th class="col-dorsal">#</th><th>Atleta</th><th>Ciudad</th><th>Team</th></tr></thead>
+                    <tbody>
+                        <% bloque.atletas.forEach(a => { %>
+                            <tr>
+                                <td class="col-dorsal"><%= a.dorsal || '—' %></td>
+                                <td><%= a.nombre %></td>
+                                <td><%= a.ciudad %></td>
+                                <td><%= a.team %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            <% } %>
         <% }) %>
     <% } else { %>
         <div style="text-align:center; padding: 40px; color:#888;">

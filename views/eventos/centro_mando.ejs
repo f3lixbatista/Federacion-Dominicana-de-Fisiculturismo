@@ -64,6 +64,9 @@ const _btnOffStyle = 'opacity:.4;pointer-events:none;';
                         <a href="/eventos/<%= evento.id %>/programa-oficial" class="btn btn-outline-primary fw-bold text-start" style="<%= _enPrep ? _btnOffStyle : '' %>" target="_blank">
                             <i class="fas fa-scroll me-2"></i> Programa Oficial (Terminado y Aprobado)
                         </a>
+                        <a href="/eventos/<%= evento.id %>/programa-resumido" class="btn btn-outline-secondary fw-bold text-start" style="<%= _enPrep ? _btnOffStyle : '' %>" target="_blank">
+                            <i class="fas fa-file-alt me-2"></i> Programa Resumido (Sin Atletas)
+                        </a>
                         <a href="/social/admin-noticias" class="btn btn-outline-info text-start">
                             <i class="fas fa-bullhorn me-2"></i> Publicar Comunicado Oficial
                         </a>
@@ -84,7 +87,7 @@ const _btnOffStyle = 'opacity:.4;pointer-events:none;';
 
         <!-- SECCIÓN B: PRODUCCIÓN AUDIOVISUAL (DJ & LED) -->
         <div class="col-lg-6">
-            <div class="card shadow-lg border-0 h-100" style="border-radius: 15px;">
+            <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
                 <div class="card-header bg-primary text-white fw-bold text-center">🎭 Producción de Espectáculo (Show en Vivo)</div>
                 <div class="card-body">
                     <div class="row g-3">
