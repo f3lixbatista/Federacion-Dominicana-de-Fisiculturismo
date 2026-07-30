@@ -81,13 +81,13 @@ async function main() {
       email_confirm: true,
     });
     if (eAuth) throw new Error(`auth juez ${juez.email}: ${eAuth.message}`);
-    const { error: eProf } = await supabaseAdmin.from('profiles').insert({
+    const { error: eProf } = await supabaseAdmin.from('profiles').upsert({
       id: authData.user.id,
       email: juez.email,
       nombre: juez.nombre,
       role: 'juez',
       id_fdff: juez.idfdff,
-    });
+    }, { onConflict: 'id' });
     if (eProf) throw new Error(`profile ${juez.email}: ${eProf.message}`);
     juezIds.push(authData.user.id);
     console.log(`   ✅ ${juez.nombre}`);
