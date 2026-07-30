@@ -15,27 +15,42 @@
     <form id="formOficializarEvento">
         <input type="hidden" id="idEvento" value="<%= eventoId %>">
 
-        <!-- Se integra dentro del form de preparacion.ejs -->
-        <div class="card p-4 shadow-sm mb-4 border-2">
-            <h4 class="fw-bold text-dark mb-3"><i class="fas fa-microphone text-danger"></i> Construcción del Programa del Evento</h4>
-            <p class="text-muted small">Intercale los bloques de protocolo entre las categorías del evento para armar el show:</p>
-            
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="d-grid gap-2 border p-3 rounded bg-white">
-                        <button type="button" class="btn btn-outline-dark text-start btn-sm" onclick="agregarBloqueMC('Protocolo', 'Oración de Inicio')">🎙️ Oración de Inicio</button>
-                        <button type="button" class="btn btn-outline-dark text-start btn-sm" onclick="agregarBloqueMC('Protocolo', 'Himno Nacional')">🎙️ Himno Nacional</button>
-                        <button type="button" class="btn btn-outline-dark text-start btn-sm" onclick="agregarBloqueMC('Protocolo', 'Palabras de Bienvenida')">🎙️ Palabras de Bienvenida</button>
-                        <button type="button" class="btn btn-outline-warning text-dark text-start btn-sm fw-bold" onclick="agregarBloqueMC('Premiación', 'Ceremonia de Premiación')">🏆 Premiación</button>
-                        <button type="button" class="btn btn-outline-danger text-start btn-sm" onclick="agregarBloqueMC('Receso', 'Receso de 10 minutos')">⏱️ Receso de 10 minutos</button>
-                    </div>
+        <!-- PANEL: AGREGAR ACTIVIDAD AL PROGRAMA -->
+        <div class="card p-4 shadow-sm mb-4 border-2 border-warning">
+            <h4 class="fw-bold text-dark mb-1"><i class="fas fa-calendar-plus text-warning"></i> Agregar Actividad al Programa</h4>
+            <p class="text-muted small mb-3">Intercale premiaciones, recesos y otros bloques entre las categorías asignándoles un número de orden.</p>
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Tipo de Actividad</label>
+                    <select id="selectTipoActividad" class="form-select form-select-sm border-warning fw-bold">
+                        <option value="premiacion">🏆 Premiación</option>
+                        <option value="receso">⏱️ Receso</option>
+                        <option value="protocolo">🎙️ Protocolo</option>
+                        <option value="apertura">🎊 Apertura / Cierre</option>
+                        <option value="otro">📋 Otra actividad</option>
+                    </select>
                 </div>
-                <div class="col-md-8">
-                    <!-- Lista ordenable -->
-                    <div id="contenedorGuionMC" class="list-group gap-2 border p-3 rounded bg-white" style="min-height: 200px;">
-                        <!-- Las categorías abiertas se pueden auto-inyectar aquí vía JS -->
-                    </div>
+                <div class="col-md-5">
+                    <label class="form-label small fw-bold">Descripción</label>
+                    <input type="text" id="inputDescActividad" class="form-control form-control-sm"
+                           placeholder="Ej: Premiación bloque femenino, Receso 15 min..." maxlength="120">
                 </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold">Orden</label>
+                    <input type="number" id="inputOrdenActividad" class="form-control form-control-sm text-center" min="0" value="0">
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-warning fw-bold w-100 btn-sm" onclick="agregarActividadAlPrograma()">
+                        <i class="fas fa-plus me-1"></i> Agregar
+                    </button>
+                </div>
+            </div>
+            <div class="mt-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm me-1" onclick="quickActividad('premiacion','Ceremonia de Premiación')">🏆 Premiación rápida</button>
+                <button type="button" class="btn btn-outline-info btn-sm me-1" onclick="quickActividad('receso','Receso de 15 minutos')">⏱️ Receso</button>
+                <button type="button" class="btn btn-outline-dark btn-sm me-1" onclick="quickActividad('protocolo','Oración de Inicio')">🎙️ Oración</button>
+                <button type="button" class="btn btn-outline-dark btn-sm me-1" onclick="quickActividad('protocolo','Himno Nacional')">🎙️ Himno</button>
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="quickActividad('apertura','Palabras de Apertura')">🎊 Apertura</button>
             </div>
         </div>
 
@@ -72,27 +87,50 @@
             </div>
         </div>
 
-        <% arrayCategorias.forEach((catRel, index) => { %>
-            <div class="card mb-4 shadow-sm border-2 cat-container-box" id="card-<%= catRel.id %>"
+        <%
+        // Unificar categorías y actividades en una sola lista ordenada
+        const _todosItems = [
+            ...(arrayCategorias || []).map((c, i) => ({
+                _tipo: 'categoria',
+                _orden: c.orden_secuencia_categoria || (i + 1),
+                _data: c
+            })),
+            ...(actividades || []).map(a => ({
+                _tipo: 'actividad',
+                _orden: a.orden_secuencia || 0,
+                _data: a
+            }))
+        ].sort((a, b) => a._orden - b._orden);
+        const _tipoMeta = {
+            premiacion: { icon: 'fa-trophy',     cls: 'warning',   emoji: '🏆', label: 'Premiación'  },
+            receso:     { icon: 'fa-clock',      cls: 'info',      emoji: '⏱️', label: 'Receso'      },
+            protocolo:  { icon: 'fa-microphone', cls: 'secondary', emoji: '🎙️', label: 'Protocolo'   },
+            apertura:   { icon: 'fa-star',       cls: 'success',   emoji: '🎊', label: 'Apertura'    },
+            otro:       { icon: 'fa-list',       cls: 'dark',      emoji: '📋', label: 'Actividad'   }
+        };
+        let _catIdx = 0;
+        %>
+
+        <% _todosItems.forEach(item => { %>
+
+            <% if (item._tipo === 'categoria') { const catRel = item._data; _catIdx++; %>
+            <div class="card mb-3 shadow-sm border-2 cat-container-box" id="card-<%= catRel.id %>"
                  data-modalidad="<%= catRel.categorias?.modalidad || 'N/A' %>"
                  data-sexo="<%= catRel.categorias?.sexo || 'N/A' %>"
                  data-disciplina="<%= catRel.categorias?.disciplina || 'N/A' %>"
                  data-division="<%= catRel.categorias?.division || 'N/A' %>">
-                
+
                 <div class="card-header bg-light p-3 d-flex justify-content-between align-items-center">
-                    <!-- ORDEN DE SALIDA -->
                     <div class="d-flex align-items-center gap-2">
                         <label class="fw-bold text-secondary small">ORDEN:</label>
-                        <input type="number" name="orden_salida" value="<%= catRel.orden_secuencia_categoria || (index + 1) %>" 
+                        <input type="number" name="orden_salida" value="<%= catRel.orden_secuencia_categoria || _catIdx %>"
                                class="form-control form-control-sm text-center fw-bold border-primary input-orden" style="width: 70px;" required>
                         <h5 class="mb-0 ms-3 fw-bold text-dark"><%= catRel.categorias.nombre %></h5>
                     </div>
-
-                    <!-- ACCIONES DE ESTADO (SELECT) -->
                     <div class="d-flex align-items-center gap-3">
                         <span class="badge bg-secondary px-2 py-1">Atletas: <%= catRel.total_atletas %></span>
                         <input type="hidden" name="evento_cat_id" value="<%= catRel.id %>">
-                        <select name="estatus_categoria" class="form-select form-select-sm fw-bold border-secondary select-estatus-cat" 
+                        <select name="estatus_categoria" class="form-select form-select-sm fw-bold border-secondary select-estatus-cat"
                                 onchange="evaluarEstadoCategoria('<%= catRel.id %>', this.value)">
                             <option value="abierta activa" <%= catRel.estatus_logistica === 'abierta activa' ? 'selected' : '' %>>Abierta Activa</option>
                             <option value="fusionada" <%= catRel.estatus_logistica === 'fusionada' ? 'selected' : '' %>>Fusionar</option>
@@ -102,8 +140,6 @@
                         </select>
                     </div>
                 </div>
-
-                <!-- LISTADO INTERNO DE ATLETAS -->
                 <div class="card-body p-0 container-tabla-atletas">
                     <table class="table table-sm table-hover mb-0 text-center align-middle">
                         <thead class="table-light small text-secondary">
@@ -125,13 +161,38 @@
                                     </tr>
                                 <% }) %>
                             <% } else { %>
-                                <tr><td colspan="4" class="text-center py-3 text-muted italic">No hay atletas oficializados en esta categoría</td></tr>
+                                <tr><td colspan="4" class="text-center py-3 text-muted fst-italic">Sin atletas oficializados en esta categoría</td></tr>
                             <% } %>
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            <% } else { const act = item._data; const meta = _tipoMeta[act.tipo] || _tipoMeta['otro']; %>
+            <div class="card mb-3 shadow-sm border-2 border-<%= meta.cls %> actividad-card"
+                 data-actividad-id="<%= act.id %>" data-tipo="<%= act.tipo %>">
+                <div class="card-header bg-<%= meta.cls %> bg-opacity-10 p-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <label class="fw-bold text-secondary small">ORDEN:</label>
+                        <input type="number" class="form-control form-control-sm text-center fw-bold border-<%= meta.cls %> input-orden-act"
+                               style="width: 70px;" value="<%= act.orden_secuencia %>">
+                        <span class="badge bg-<%= meta.cls %> <%= meta.cls === 'warning' || meta.cls === 'info' ? 'text-dark' : '' %> px-2">
+                            <%= meta.emoji %> <%= meta.label %>
+                        </span>
+                        <input type="text" class="form-control form-control-sm input-desc-act"
+                               style="max-width: 380px;" value="<%= act.descripcion %>" placeholder="Descripción de la actividad">
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarActividadCard(this)">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <% } %>
+
         <% }) %>
+
+        <!-- Ancla: nuevas actividades se insertan aquí -->
+        <div id="contenedor-nuevas-actividades"></div>
 
         <!-- BOTÓN DE CIERRE -->
         <div class="card p-4 border-primary bg-light shadow-sm text-center mb-5">
@@ -245,14 +306,68 @@
         modalFusionObj.hide();
     }
 
+    const _TIPO_META = {
+        premiacion: { cls: 'warning',   emoji: '🏆', label: 'Premiación'  },
+        receso:     { cls: 'info',      emoji: '⏱️', label: 'Receso'      },
+        protocolo:  { cls: 'secondary', emoji: '🎙️', label: 'Protocolo'   },
+        apertura:   { cls: 'success',   emoji: '🎊', label: 'Apertura'    },
+        otro:       { cls: 'dark',      emoji: '📋', label: 'Actividad'   }
+    };
+
+    function agregarActividadAlPrograma() {
+        const tipo  = document.getElementById('selectTipoActividad').value;
+        const desc  = document.getElementById('inputDescActividad').value.trim();
+        const orden = parseInt(document.getElementById('inputOrdenActividad').value) || 0;
+        if (!desc) return alert('Escriba una descripción para la actividad.');
+        _crearCardActividad(tipo, desc, orden, null);
+        document.getElementById('inputDescActividad').value = '';
+        document.getElementById('inputOrdenActividad').value = 0;
+    }
+
+    function quickActividad(tipo, desc) {
+        document.getElementById('selectTipoActividad').value = tipo;
+        document.getElementById('inputDescActividad').value  = desc;
+        document.getElementById('inputDescActividad').focus();
+    }
+
+    function _crearCardActividad(tipo, desc, orden, actividadId) {
+        const meta    = _TIPO_META[tipo] || _TIPO_META['otro'];
+        const txtBadge = (meta.cls === 'warning' || meta.cls === 'info') ? 'text-dark' : '';
+        const card = document.createElement('div');
+        card.className = `card mb-3 shadow-sm border-2 border-${meta.cls} actividad-card`;
+        card.dataset.actividadId = actividadId || '';
+        card.dataset.tipo = tipo;
+        card.innerHTML = `
+            <div class="card-header bg-${meta.cls} bg-opacity-10 p-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <label class="fw-bold text-secondary small">ORDEN:</label>
+                    <input type="number" class="form-control form-control-sm text-center fw-bold border-${meta.cls} input-orden-act"
+                           style="width:70px;" value="${orden}">
+                    <span class="badge bg-${meta.cls} ${txtBadge} px-2">${meta.emoji} ${meta.label}</span>
+                    <input type="text" class="form-control form-control-sm input-desc-act"
+                           style="max-width:380px;" value="${desc}" placeholder="Descripción de la actividad">
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarActividadCard(this)">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>`;
+        document.getElementById('contenedor-nuevas-actividades').appendChild(card);
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function eliminarActividadCard(btn) {
+        if (!confirm('¿Eliminar esta actividad del programa?')) return;
+        btn.closest('.actividad-card').remove();
+    }
+
     async function procesarOficializacion() {
         if (!confirm("¿Confirma cerrar la fase logística? Esto recalculará listados y asignará números correlativos.")) return;
 
         const idEvento = document.getElementById('idEvento').value;
-        const bloques = document.querySelectorAll('.cat-container-box');
-        let dataLogistica = [];
 
-        bloques.forEach(b => {
+        // Categorías
+        const dataLogistica = [];
+        document.querySelectorAll('.cat-container-box').forEach(b => {
             const id = b.id.replace('card-', '');
             dataLogistica.push({
                 evento_cat_id: id,
@@ -262,11 +377,21 @@
             });
         });
 
+        // Actividades (existentes en DOM + nuevas)
+        const dataActividades = [];
+        document.querySelectorAll('.actividad-card').forEach(card => {
+            dataActividades.push({
+                tipo: card.dataset.tipo || 'otro',
+                descripcion: card.querySelector('.input-desc-act')?.value || '',
+                orden: parseInt(card.querySelector('.input-orden-act')?.value) || 0
+            });
+        });
+
         try {
             const res = await fetch('/eventos/preparacion/oficializar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ eventoId: idEvento, logistica: dataLogistica })
+                body: JSON.stringify({ eventoId: idEvento, logistica: dataLogistica, actividades: dataActividades })
             });
 
             const result = await res.json();
@@ -279,24 +404,6 @@
         } catch (e) {
             alert("Error de conexión con el servidor backend.");
         }
-    }
-
-    function agregarBloqueMC(tipo, nombre) {
-        const contenedor = document.getElementById('contenedorGuionMC');
-        if (!contenedor) return;
-
-        const item = document.createElement('div');
-        item.className = 'list-group-item d-flex justify-content-between align-items-center py-3 border rounded';
-        item.innerHTML = `
-            <div>
-                <div class="fw-bold">${nombre}</div>
-                <div class="small text-muted">${tipo}</div>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.list-group-item').remove()">Eliminar</button>
-        `;
-
-        contenedor.appendChild(item);
-        contenedor.scrollTop = contenedor.scrollHeight;
     }
 
     async function guardarPanel() {

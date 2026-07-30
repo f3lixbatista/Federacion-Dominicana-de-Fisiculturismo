@@ -141,9 +141,16 @@ const prepararEventoPage = async (req, res) => {
             });
         }
 
+        const { data: actividadesDB } = await supabaseAdmin
+            .from('programa_actividades')
+            .select('id, tipo, descripcion, orden_secuencia')
+            .eq('evento_id', eventoId)
+            .order('orden_secuencia', { ascending: true });
+
         res.render('eventos/preparacion', {
             eventoId,
             arrayCategorias,
+            actividades: actividadesDB || [],
             evento,
             juecesDisponibles: jueces || []
         });
@@ -154,7 +161,7 @@ const prepararEventoPage = async (req, res) => {
 };
 
 const oficializarPreparacion = async (req, res) => {
-    const { eventoId, logistica } = req.body;
+    const { eventoId, logistica, actividades } = req.body;
 
     if (!eventoId || !Array.isArray(logistica) || logistica.length === 0) {
         return res.status(400).json({ estado: false, mensaje: 'Información logística incompleta.' });
@@ -240,6 +247,21 @@ const oficializarPreparacion = async (req, res) => {
             .from('eventos')
             .update({ estado: 'en_progreso' })
             .eq('id', eventoId);
+
+        // 4. Guardar actividades del programa (reemplazo total si se envían)
+        if (Array.isArray(actividades)) {
+            await supabaseAdmin.from('programa_actividades').delete().eq('evento_id', eventoId);
+            if (actividades.length > 0) {
+                await supabaseAdmin.from('programa_actividades').insert(
+                    actividades.map(a => ({
+                        evento_id: eventoId,
+                        tipo: a.tipo || 'otro',
+                        descripcion: a.descripcion || '',
+                        orden_secuencia: Number(a.orden) || 0
+                    }))
+                );
+            }
+        }
 
         res.json({ estado: true, mensaje: 'Listados reestructurados y dorsales asignados con éxito.' });
     } catch (error) {
