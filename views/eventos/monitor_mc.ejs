@@ -61,11 +61,12 @@
                 <div class="list-group gap-2" id="listaProgramaMC">
                     <% if(evento.cronograma_mc && evento.cronograma_mc.length > 0) { %>
                         <% evento.cronograma_mc.forEach((bloque, index) => { %>
-                            <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-start border-4 
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-start border-4
                                 <%= bloque.tipo === 'Categoría' ? 'border-primary bg-light' : '' %>
                                 <%= bloque.tipo === 'Protocolo' ? 'border-info' : '' %>
                                 <%= bloque.tipo === 'Premiación' ? 'border-warning' : '' %>
-                                <%= bloque.tipo === 'Receso' ? 'border-danger' : '' %>" 
+                                <%= bloque.tipo === 'Receso' ? 'border-danger' : '' %>
+                                <%= bloque.tipo === 'Apertura' ? 'border-success' : '' %>"
                                 id="item-mc-<%= index %>">
                                 
                                 <div class="form-check d-flex align-items-center gap-3">

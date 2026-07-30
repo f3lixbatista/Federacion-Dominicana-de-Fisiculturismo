@@ -275,6 +275,25 @@ const oficializarPreparacion = async (req, res) => {
             }
         }
 
+        // 5. Publicar el guion unificado (categorías + actividades) para Backstage y Monitor MC
+        const TIPO_DISPLAY_MC = { premiacion: 'Premiación', receso: 'Receso', protocolo: 'Protocolo', apertura: 'Apertura', otro: 'Actividad' };
+        const bloquesCategoria = logistica
+            .filter(item => ['abierta activa', 'abierta exhibicion', 'exhibicion'].includes(item.estatus))
+            .map(item => ({
+                tipo: 'Categoría',
+                nombre: item.nombre || 'Categoría',
+                orden: Number(item.orden) || 0,
+                evento_cat_id: item.evento_cat_id
+            }));
+        const bloquesActividad = (Array.isArray(actividades) ? actividades : []).map(a => ({
+            tipo: TIPO_DISPLAY_MC[a.tipo] || 'Actividad',
+            nombre: a.descripcion || '',
+            orden: Number(a.orden) || 0
+        }));
+        const cronogramaMc = [...bloquesCategoria, ...bloquesActividad].sort((a, b) => a.orden - b.orden);
+
+        await supabaseAdmin.from('eventos').update({ cronograma_mc: cronogramaMc }).eq('id', eventoId);
+
         res.json({ estado: true, mensaje: 'Listados reestructurados y dorsales asignados con éxito.' });
     } catch (error) {
         console.error('Error oficializando preparación:', error.message || error);
@@ -1282,6 +1301,51 @@ const verLowerThird = async (req, res) => {
     }
 };
 
+const verProgramaOficial = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data: evento, error } = await supabaseAdmin
+            .from('eventos')
+            .select('id, nombre, lugar, fecha_inicio, cronograma_mc')
+            .eq('id', id)
+            .single();
+
+        if (error || !evento) return res.status(404).send('Evento no encontrado.');
+
+        const bloques = evento.cronograma_mc || [];
+        const catIds = bloques.filter(b => b.tipo === 'Categoría' && b.evento_cat_id).map(b => b.evento_cat_id);
+
+        const dorsalesPorCat = {};
+        if (catIds.length > 0) {
+            const { data: comps } = await supabaseAdmin
+                .from('competidores')
+                .select('evento_cat_id, numero_atleta')
+                .in('evento_cat_id', catIds);
+
+            (comps || []).forEach(c => {
+                if (!dorsalesPorCat[c.evento_cat_id]) dorsalesPorCat[c.evento_cat_id] = [];
+                if (c.numero_atleta) dorsalesPorCat[c.evento_cat_id].push(c.numero_atleta);
+            });
+        }
+
+        const programa = bloques.map(b => {
+            if (b.tipo !== 'Categoría') return { ...b, totalAtletas: null, dorsalMin: null, dorsalMax: null };
+            const dorsales = dorsalesPorCat[b.evento_cat_id] || [];
+            return {
+                ...b,
+                totalAtletas: dorsales.length,
+                dorsalMin: dorsales.length ? Math.min(...dorsales) : null,
+                dorsalMax: dorsales.length ? Math.max(...dorsales) : null
+            };
+        });
+
+        res.render('eventos/programa_oficial', { evento, programa });
+    } catch (e) {
+        console.error('Error en Programa Oficial:', e.message);
+        res.status(500).send('Error: ' + e.message);
+    }
+};
+
 module.exports = {
     listarEventos,
     prepararEventoPage,
@@ -1307,6 +1371,7 @@ module.exports = {
     verGestionFotografia,
     verBroadcastLive,
     verLowerThird,
+    verProgramaOficial,
     registrarIngresoExtra,
     registrarGastoOperativo,
     validarAccesoAtleta,

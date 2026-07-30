@@ -18,7 +18,7 @@
         <!-- PANEL: AGREGAR ACTIVIDAD AL PROGRAMA -->
         <div class="card p-4 shadow-sm mb-4 border-2 border-warning">
             <h4 class="fw-bold text-dark mb-1"><i class="fas fa-calendar-plus text-warning"></i> Agregar Actividad al Programa</h4>
-            <p class="text-muted small mb-3">Intercale premiaciones, recesos y otros bloques entre las categorías asignándoles un número de orden.</p>
+            <p class="text-muted small mb-3">Intercale premiaciones, recesos y otros bloques entre las categorías — se agregan al final del programa y luego se arrastran (⣿) o se les escribe el número de orden deseado.</p>
             <div class="row g-2 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label small fw-bold">Tipo de Actividad</label>
@@ -30,14 +30,10 @@
                         <option value="otro">📋 Otra actividad</option>
                     </select>
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-7">
                     <label class="form-label small fw-bold">Descripción</label>
                     <input type="text" id="inputDescActividad" class="form-control form-control-sm"
                            placeholder="Ej: Premiación bloque femenino, Receso 15 min..." maxlength="120">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label small fw-bold">Orden</label>
-                    <input type="number" id="inputOrdenActividad" class="form-control form-control-sm text-center" min="0" value="0">
                 </div>
                 <div class="col-md-2">
                     <button type="button" class="btn btn-warning fw-bold w-100 btn-sm" onclick="agregarActividadAlPrograma()">
@@ -111,10 +107,11 @@
         let _catIdx = 0;
         %>
 
+        <div id="listaPrograma">
         <% _todosItems.forEach(item => { %>
 
             <% if (item._tipo === 'categoria') { const catRel = item._data; _catIdx++; %>
-            <div class="card mb-3 shadow-sm border-2 cat-container-box" id="card-<%= catRel.id %>"
+            <div class="card mb-3 shadow-sm border-2 cat-container-box programa-item" id="card-<%= catRel.id %>"
                  data-modalidad="<%= catRel.categorias?.modalidad || 'N/A' %>"
                  data-sexo="<%= catRel.categorias?.sexo || 'N/A' %>"
                  data-disciplina="<%= catRel.categorias?.disciplina || 'N/A' %>"
@@ -122,9 +119,10 @@
 
                 <div class="card-header bg-light p-3 d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-grip-vertical text-muted drag-handle" draggable="true" title="Arrastrar para reordenar" style="cursor:grab;"></i>
                         <label class="fw-bold text-secondary small">ORDEN:</label>
                         <input type="number" name="orden_salida" value="<%= catRel.orden_secuencia_categoria || _catIdx %>"
-                               class="form-control form-control-sm text-center fw-bold border-primary input-orden" style="width: 70px;" required>
+                               class="form-control form-control-sm text-center fw-bold border-primary input-orden" style="width: 70px;" required min="1">
                         <h5 class="mb-0 ms-3 fw-bold text-dark"><%= catRel.categorias.nombre %></h5>
                     </div>
                     <div class="d-flex align-items-center gap-3">
@@ -169,13 +167,14 @@
             </div>
 
             <% } else { const act = item._data; const meta = _tipoMeta[act.tipo] || _tipoMeta['otro']; %>
-            <div class="card mb-3 shadow-sm border-2 border-<%= meta.cls %> actividad-card"
+            <div class="card mb-3 shadow-sm border-2 border-<%= meta.cls %> actividad-card programa-item"
                  data-actividad-id="<%= act.id %>" data-tipo="<%= act.tipo %>">
                 <div class="card-header bg-<%= meta.cls %> bg-opacity-10 p-3 d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <i class="fas fa-grip-vertical text-muted drag-handle" draggable="true" title="Arrastrar para reordenar" style="cursor:grab;"></i>
                         <label class="fw-bold text-secondary small">ORDEN:</label>
                         <input type="number" class="form-control form-control-sm text-center fw-bold border-<%= meta.cls %> input-orden-act"
-                               style="width: 70px;" value="<%= act.orden_secuencia %>">
+                               style="width: 70px;" value="<%= act.orden_secuencia %>" min="1">
                         <span class="badge bg-<%= meta.cls %> <%= meta.cls === 'warning' || meta.cls === 'info' ? 'text-dark' : '' %> px-2">
                             <%= meta.emoji %> <%= meta.label %>
                         </span>
@@ -190,9 +189,8 @@
             <% } %>
 
         <% }) %>
-
-        <!-- Ancla: nuevas actividades se insertan aquí -->
-        <div id="contenedor-nuevas-actividades"></div>
+        </div>
+        <!-- #listaPrograma: contenedor único y reordenable (categorías + actividades) -->
 
         <!-- BOTÓN DE CIERRE -->
         <div class="card p-4 border-primary bg-light shadow-sm text-center mb-5">
@@ -317,11 +315,9 @@
     function agregarActividadAlPrograma() {
         const tipo  = document.getElementById('selectTipoActividad').value;
         const desc  = document.getElementById('inputDescActividad').value.trim();
-        const orden = parseInt(document.getElementById('inputOrdenActividad').value) || 0;
         if (!desc) return alert('Escriba una descripción para la actividad.');
-        _crearCardActividad(tipo, desc, orden, null);
+        _crearCardActividad(tipo, desc, null, null);
         document.getElementById('inputDescActividad').value = '';
-        document.getElementById('inputOrdenActividad').value = 0;
     }
 
     function quickActividad(tipo, desc) {
@@ -334,15 +330,16 @@
         const meta    = _TIPO_META[tipo] || _TIPO_META['otro'];
         const txtBadge = (meta.cls === 'warning' || meta.cls === 'info') ? 'text-dark' : '';
         const card = document.createElement('div');
-        card.className = `card mb-3 shadow-sm border-2 border-${meta.cls} actividad-card`;
+        card.className = `card mb-3 shadow-sm border-2 border-${meta.cls} actividad-card programa-item`;
         card.dataset.actividadId = actividadId || '';
         card.dataset.tipo = tipo;
         card.innerHTML = `
             <div class="card-header bg-${meta.cls} bg-opacity-10 p-3 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <i class="fas fa-grip-vertical text-muted drag-handle" draggable="true" title="Arrastrar para reordenar" style="cursor:grab;"></i>
                     <label class="fw-bold text-secondary small">ORDEN:</label>
                     <input type="number" class="form-control form-control-sm text-center fw-bold border-${meta.cls} input-orden-act"
-                           style="width:70px;" value="${orden}">
+                           style="width:70px;" value="${orden || 0}" min="1">
                     <span class="badge bg-${meta.cls} ${txtBadge} px-2">${meta.emoji} ${meta.label}</span>
                     <input type="text" class="form-control form-control-sm input-desc-act"
                            style="max-width:380px;" value="${desc}" placeholder="Descripción de la actividad">
@@ -351,14 +348,80 @@
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </div>`;
-        document.getElementById('contenedor-nuevas-actividades').appendChild(card);
+        document.getElementById('listaPrograma').appendChild(card);
+        renumerarPrograma();
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function eliminarActividadCard(btn) {
         if (!confirm('¿Eliminar esta actividad del programa?')) return;
         btn.closest('.actividad-card').remove();
+        renumerarPrograma();
     }
+
+    // ── Reordenamiento por posición: arrastrar o escribir un número mueve la tarjeta ──
+    // El número de orden siempre se deriva de la posición en la lista, nunca se asigna
+    // suelto — por eso no pueden existir duplicados una vez armada la lista.
+    function _itemsPrograma() {
+        return Array.from(document.querySelectorAll('#listaPrograma > .programa-item'));
+    }
+
+    function renumerarPrograma() {
+        _itemsPrograma().forEach((item, i) => {
+            const input = item.querySelector('.input-orden, .input-orden-act');
+            if (input) input.value = i + 1;
+        });
+    }
+
+    let _draggedItem = null;
+
+    function _onDragStart(e) {
+        const handle = e.target.closest('.drag-handle');
+        if (!handle) { e.preventDefault(); return; }
+        _draggedItem = handle.closest('.programa-item');
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function _onDragOver(e) {
+        const target = e.target.closest('.programa-item');
+        if (!target || !_draggedItem || target === _draggedItem) return;
+        e.preventDefault();
+        const rect = target.getBoundingClientRect();
+        const despuesDelMedio = (e.clientY - rect.top) > rect.height / 2;
+        target.parentNode.insertBefore(_draggedItem, despuesDelMedio ? target.nextSibling : target);
+        renumerarPrograma();
+    }
+
+    function _onDragEnd() {
+        _draggedItem = null;
+        renumerarPrograma();
+    }
+
+    function _onCambioOrden(e) {
+        const input = e.target;
+        if (!input.matches('.input-orden, .input-orden-act')) return;
+        const item = input.closest('.programa-item');
+        const items = _itemsPrograma();
+        const total = items.length;
+        let destino = parseInt(input.value) || total;
+        destino = Math.min(Math.max(destino, 1), total);
+
+        const resto = items.filter(i => i !== item);
+        resto.splice(destino - 1, 0, item);
+
+        const contenedor = document.getElementById('listaPrograma');
+        resto.forEach(i => contenedor.appendChild(i));
+        renumerarPrograma();
+        item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    const _listaPrograma = document.getElementById('listaPrograma');
+    _listaPrograma.addEventListener('dragstart', _onDragStart);
+    _listaPrograma.addEventListener('dragover', _onDragOver);
+    _listaPrograma.addEventListener('drop', e => e.preventDefault());
+    _listaPrograma.addEventListener('dragend', _onDragEnd);
+    _listaPrograma.addEventListener('change', _onCambioOrden);
+    renumerarPrograma(); // normaliza a 1..N según el orden visual real, por si la BD trae huecos o duplicados de antes
 
     async function procesarOficializacion() {
         if (!confirm("¿Confirma cerrar la fase logística? Esto recalculará listados y asignará números correlativos.")) return;
@@ -371,6 +434,7 @@
             const id = b.id.replace('card-', '');
             dataLogistica.push({
                 evento_cat_id: id,
+                nombre: b.querySelector('h5')?.innerText.trim() || '',
                 orden: parseInt(b.querySelector('.input-orden').value) || 0,
                 estatus: b.querySelector('.select-estatus-cat').value,
                 fusion_destino_id: mapaFusiones[id] || null
@@ -386,18 +450,6 @@
                 orden: parseInt(card.querySelector('.input-orden-act')?.value) || 0
             });
         });
-
-        // Validar que no haya números de orden duplicados entre categorías + actividades
-        const todosOrdenes = [
-            ...dataLogistica.map(x => x.orden),
-            ...dataActividades.map(x => x.orden)
-        ];
-        const duplicados = todosOrdenes.filter((v, i, arr) => arr.indexOf(v) !== i);
-        if (duplicados.length > 0) {
-            const unicos = [...new Set(duplicados)].sort((a, b) => a - b).join(', ');
-            alert(`⚠️ Números de orden duplicados: ${unicos}\n\nCada categoría y actividad debe tener un número de orden único. Corrija antes de guardar.`);
-            return;
-        }
 
         try {
             const res = await fetch('/eventos/preparacion/oficializar', {

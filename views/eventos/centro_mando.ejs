@@ -61,6 +61,9 @@ const _btnOffStyle = 'opacity:.4;pointer-events:none;';
                         <a href="/estadisticas/<%= evento.id %>/imprimir-boletas" class="btn btn-outline-dark text-start" target="_blank">
                             <i class="fas fa-print me-2"></i> Boletas Físicas (Respaldo PDF)
                         </a>
+                        <a href="/eventos/<%= evento.id %>/programa-oficial" class="btn btn-outline-primary fw-bold text-start" style="<%= _enPrep ? _btnOffStyle : '' %>" target="_blank">
+                            <i class="fas fa-scroll me-2"></i> Programa Oficial (Terminado y Aprobado)
+                        </a>
                         <a href="/social/admin-noticias" class="btn btn-outline-info text-start">
                             <i class="fas fa-bullhorn me-2"></i> Publicar Comunicado Oficial
                         </a>

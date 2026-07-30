@@ -46,6 +46,7 @@ routerEventos.get('/:id/monitor-mc', checkPermiso('monitor_mc', 'ver'), eventosC
 
 routerEventos.get('/:id/preparacion', checkPermiso('preparacion', 'editar'), eventosController.prepararEventoPage);
 routerEventos.post('/preparacion/oficializar', checkPermiso('preparacion', 'editar'), eventosController.oficializarPreparacion);
+routerEventos.get('/:id/programa-oficial', checkPermiso('programa', 'ver'), eventosController.verProgramaOficial);
 
 // MESA DE CÓMPUTO
 routerEventos.get('/:id/computo/:eventoCatId', checkPermiso('computo', 'ver'), estadisticasController.verMesaComputo);
