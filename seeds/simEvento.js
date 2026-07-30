@@ -114,6 +114,7 @@ async function main() {
         costo_adicional:   0,
         estado:           'inscripcion',
         info_pesaje:      'Evento de prueba generado automáticamente por el sistema FDFF.',
+        url_afiche_evento: '',
       }]).select('id').single();
     if (eEv) throw new Error('Crear evento: ' + eEv.message);
     eventoId = nuevoEv.id;
