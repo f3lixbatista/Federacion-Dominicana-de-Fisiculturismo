@@ -553,7 +553,7 @@ const _buildListado = async (eventoId, tipo) => {
                 atletas(nombre, municipio, preparador, peso, estatura, fecha_nacimiento),
                 eventos_categorias!inner(
                     id,
-                    categorias(id, nombre, disciplina, modalidad, parametro:divisiones(parametro))
+                    categorias(id, nombre, disciplina, modalidad, parametro)
                 )
             `)
             .eq('id_evento', eventoId)
@@ -567,7 +567,7 @@ const _buildListado = async (eventoId, tipo) => {
         const catId  = c.eventos_categorias?.id;
         const catNom = c.eventos_categorias?.categorias?.nombre || 'Sin categoría';
         const modalidad = c.eventos_categorias?.categorias?.modalidad || '';
-        const parametro = (c.eventos_categorias?.categorias?.parametro || [])[0]?.parametro || 'ninguno';
+        const parametro = c.eventos_categorias?.categorias?.parametro || 'ninguno';
 
         if (!catMap.has(catId)) {
             catMap.set(catId, { nombre: catNom, modalidad, parametro, atletas: [] });
@@ -582,12 +582,14 @@ const _buildListado = async (eventoId, tipo) => {
         if (parametro === 'peso')        param = atl.peso ? atl.peso + ' kg' : '';
         else if (parametro === 'estatura') param = atl.estatura ? atl.estatura + ' cm' : '';
         else if (parametro === 'ambos')  param = [atl.estatura ? atl.estatura + ' cm' : '', atl.peso ? atl.peso + ' kg' : ''].filter(Boolean).join('/');
+        else if (parametro === 'relacion') param = [atl.estatura ? atl.estatura + ' cm' : '', atl.peso ? atl.peso + ' kg' : ''].filter(Boolean).join(' / ');
         else if (edad)                   param = edad + ' años';
 
         let columna_param = 'Peso/Talla/Edad (Kg/Cm/Años)';
-        if (parametro === 'peso')        columna_param = 'Peso (kg)';
+        if (parametro === 'peso')          columna_param = 'Peso (kg)';
         else if (parametro === 'estatura') columna_param = 'Estatura (cm)';
-        else if (parametro === 'ambos')  columna_param = 'Talla / Peso';
+        else if (parametro === 'ambos')    columna_param = 'Talla / Peso';
+        else if (parametro === 'relacion') columna_param = 'Estatura / Peso';
 
         catMap.get(catId).atletas.push({
             numero:  c.numero_atleta,
