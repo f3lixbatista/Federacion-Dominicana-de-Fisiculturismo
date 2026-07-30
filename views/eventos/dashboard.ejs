@@ -153,6 +153,16 @@
                             </div>
                         <% } %>
 
+                        <!-- BORRAR EVENTO (admin only) -->
+                        <% if (locals.user && user.role === 'admin') { %>
+                            <div class="border-top pt-3 mt-2">
+                                <button class="btn btn-outline-danger w-100 btn-sm fw-bold"
+                                        onclick="confirmarEliminarEvento('<%= evento.id %>', '<%= evento.nombre.replace(/'/g, \"\\\\'\") %>')">
+                                    <i class="fas fa-trash-alt me-1"></i> Eliminar Evento
+                                </button>
+                            </div>
+                        <% } %>
+
                     <% } else { %>
                         <div class="alert alert-light text-center">
                             <p class="small mb-2 text-muted">Inicia sesión para ver opciones adicionales</p>
@@ -323,6 +333,19 @@
             else alert("¡Mesa de jueces configurada y guardada con éxito!");
         }
     }
+</script>
+
+<script>
+function confirmarEliminarEvento(eventoId, nombre) {
+    if (!confirm(`¿Eliminar permanentemente "${nombre}"?\n\nSe borrarán competidores, votos, paneles y todos los datos asociados.\n\nEsta acción no se puede deshacer.`)) return;
+    fetch(`/eventos/${eventoId}/eliminar`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+        .then(r => r.json())
+        .then(d => {
+            if (d.ok) { alert('Evento eliminado.'); window.location.href = '/eventos/competencias'; }
+            else alert('Error: ' + d.mensaje);
+        })
+        .catch(e => alert('Error de red: ' + e.message));
+}
 </script>
 
 <%- include("../template/footer") %>

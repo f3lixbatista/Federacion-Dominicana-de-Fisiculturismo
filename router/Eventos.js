@@ -88,4 +88,7 @@ routerEventos.get('/fotografia/gestion-atletica/:id', checkPermiso('fotografo', 
 routerEventos.post('/ingreso-extra', checkPermiso('finanzas', 'crear'), eventosController.registrarIngresoExtra);
 routerEventos.post('/gasto-operativo', checkPermiso('finanzas', 'crear'), upload.single('recibo_foto'), eventosController.registrarGastoOperativo);
 
+// ELIMINAR EVENTO (admin only)
+routerEventos.post('/:id/eliminar', checkRole(['admin']), eventosController.eliminarEvento);
+
 module.exports = routerEventos;

@@ -1215,6 +1215,28 @@ const verBroadcastLive = async (req, res) => {
     }
 };
 
+const eliminarEvento = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const evCats = await supabaseAdmin.from('eventos_categorias').select('id').eq('evento_id', id);
+        const evCatIds = (evCats.data || []).map(ec => ec.id);
+
+        await supabaseAdmin.from('votaciones_jueces').delete().eq('id_evento', id);
+        if (evCatIds.length > 0) {
+            await supabaseAdmin.from('pre_seleccion_top5').delete().in('evento_cat_id', evCatIds).catch(() => {});
+        }
+        await supabaseAdmin.from('panel_sillas_jueces').delete().eq('id_evento', id);
+        await supabaseAdmin.from('paneles_jueces').delete().eq('id_evento', id);
+        await supabaseAdmin.from('competidores').delete().eq('id_evento', id);
+        await supabaseAdmin.from('eventos_categorias').delete().eq('evento_id', id);
+        const { error } = await supabaseAdmin.from('eventos').delete().eq('id', id);
+        if (error) return res.status(500).json({ ok: false, mensaje: error.message });
+        res.json({ ok: true });
+    } catch (e) {
+        res.status(500).json({ ok: false, mensaje: e.message });
+    }
+};
+
 const verLowerThird = async (req, res) => {
     const { id } = req.params;
     try {
@@ -1253,5 +1275,6 @@ module.exports = {
     verLowerThird,
     registrarIngresoExtra,
     registrarGastoOperativo,
-    validarAccesoAtleta
+    validarAccesoAtleta,
+    eliminarEvento
 };
