@@ -61,11 +61,11 @@ const _btnOffStyle = 'opacity:.4;pointer-events:none;';
                         <a href="/estadisticas/<%= evento.id %>/imprimir-boletas" class="btn btn-outline-dark text-start" target="_blank">
                             <i class="fas fa-print me-2"></i> Boletas Físicas (Respaldo PDF)
                         </a>
-                        <a href="/eventos/<%= evento.id %>/programa-oficial" class="btn btn-outline-primary fw-bold text-start" style="<%= _enPrep ? _btnOffStyle : '' %>" target="_blank">
-                            <i class="fas fa-scroll me-2"></i> Programa Oficial (Terminado y Aprobado)
+                        <a href="/eventos/<%= evento.id %>/programa-oficial" class="btn btn-outline-primary text-start" style="<%= _enPrep ? _btnOffStyle : '' %>" target="_blank" title="Guion completo del evento, ya oficializado y aprobado">
+                            <i class="fas fa-scroll me-2"></i> Programa Oficial
                         </a>
-                        <a href="/eventos/<%= evento.id %>/programa-resumido" class="btn btn-outline-secondary fw-bold text-start" style="<%= _enPrep ? _btnOffStyle : '' %>" target="_blank">
-                            <i class="fas fa-file-alt me-2"></i> Programa Resumido (Sin Atletas)
+                        <a href="/eventos/<%= evento.id %>/programa-resumido" class="btn btn-outline-secondary text-start" style="<%= _enPrep ? _btnOffStyle : '' %>" target="_blank" title="Mismo guion sin listado de atletas">
+                            <i class="fas fa-file-alt me-2"></i> Programa Resumido
                         </a>
                         <a href="/social/admin-noticias" class="btn btn-outline-info text-start">
                             <i class="fas fa-bullhorn me-2"></i> Publicar Comunicado Oficial
