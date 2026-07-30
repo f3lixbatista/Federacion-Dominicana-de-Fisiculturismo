@@ -953,10 +953,13 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
     }
 
     $(document).ready(function () {
-        $('#mydatatable').DataTable({
-            "dom": 'Bfrtip',
-            "buttons": ['excel', 'pdf']
-        });
+        const dtOpts = { "pageLength": 25, "ordering": true, "searching": true };
+        // Intentar añadir botones solo si la extensión está disponible
+        if ($.fn.DataTable.Buttons) {
+            dtOpts.dom = 'Bfrtip';
+            dtOpts.buttons = ['excel'];
+        }
+        $('#mydatatable').DataTable(dtOpts);
     });
 </script>
 <script src="https://unpkg.com/html5-qrcode"></script>
