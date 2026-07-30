@@ -387,6 +387,18 @@
             });
         });
 
+        // Validar que no haya números de orden duplicados entre categorías + actividades
+        const todosOrdenes = [
+            ...dataLogistica.map(x => x.orden),
+            ...dataActividades.map(x => x.orden)
+        ];
+        const duplicados = todosOrdenes.filter((v, i, arr) => arr.indexOf(v) !== i);
+        if (duplicados.length > 0) {
+            const unicos = [...new Set(duplicados)].sort((a, b) => a - b).join(', ');
+            alert(`⚠️ Números de orden duplicados: ${unicos}\n\nCada categoría y actividad debe tener un número de orden único. Corrija antes de guardar.`);
+            return;
+        }
+
         try {
             const res = await fetch('/eventos/preparacion/oficializar', {
                 method: 'POST',
