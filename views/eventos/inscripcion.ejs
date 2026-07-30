@@ -46,6 +46,15 @@
             <div id="reader" class="mt-3 mx-auto" style="width: 300px; display: none;"></div>
         </div>
     </div>
+<script>
+function filtrarTablaAtletas() {
+    var val = (document.getElementById('busquedaAtleta').value || '').toLowerCase();
+    var rows = document.querySelectorAll('#bodyAtletas tr');
+    rows.forEach(function(row) {
+        row.style.display = row.textContent.toLowerCase().indexOf(val) !== -1 ? '' : 'none';
+    });
+}
+</script>
 
     <div class="container divGeneral border border-1 border-dark p-4 col-12 shadow-sm bg-white" style="border-radius: 15px;">
         <h2 class="mb-4 fw-bold text-primary border-bottom pb-2">Estación de Inscripción Asistida</h2>
@@ -326,8 +335,8 @@ async function rechazarPagoInsc(competidorId) {
      data-costo-adic="<%= precioEfectivoAdicional || 0 %>"
      data-es-oferta="<%= esPrecioOferta ? '1' : '0' %>">
 </div>
-<script id="data-categorias" type="application/json"><%- JSON.stringify(arrayCategorias || []) %></script>
-<script id="data-atletas" type="application/json"><%- JSON.stringify(arrayAtletas || []) %></script>
+<script id="data-categorias" type="application/json"><%- JSON.stringify(arrayCategorias || []).replace(/</g, '\\u003c') %></script>
+<script id="data-atletas" type="application/json"><%- JSON.stringify(arrayAtletas || []).replace(/</g, '\\u003c') %></script>
 
 <script src="/js/supabase.js"></script>
 <script>
@@ -907,12 +916,6 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-upload"></i> Cargar';
         }
-    }
-
-    function filtrarTablaAtletas() {
-        const input = document.getElementById('busquedaAtleta').value;
-        // Usamos la API de DataTables para filtrar la tabla existente
-        $('#mydatatable').DataTable().search(input).draw();
     }
 
     async function iniciarEscaneoCamara() {
