@@ -167,6 +167,18 @@ const oficializarPreparacion = async (req, res) => {
         return res.status(400).json({ estado: false, mensaje: 'Información logística incompleta.' });
     }
 
+    const todosOrdenes = [
+        ...logistica.map(item => Number(item.orden) || 0),
+        ...(Array.isArray(actividades) ? actividades.map(a => Number(a.orden) || 0) : [])
+    ];
+    const ordenesDuplicados = [...new Set(todosOrdenes.filter((v, i, arr) => arr.indexOf(v) !== i))];
+    if (ordenesDuplicados.length > 0) {
+        return res.status(400).json({
+            estado: false,
+            mensaje: `Números de orden duplicados: ${ordenesDuplicados.sort((a, b) => a - b).join(', ')}. Cada categoría y actividad debe tener un número de orden único.`
+        });
+    }
+
     try {
         // 1. Procesar fusiones y actualizaciones en paralelo
         const promesasLogistica = logistica.map(item => {
