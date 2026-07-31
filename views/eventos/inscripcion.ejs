@@ -48,11 +48,12 @@
     </div>
 <script>
 function filtrarTablaAtletas() {
-    var val = (document.getElementById('busquedaAtleta').value || '').toLowerCase();
-    var rows = document.querySelectorAll('#bodyAtletas tr');
-    rows.forEach(function(row) {
-        row.style.display = row.textContent.toLowerCase().indexOf(val) !== -1 ? '' : 'none';
-    });
+    var val = document.getElementById('busquedaAtleta').value || '';
+    // DataTables pagina #mydatatable (25 filas) y solo mantiene en el DOM las
+    // filas de la pagina actual — filtrar con querySelectorAll+display:none
+    // (como antes) ignoraba a cualquier atleta fuera de esa pagina. Usar la
+    // API de DataTables busca sobre el dataset completo y re-pagina el resultado.
+    $('#mydatatable').DataTable().search(val).draw();
 }
 </script>
 
