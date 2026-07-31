@@ -367,7 +367,7 @@ async function _validarElegibilidadFisica(atleta, eventoCatIds) {
 }
 
 const guardarInscripcionAsistida = async (req, res) => {
-    const { atleta_id, id_evento, categoriasElegidas, preparador_id } = req.body;
+    const { atleta_id, id_evento, categoriasElegidas, preparador_id, peso, estatura } = req.body;
     const juez_id = res.locals.user?.id;
 
     if (!atleta_id || !id_evento || !categoriasElegidas || categoriasElegidas.length === 0) {
@@ -399,10 +399,17 @@ const guardarInscripcionAsistida = async (req, res) => {
         const categoriasArray = Array.isArray(categoriasElegidas) ? categoriasElegidas : [categoriasElegidas];
 
         // Bloqueo real: el peso/estatura del atleta debe caer dentro de lo que exige
-        // cada categoria elegida (o cumplir la formula de relacion talla-peso).
-        const { data: atletaFisico } = await supabaseAdmin
+        // cada categoria elegida (o cumplir la formula de relacion talla-peso). Si el
+        // pesaje trae peso/estatura corregidos (el staff los ajusto en el modal porque
+        // el perfil estaba desactualizado), esos son los que se validan y se persisten
+        // — asi el pesaje puede "editarse" en el momento en vez de solo mostrar el dato viejo.
+        const { data: atletaDb } = await supabaseAdmin
             .from('atletas').select('peso, estatura').eq('id', atleta_id).single();
-        const erroresFisicos = await _validarElegibilidadFisica(atletaFisico || {}, categoriasArray);
+        const atletaFisico = {
+            peso: peso != null ? peso : atletaDb?.peso,
+            estatura: estatura != null ? estatura : atletaDb?.estatura
+        };
+        const erroresFisicos = await _validarElegibilidadFisica(atletaFisico, categoriasArray);
         if (erroresFisicos.length > 0) {
             return res.status(400).json({
                 estado: false,
@@ -433,6 +440,8 @@ const guardarInscripcionAsistida = async (req, res) => {
         // que sí son reales y sí se usan.
         const updateAtleta = { descargo_firmado: true, fecha_firma_descargo: new Date().toISOString() };
         if (preparador_id) updateAtleta.preparador_id = preparador_id;
+        if (peso != null) updateAtleta.peso = peso;
+        if (estatura != null) updateAtleta.estatura = estatura;
 
         const { error: errAtleta } = await supabaseAdmin
             .from('atletas')

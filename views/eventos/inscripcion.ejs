@@ -250,7 +250,24 @@ async function rechazarPagoInsc(competidorId) {
                         </select>
                         <small class="text-muted">Si su preparador no aparece, debe registrarse primero en el módulo de Preparadores.</small>
                     </div>
-                    
+
+                    <div class="card border-primary mb-4">
+                        <div class="card-header bg-primary text-white fw-bold py-2">
+                            <i class="fas fa-weight me-2"></i> Peso / Estatura confirmados en pesaje
+                        </div>
+                        <div class="card-body row g-3">
+                            <div class="col-6">
+                                <label class="form-label fw-bold">Peso (kg)</label>
+                                <input type="number" step="0.01" id="pesoConfirmadoIns" class="form-control" oninput="_onCambioPesoEstatura()">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold">Estatura (cm)</label>
+                                <input type="number" step="0.1" id="estaturaConfirmadaIns" class="form-control" oninput="_onCambioPesoEstatura()">
+                            </div>
+                            <small class="text-muted">Corrija aquí si la báscula/cinta métrica no coincide con el perfil del atleta — se actualiza su ficha y las categorías disponibles abajo se recalculan al instante.</small>
+                        </div>
+                    </div>
+
                     <div id="listaCategoriasAfines" class="list-group shadow-sm">
                         <!-- Se inyecta vía JavaScript -->
                     </div>
@@ -391,6 +408,17 @@ async function rechazarPagoInsc(competidorId) {
         if (myModal) myModal.hide();
     }
 
+    // Contexto del atleta actualmente abierto en el modal (sexo/edad/preselecciones),
+    // guardado para poder recalcular categorias si se corrige peso/estatura en pesaje.
+    let _modalCtx = null;
+
+    function _onCambioPesoEstatura() {
+        if (!_modalCtx) return;
+        const peso = parseFloat(document.getElementById('pesoConfirmadoIns').value);
+        const estatura = parseFloat(document.getElementById('estaturaConfirmadaIns').value);
+        renderizarCategorias(_modalCtx.sexoNormalizado, _modalCtx.yaInscritosIds, _modalCtx.edad, estatura, peso);
+    }
+
     // Función puente para manejar los datos del botón
     function abrirModalDesdeBoton(btn) {
         const d = btn.dataset;
@@ -415,6 +443,8 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
         document.getElementById('signNombre').innerText = nombre;
         document.getElementById('signCedula').innerText = cedula || 'Sin especificar';
         document.getElementById('checkDescargo').checked = false;
+        document.getElementById('pesoConfirmadoIns').value = peso || '';
+        document.getElementById('estaturaConfirmadaIns').value = estatura || '';
 
         const player = document.getElementById('playerAudio');
         const audio = document.getElementById('audioElement');
@@ -459,6 +489,10 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
         let _edad = _hoy.getFullYear() - _nac.getFullYear();
         const _mDiff = _hoy.getMonth() - _nac.getMonth();
         if (_mDiff < 0 || (_mDiff === 0 && _hoy.getDate() < _nac.getDate())) _edad--;
+
+        // Guardado para poder re-renderizar categorias si el staff corrige peso/estatura
+        // en el pesaje (ver _onCambioPesoEstatura).
+        _modalCtx = { sexoNormalizado, yaInscritosIds, edad: _edad };
 
         renderizarCategorias(sexoNormalizado, yaInscritosIds, _edad, parseFloat(estatura), parseFloat(peso));
 
@@ -807,6 +841,9 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
             return alert("Debe seleccionar al menos una categoría para oficializar.");
         }
 
+        const pesoConfirmado = parseFloat(document.getElementById('pesoConfirmadoIns').value) || null;
+        const estaturaConfirmada = parseFloat(document.getElementById('estaturaConfirmadaIns').value) || null;
+
         try {
             // Hacemos la petición POST al servidor que creamos en el Paso 1
             const respuesta = await fetch('/inscripcion/guardar-asistida', {
@@ -816,7 +853,9 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
                     atleta_id: atletaId,
                     id_evento: configEl.id,
                     categoriasElegidas: categoriasElegidas,
-                    preparador_id: preparadorId
+                    preparador_id: preparadorId,
+                    peso: pesoConfirmado,
+                    estatura: estaturaConfirmada
                 })
             });
 
