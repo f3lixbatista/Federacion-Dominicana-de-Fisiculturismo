@@ -327,7 +327,7 @@
 
     const _GRUPOS_AFINIDAD_WEB = {
         "culturismo_m":  ["Men's Bodybuilding", "Men's Bodybuilding Principiante", "Men's Classic Bodybuilding", "Men's Classic Bodybuilding Principiante", "Men's Classic Physique", "Men's Classic Physique Principiante", "Men's Games Classic"],
-        "physique_m":    ["Men's Physique", "Men's Physique Principiante", "Men's Fit Model", "Men's Fit Model Principiante", "Men's Fitness"],
+        "physique_m":    ["Men's Physique", "Men's Physique Principiante", "Men's Physique Clásico", "Men's Physique Clásico Principiante", "Men's Fit Model", "Men's Fit Model Principiante", "Men's Fitness"],
         "muscular_m":    ["Muscular Men's Physique", "Muscular Men's Physique Principiante"],
         "wellness_f":    ["Women's Wellness", "Women's Wellness Principiante", "Women's Fit Model", "Women's Fit Model Principiante"],
         "bikini_f":      ["Women's Bikini", "Women's Bikini Principiante", "Women's Fit Model", "Women's Fit Model Principiante", "Women's Artistic Fitness"],
@@ -337,8 +337,11 @@
         "children_f":    ["Female Children Fitness"]
     };
 
+    const _RE_DIACRITICOS_W = new RegExp('[' + String.fromCharCode(0x0300) + '-' + String.fromCharCode(0x036f) + ']', 'g');
+
     function _normW(s) {
-        return (s || '').toLowerCase().replace(/[''ʼ`´]/g, "'").trim();
+        return (s || '').toLowerCase().replace(/[''ʼ`´]/g, "'")
+            .normalize('NFD').replace(_RE_DIACRITICOS_W, '').trim();
     }
 
     const _AFINIDAD_NORM_W = {};

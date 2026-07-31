@@ -281,19 +281,37 @@ const detalleInscripcion = async (req, res) => {
     }
 };
 
-// Men's Classic Physique usa formula propia (peso maximo = estatura - 105 cm),
-// verificada contra la tabla oficial FDFF de relacion talla-peso (ej. 172cm -> 67kg,
-// 190cm -> 85kg). Las demas disciplinas con parametro 'peso'/'estatura'/'ambos' ya
+// Disciplinas con formula propia de relacion talla-peso (peso maximo = estatura
+// - offset), verificadas contra las tablas oficiales FDFF:
+// - "Men's Physique Clásico": formula unica (sin clases), offset 105.
+// - Las demas: el offset varia POR CLASE (Class A..I) — cada clase tiene su
+//   propia tabla de imagen, no es un solo valor para toda la disciplina.
+// Las disciplinas con parametro 'peso'/'estatura'/'ambos' que NO estan aquí ya
 // tienen su rango exacto guardado en la propia categoria (peso_min/max, estatura_min/max).
 const _OFFSET_RELACION_TALLA_PESO = {
-    "men's classic physique": 105,
-    "men's classic physique principiante": 105
+    "men's physique clasico": 105,
+    "men's physique clasico principiante": 105,
+    "men's classic physique": { "class a": 96, "class b": 94, "class c": 92, "class d": 89, "class e": 87, "class f": 85, "class g": 83 },
+    "men's classic physique principiante": { "class a": 96, "class b": 94, "class c": 92, "class d": 89, "class e": 87, "class f": 85, "class g": 83 },
+    "men's classic bodybuilding": { "class a": 100, "class b": 98, "class c": 96, "class d": 93, "class e": 91, "class f": 89, "class g": 87 },
+    "men's classic bodybuilding principiante": { "class a": 100, "class b": 98, "class c": 96, "class d": 93, "class e": 91, "class f": 89, "class g": 87 },
+    "men's games classic": { "class a": 102, "class b": 101, "class c": 100, "class d": 99, "class e": 98, "class f": 96, "class g": 95, "class h": 94, "class i": 93 }
 };
 
 function _normDiscValidacion(s) {
     var chars = [0x2018, 0x2019, 0x02BC, 0x00B4, 0x0060].map(function(c){ return String.fromCharCode(c); });
     var re = new RegExp('[' + chars.join('') + ']', 'g');
-    return (s || '').toString().toLowerCase().replace(re, "'").trim();
+    var reDiacriticos = new RegExp('[' + String.fromCharCode(0x0300) + '-' + String.fromCharCode(0x036f) + ']', 'g');
+    return (s || '').toString().toLowerCase().replace(re, "'")
+        .normalize('NFD').replace(reDiacriticos, '').trim();
+}
+
+function _offsetRelacion(disc, division) {
+    var entry = _OFFSET_RELACION_TALLA_PESO[disc];
+    if (entry == null) return null;
+    if (typeof entry === 'number') return entry;
+    var key = _normDiscValidacion(division || '');
+    return entry[key] != null ? entry[key] : null;
 }
 
 // Bloqueo real: el atleta debe caer estrictamente dentro del peso/estatura de la
@@ -304,7 +322,7 @@ async function _validarElegibilidadFisica(atleta, eventoCatIds) {
 
     const { data: seleccionadas, error } = await supabaseAdmin
         .from('eventos_categorias')
-        .select('id, categorias!inner(nombre, disciplina, parametro, peso_min, peso_max, estatura_min, estatura_max)')
+        .select('id, categorias!inner(nombre, disciplina, division, parametro, peso_min, peso_max, estatura_min, estatura_max)')
         .in('id', eventoCatIds);
     if (error) throw error;
 
@@ -324,7 +342,7 @@ async function _validarElegibilidadFisica(atleta, eventoCatIds) {
         }
 
         const disc = _normDiscValidacion(cat.disciplina);
-        const offset = _OFFSET_RELACION_TALLA_PESO[disc];
+        const offset = _offsetRelacion(disc, cat.division);
         if (offset != null) {
             if (atleta.estatura && atleta.peso) {
                 const pesoMax = atleta.estatura - offset;

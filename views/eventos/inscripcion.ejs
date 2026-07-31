@@ -471,18 +471,33 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
 
     let _sexoAtletaActual = 'm';
 
-    // Men's Classic Physique usa formula propia (peso maximo = estatura - 105 cm),
-    // verificada contra la tabla oficial FDFF de relacion talla-peso.
+    // Disciplinas con formula propia de relacion talla-peso (peso maximo =
+    // estatura - offset), verificadas contra las tablas oficiales FDFF:
+    // - "Men's Physique Clásico": formula unica (sin clases), offset 105.
+    // - Las demas: el offset varia POR CLASE (Class A..I), no es un solo valor
+    //   para toda la disciplina — cada clase tiene su propia tabla de imagen.
     const _OFFSET_RELACION_TALLA_PESO = {
-        "men's classic physique": 105,
-        "men's classic physique principiante": 105
+        "men's physique clasico": 105,
+        "men's physique clasico principiante": 105,
+        "men's classic physique": { "class a": 96, "class b": 94, "class c": 92, "class d": 89, "class e": 87, "class f": 85, "class g": 83 },
+        "men's classic physique principiante": { "class a": 96, "class b": 94, "class c": 92, "class d": 89, "class e": 87, "class f": 85, "class g": 83 },
+        "men's classic bodybuilding": { "class a": 100, "class b": 98, "class c": 96, "class d": 93, "class e": 91, "class f": 89, "class g": 87 },
+        "men's classic bodybuilding principiante": { "class a": 100, "class b": 98, "class c": 96, "class d": 93, "class e": 91, "class f": 89, "class g": 87 },
+        "men's games classic": { "class a": 102, "class b": 101, "class c": 100, "class d": 99, "class e": 98, "class f": 96, "class g": 95, "class h": 94, "class i": 93 }
     };
+
+    function _offsetRelacion(disc, division) {
+        const entry = _OFFSET_RELACION_TALLA_PESO[disc];
+        if (entry == null) return null;
+        if (typeof entry === 'number') return entry;
+        return entry[_normDisc(division || '')] ?? null;
+    }
 
     // Elegibilidad fisica por peso/estatura. El atleta debe caer estrictamente
     // dentro del rango de la categoria (peso_min/max, estatura_min/max) si esta
-    // definido, y ademas cumplir la formula de relacion talla-peso cuando aplica
-    // (Men's Classic Physique). Sin dato de peso/estatura del atleta o de la
-    // categoria, esa dimension no se bloquea.
+    // definido, y ademas cumplir la formula de relacion talla-peso cuando aplica.
+    // Sin dato de peso/estatura del atleta o de la categoria, esa dimension no
+    // se bloquea.
     function _esFisicamenteElegible(cat, estaturaAtleta, pesoAtleta) {
         // Estatura: se respeta el rango de la clase (Class A/B/...) si la categoria lo define.
         if (estaturaAtleta) {
@@ -491,7 +506,7 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
         }
 
         const disc = _normDisc(cat.disciplina || '');
-        const offset = _OFFSET_RELACION_TALLA_PESO[disc];
+        const offset = _offsetRelacion(disc, cat.division);
         if (offset != null) {
             if (!estaturaAtleta || !pesoAtleta) return true;
             return pesoAtleta <= (estaturaAtleta - offset);
@@ -608,7 +623,7 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
     // Pairs (Fit Pairs / Mixed Pairs) son sex-aware: se manejan fuera del mapa.
     const GRUPOS_AFINIDAD = {
         "culturismo_m":  ["Men's Bodybuilding", "Men's Bodybuilding Principiante", "Men's Classic Bodybuilding", "Men's Classic Bodybuilding Principiante", "Men's Classic Physique", "Men's Classic Physique Principiante", "Men's Games Classic"],
-        "physique_m":    ["Men's Physique", "Men's Physique Principiante", "Men's Fit Model", "Men's Fit Model Principiante", "Men's Fitness"],
+        "physique_m":    ["Men's Physique", "Men's Physique Principiante", "Men's Physique Clásico", "Men's Physique Clásico Principiante", "Men's Fit Model", "Men's Fit Model Principiante", "Men's Fitness"],
         "muscular_m":    ["Muscular Men's Physique", "Muscular Men's Physique Principiante"],
         "wellness_f":    ["Women's Wellness", "Women's Wellness Principiante", "Women's Fit Model", "Women's Fit Model Principiante"],
         "bikini_f":      ["Women's Bikini", "Women's Bikini Principiante", "Women's Fit Model", "Women's Fit Model Principiante", "Women's Artistic Fitness"],
@@ -618,10 +633,18 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
         "children_f":    ["Female Children Fitness"]
     };
 
-    // Normaliza strings: minúsculas + apóstrofes uniformes
+    // Marcas diacriticas combinantes (U+0300-U+036F) que deja normalize('NFD') al
+    // separar una vocal acentuada de su acento — construido via charCode para no
+    // escribir el caracter unicode literal en el código fuente (ver hallazgo #14).
+    const _RE_DIACRITICOS = new RegExp('[' + String.fromCharCode(0x0300) + '-' + String.fromCharCode(0x036f) + ']', 'g');
+
+    // Normaliza strings: minúsculas + apóstrofes uniformes + sin acentos
+    // (así "Clásico" y "Clasico" comparan igual en GRUPOS_AFINIDAD y en el
+    // lookup de fórmulas talla-peso).
     function _normDisc(s) {
         return (s || '').toLowerCase()
             .replace(/[''ʼ`´]/g, "'")
+            .normalize('NFD').replace(_RE_DIACRITICOS, '')
             .trim();
     }
 
