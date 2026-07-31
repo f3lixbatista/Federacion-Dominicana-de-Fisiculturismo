@@ -129,9 +129,9 @@
     <div class="campo">
         <span class="etiqueta">CATEGORÍA(S):</span>
         <span class="valor">
-            <% (inscripciones || []).forEach(ins => { %>
+            <% (inscripciones || []).forEach((ins, idx) => { %>
                 <span style="display:inline-block;margin-right:8px;font-weight:bold;">
-                    #<%= ins.numero_atleta || '—' %> &nbsp;<%= ins.eventos_categorias?.categorias?.nombre || '' %>
+                    <%= idx > 0 ? '· ' : '' %><%= ins.eventos_categorias?.categorias?.nombre || '' %>
                 </span>
             <% }) %>
         </span>

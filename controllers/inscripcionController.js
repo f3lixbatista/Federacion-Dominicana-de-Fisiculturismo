@@ -524,8 +524,11 @@ const descargoAtleta = async (req, res) => {
             supabaseAdmin.from('eventos')
                 .select('id, nombre, lugar, fecha_inicio')
                 .eq('id', eventoId).single(),
+            // Sin numero_atleta: el dorsal se asigna en Preparación (oficializarPreparacion),
+            // después de cerrar pesaje y fijar el orden de salida — no existe todavía
+            // en el momento en que se imprime este descargo durante la inscripción asistida.
             supabaseAdmin.from('competidores')
-                .select('numero_atleta, monto_total, eventos_categorias(categorias(nombre))')
+                .select('monto_total, eventos_categorias(categorias(nombre))')
                 .eq('atleta_id', atletaId)
                 .eq('id_evento', eventoId)
         ]);
