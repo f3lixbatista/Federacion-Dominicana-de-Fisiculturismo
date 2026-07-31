@@ -326,11 +326,11 @@
     // Misma lógica que inscripcion.ejs (admin), adaptada a .check-categoria / .cat-item-web
 
     const _GRUPOS_AFINIDAD_WEB = {
-        "culturismo_m":  ["Men's Bodybuilding", "Men's Classic Bodybuilding", "Men's Classic Physique", "Men's Games Classic"],
-        "physique_m":    ["Men's Physique", "Men's Fit Model", "Men's Fitness"],
-        "muscular_m":    ["Muscular Men's Physique"],
-        "wellness_f":    ["Women's Wellness", "Women's Fit Model"],
-        "bikini_f":      ["Women's Bikini", "Women's Fit Model", "Women's Artistic Fitness"],
+        "culturismo_m":  ["Men's Bodybuilding", "Men's Bodybuilding Principiante", "Men's Classic Bodybuilding", "Men's Classic Bodybuilding Principiante", "Men's Classic Physique", "Men's Classic Physique Principiante", "Men's Games Classic"],
+        "physique_m":    ["Men's Physique", "Men's Physique Principiante", "Men's Fit Model", "Men's Fit Model Principiante", "Men's Fitness"],
+        "muscular_m":    ["Muscular Men's Physique", "Muscular Men's Physique Principiante"],
+        "wellness_f":    ["Women's Wellness", "Women's Wellness Principiante", "Women's Fit Model", "Women's Fit Model Principiante"],
+        "bikini_f":      ["Women's Bikini", "Women's Bikini Principiante", "Women's Fit Model", "Women's Fit Model Principiante", "Women's Artistic Fitness"],
         "bodyfitness_f": ["Women's Bodyfitness", "Women's Acrobatic Fitness"],
         "physique_f":    ["Women's Physique"],
         "children_m":    ["Male Children Fitness"],
@@ -349,13 +349,14 @@
 
     const _FIT_PAIRS_W   = _normW("Fit Pairs");
     const _MIXED_PAIRS_W = _normW("Mixed Pairs");
+    const _FIT_PAIRS_PRINCIPIANTE_W = _normW("Fit Pairs Principiante");
     const _SEXO_ATLETA   = "<%= atleta ? atleta.sexo.toLowerCase() : 'm' %>";
 
     function _getPermitidasW(normPrincipal) {
-        if (normPrincipal === _FIT_PAIRS_W) {
+        if (normPrincipal === _FIT_PAIRS_W || normPrincipal === _FIT_PAIRS_PRINCIPIANTE_W) {
             const k = _SEXO_ATLETA === 'f' ? "bikini_f" : "physique_m";
             const base = _AFINIDAD_NORM_W[_normW(_GRUPOS_AFINIDAD_WEB[k][0])] || [normPrincipal];
-            return [...base, _FIT_PAIRS_W];
+            return [...base, _FIT_PAIRS_W, _FIT_PAIRS_PRINCIPIANTE_W];
         }
         if (normPrincipal === _MIXED_PAIRS_W) {
             const k = _SEXO_ATLETA === 'f' ? "physique_f" : "culturismo_m";
@@ -365,10 +366,10 @@
         const grupo = _AFINIDAD_NORM_W[normPrincipal] || [normPrincipal];
         const extra = [];
         if (_SEXO_ATLETA === 'm') {
-            if (grupo.includes(_normW("Men's Physique")))     extra.push(_FIT_PAIRS_W);
+            if (grupo.includes(_normW("Men's Physique")))     extra.push(_FIT_PAIRS_W, _FIT_PAIRS_PRINCIPIANTE_W);
             if (grupo.includes(_normW("Men's Bodybuilding"))) extra.push(_MIXED_PAIRS_W);
         } else {
-            if (grupo.includes(_normW("Women's Bikini")))    extra.push(_FIT_PAIRS_W);
+            if (grupo.includes(_normW("Women's Bikini")))    extra.push(_FIT_PAIRS_W, _FIT_PAIRS_PRINCIPIANTE_W);
             if (grupo.includes(_normW("Women's Physique"))) extra.push(_MIXED_PAIRS_W);
         }
         return [...grupo, ...extra];

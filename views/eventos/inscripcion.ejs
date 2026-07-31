@@ -552,11 +552,11 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
     // resuelva al grupo Bikini por defecto (el último en escribir al mapa gana).
     // Pairs (Fit Pairs / Mixed Pairs) son sex-aware: se manejan fuera del mapa.
     const GRUPOS_AFINIDAD = {
-        "culturismo_m":  ["Men's Bodybuilding", "Men's Classic Bodybuilding", "Men's Classic Physique", "Men's Games Classic"],
-        "physique_m":    ["Men's Physique", "Men's Fit Model", "Men's Fitness"],
-        "muscular_m":    ["Muscular Men's Physique"],
-        "wellness_f":    ["Women's Wellness", "Women's Fit Model"],
-        "bikini_f":      ["Women's Bikini", "Women's Fit Model", "Women's Artistic Fitness"],
+        "culturismo_m":  ["Men's Bodybuilding", "Men's Bodybuilding Principiante", "Men's Classic Bodybuilding", "Men's Classic Bodybuilding Principiante", "Men's Classic Physique", "Men's Classic Physique Principiante", "Men's Games Classic"],
+        "physique_m":    ["Men's Physique", "Men's Physique Principiante", "Men's Fit Model", "Men's Fit Model Principiante", "Men's Fitness"],
+        "muscular_m":    ["Muscular Men's Physique", "Muscular Men's Physique Principiante"],
+        "wellness_f":    ["Women's Wellness", "Women's Wellness Principiante", "Women's Fit Model", "Women's Fit Model Principiante"],
+        "bikini_f":      ["Women's Bikini", "Women's Bikini Principiante", "Women's Fit Model", "Women's Fit Model Principiante", "Women's Artistic Fitness"],
         "bodyfitness_f": ["Women's Bodyfitness", "Women's Acrobatic Fitness"],
         "physique_f":    ["Women's Physique"],
         "children_m":    ["Male Children Fitness"],
@@ -581,6 +581,7 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
 
     const _FIT_PAIRS_N   = _normDisc("Fit Pairs");
     const _MIXED_PAIRS_N = _normDisc("Mixed Pairs");
+    const _FIT_PAIRS_PRINCIPIANTE_N = _normDisc("Fit Pairs Principiante");
 
     // Devuelve la lista de disciplinas normalizadas permitidas para la disciplina
     // principal, incluyendo los Pairs correctos según el sexo del atleta.
@@ -588,10 +589,10 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
         const sexo = _sexoAtletaActual;
 
         // Pairs como punto de partida: buscar su grupo natural según sexo
-        if (normPrincipal === _FIT_PAIRS_N) {
+        if (normPrincipal === _FIT_PAIRS_N || normPrincipal === _FIT_PAIRS_PRINCIPIANTE_N) {
             const grupoKey = sexo === 'f' ? "bikini_f" : "physique_m";
             const base = _AFINIDAD_NORM[_normDisc(GRUPOS_AFINIDAD[grupoKey][0])] || [normPrincipal];
-            return [...base, _FIT_PAIRS_N];
+            return [...base, _FIT_PAIRS_N, _FIT_PAIRS_PRINCIPIANTE_N];
         }
         if (normPrincipal === _MIXED_PAIRS_N) {
             const grupoKey = sexo === 'f' ? "physique_f" : "culturismo_m";
@@ -604,10 +605,10 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
         // Agregar Pairs si el grupo del atleta los habilita
         const extra = [];
         if (sexo === 'm') {
-            if (grupo.includes(_normDisc("Men's Physique")))     extra.push(_FIT_PAIRS_N);
+            if (grupo.includes(_normDisc("Men's Physique")))     extra.push(_FIT_PAIRS_N, _FIT_PAIRS_PRINCIPIANTE_N);
             if (grupo.includes(_normDisc("Men's Bodybuilding"))) extra.push(_MIXED_PAIRS_N);
         } else {
-            if (grupo.includes(_normDisc("Women's Bikini")))    extra.push(_FIT_PAIRS_N);
+            if (grupo.includes(_normDisc("Women's Bikini")))    extra.push(_FIT_PAIRS_N, _FIT_PAIRS_PRINCIPIANTE_N);
             if (grupo.includes(_normDisc("Women's Physique"))) extra.push(_MIXED_PAIRS_N);
         }
         return [...grupo, ...extra];
