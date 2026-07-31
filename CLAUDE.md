@@ -336,6 +336,16 @@ Antes del 2026-07-31 esta lógica estaba duplicada e inconsistente en 4 lugares 
 - 1ra categoría paga `costo_primera_cat` (o `costo_oferta_primera`)
 - Categorías adicionales pagan `costo_adicional` (o `costo_oferta_adicional`)
 
+### Elegibilidad física por peso/estatura (bloqueo real, desde 2026-07-31)
+El atleta debe caer estrictamente dentro del `peso_min`/`peso_max` y `estatura_min`/`estatura_max` de la categoría elegida — antes esto no se validaba en ningún lado (ni cliente ni servidor), era 100% criterio manual del staff para TODAS las disciplinas.
+- **Reglas generales** (cualquier categoría con `peso_min`/`peso_max`/`estatura_min`/`estatura_max` definidos, sea cual sea su `parametro`): el valor `1000` en un `_max` es sentinela de "sin tope superior" (ej. Heavyweight `peso_max=1000`, Class B `estatura_max=1000`) y no bloquea.
+- **Men's Classic Physique / Men's Classic Physique Principiante — fórmula propia**: `peso_máximo = estatura_cm − 105`, verificada contra la tabla oficial FDFF de relación talla-peso (imagen `mph clasico.jpeg`, ej. 172cm→67kg, 190cm→85kg, 204cm→99kg — exacto en todo el rango). Además de la fórmula, también se respeta el rango de estatura de la clase (Class A/B) si el atleta cae fuera de él.
+- **Dónde vive la lógica** (duplicada intencionalmente cliente+servidor, no solo por UX sino porque el cliente se puede evadir):
+  - Cliente: `_esFisicamenteElegible()` en `views/eventos/inscripcion.ejs` — deshabilita el checkbox desde el render (`renderizarCategorias` ahora recibe `estaturaAtleta`/`pesoAtleta`) y `validarAfinidad()` respeta el atributo `data-bloqueo-fisico` sin re-habilitarlo.
+  - Servidor: `_validarElegibilidadFisica()` en `controllers/inscripcionController.js`, llamada desde `guardarInscripcionAsistida` (inscripción asistida) e `inscribirAtleta` (web) usando el peso/estatura real del atleta en BD — esto es lo que realmente impide guardar, el cliente es solo UX.
+  - `inscripcionPage` ahora selecciona `parametro, peso_min, peso_max, estatura_min, estatura_max` de `categorias` (antes solo mandaba `modalidad, disciplina, sexo, division, edad_min, edad_max` al cliente).
+- **Si se agrega otra disciplina con fórmula propia** (ej. Men's Games Classic, que en `crearCategoria.ejs` también usa `parametro='relacion'`), agregar su offset a `_OFFSET_RELACION_TALLA_PESO` en AMBOS archivos (cliente y servidor) — no asumir que todas las disciplinas `relacion` comparten la misma fórmula que Classic Physique sin verificarlo primero contra su propia tabla oficial.
+
 ### Presidente de Mesa (silla central) — regla fija, no editable manualmente
 El Presidente de Mesa **siempre** es el juez sentado en la silla central del panel 1, según la cantidad de jueces del panel:
 
