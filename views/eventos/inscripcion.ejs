@@ -548,25 +548,25 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
     }
 
     // ── Grupos de afinidad FDFF ─────────────────────────────────────────────────
-    // Wellness va antes que Bikini para que Women’s Fit Model (presente en ambos)
+    // Wellness va antes que Bikini para que Women's Fit Model (presente en ambos)
     // resuelva al grupo Bikini por defecto (el último en escribir al mapa gana).
     // Pairs (Fit Pairs / Mixed Pairs) son sex-aware: se manejan fuera del mapa.
     const GRUPOS_AFINIDAD = {
-        "culturismo_m":  ["Men’s Bodybuilding", "Men’s Classic Bodybuilding", "Men’s Classic Physique", "Men’s Games Classic"],
-        "physique_m":    ["Men’s Physique", "Men’s Fit Model", "Men’s Fitness"],
-        "muscular_m":    ["Muscular Men’s Physique"],
-        "wellness_f":    ["Women’s Wellness", "Women’s Fit Model"],
-        "bikini_f":      ["Women’s Bikini", "Women’s Fit Model", "Women’s Artistic Fitness"],
-        "bodyfitness_f": ["Women’s Bodyfitness", "Women’s Acrobatic Fitness"],
-        "physique_f":    ["Women’s Physique"],
+        "culturismo_m":  ["Men's Bodybuilding", "Men's Classic Bodybuilding", "Men's Classic Physique", "Men's Games Classic"],
+        "physique_m":    ["Men's Physique", "Men's Fit Model", "Men's Fitness"],
+        "muscular_m":    ["Muscular Men's Physique"],
+        "wellness_f":    ["Women's Wellness", "Women's Fit Model"],
+        "bikini_f":      ["Women's Bikini", "Women's Fit Model", "Women's Artistic Fitness"],
+        "bodyfitness_f": ["Women's Bodyfitness", "Women's Acrobatic Fitness"],
+        "physique_f":    ["Women's Physique"],
         "children_m":    ["Male Children Fitness"],
         "children_f":    ["Female Children Fitness"]
     };
 
     // Normaliza strings: minúsculas + apóstrofes uniformes
     function _normDisc(s) {
-        return (s || ‘’).toLowerCase()
-            .replace(/[‘’ʼ`´]/g, "’")
+        return (s || '').toLowerCase()
+            .replace(/[''ʼ`´]/g, "'")
             .trim();
     }
 
@@ -589,12 +589,12 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
 
         // Pairs como punto de partida: buscar su grupo natural según sexo
         if (normPrincipal === _FIT_PAIRS_N) {
-            const grupoKey = sexo === ‘f’ ? "bikini_f" : "physique_m";
+            const grupoKey = sexo === 'f' ? "bikini_f" : "physique_m";
             const base = _AFINIDAD_NORM[_normDisc(GRUPOS_AFINIDAD[grupoKey][0])] || [normPrincipal];
             return [...base, _FIT_PAIRS_N];
         }
         if (normPrincipal === _MIXED_PAIRS_N) {
-            const grupoKey = sexo === ‘f’ ? "physique_f" : "culturismo_m";
+            const grupoKey = sexo === 'f' ? "physique_f" : "culturismo_m";
             const base = _AFINIDAD_NORM[_normDisc(GRUPOS_AFINIDAD[grupoKey][0])] || [normPrincipal];
             return [...base, _MIXED_PAIRS_N];
         }
@@ -603,52 +603,52 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
 
         // Agregar Pairs si el grupo del atleta los habilita
         const extra = [];
-        if (sexo === ‘m’) {
-            if (grupo.includes(_normDisc("Men’s Physique")))     extra.push(_FIT_PAIRS_N);
-            if (grupo.includes(_normDisc("Men’s Bodybuilding"))) extra.push(_MIXED_PAIRS_N);
+        if (sexo === 'm') {
+            if (grupo.includes(_normDisc("Men's Physique")))     extra.push(_FIT_PAIRS_N);
+            if (grupo.includes(_normDisc("Men's Bodybuilding"))) extra.push(_MIXED_PAIRS_N);
         } else {
-            if (grupo.includes(_normDisc("Women’s Bikini")))    extra.push(_FIT_PAIRS_N);
-            if (grupo.includes(_normDisc("Women’s Physique"))) extra.push(_MIXED_PAIRS_N);
+            if (grupo.includes(_normDisc("Women's Bikini")))    extra.push(_FIT_PAIRS_N);
+            if (grupo.includes(_normDisc("Women's Physique"))) extra.push(_MIXED_PAIRS_N);
         }
         return [...grupo, ...extra];
     }
 
     function validarAfinidad(checkbox) {
-        const todosLosChecks = document.querySelectorAll(‘.check-cat’);
-        const marcados       = Array.from(document.querySelectorAll(‘.check-cat:checked’));
+        const todosLosChecks = document.querySelectorAll('.check-cat');
+        const marcados       = Array.from(document.querySelectorAll('.check-cat:checked'));
 
         if (marcados.length > 0) {
-            const normPrincipal  = _normDisc(marcados[0].closest(‘.cat-item’).dataset.disciplina || ‘’);
+            const normPrincipal  = _normDisc(marcados[0].closest('.cat-item').dataset.disciplina || '');
             const permitidasNorm = _getPermitidas(normPrincipal);
 
             // Modalidades ya marcadas (Junior/Master)
             const modalidadesMarcadas = new Set(
-                marcados.map(cb => (cb.closest(‘.cat-item’).dataset.modalidad || ‘’).toLowerCase())
+                marcados.map(cb => (cb.closest('.cat-item').dataset.modalidad || '').toLowerCase())
             );
-            const tieneJunior = modalidadesMarcadas.has(‘junior’);
-            const tieneMaster = modalidadesMarcadas.has(‘master’);
+            const tieneJunior = modalidadesMarcadas.has('junior');
+            const tieneMaster = modalidadesMarcadas.has('master');
 
             // División seleccionada por (disciplina + modalidad): bloquea divisiones
             // hermanas solo dentro de la misma modalidad, no entre Junior y Senior.
             const divPorDiscModal = {};
             marcados.forEach(cb => {
-                const item = cb.closest(‘.cat-item’);
-                const key = _normDisc(item.dataset.disciplina || ‘’) + ‘|’ + (item.dataset.modalidad || ‘’).toLowerCase();
-                const div = (item.dataset.division || ‘’).toLowerCase();
+                const item = cb.closest('.cat-item');
+                const key = _normDisc(item.dataset.disciplina || '') + '|' + (item.dataset.modalidad || '').toLowerCase();
+                const div = (item.dataset.division || '').toLowerCase();
                 if (!divPorDiscModal[key]) divPorDiscModal[key] = new Set();
                 divPorDiscModal[key].add(div);
             });
 
             todosLosChecks.forEach(cb => {
-                const item          = cb.closest(‘.cat-item’);
-                const normItem      = _normDisc(item.dataset.disciplina || ‘’);
-                const modalidadItem = (item.dataset.modalidad || ‘’).toLowerCase();
-                const divItem       = (item.dataset.division || ‘’).toLowerCase();
+                const item          = cb.closest('.cat-item');
+                const normItem      = _normDisc(item.dataset.disciplina || '');
+                const modalidadItem = (item.dataset.modalidad || '').toLowerCase();
+                const divItem       = (item.dataset.division || '').toLowerCase();
 
                 if (cb.checked) {
                     cb.disabled = false;
-                    item.classList.remove(‘opacity-50’, ‘bg-light’);
-                    item.style.order = ‘0’;
+                    item.classList.remove('opacity-50', 'bg-light');
+                    item.style.order = '0';
                     return;
                 }
 
@@ -657,9 +657,9 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
 
                 // Regla 2: modalidad (solo 1 Junior, solo 1 Master, nunca ambos)
                 let esModalidadValida = true;
-                if (modalidadItem === ‘junior’)     esModalidadValida = !tieneJunior && !tieneMaster;
-                else if (modalidadItem === ‘master’) esModalidadValida = !tieneMaster && !tieneJunior;
-                else if (modalidadItem === ‘children’) esModalidadValida = false;
+                if (modalidadItem === 'junior')     esModalidadValida = !tieneJunior && !tieneMaster;
+                else if (modalidadItem === 'master') esModalidadValida = !tieneMaster && !tieneJunior;
+                else if (modalidadItem === 'children') esModalidadValida = false;
 
                 // Regla 3: división — dentro de la misma disciplina y modalidad, solo una división
                 const _divKey = normItem + '|' + modalidadItem;
@@ -670,17 +670,17 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
 
                 const esValida = esGrupoValido && esModalidadValida && esDivisionValida;
                 cb.disabled = !esValida;
-                item.classList.toggle(‘opacity-50’, !esValida);
-                item.classList.toggle(‘bg-light’,   !esValida);
+                item.classList.toggle('opacity-50', !esValida);
+                item.classList.toggle('bg-light',   !esValida);
                 // Agrupación visual: disponibles arriba, bloqueadas abajo
-                item.style.order = esValida ? ‘0’ : ‘1’;
+                item.style.order = esValida ? '0' : '1';
             });
         } else {
             todosLosChecks.forEach(cb => {
-                const item = cb.closest(‘.cat-item’);
+                const item = cb.closest('.cat-item');
                 cb.disabled = false;
-                item.classList.remove(‘opacity-50’, ‘bg-light’);
-                item.style.order = ‘’;
+                item.classList.remove('opacity-50', 'bg-light');
+                item.style.order = '';
             });
         }
         calcularCobro();
