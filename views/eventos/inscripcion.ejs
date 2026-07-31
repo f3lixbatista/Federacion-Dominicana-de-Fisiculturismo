@@ -47,13 +47,26 @@
         </div>
     </div>
 <script>
+function _normalizarBusqueda(s) {
+    return (s || '').toString().toLowerCase().normalize('NFD').replace(new RegExp(String.fromCharCode(91) + String.fromCharCode(768) + '-' + String.fromCharCode(879) + String.fromCharCode(93), 'g'), '');
+}
+
+// Filtro custom de DataTables: compara la busqueda y el contenido de cada fila
+// sin acentos, para que "jose"/"josé" encuentren lo mismo. Se registra una sola
+// vez (fuera de filtrarTablaAtletas) para no duplicar el filtro en cada tecla.
+$.fn.dataTable.ext.search.push(function(settings, dataFila) {
+    if (settings.nTable.id !== 'mydatatable') return true;
+    var val = _normalizarBusqueda(document.getElementById('busquedaAtleta').value);
+    if (!val) return true;
+    return dataFila.some(function(col) { return _normalizarBusqueda(col).indexOf(val) !== -1; });
+});
+
 function filtrarTablaAtletas() {
-    var val = document.getElementById('busquedaAtleta').value || '';
     // DataTables pagina #mydatatable (25 filas) y solo mantiene en el DOM las
     // filas de la pagina actual — filtrar con querySelectorAll+display:none
-    // (como antes) ignoraba a cualquier atleta fuera de esa pagina. Usar la
-    // API de DataTables busca sobre el dataset completo y re-pagina el resultado.
-    $('#mydatatable').DataTable().search(val).draw();
+    // ignoraba a cualquier atleta fuera de esa pagina. draw() vuelve a aplicar
+    // el filtro custom de arriba (acentos) sobre el dataset completo.
+    $('#mydatatable').DataTable().draw();
 }
 </script>
 
