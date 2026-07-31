@@ -17,16 +17,28 @@ async function siguienteIdfdff() {
 
 const listarAtletas = async (req, res) => {
     try {
-        const { data, error } = await supabase
-            .from('atletas')
-            .select('id, nombre, cedula, idfdff, estatus_afiliacion, foto_url, sexo, email, celular, gimnasio, provincia, preparador_id')
-            .order('estatus_afiliacion', { ascending: false })
-            .order('nombre', { ascending: true })
-            .limit(500);
+        // PostgREST limita cada respuesta a un maximo de filas (tipicamente 1000)
+        // sin importar el .limit() pedido — con paginacion via .range() se trae
+        // el 100% de los atletas sin importar cuantos haya (antes un .limit(500)
+        // fijo dejaba fuera a la mitad de los ~1977 atletas registrados).
+        const PAGE_SIZE = 1000;
+        let arrayAtletas = [];
+        let desde = 0;
+        while (true) {
+            const { data, error } = await supabaseAdmin
+                .from('atletas')
+                .select('id, nombre, cedula, idfdff, estatus_afiliacion, foto_url, sexo, email, celular, gimnasio, provincia, preparador_id')
+                .order('estatus_afiliacion', { ascending: false })
+                .order('nombre', { ascending: true })
+                .range(desde, desde + PAGE_SIZE - 1);
 
-        if (error) throw error;
+            if (error) throw error;
+            arrayAtletas = arrayAtletas.concat(data || []);
+            if (!data || data.length < PAGE_SIZE) break;
+            desde += PAGE_SIZE;
+        }
 
-        res.render('atletas', { arrayAtletas: data || [] });
+        res.render('atletas', { arrayAtletas });
     } catch (error) {
         console.error('Error al listar atletas:', error.message);
         res.render('atletas', { arrayAtletas: [] });
