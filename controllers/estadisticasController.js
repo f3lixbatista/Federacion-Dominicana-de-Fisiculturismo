@@ -122,10 +122,7 @@ const verMesaComputo = async (req, res) => {
         // Lógica Automática de Fase (Si no se fuerza por URL)
         let faseTrabajo = fase;
         if (fase === 'auto') {
-            const total = (atletas || []).length;
-            if (total > 15) faseTrabajo = 'eliminatoria';
-            else if (total >= 7) faseTrabajo = 'semifinal';
-            else faseTrabajo = 'final_r1';
+            faseTrabajo = votingService.resolverFaseAutomatica((atletas || []).length);
         }
 
         const { data: jueces } = await supabaseAdmin
@@ -160,7 +157,15 @@ const verMesaComputo = async (req, res) => {
 };
 
 const oficializarCategoria = async (req, res) => {
-    const { eventoCatId, resultados } = req.body;
+    const { eventoCatId, resultados, fase } = req.body;
+
+    if (!['final_r1', 'final_r2'].includes(fase)) {
+        return res.status(400).json({
+            estado: false,
+            mensaje: `No se puede oficializar en fase "${fase || 'desconocida'}". Solo se oficializan resultados en Final Ronda 1 o Ronda 2 — cambie el selector de fase a la ronda final correspondiente antes de oficializar.`
+        });
+    }
+
     try {
         const updates = resultados.map(resAtleta => 
             // El Juez Estadístico envía la posición final (sea la sugerida o la manual)
@@ -235,6 +240,52 @@ const verGestionAbsolutos = async (req, res) => {
         res.render('estadisticas/gestion_absolutos', { idEvento, absolutos });
     } catch (error) {
         res.status(500).send("Error detectando campeones: " + error.message);
+    }
+};
+
+const imprimirResultadosAbsolutos = async (req, res) => {
+    const { idEvento } = req.params;
+    try {
+        const { data: evento } = await supabaseAdmin
+            .from('eventos')
+            .select('id, nombre, lugar, fecha_inicio')
+            .eq('id', idEvento)
+            .single();
+
+        const { data: campeones, error } = await supabaseAdmin
+            .from('competidores')
+            .select(`
+                id, numero_atleta, es_ganador_absoluto, puntos_totales,
+                atletas (nombre),
+                eventos_categorias ( categorias (nombre, modalidad, disciplina, division) )
+            `)
+            .eq('id_evento', idEvento)
+            .eq('posicion_final', 1);
+
+        if (error) throw error;
+
+        const grupos = {};
+        (campeones || []).forEach(c => {
+            const cat = c.eventos_categorias?.categorias || {};
+            const disc = cat.disciplina || 'Otras';
+            const mod  = (cat.modalidad || 'Senior').toLowerCase();
+            const key  = `${disc}|||${mod}`;
+            if (!grupos[key]) grupos[key] = { disciplina: disc, modalidad: cat.modalidad || 'Senior', campeones: [] };
+            grupos[key].campeones.push({
+                dorsal: c.numero_atleta,
+                nombre: c.atletas?.nombre || 'N/A',
+                categoria: cat.nombre || 'N/A',
+                division: cat.division || '--',
+                esGanadorAbsoluto: !!c.es_ganador_absoluto,
+                puntos: c.puntos_totales || null
+            });
+        });
+
+        const absolutos = Object.values(grupos).filter(g => g.campeones.length >= 2);
+
+        res.render('estadisticas/imprimir_absolutos', { evento, absolutos });
+    } catch (error) {
+        res.status(500).send("Error generando impresión de absolutos: " + error.message);
     }
 };
 
@@ -330,7 +381,7 @@ const verPresidenteMesa = async (req, res) => {
             .order('numero_atleta', { ascending: true });
 
         const total = (competidores || []).length;
-        const faseActual = faseParam || (total > 15 ? 'eliminatoria' : total >= 7 ? 'semifinal' : 'final');
+        const faseActual = faseParam || votingService.resolverFaseAutomatica(total);
         const requiereTop5 = total > 7;
         const limiteClasificacion = faseActual === 'eliminatoria' ? 15 : 6;
 
@@ -398,7 +449,7 @@ const verComparacionJuez = async (req, res) => {
             .order('numero_atleta', { ascending: true });
 
         const total = (competidores || []).length;
-        const faseActual = fase || (total > 15 ? 'eliminatoria' : total >= 7 ? 'semifinal' : 'final');
+        const faseActual = fase || votingService.resolverFaseAutomatica(total);
 
         // Selección previa de este juez
         const { data: miSeleccion } = await supabaseAdmin
@@ -612,6 +663,29 @@ const verMesaComputoActual = async (req, res) => {
     }
 };
 
+const verPresidenteMesaActual = async (req, res) => {
+    const { id: eventoId } = req.params;
+    try {
+        const { data: catActiva, error } = await supabaseAdmin
+            .from('eventos_categorias')
+            .select('id')
+            .eq('evento_id', eventoId)
+            .in('estatus_logistica', ['abierta activa', 'abierta exhibicion', 'exhibicion'])
+            .order('orden_secuencia_categoria', { ascending: true })
+            .limit(1)
+            .single();
+
+        if (error || !catActiva) {
+            return res.status(404).send("No hay ninguna categoría activa en tarima actualmente. Por favor, abra una categoría en el panel de Preparación.");
+        }
+
+        res.redirect(`/estadisticas/presidente-mesa/${catActiva.id}`);
+    } catch (error) {
+        console.error("Error al localizar presidente de mesa:", error.message);
+        res.redirect(`/eventos/${eventoId}/centro-mando`);
+    }
+};
+
 module.exports = {
     listarEstadisticas,
     verCalculosEvento,
@@ -620,6 +694,7 @@ module.exports = {
     oficializarCategoria,
     prepararPremiacion,
     verGestionAbsolutos,
+    imprimirResultadosAbsolutos,
     verMesaComputoAbsoluto,
     oficializarAbsoluto,
     imprimirBoletas,
@@ -629,5 +704,6 @@ module.exports = {
     enviarClasificadosMC,
     imprimirCertificadosMasivos,
     verCertificadoPreview,
-    verMesaComputoActual
+    verMesaComputoActual,
+    verPresidenteMesaActual
 };

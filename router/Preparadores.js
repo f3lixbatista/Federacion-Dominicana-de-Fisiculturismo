@@ -22,6 +22,9 @@ router.post('/habilitar/:id', checkPermiso('preparadores', 'editar'), preparador
 // Panel del coach (preparador ve su propio dashboard)
 router.get('/panel', checkPermiso('preparadores', 'ver'), preparadoresController.verPanel);
 
+// Impresión oficial del ranking de equipos de un evento específico
+router.get('/imprimir-ranking-teams/:idEvento', checkPermiso('reportes', 'ver'), preparadoresController.imprimirRankingTeams);
+
 // Redirect al team propio (para el sidebar — no necesita ID en la URL)
 router.get('/mi-team', checkPermiso('preparadores', 'ver'), preparadoresController.verMiTeam);
 

@@ -61,7 +61,7 @@
 
 <script src="/js/supabase.js"></script>
 <script>
-    const _supabase = supabase.createClient("<%= process.env.SUPABASE_URL %>", "<%= process.env.SUPABASE_KEY %>");
+    const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
 
     // Función interactiva para impedir puestos duplicados en la boleta
     function verificarDuplicidadPuestos(selectActual) {

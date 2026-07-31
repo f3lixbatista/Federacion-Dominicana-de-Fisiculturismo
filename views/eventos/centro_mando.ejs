@@ -140,6 +140,9 @@ const _btnOffStyle = 'opacity:.4;pointer-events:none;';
                         <a href="/eventos/<%= evento.id %>/mesa-tecnica-actual" class="btn btn-danger fw-bold text-start" style="<%= _cerradoCM ? _btnOffStyle : '' %>">
                             <i class="fas fa-gavel me-2"></i> MESA TÉCNICA (EN VIVO)
                         </a>
+                        <a href="/eventos/<%= evento.id %>/presidente-mesa-actual" class="btn btn-outline-danger text-start" style="<%= _cerradoCM ? _btnOffStyle : '' %>" title="Marcar clasificados y enviar al MC/Backstage">
+                            <i class="fas fa-user-tie me-2"></i> Presidente de Mesa
+                        </a>
                         <a href="/eventos/<%= evento.id %>/reporte-oficial" class="btn btn-outline-dark text-start">
                             <i class="fas fa-file-invoice me-2"></i> Reporte Oficial de Resultados
                         </a>

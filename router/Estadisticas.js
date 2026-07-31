@@ -49,6 +49,9 @@ router.post('/:id/calcular/:catId', checkPermiso('computo', 'editar'), estadisti
 // 6. DETECTOR DE CAMPEONES Y GESTIÓN DE ABSOLUTOS
 router.get('/:idEvento/absolutos', checkPermiso('computo', 'editar'), estadisticasController.verGestionAbsolutos);
 
+// IMPRESIÓN OFICIAL DE RESULTADOS DE ABSOLUTOS
+router.get('/:idEvento/imprimir-absolutos', checkPermiso('reportes', 'ver'), estadisticasController.imprimirResultadosAbsolutos);
+
 // 9. GENERAR BOLETAS DE VOTACIÓN MASIVAS (PARA IMPRESIÓN FÍSICA)
 router.get('/:idEvento/imprimir-boletas', checkPermiso('pesaje', 'ver'), estadisticasController.imprimirBoletas);
 

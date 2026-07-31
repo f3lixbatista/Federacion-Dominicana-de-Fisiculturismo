@@ -74,7 +74,22 @@ const calcularRankingEquipos = (participaciones) => {
         .sort((a, b) => b.puntos - a.puntos);
 };
 
+/**
+ * Determina automáticamente la fase de competencia según el total de atletas
+ * en la categoría. Única fuente de verdad — antes esta lógica estaba
+ * duplicada e inconsistente en verMesaComputo, verPresidenteMesa,
+ * verComparacionJuez (cada uno con su propio valor por defecto para <=6
+ * atletas: 'final_r1' vs 'final' plano), lo que dejaba votos huérfanos
+ * porque la boleta del juez y la Mesa de Cómputo no coincidían de fase.
+ */
+const resolverFaseAutomatica = (totalAtletas) => {
+    if (totalAtletas > 15) return 'eliminatoria';
+    if (totalAtletas >= 7) return 'semifinal';
+    return 'final_r1';
+};
+
 module.exports = {
     calcularPosicionesFinales,
-    calcularRankingEquipos
+    calcularRankingEquipos,
+    resolverFaseAutomatica
 };

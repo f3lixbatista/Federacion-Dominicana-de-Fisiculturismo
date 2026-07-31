@@ -215,6 +215,51 @@ const verRankingTeams = async (req, res) => {
     }
 };
 
+const imprimirRankingTeams = async (req, res) => {
+    const { idEvento } = req.params;
+    try {
+        const { data: evento } = await supabaseAdmin
+            .from('eventos')
+            .select('id, nombre, lugar, fecha_inicio')
+            .eq('id', idEvento)
+            .single();
+
+        if (!evento) return res.status(404).send('Evento no encontrado.');
+
+        const { data: participaciones } = await supabaseAdmin
+            .from('competidores')
+            .select(`
+                posicion_final, es_ganador_absoluto,
+                atletas(nombre, preparadores(nombre_completo, gimnasio_labora))
+            `)
+            .eq('id_evento', idEvento)
+            .not('posicion_final', 'is', null);
+
+        const teamsRaw = {};
+        (participaciones || []).forEach(p => {
+            const prep = p.atletas?.preparadores;
+            const teamName = prep?.nombre_completo || 'Independientes';
+            const teamGym = prep?.gimnasio_labora || '—';
+
+            if (!teamsRaw[teamName]) {
+                teamsRaw[teamName] = { nombre: teamName, gimnasio: teamGym, puntos: 0, medallas_oro: 0, podios: 0 };
+            }
+            teamsRaw[teamName].puntos += PUNTOS_MAP[p.posicion_final] || 0;
+            if (p.es_ganador_absoluto) teamsRaw[teamName].puntos += 11;
+            if (p.posicion_final === 1) teamsRaw[teamName].medallas_oro++;
+            if (p.posicion_final <= 3) teamsRaw[teamName].podios++;
+        });
+
+        const ranking = Object.values(teamsRaw)
+            .sort((a, b) => b.puntos - a.puntos || b.medallas_oro - a.medallas_oro || b.podios - a.podios);
+
+        res.render('preparadores/imprimir_ranking_teams', { evento, ranking });
+    } catch (error) {
+        console.error('Error imprimiendo ranking de equipos:', error.message);
+        res.status(500).send('Error al generar la impresión del ranking de equipos');
+    }
+};
+
 const listarEquipos = async (req, res) => {
     try {
         const [{ data: equipos }, { data: atletasRaw }] = await Promise.all([
@@ -441,6 +486,7 @@ module.exports = {
     habilitarPreparador,
     verPanel,
     verRankingTeams,
+    imprimirRankingTeams,
     listarEquipos,
     verMiTeam,
     verTeam,

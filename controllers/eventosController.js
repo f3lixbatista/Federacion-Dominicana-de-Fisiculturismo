@@ -2,6 +2,7 @@ const { supabase, supabaseAdmin } = require('../config/supabase');
 const QRCode = require('qrcode');
 const webpush = require('web-push'); // Import web-push
 const { z } = require('zod');
+const votingService = require('../services/votingService');
 
 // Esquema para validar la creación de un evento
 const nuevoEventoSchema = z.object({
@@ -436,7 +437,7 @@ const inyectarJuecesMC = async (req, res) => {
 const verBoletaJuez = async (req, res) => {
     const { id: eventoId } = req.params;
     const juezId = res.locals.user?.id;
-    const { fase = 'final' } = req.query;
+    const { fase: faseParam } = req.query;
 
     try {
         const { data: evento } = await supabase.from('eventos').select('id, nombre, estado').eq('id', eventoId).single();
@@ -467,6 +468,10 @@ const verBoletaJuez = async (req, res) => {
             .eq('evento_cat_id', catActiva.id)
             .eq('id_evento', eventoId)
             .order('numero_atleta', { ascending: true });
+
+        // Misma fórmula que la Mesa de Cómputo (votingService.resolverFaseAutomatica) para
+        // que el voto del juez y la lectura del estadístico caigan en la misma fase.
+        const fase = faseParam || votingService.resolverFaseAutomatica((competidores || []).length);
 
         res.render('eventos/boleta', {
             eventoId,

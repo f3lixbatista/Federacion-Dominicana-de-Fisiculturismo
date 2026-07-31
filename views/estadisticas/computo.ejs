@@ -192,6 +192,7 @@
         const idCatRel = document.getElementById('idCatRel').value;
         const payload = {
             eventoCatId: idCatRel,
+            fase: faseTrabajo,
             resultados: resultadosCalculados.map(r => ({
                 atleta_id: r.atletaId,
                 posicion: r.lugar,

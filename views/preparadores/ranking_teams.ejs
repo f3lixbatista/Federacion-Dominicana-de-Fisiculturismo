@@ -38,8 +38,11 @@
     </div>
 
     <% if (eventoSeleccionado) { %>
-        <div class="alert alert-primary border-0 mb-3 fw-bold">
-            <i class="fas fa-calendar-check me-2"></i> Mostrando resultados de: <strong><%= eventoSeleccionado.nombre %></strong>
+        <div class="alert alert-primary border-0 mb-3 fw-bold d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span><i class="fas fa-calendar-check me-2"></i> Mostrando resultados de: <strong><%= eventoSeleccionado.nombre %></strong></span>
+            <a href="/preparadores/imprimir-ranking-teams/<%= eventoSeleccionado.id %>" class="btn btn-warning btn-sm fw-bold" target="_blank">
+                <i class="fas fa-print me-1"></i> Imprimir Oficial
+            </a>
         </div>
     <% } else if (eventos.length > 0) { %>
         <div class="alert alert-info border-0 mb-3">

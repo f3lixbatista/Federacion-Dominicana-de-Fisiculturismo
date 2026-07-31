@@ -52,6 +52,7 @@ routerEventos.get('/:id/programa-resumido', checkPermiso('programa', 'ver'), eve
 // MESA DE CÓMPUTO
 routerEventos.get('/:id/computo/:eventoCatId', checkPermiso('computo', 'ver'), estadisticasController.verMesaComputo);
 routerEventos.get('/:id/mesa-tecnica-actual', checkPermiso('computo', 'ver'), estadisticasController.verMesaComputoActual);
+routerEventos.get('/:id/presidente-mesa-actual', checkPermiso('computo', 'ver'), estadisticasController.verPresidenteMesaActual);
 
 // INYECTAR JUECES AL MC
 routerEventos.post('/:id/inyectar-jueces-mc', checkPermiso('computo', 'editar'), eventosController.inyectarJuecesMC);

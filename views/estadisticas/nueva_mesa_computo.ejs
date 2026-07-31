@@ -121,10 +121,24 @@
             }
 
             fila.querySelector('.cell-total').innerText = totalFase;
-            tablaParaRanking.push({ id: fila.dataset.id, puntos: totalFase });
+            tablaParaRanking.push({ id: fila.dataset.id, puntos: totalFase, votosOriginales: votos });
         });
 
-        tablaParaRanking.sort((a, b) => a.puntos - b.puntos);
+        // Desempate por Relative Placement (misma regla que services/votingService.js):
+        // a igualdad de puntos, gana quien tenga más votos en los puestos más altos.
+        tablaParaRanking.forEach(item => {
+            const hist = new Array(16).fill(0);
+            item.votosOriginales.forEach(v => { if (v >= 1 && v <= 15) hist[v]++; });
+            item._hist = hist;
+        });
+
+        tablaParaRanking.sort((a, b) => {
+            if (a.puntos !== b.puntos) return a.puntos - b.puntos;
+            for (let i = 1; i <= 15; i++) {
+                if (a._hist[i] !== b._hist[i]) return b._hist[i] - a._hist[i];
+            }
+            return 0;
+        });
         tablaParaRanking.forEach((item, index) => {
             const fila = document.querySelector(`.fila-atleta[data-id="${item.id}"]`);
             fila.querySelector('.cell-posicion').innerText = (index + 1) + "°";
