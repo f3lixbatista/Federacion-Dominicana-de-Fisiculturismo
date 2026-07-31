@@ -440,10 +440,15 @@ const verBoletaJuez = async (req, res) => {
     const { fase: faseParam } = req.query;
 
     try {
-        const { data: evento } = await supabase.from('eventos').select('id, nombre, estado').eq('id', eventoId).single();
+        // Esta función ya está protegida por checkRole(['admin','juez']) a nivel de ruta,
+        // así que usa supabaseAdmin (bypassa RLS) en vez del cliente anon: el cliente
+        // "supabase" no reenvía el JWT del usuario en llamadas de servidor, por lo que
+        // políticas RLS como "auth.uid() = juez_id" en panel_sillas_jueces nunca se
+        // cumplían aquí — ningún juez podía encontrar su silla ni acceder a su boleta.
+        const { data: evento } = await supabaseAdmin.from('eventos').select('id, nombre, estado').eq('id', eventoId).single();
         if (!evento || evento.estado !== 'en_progreso') return res.send("Acceso Restringido.");
 
-        const { data: asiento } = await supabase
+        const { data: asiento } = await supabaseAdmin
             .from('panel_sillas_jueces')
             .select(`numero_silla, panel_id, paneles_jueces!inner(id, numero_panel, id_evento)`)
             .eq('juez_id', juezId)
@@ -452,7 +457,7 @@ const verBoletaJuez = async (req, res) => {
 
         if (!asiento) return res.render('jueces/espera', { user: res.locals.user });
 
-        const { data: catActiva } = await supabase
+        const { data: catActiva } = await supabaseAdmin
             .from('eventos_categorias')
             .select(`id, categorias(id, nombre, division)`)
             .eq('evento_id', eventoId)
@@ -462,7 +467,7 @@ const verBoletaJuez = async (req, res) => {
 
         if (!catActiva) return res.send("No hay categorías activas.");
 
-        const { data: competidores } = await supabase
+        const { data: competidores } = await supabaseAdmin
             .from('competidores')
             .select(`id, numero_atleta, atletas(id, nombre)`)
             .eq('evento_cat_id', catActiva.id)

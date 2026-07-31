@@ -125,8 +125,11 @@ public/
 ## Convenciones críticas de código
 1. **Visibilidad JS/CSS:** NO usar `class="d-none"` en elementos que JS necesita mostrar. Bootstrap `.d-none { display:none !important }` gana sobre `el.style.display`. Usar `style="display:none"` en HTML y `el.style.display = 'block'` en JS.
 2. **`supabaseAdmin`** solo en controllers del servidor. Nunca exponer en el cliente.
-3. **Respuestas del asistente:** siempre en **español**.
-4. **Apostrofes en datos de BD:** pueden ser curvos (`'` U+2019) o rectos (`'` U+0027). Siempre normalizar antes de comparar strings con nombres de disciplinas.
+3. **En controllers, usar SIEMPRE `supabaseAdmin`, nunca el `supabase` (anon) crudo** — salvo que exista una razón explícita para respetar RLS. El cliente `supabase` del servidor **no reenvía el JWT del usuario** (se crea una sola vez con la anon key a nivel de módulo), así que cualquier política RLS que dependa de `auth.uid()` NUNCA se cumple desde un controller, aunque el usuario esté perfectamente autenticado a nivel de Express/cookies. Esto rompió silenciosamente `verBoletaJuez` hasta 2026-07-31 (el juez nunca encontraba su silla). Ver §"Hallazgos críticos" abajo.
+4. **Respuestas del asistente:** siempre en **español**.
+5. **Apostrofes en datos de BD:** pueden ser curvos (`'` U+2019) o rectos (`'` U+0027). Siempre normalizar antes de comparar strings con nombres de disciplinas.
+6. **Orden de carga de Bootstrap 5 en `cabecera.ejs`:** el `<script>` de `bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js` debe ir **al final** de los `<script>` de cabecera, después de DataTables. El bundle de DataTables `bs4-4.1.1` trae embebida su propia copia de Bootstrap 4 y sobreescribe `window.bootstrap` si carga después — cualquier `new bootstrap.Modal(...)`/`bootstrap.Dropdown`/etc. en CUALQUIER página quedaría usando la API de Bootstrap 4 en silencio (sin error visible) si se invierte el orden.
+7. **Inicialización de componentes Bootstrap (modales, etc.) en vistas:** no depender solo de `document.addEventListener('DOMContentLoaded', ...)` en scripts que se cargan al final del body — verificar `document.readyState` y ejecutar de inmediato si ya pasó `'loading'`. Ver `views/eventos/inscripcion.ejs`.
 
 ---
 
@@ -184,10 +187,17 @@ id, evento_id, categoria_id
 
 ### `competidores`
 ```
-id, atleta_id, evento_cat_id, id_evento, juez_id,
-estatus_pesaje (pendiente|aprobado), numero_competidor,
-monto_total, uso_oferta, musica_url, salida
+id, atleta_id, evento_cat_id, id_evento, numero_atleta, salida,
+peso_confirmado, estatura_confirmada, juez_id, estatus_pesaje (pendiente|aprobado),
+es_ganador_absoluto, posicion_final, puntos_totales,
+puntos_eliminatoria, puntos_semifinal, puntos_final_r1, puntos_final_r2 (sin uso real — ver abajo),
+fase_actual, clasificado_fase (sin uso real — ver abajo),
+musica_url, foto_atletica_url,
+url_comprobante_pago, pago_validado, fecha_subida_pago, observaciones_pago, fecha_revision_pago,
+monto_total, uso_oferta, created_at
 ```
+- **`monto_total`/`uso_oferta` se eliminaron accidentalmente de la BD en algún momento sin migración registrada** (ninguna migración en `migrations/` los toca) y se restauraron el 2026-07-31 vía `migrations/008_restaurar_monto_total_competidores.sql`. Mientras faltaron, **`guardarInscripcionAsistida` (inscripción asistida real) fallaba en TODO intento de registrar un atleta** (`column competidores.monto_total does not exist`), y `_buildListado` (listados oficiales de atletas/posiciones) fallaba silenciosamente — el error no se verificaba al desestructurar la respuesta de Supabase, así que `listado-atletas`/`listado-posiciones` mostraban siempre 0 participantes sin ningún error visible. **Antes de asumir que un problema de datos es "normal", verificar que las columnas que el código espera realmente existen en la tabla** — este proyecto no tiene todas sus migraciones trackeadas.
+- **`puntos_eliminatoria`/`puntos_semifinal`/`puntos_final_r1`/`puntos_final_r2`/`fase_actual`/`clasificado_fase`** existen en la tabla pero **no los escribe ningún código actual** — son vestigios de un diseño más granular (guardar puntos por fase, marcar quién clasifica) que nunca se terminó de implementar. Lo que sí se usa activamente es `puntos_totales` + `posicion_final`, escritos únicamente por `oficializarCategoria`/`oficializarAbsoluto` sobre la fase que esté activa en ese momento (se sobreescriben en cada fase, no se acumulan por separado salvo el caso manual de `final_r2` que suma el `R1` ya impreso en pantalla).
 
 ### `preparadores`
 ```
@@ -299,10 +309,26 @@ Cuando se bloquean categorías, las disponibles se ordenan visualmente al inicio
 - Pairs (Fit Pairs / Mixed Pairs) son sex-aware — manejados por `_getPermitidas()` / `_getPermitidasW()` según `_sexoAtletaActual` / `_SEXO_ATLETA`.
 
 ### Algoritmo de puntuación IFBB
-- Se eliminan el voto más alto y más bajo de cada atleta
+- Se eliminan el voto más alto y más bajo de cada atleta (solo si hay 5+ jueces)
 - Se suman los votos restantes → menor puntaje = mejor posición
-- Empates se resuelven por Relative Placement
-- Implementado en `services/votingService.js`
+- Empates se resuelven por Relative Placement (histograma de votos originales, gana quien tenga más votos en las posiciones más altas)
+- Implementado en `services/votingService.js` (`calcularPosicionesFinales`) — **triplicado** en el código: también existe en `public/js/compu-algo.js` (cliente, Mesa de Cómputo normal) y estaba reimplementado sin desempate en `views/estadisticas/nueva_mesa_computo.ejs` (Mesa de Cómputo de Absolutos) hasta que se le agregó el mismo desempate el 2026-07-31. Si se toca la regla de puntuación, **actualizar los 3 lugares**.
+
+### Fases de competencia (`fase_competencia` / `fase`)
+No es una columna persistente de `competidores` — vive como string libre en `votaciones_jueces.fase_competencia`, resuelto en cada pantalla vía query param `?fase=`. Valores válidos (los únicos que ofrece el selector de `computo.ejs`): `eliminatoria | semifinal | final_r1 | final_r2 | absoluto`.
+
+**Auto-detección por cantidad de atletas** — única fuente de verdad: `votingService.resolverFaseAutomatica(total)`:
+| Total de atletas | Fase automática |
+|---|---|
+| > 15 | `eliminatoria` |
+| 7 – 15 | `semifinal` |
+| ≤ 6 | `final_r1` |
+
+Antes del 2026-07-31 esta lógica estaba duplicada e inconsistente en 4 lugares (`verMesaComputo`, `verPresidenteMesa`, `verComparacionJuez`, `verBoletaJuez`) — la boleta del juez usaba por defecto `'final'` (literal plano, ni siquiera una opción real del selector) sin mirar la cantidad de atletas, mientras la Mesa de Cómputo autodetectaba `'final_r1'` para las mismas 8 categorías. Resultado: el juez votaba en una fase, el estadístico miraba otra, y la matriz aparecía vacía sin ningún error. Ahora las 4 funciones llaman a `resolverFaseAutomatica()`.
+
+**No existe "avance de fase" automático.** No hay ningún proceso que filtre atletas entre eliminatoria→semifinal→final — es 100% criterio humano: el estadístico simplemente cambia el `<select id="selectFase">` en `computo.ejs` y todos los atletas de la categoría vuelven a aparecer (sin filtrar a los "clasificados"). El corte de quién sigue queda en la cabeza del estadístico/presidente de mesa, no en el sistema. La pantalla "Presidente de Mesa" (`/estadisticas/presidente-mesa/:eventoCatId`) ayuda a marcar candidatos pero **no está enlazada desde ninguna vista** — hay que teclear la URL, o usar el atajo `/eventos/:id/presidente-mesa-actual` (agregado 2026-07-31) que autodetecta la categoría activa en tarima.
+
+**`oficializarCategoria` exige fase `final_r1` o `final_r2`** (validado en servidor desde 2026-07-31) — antes se podía oficializar por error una ronda eliminatoria/semifinal como resultado definitivo, sin ninguna advertencia.
 
 ### Precios (Early Bird)
 - Si la fecha actual ≤ `eventos.fecha_limite_oferta` → precios de oferta
@@ -331,14 +357,33 @@ Dos documentos imprimibles generados desde el mismo dato (`eventos.cronograma_mc
 
 ---
 
-## Flujo de operación el día del evento
-1. **Pesaje** (`/inscripcion/asistida`): Staff escanea QR o busca atleta, registra peso/talla, selecciona categorías, genera dorsal
-2. **Centro de Mando** (`/eventos/centro-mando`): Admin gestiona orden de salida, fusión de categorías por cuórum, dorsaleo
-3. **Backstage** (`/eventos/[id]/backstage`): Muestra próximos atletas por dorsal
-4. **Mesa de Cómputo** (`/estadisticas/mesa-computo/[id]`): Jueces votan en tablet, estadístico ejecuta algoritmo IFBB
-5. **Monitor MC** (`/eventos/[id]/monitor-mc`): Solo lectura, recibe resultados cuando estadístico los envía
-6. **Absolutos** (`/estadisticas/gestion-absolutos`): Duelo de campeones de oro, asignación de 11 puntos al team
-7. **Cierre**: Resultados al Salón de la Fama, certificados en perfil del atleta
+## Flujo de operación el día del evento (cronograma completo, verificado 2026-07-31)
+
+### Fase 1 — Antes del evento: inscripción y pesaje
+1. **Inscripción asistida** (`/inscripcion?evento=:id`, `guardarInscripcionAsistida`): staff busca al atleta (nombre/cédula/QR), abre el modal, selecciona categorías afines, confirma peso/talla. Requiere `evento.estado` en `inscripcion`|`pesaje`. Crea filas en `competidores` con `estatus_pesaje='aprobado'`.
+2. **Cierre de pesaje**: no es un botón único — el evento pasa de `inscripcion`/`pesaje` a `en_progreso` recién en el paso 4 (oficializar preparación). Antes de eso se puede seguir inscribiendo/corrigiendo pesaje libremente.
+
+### Fase 2 — Preparación del programa (`/eventos/:id/preparacion`)
+3. **Orden de salida**: arrastrar (⣿) o escribir el número de orden mueve categorías/actividades a esa posición — el número siempre se deriva de la posición, nunca se asigna suelto, así que no puede haber duplicados.
+4. **Panel de jueces**: elegir cantidad (3/5/7/9/11), asignar jueces por silla. La silla central queda marcada automáticamente como Presidente de Mesa (ver regla arriba) al guardar.
+5. **Invitados especiales**: cargar jueces fuera del panel, staff, patrocinadores, personalidades (para que el MC los mencione en la apertura).
+6. **Oficializar**: botón "OFICIALIZAR LISTADOS Y GENERAR DORSALES" → asigna `numero_atleta` correlativo por categoría en el orden definido, cambia `evento.estado` a `en_progreso`, y publica `eventos.cronograma_mc` (consumido por Monitor MC y Backstage).
+
+### Fase 3 — Show en vivo
+7. **Backstage** (`/eventos/:id/backstage`): siguiente atleta por dorsal.
+8. **Votación**: dos caminos independientes que alimentan la misma `votaciones_jueces`:
+   - **Boleta digital del juez** (`/eventos/:id/votacion`): el juez ve SIEMPRE la categoría de menor `orden_secuencia_categoria` que siga `abierta activa` (no hay forma de "empujar" una categoría específica salvo cerrar/fusionar las anteriores). Requiere sesión con **MFA (AAL2)** — la política RLS `Votos_Insert_Seguro_MFA` de `votaciones_jueces` rechaza el INSERT si el juez no tiene `aal2` en su JWT (solo `admin` puede insertar sin MFA). **No hay flujo de enrolamiento de MFA para jueces en la app** — hasta que exista, la boleta digital es inviable para jueces reales; el canal que sí funciona hoy es el siguiente.
+   - **Digitación asistida** (`/estadisticas/mesa-computo/:eventoCatId`): el estadístico teclea directo en la matriz los votos de boletas físicas, por juez y atleta — no depende de RLS ni de MFA (la página lee/escribe todo vía `supabaseAdmin` en el servidor salvo el guardado final).
+9. **Cómputo**: botón "COMPU-ESTADÍSTICA" corre el algoritmo IFBB en el navegador sobre lo digitado; "OFICIALIZAR RESULTADOS" solo se habilita si la fase es `final_r1`/`final_r2` y guarda `posicion_final`/`puntos_totales` vía `supabaseAdmin`.
+10. **Monitor MC** (`/eventos/:id/monitor-mc`): solo lectura, recibe resultados cuando el estadístico los envía ("ENVIAR RESULTADOS AL MC").
+11. **Absolutos** (`/estadisticas/:idEvento/absolutos`): aparece un grupo por cada disciplina+modalidad con 2+ divisiones ya oficializadas. Se abre la Mesa de Cómputo de Absolutos, se vota entre los campeones de división, se oficializa el ganador (`es_ganador_absoluto=true`, +11 puntos al team en el ranking calculado al vuelo).
+
+### Fase 4 — Resultados e impresión
+12. **Por categoría**: `reporte_oficial.ejs` (acta protocolar, solo posiciones si `evento.estado==='finalizado'`) o `/inscripcion/listado-posiciones/:eventoId` (listado plano, funciona apenas se oficializa cada categoría, no espera a que cierre el evento).
+13. **Por absoluto**: `/estadisticas/:idEvento/imprimir-absolutos` (agregado 2026-07-31).
+14. **Por equipo**: `/preparadores/imprimir-ranking-teams/:idEvento` (agregado 2026-07-31) — puntos por posición (7/5/4/3/2/1 para 1°-6°) + 11 por absoluto, calculado en vivo, no hay tabla de ranking persistida.
+15. **Certificados**: individual en `/estadisticas/certificado-preview/:idCompetidor` (vista reconstruida 2026-07-31, estaba vacía), o masivo en `/estadisticas/imprimir-certificados/:eventoId`.
+16. **Cierre**: Resultados al Salón de la Fama.
 
 ---
 
@@ -357,8 +402,14 @@ Dos documentos imprimibles generados desde el mismo dato (`eventos.cronograma_mc
 | `/eventos/:id/programa-oficial` | admin/ejecutivo/estadístico/mc | Guion imprimible completo (con atletas) |
 | `/eventos/:id/programa-resumido` | admin/ejecutivo/estadístico/mc | Guion imprimible sin atletas (solo estructura + roster) |
 | `/eventos/[id]/monitor-mc` | mc | Monitor del locutor |
+| `/eventos/:id/presidente-mesa-actual` | estadístico | Auto-detecta categoría activa → redirige a Presidente de Mesa |
+| `/estadisticas/presidente-mesa/:eventoCatId` | estadístico | Marcar clasificados, enviar al MC/Backstage |
 | `/estadisticas/mesa-computo/[id]` | estadistico/juez | Votación y cómputo |
+| `/estadisticas/mesa-computo-absoluto` | estadístico | Cómputo del duelo de campeones (query params evento/disciplina/modalidad) |
 | `/estadisticas/gestion-absolutos` | estadistico | Campeones y puntos team |
+| `/estadisticas/:idEvento/imprimir-absolutos` | reportes:ver | Impresión oficial de resultados de Absolutos |
+| `/preparadores/imprimir-ranking-teams/:idEvento` | reportes:ver | Impresión oficial de ranking de equipos por evento |
+| `/inscripcion/listado-posiciones/:eventoId` | pesaje:ver | Listado oficial de posiciones por categoría (imprimible) |
 | `/social/muro` | todos | Muro social (feed + publicar para atletas) |
 | `/social/noticias` | todos | Comunicados oficiales |
 | `/social/noticias/crear` | admin/ejecutivo | Publicar nueva noticia |
@@ -388,3 +439,21 @@ Dos documentos imprimibles generados desde el mismo dato (`eventos.cronograma_mc
 - [x] Módulo 13 — Broadcast (lower thirds, TTS, efectos LED, panel VMD, overlay OBS)
 - [x] Módulo 14 — Presidente de Mesa (fases de competencia, Top 5 comparación, clasificados al MC)
 - [x] Módulo 15 — Programa del evento: orden de salida por posición (drag & drop, sin duplicados posibles), Presidente de Mesa automático por silla central, roster de invitados especiales (jueces no-panel/staff/patrocinadores/personalidades), Programa Oficial y Programa Resumido imprimibles
+- [x] Módulo 16 — Auditoría completa del flujo de competencia (2026-07-31): inscripción asistida, pesaje, votación por fases (eliminatoria/semifinal/final/absoluto), impresión de resultados por categoría/absoluto/equipo. Ver "Hallazgos críticos corregidos" abajo — se encontraron y corrigieron 6 bugs que impedían el funcionamiento real de inscripción, votación de jueces y listados oficiales.
+
+### ⚠️ Hallazgos críticos corregidos en la auditoría (2026-07-31)
+Encontrados probando el flujo real en navegador (no solo leyendo código) — todos confirmados con evidencia (error reproducido, luego corregido y re-probado):
+
+1. **`views/eventos/boleta.ejs` usaba `process.env.SUPABASE_KEY`** (variable inexistente) en vez de `SUPABASE_ANON_KEY` vía locals — el voto digital del juez nunca se guardaba. Corregido, pero ver hallazgo #2 (sigue bloqueado por MFA).
+2. **RLS de `votaciones_jueces` exige MFA (`aal2`)** para insertar votos, salvo rol `admin`. Ningún juez real tiene MFA enrolado (no existe esa UI) → **la boleta digital del juez es inviable en producción tal como está**. El camino que sí funciona es la "digitación asistida" en la Mesa de Cómputo (server-side, `supabaseAdmin`). No se debilitó la política — es una decisión de seguridad legítima, pero requiere decidir: construir enrolamiento de MFA para jueces, o aceptar que la digitación asistida es el único canal real.
+3. **`verBoletaJuez` usaba el cliente `supabase` (anon) sin JWT del usuario** — la política RLS `Sillas_Lectura_Propia` (`auth.uid() = juez_id`) nunca se cumplía desde el servidor, así que ningún juez podía encontrar su silla asignada. Corregido a `supabaseAdmin` (la ruta ya está protegida por `checkRole` a nivel Express).
+4. **Fase de votación inconsistente entre 4 funciones** (ver sección "Fases de competencia" arriba) — corregido con `resolverFaseAutomatica()` único.
+5. **`competidores.monto_total`/`uso_oferta` no existían en la BD** (sin migración registrada que las quitara) — rompía inscripción asistida real y listados oficiales. Restaurado vía `migrations/008_restaurar_monto_total_competidores.sql`.
+6. **DataTables `bs4-4.1.1` sobreescribía `window.bootstrap` con Bootstrap 4**, cargándose después del Bootstrap 5.2.2 real en `cabecera.ejs` — rompía **todo** modal/dropdown/etc. de Bootstrap 5 en cualquier página del sitio (confirmado: `new bootstrap.Modal()` creaba una instancia v4 que no mostraba nada visualmente con el CSS v5 cargado). Corregido reordenando los `<script>`.
+7. **`oficializarCategoria` no validaba la fase** antes de grabar `posicion_final` — se podía oficializar una ronda eliminatoria/semifinal por error como resultado definitivo. Ahora exige `final_r1`/`final_r2`.
+8. **Cómputo de Absolutos sin desempate por Relative Placement** (a diferencia de la Mesa de Cómputo normal) — agregado.
+9. **`views/reportes/certificado.ejs` estaba vacío (0 bytes)** — certificado individual en blanco. Reconstruido.
+10. Faltaban vistas imprimibles de **resultado de Absoluto** y de **ranking de equipo por evento** — no existían, se construyeron.
+11. **"Presidente de Mesa" no estaba enlazado desde ninguna vista** — se agregó acceso desde Centro de Mando.
+
+**No se tocó** (fuera de alcance, código legacy no usado por la UI actual): `verCalculosEvento`/`calculos.ejs` (superado por Mesa de Cómputo), `crearCompetidor`/`pesajePage` en `inscripcionController.js` (usan el cliente anon y también fallarían, pero no están enrutados desde ninguna vista activa).

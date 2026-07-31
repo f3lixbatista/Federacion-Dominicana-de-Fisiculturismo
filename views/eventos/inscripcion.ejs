@@ -354,15 +354,24 @@ async function rechazarPagoInsc(competidorId) {
     };
 
     // 3. Inicialización del Modal
+    // No depender solo de DOMContentLoaded: este script se ejecuta al final del
+    // body, y el evento puede no dispararse un handler agregado tan tarde en
+    // ciertos escenarios de carga — se inicializa de inmediato si el documento
+    // ya terminó de parsear.
     let myModal;
-    document.addEventListener('DOMContentLoaded', () => {
+    function _inicializarModalInscripcion() {
         const modalEl = document.getElementById('modalInscripcion');
         if (modalEl && typeof bootstrap !== 'undefined') {
             myModal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
         } else if (typeof bootstrap === 'undefined') {
             console.error("Bootstrap no se cargó correctamente. Verifique su conexión o use una copia local.");
         }
-    });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _inicializarModalInscripcion);
+    } else {
+        _inicializarModalInscripcion();
+    }
 
     function cerrarModal() {
         if (myModal) myModal.hide();
