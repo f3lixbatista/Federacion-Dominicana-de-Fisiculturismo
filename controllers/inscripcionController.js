@@ -33,7 +33,7 @@ const inscripcionPage = async (req, res) => {
                 .from('eventos_categorias')
                 .select(`
                     id,
-                    categorias!inner (id, nombre, modalidad, disciplina, sexo, division, edad_min, edad_max)
+                    categorias!inner (id, nombre, modalidad, disciplina, sexo, division, edad_min, edad_max, parametro, peso_min, peso_max, estatura_min, estatura_max)
                 `)
                 .eq('evento_id', evento.id);
             arrayCategorias = cats || [];
@@ -281,6 +281,73 @@ const detalleInscripcion = async (req, res) => {
     }
 };
 
+// Men's Classic Physique usa formula propia (peso maximo = estatura - 105 cm),
+// verificada contra la tabla oficial FDFF de relacion talla-peso (ej. 172cm -> 67kg,
+// 190cm -> 85kg). Las demas disciplinas con parametro 'peso'/'estatura'/'ambos' ya
+// tienen su rango exacto guardado en la propia categoria (peso_min/max, estatura_min/max).
+const _OFFSET_RELACION_TALLA_PESO = {
+    "men's classic physique": 105,
+    "men's classic physique principiante": 105
+};
+
+function _normDiscValidacion(s) {
+    var chars = [0x2018, 0x2019, 0x02BC, 0x00B4, 0x0060].map(function(c){ return String.fromCharCode(c); });
+    var re = new RegExp('[' + chars.join('') + ']', 'g');
+    return (s || '').toString().toLowerCase().replace(re, "'").trim();
+}
+
+// Bloqueo real: el atleta debe caer estrictamente dentro del peso/estatura de la
+// categoria elegida (o cumplir la formula de relacion talla-peso). Si no hay dato
+// de peso/estatura del atleta o de la categoria, no se bloquea esa dimension.
+async function _validarElegibilidadFisica(atleta, eventoCatIds) {
+    if (!Array.isArray(eventoCatIds) || eventoCatIds.length === 0) return [];
+
+    const { data: seleccionadas, error } = await supabaseAdmin
+        .from('eventos_categorias')
+        .select('id, categorias!inner(nombre, disciplina, parametro, peso_min, peso_max, estatura_min, estatura_max)')
+        .in('id', eventoCatIds);
+    if (error) throw error;
+
+    const errores = [];
+    for (const ec of (seleccionadas || [])) {
+        const cat = ec.categorias || {};
+
+        // Estatura: se respeta el rango de la clase (Class A/B/...) si la categoria lo define,
+        // sea cual sea el parametro (aplica tambien a Men's Classic Physique).
+        if (atleta.estatura) {
+            if (cat.estatura_min != null && atleta.estatura < cat.estatura_min) {
+                errores.push(`"${cat.nombre}": estatura ${atleta.estatura}cm está por debajo del mínimo (${cat.estatura_min}cm).`);
+            }
+            if (cat.estatura_max != null && cat.estatura_max < 1000 && atleta.estatura > cat.estatura_max) {
+                errores.push(`"${cat.nombre}": estatura ${atleta.estatura}cm excede el máximo (${cat.estatura_max}cm).`);
+            }
+        }
+
+        const disc = _normDiscValidacion(cat.disciplina);
+        const offset = _OFFSET_RELACION_TALLA_PESO[disc];
+        if (offset != null) {
+            if (atleta.estatura && atleta.peso) {
+                const pesoMax = atleta.estatura - offset;
+                if (atleta.peso > pesoMax) {
+                    errores.push(`"${cat.nombre}": peso ${atleta.peso}kg excede el máximo permitido (${pesoMax.toFixed(1)}kg) para ${atleta.estatura}cm de estatura.`);
+                }
+            }
+            continue;
+        }
+
+        // Peso: se respeta el rango de la categoria si lo define.
+        if (atleta.peso) {
+            if (cat.peso_min != null && atleta.peso < cat.peso_min) {
+                errores.push(`"${cat.nombre}": peso ${atleta.peso}kg está por debajo del mínimo (${cat.peso_min}kg).`);
+            }
+            if (cat.peso_max != null && cat.peso_max < 1000 && atleta.peso > cat.peso_max) {
+                errores.push(`"${cat.nombre}": peso ${atleta.peso}kg excede el máximo (${cat.peso_max}kg).`);
+            }
+        }
+    }
+    return errores;
+}
+
 const guardarInscripcionAsistida = async (req, res) => {
     const { atleta_id, id_evento, categoriasElegidas, preparador_id } = req.body;
     const juez_id = res.locals.user?.id;
@@ -312,6 +379,18 @@ const guardarInscripcionAsistida = async (req, res) => {
         const pA = esPrecioOferta ? (evento.costo_oferta_adicional || evento.costo_adicional) : (evento.costo_adicional || 0);
 
         const categoriasArray = Array.isArray(categoriasElegidas) ? categoriasElegidas : [categoriasElegidas];
+
+        // Bloqueo real: el peso/estatura del atleta debe caer dentro de lo que exige
+        // cada categoria elegida (o cumplir la formula de relacion talla-peso).
+        const { data: atletaFisico } = await supabaseAdmin
+            .from('atletas').select('peso, estatura').eq('id', atleta_id).single();
+        const erroresFisicos = await _validarElegibilidadFisica(atletaFisico || {}, categoriasArray);
+        if (erroresFisicos.length > 0) {
+            return res.status(400).json({
+                estado: false,
+                mensaje: 'No se puede inscribir — el atleta no cumple los parámetros de:\n' + erroresFisicos.join('\n')
+            });
+        }
 
         const registrosCompetidores = categoriasArray.map((eventoCatId, index) => ({
             atleta_id,
@@ -432,6 +511,14 @@ const inscribirAtleta = async (req, res) => {
     const esPrecioOferta = evento?.fecha_limite_oferta && ahora <= new Date(evento.fecha_limite_oferta);
     const p1 = esPrecioOferta ? (evento.costo_oferta_primera || evento.costo_primera_cat || 0) : (evento.costo_primera_cat || 0);
     const pA = esPrecioOferta ? (evento.costo_oferta_adicional || evento.costo_adicional || 0) : (evento.costo_adicional || 0);
+
+    // Bloqueo real: mismo chequeo de peso/estatura que la inscripción asistida.
+    const { data: atletaFisicoWeb } = await supabaseAdmin
+        .from('atletas').select('peso, estatura').eq('id', atletaId).single();
+    const erroresFisicosWeb = await _validarElegibilidadFisica(atletaFisicoWeb || {}, catEventoIds);
+    if (erroresFisicosWeb.length > 0) {
+        return res.status(400).json({ error: 'No cumple los parámetros de: ' + erroresFisicosWeb.join(' | ') });
+    }
 
     // Reemplazar inscripciones existentes con la nueva selección
     await supabaseAdmin.from('competidores')

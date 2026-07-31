@@ -460,7 +460,7 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
         const _mDiff = _hoy.getMonth() - _nac.getMonth();
         if (_mDiff < 0 || (_mDiff === 0 && _hoy.getDate() < _nac.getDate())) _edad--;
 
-        renderizarCategorias(sexoNormalizado, yaInscritosIds, _edad);
+        renderizarCategorias(sexoNormalizado, yaInscritosIds, _edad, parseFloat(estatura), parseFloat(peso));
 
         if (myModal) {
             myModal.show();
@@ -471,7 +471,41 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
 
     let _sexoAtletaActual = 'm';
 
-    function renderizarCategorias(sexoAtleta, yaInscritosIds = [], edadAtleta = null) {
+    // Men's Classic Physique usa formula propia (peso maximo = estatura - 105 cm),
+    // verificada contra la tabla oficial FDFF de relacion talla-peso.
+    const _OFFSET_RELACION_TALLA_PESO = {
+        "men's classic physique": 105,
+        "men's classic physique principiante": 105
+    };
+
+    // Elegibilidad fisica por peso/estatura. El atleta debe caer estrictamente
+    // dentro del rango de la categoria (peso_min/max, estatura_min/max) si esta
+    // definido, y ademas cumplir la formula de relacion talla-peso cuando aplica
+    // (Men's Classic Physique). Sin dato de peso/estatura del atleta o de la
+    // categoria, esa dimension no se bloquea.
+    function _esFisicamenteElegible(cat, estaturaAtleta, pesoAtleta) {
+        // Estatura: se respeta el rango de la clase (Class A/B/...) si la categoria lo define.
+        if (estaturaAtleta) {
+            if (cat.estatura_min != null && estaturaAtleta < cat.estatura_min) return false;
+            if (cat.estatura_max != null && cat.estatura_max < 1000 && estaturaAtleta > cat.estatura_max) return false;
+        }
+
+        const disc = _normDisc(cat.disciplina || '');
+        const offset = _OFFSET_RELACION_TALLA_PESO[disc];
+        if (offset != null) {
+            if (!estaturaAtleta || !pesoAtleta) return true;
+            return pesoAtleta <= (estaturaAtleta - offset);
+        }
+
+        // Peso: se respeta el rango de la categoria si lo define.
+        if (pesoAtleta) {
+            if (cat.peso_min != null && pesoAtleta < cat.peso_min) return false;
+            if (cat.peso_max != null && cat.peso_max < 1000 && pesoAtleta > cat.peso_max) return false;
+        }
+        return true;
+    }
+
+    function renderizarCategorias(sexoAtleta, yaInscritosIds = [], edadAtleta = null, estaturaAtleta = null, pesoAtleta = null) {
         _sexoAtletaActual = (sexoAtleta || 'm').toLowerCase();
         const contenedor = document.getElementById('listaCategoriasAfines');
         if (!contenedor) return;
@@ -529,23 +563,30 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
 
         filtradas.forEach(rel => {
             const yaInscrito = yaInscritosIds.includes(rel.id);
+            const cat = rel.categorias || {};
+            const elegibleFisico = _esFisicamenteElegible(cat, estaturaAtleta, pesoAtleta);
+            const bloqueado = !elegibleFisico && !yaInscrito;
             const item = `
-                <div class="list-group-item d-flex justify-content-between align-items-center cat-item py-3 ${yaInscrito ? 'border-start border-3 border-primary bg-primary bg-opacity-10' : ''}"
-                     data-modalidad="${rel.categorias?.modalidad || ''}"
-                     data-disciplina="${rel.categorias?.disciplina || ''}"
-                     data-division="${rel.categorias?.division || ''}"
+                <div class="list-group-item d-flex justify-content-between align-items-center cat-item py-3 ${yaInscrito ? 'border-start border-3 border-primary bg-primary bg-opacity-10' : ''} ${bloqueado ? 'opacity-50 bg-light' : ''}"
+                     data-modalidad="${cat.modalidad || ''}"
+                     data-disciplina="${cat.disciplina || ''}"
+                     data-division="${cat.division || ''}"
+                     data-bloqueo-fisico="${!elegibleFisico}"
+                     style="${bloqueado ? 'order:1;' : ''}"
                      id="item-${rel.id}">
                     <div class="form-check w-100 cursor-pointer">
                         <input class="form-check-input check-cat me-3" type="checkbox"
                                value="${rel.id}" id="check-${rel.id}"
                                ${yaInscrito ? 'checked' : ''}
+                               ${bloqueado ? 'disabled' : ''}
                                onchange="validarAfinidad(this)">
                         <label class="form-check-label w-100" for="check-${rel.id}">
                             <span class="fw-bold d-block">
-                                ${rel.categorias?.nombre || 'S/N'}
+                                ${cat.nombre || 'S/N'}
                                 ${yaInscrito ? '<span class="badge bg-primary ms-2 fw-normal" style="font-size:0.65rem;">WEB</span>' : ''}
                             </span>
-                            <span class="small text-muted">${rel.categorias?.disciplina || ''} | ${rel.categorias?.modalidad || ''} | ${rel.categorias?.division || ''}</span>
+                            <span class="small text-muted">${cat.disciplina || ''} | ${cat.modalidad || ''} | ${cat.division || ''}</span>
+                            ${bloqueado ? '<span class="small text-danger d-block fw-bold"><i class="fas fa-ban me-1"></i>No cumple el peso/estatura de esta categoría</span>' : ''}
                         </label>
                     </div>
                 </div>`;
@@ -683,7 +724,10 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
                     esDivisionValida = divPorDiscModal[_divKey].has(divItem);
                 }
 
-                const esValida = esGrupoValido && esModalidadValida && esDivisionValida;
+                // Regla 4: elegibilidad fisica (peso/estatura), calculada al renderizar
+                const noBloqueadaFisico = item.dataset.bloqueoFisico !== 'true';
+
+                const esValida = esGrupoValido && esModalidadValida && esDivisionValida && noBloqueadaFisico;
                 cb.disabled = !esValida;
                 item.classList.toggle('opacity-50', !esValida);
                 item.classList.toggle('bg-light',   !esValida);
@@ -693,9 +737,11 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
         } else {
             todosLosChecks.forEach(cb => {
                 const item = cb.closest('.cat-item');
-                cb.disabled = false;
-                item.classList.remove('opacity-50', 'bg-light');
-                item.style.order = '';
+                const bloqueadaFisico = item.dataset.bloqueoFisico === 'true';
+                cb.disabled = bloqueadaFisico;
+                item.classList.toggle('opacity-50', bloqueadaFisico);
+                item.classList.toggle('bg-light',   bloqueadaFisico);
+                item.style.order = bloqueadaFisico ? '1' : '';
             });
         }
         calcularCobro();
