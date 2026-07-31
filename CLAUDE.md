@@ -263,7 +263,7 @@ Cada disciplina en el grupo puede tener versión Senior, Junior y Master propia.
 | Grupo `grupo_afinidad` | Disciplinas | Pairs asociado |
 |---|---|---|
 | `culturismo_m` | Men's Bodybuilding, Men's Classic Bodybuilding, Men's Classic Physique, Men's Games Classic | Mixed Pairs (pareja esperada: Women's Physique) |
-| `physique_m` | Men's Physique, Men's Fit Model, Men's Fitness | Fit Pairs (pareja esperada: Women's Bikini) |
+| `physique_m` | Men's Physique, Men's Physique Clásico, Men's Fit Model, Men's Fitness | Fit Pairs (pareja esperada: Women's Bikini) |
 | `muscular_m` | Muscular Men's Physique | — sin afines |
 | `bikini_f` | Women's Bikini, Women's Fit Model, Women's Artistic Fitness | Fit Pairs (pareja esperada: Men's Physique) |
 | `wellness_f` | Women's Wellness, Women's Fit Model | — |
@@ -275,6 +275,8 @@ Cada disciplina en el grupo puede tener versión Senior, Junior y Master propia.
 > **Women's Fit Model es puente parcial**: aparece en `bikini_f` y en `wellness_f`. No une ambos grupos — la primera categoría elegida determina el grupo activo. Bikini + Fit Model = el grupo es `bikini_f`, Women's Wellness queda bloqueada (y viceversa).
 
 > **Fit Pairs / Mixed Pairs**: la categoría tiene `sexo = 'F-M'` y es visible para todos. Su grupo de afinidad depende del sexo del atleta: atleta masculino → pertenece a `physique_m`; atleta femenino → pertenece a `bikini_f`. Mixed Pairs: masculino → `culturismo_m`; femenino → `physique_f`.
+
+> **"Men's Physique Clásico" ≠ "Men's Classic Physique"**: son DOS disciplinas distintas pese al nombre parecido (confundidas una vez en este proyecto, 2026-07-31 — ver hallazgo en `evento_fusionado_mr_republica` en memoria). "Men's Physique Clásico" es afín con Men's Physique (grupo `physique_m`) y usa la fórmula única peso_máx = estatura − 105. "Men's Classic Physique" es afín con Men's Bodybuilding/Classic Bodybuilding (grupo `culturismo_m`) y usa 7 clases con offset propio cada una — ver sección "Elegibilidad física" más abajo.
 
 ### Tabla de combinaciones de modalidad permitidas (dentro del mismo grupo)
 | Combinación | ¿Permitida? |
@@ -339,12 +341,19 @@ Antes del 2026-07-31 esta lógica estaba duplicada e inconsistente en 4 lugares 
 ### Elegibilidad física por peso/estatura (bloqueo real, desde 2026-07-31)
 El atleta debe caer estrictamente dentro del `peso_min`/`peso_max` y `estatura_min`/`estatura_max` de la categoría elegida — antes esto no se validaba en ningún lado (ni cliente ni servidor), era 100% criterio manual del staff para TODAS las disciplinas.
 - **Reglas generales** (cualquier categoría con `peso_min`/`peso_max`/`estatura_min`/`estatura_max` definidos, sea cual sea su `parametro`): el valor `1000` en un `_max` es sentinela de "sin tope superior" (ej. Heavyweight `peso_max=1000`, Class B `estatura_max=1000`) y no bloquea.
-- **Men's Classic Physique / Men's Classic Physique Principiante — fórmula propia**: `peso_máximo = estatura_cm − 105`, verificada contra la tabla oficial FDFF de relación talla-peso (imagen `mph clasico.jpeg`, ej. 172cm→67kg, 190cm→85kg, 204cm→99kg — exacto en todo el rango). Además de la fórmula, también se respeta el rango de estatura de la clase (Class A/B) si el atleta cae fuera de él.
+- **4 disciplinas usan además una fórmula de relación talla-peso** (verificadas contra 4 tablas oficiales distintas, imágenes `mph clasico.jpeg`, `classic Physique senior.jpeg`, `fisiculturismo clasico senior.jpeg`, `games classic Bodybuilding senior.jpeg` — 2026-07-31), y **solo estas 4** (ninguna otra disciplina, ej. Muscular Men's Physique, usa este filtro):
+  - **Men's Physique Clásico** (afín con Men's Physique/Junior/Master, grupo `physique_m`) — fórmula única sin clases: `peso_máximo = estatura_cm − 105` (ej. 172cm→67kg, 204cm→99kg).
+  - **Men's Classic Physique** (grupo `culturismo_m`) — 7 clases por estatura (Class A ≤168cm … Class G >196cm, mismos cortes que Classic Bodybuilding), cada una con SU PROPIO offset: A=96, B=94, C=92, D=89, E=87, F=85, G=83.
+  - **Men's Classic Bodybuilding** (grupo `culturismo_m`) — mismas 7 clases/cortes que Classic Physique, offsets distintos: A=100, B=98, C=96, D=93, E=91, F=89, G=87.
+  - **Men's Games Classic** (grupo `culturismo_m`, catálogo listo pero sin vincular a ningún evento activo) — 9 clases (Class A ≤162cm … Class I >196cm), offsets: A=102, B=101, C=100, D=99, E=98, F=96, G=95, H=94, I=93.
+  - Cada clase, ADEMÁS de su propio offset, respeta su propio rango de estatura (`estatura_min`/`estatura_max`) — un atleta fuera de esa banda no puede elegirla aunque su peso cumpliera la fórmula.
 - **Dónde vive la lógica** (duplicada intencionalmente cliente+servidor, no solo por UX sino porque el cliente se puede evadir):
-  - Cliente: `_esFisicamenteElegible()` en `views/eventos/inscripcion.ejs` — deshabilita el checkbox desde el render (`renderizarCategorias` ahora recibe `estaturaAtleta`/`pesoAtleta`) y `validarAfinidad()` respeta el atributo `data-bloqueo-fisico` sin re-habilitarlo.
-  - Servidor: `_validarElegibilidadFisica()` en `controllers/inscripcionController.js`, llamada desde `guardarInscripcionAsistida` (inscripción asistida) e `inscribirAtleta` (web) usando el peso/estatura real del atleta en BD — esto es lo que realmente impide guardar, el cliente es solo UX.
-  - `inscripcionPage` ahora selecciona `parametro, peso_min, peso_max, estatura_min, estatura_max` de `categorias` (antes solo mandaba `modalidad, disciplina, sexo, division, edad_min, edad_max` al cliente).
-- **Si se agrega otra disciplina con fórmula propia** (ej. Men's Games Classic, que en `crearCategoria.ejs` también usa `parametro='relacion'`), agregar su offset a `_OFFSET_RELACION_TALLA_PESO` en AMBOS archivos (cliente y servidor) — no asumir que todas las disciplinas `relacion` comparten la misma fórmula que Classic Physique sin verificarlo primero contra su propia tabla oficial.
+  - Cliente: `_esFisicamenteElegible()` + `_offsetRelacion(disciplina, division)` en `views/eventos/inscripcion.ejs` — deshabilita el checkbox desde el render (`renderizarCategorias` ahora recibe `estaturaAtleta`/`pesoAtleta`) y `validarAfinidad()` respeta el atributo `data-bloqueo-fisico` sin re-habilitarlo.
+  - Servidor: `_validarElegibilidadFisica()` + `_offsetRelacion()` en `controllers/inscripcionController.js`, llamada desde `guardarInscripcionAsistida` (inscripción asistida) e `inscribirAtleta` (web) usando el peso/estatura real del atleta en BD — esto es lo que realmente impide guardar, el cliente es solo UX.
+  - `_OFFSET_RELACION_TALLA_PESO` acepta un número plano (fórmula única, ej. Physique Clásico) o un objeto `{"class a": offset, ...}` (fórmula por clase) — `_offsetRelacion()` resuelve cuál aplica.
+  - `_normDisc`/`_normW`/`_normDiscValidacion` quitan acentos (`normalize('NFD')` + strip de marcas combinantes vía `String.fromCharCode`, nunca el carácter unicode literal — ver hallazgo #14) para que "Clásico" y "Clasico" comparen igual al buscar el offset.
+  - `inscripcionPage` selecciona `parametro, peso_min, peso_max, estatura_min, estatura_max` de `categorias` (antes solo mandaba `modalidad, disciplina, sexo, division, edad_min, edad_max` al cliente).
+- **Si se agrega otra disciplina con fórmula propia**, agregar su offset (plano o por clase) a `_OFFSET_RELACION_TALLA_PESO` en AMBOS archivos (cliente y servidor) — **nunca asumir que comparte la fórmula de otra disciplina similar sin verificarlo contra su propia tabla oficial primero** (Physique Clásico, Classic Physique, Classic Bodybuilding y Games Classic tienen las 4 fórmulas distintas pese a nombres parecidos).
 
 ### Presidente de Mesa (silla central) — regla fija, no editable manualmente
 El Presidente de Mesa **siempre** es el juez sentado en la silla central del panel 1, según la cantidad de jueces del panel:
