@@ -455,5 +455,7 @@ Encontrados probando el flujo real en navegador (no solo leyendo código) — to
 9. **`views/reportes/certificado.ejs` estaba vacío (0 bytes)** — certificado individual en blanco. Reconstruido.
 10. Faltaban vistas imprimibles de **resultado de Absoluto** y de **ranking de equipo por evento** — no existían, se construyeron.
 11. **"Presidente de Mesa" no estaba enlazado desde ninguna vista** — se agregó acceso desde Centro de Mando.
+12. **`guardarInscripcionAsistida` intentaba grabar `atletas.juez_firma_id`** (columna inexistente) junto con `descargo_firmado`/`fecha_firma_descargo` (reales) — un UPDATE con una sola columna inválida falla completo en Postgres, así que el descargo firmado nunca quedaba registrado tras ninguna inscripción exitosa (esto solo apareció en los logs del servidor, la respuesta HTTP seguía devolviendo éxito). Se quitó el campo inexistente.
+13. **`views/jueces/espera.ejs` no existía** — `verBoletaJuez` la renderiza cuando un juez autenticado aún no tiene silla asignada; esa ruta estaba enmascarada por el hallazgo #3 (antes ni siquiera se llegaba ahí). Creada.
 
 **No se tocó** (fuera de alcance, código legacy no usado por la UI actual): `verCalculosEvento`/`calculos.ejs` (superado por Mesa de Cómputo), `crearCompetidor`/`pesajePage` en `inscripcionController.js` (usan el cliente anon y también fallarían, pero no están enrutados desde ninguna vista activa).
