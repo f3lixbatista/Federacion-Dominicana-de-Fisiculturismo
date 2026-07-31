@@ -546,14 +546,27 @@ const eliminarCuenta = async (req, res) => {
 
 const listarUsuariosConRol = async (req, res) => {
     try {
-        const { data: usuarios, error } = await supabaseAdmin
-            .from('profiles')
-            .select('id, nombre, email, role, cedula, id_fdff')
-            .order('nombre', { ascending: true })
-            .limit(500);
+        // PostgREST limita cada respuesta a un maximo de filas por su cuenta
+        // (tipicamente 1000) sin importar el .limit() pedido — con ~1991 perfiles
+        // reales, un .limit(500) fijo dejaba fuera a la mayoria. Paginado via
+        // .range() en loop hasta agotar resultados (mismo fix que listarAtletas).
+        const PAGE_SIZE = 1000;
+        let usuarios = [];
+        let desde = 0;
+        while (true) {
+            const { data, error } = await supabaseAdmin
+                .from('profiles')
+                .select('id, nombre, email, role, cedula, id_fdff')
+                .order('nombre', { ascending: true })
+                .range(desde, desde + PAGE_SIZE - 1);
 
-        if (error) throw error;
-        res.json({ ok: true, usuarios: usuarios || [] });
+            if (error) throw error;
+            usuarios = usuarios.concat(data || []);
+            if (!data || data.length < PAGE_SIZE) break;
+            desde += PAGE_SIZE;
+        }
+
+        res.json({ ok: true, usuarios });
     } catch (err) {
         res.status(500).json({ ok: false, error: err.message });
     }
