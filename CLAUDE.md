@@ -388,6 +388,18 @@ Dos documentos imprimibles generados desde el mismo dato (`eventos.cronograma_mc
 
 ---
 
+## Eventos fusionados (dos marcas, un solo evento técnico)
+
+Patrón usado por primera vez el 2026-07-31 para **"XXXVII Mr. República Dominicana 2026 + XI Mr. República Principiante"** (pesaje sábado 1 de agosto, competencia domingo 2 de agosto 2026, Teatro La Fiesta — Hotel Jaragua). Aplica quando dos afiches/marcas comparten logística (mismo día, mismo escenario, mismos jueces) pero deben coronar campeones y emitir certificados/listados **separados** por marca.
+
+- **Un solo `eventos` row.** Todo se opera al unísono: mismo pesaje, mismo panel de jueces, mismo `cronograma_mc`, mismo `oficializarPreparacion`.
+- **Categorías 100% duplicadas por marca**, aunque los parámetros (peso/estatura) sean idénticos entre ambas — así cada marca tiene su propio podio/certificado, sin compartir resultado. La marca secundaria usa `disciplina = "{Disciplina} {Coletilla}"` (ej. `"Men's Bodybuilding Principiante"`), NUNCA se sufija `modalidad` ni `nombre` de división — solo `disciplina`.
+- **`GRUPOS_AFINIDAD`** (en `inscripcion.ejs` e `InscripcionAtleta.ejs`) debe incluir la disciplina sufijada en el MISMO grupo que su base (ej. `"Men's Bodybuilding Principiante"` dentro de `culturismo_m` junto a `"Men's Bodybuilding"`) — así un atleta puede marcar ambas versiones en la misma visita (la marca secundaria "abre hacia arriba" a la principal). Si el afiche incluye Fit Pairs/Mixed Pairs sufijado, extender también el bloque especial `_FIT_PAIRS_N`/`_FIT_PAIRS_W` (ver commit 56560b5).
+- **La regla inversa ("la marca principal NO puede competir en la secundaria") es criterio del staff en inscripción asistida, no se aplica por código** — no existe ningún campo en `atletas` que indique nivel/experiencia del atleta, así que no hay forma de bloquearlo automáticamente. Decisión explícita del usuario 2026-07-31: no vale la pena agregar ese campo solo para esto.
+- **Publicación separada (afiches, listados por marca) queda pendiente como fase 2** — por ahora ambos afiches se subieron a `eventos-banners` (`url_afiche_evento` = marca principal, `url_afiche_pesaje` = marca secundaria) pero la galería pública / listados aún muestran el evento como uno solo. Ver [[evento_fusionado_mr_republica]] en memoria del proyecto para el estado exacto y qué falta.
+
+---
+
 ## Mapa de rutas clave
 | Ruta | Rol | Descripción |
 |---|---|---|
