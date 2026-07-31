@@ -330,7 +330,11 @@ const guardarInscripcionAsistida = async (req, res) => {
 
         if (errComp) throw errComp;
 
-        const updateAtleta = { descargo_firmado: true, fecha_firma_descargo: new Date().toISOString(), juez_firma_id: juez_id };
+        // juez_firma_id no es una columna real de `atletas` (no existe en el esquema y
+        // ninguna vista/reporte la lee) — se quitó del update porque una columna
+        // inválida hace fallar TODO el update, incluyendo descargo_firmado/fecha_firma_descargo
+        // que sí son reales y sí se usan.
+        const updateAtleta = { descargo_firmado: true, fecha_firma_descargo: new Date().toISOString() };
         if (preparador_id) updateAtleta.preparador_id = preparador_id;
 
         const { error: errAtleta } = await supabaseAdmin

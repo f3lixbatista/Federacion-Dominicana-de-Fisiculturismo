@@ -1,0 +1,19 @@
+<%- include("../template/cabecera", {tituloWeb: "Esperando Asignación"}) %>
+
+<div class="container my-5 text-center">
+    <div class="card shadow-sm border-0 mx-auto p-5" style="max-width: 500px; border-radius: 15px;">
+        <i class="fas fa-hourglass-half fa-4x text-warning mb-4"></i>
+        <h3 class="fw-bold text-dark">Esperando Asignación de Silla</h3>
+        <p class="text-muted mt-2">
+            Hola <strong><%= user?.nombre || 'Juez' %></strong>, aún no tienes una silla asignada en el panel principal de este evento.
+        </p>
+        <p class="text-muted small">
+            Consulta con el Estadístico o Presidente de Mesa para que te asignen una silla en la Preparación del Evento.
+        </p>
+        <button class="btn btn-outline-primary fw-bold mt-3" onclick="location.reload()">
+            <i class="fas fa-sync-alt me-2"></i> Actualizar
+        </button>
+    </div>
+</div>
+
+<%- include("../template/footer") %>
