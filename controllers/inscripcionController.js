@@ -238,19 +238,63 @@ const crearCompetidor = async (req, res) => {
 };
 
 const pesajePage = async (req, res) => {
+    const eventoId = req.query.evento || null;
     try {
-        const { data: atletas } = await supabase.from('atletas').select('*');
+        let eventoActual = null;
+        if (eventoId) {
+            const { data } = await supabaseAdmin
+                .from('eventos').select('id, nombre, estado').eq('id', eventoId).single();
+            eventoActual = data || null;
+        }
+
+        const { data: atletas, error } = await supabaseAdmin
+            .from('atletas')
+            .select('id, nombre, cedula, idfdff, estatus_afiliacion, peso, estatura, pesaje_evento_id, pesaje_fecha')
+            .order('nombre', { ascending: true });
+        if (error) throw error;
+
         res.render('eventos/pesaje', {
             atletas: atletas || [],
+            eventoActual,
             juezLogueado: res.locals.user
         });
     } catch (error) {
         console.error('Error en pesaje:', error.message);
-        res.render('eventos/pesaje', { 
-            atletas: [], 
+        res.render('eventos/pesaje', {
+            atletas: [],
+            eventoActual: null,
             error: error.message,
-            juezLogueado: res.locals.user 
+            juezLogueado: res.locals.user
         });
+    }
+};
+
+// Guarda/corrige el peso y estatura confirmados del atleta para un evento
+// especifico (Estacion de Pesaje y Medicion). Se persiste en atletas.peso/
+// estatura (el valor vigente, el mismo que usa inscripcion.ejs) y se marca
+// pesaje_evento_id/pesaje_fecha para saber que este atleta YA fue pesado
+// para ESTE evento — asi el boton "PESAR" se puede bloquear (solo queda
+// habilitado "EDITAR") y no se pueden crear pesajes duplicados por error.
+const guardarPesajeEstacion = async (req, res) => {
+    const { atletaId, eventoId, peso, estatura } = req.body;
+    if (!atletaId || !eventoId || !peso || !estatura) {
+        return res.status(400).json({ estado: false, mensaje: 'Datos incompletos (atleta, evento, peso y estatura son obligatorios).' });
+    }
+    try {
+        const { error } = await supabaseAdmin
+            .from('atletas')
+            .update({
+                peso: parseFloat(peso),
+                estatura: parseFloat(estatura),
+                pesaje_evento_id: eventoId,
+                pesaje_fecha: new Date().toISOString()
+            })
+            .eq('id', atletaId);
+        if (error) throw error;
+        res.json({ estado: true, mensaje: 'Peso y estatura confirmados.' });
+    } catch (error) {
+        console.error('Error guardando pesaje:', error.message);
+        res.status(500).json({ estado: false, mensaje: error.message });
     }
 };
 
@@ -837,6 +881,7 @@ module.exports = {
     inscripcionAtletaPage,
     crearCompetidor,
     pesajePage,
+    guardarPesajeEstacion,
     detalleInscripcion,
     guardarInscripcionAsistida,
     inscribirAtleta,

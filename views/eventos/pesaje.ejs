@@ -3,9 +3,15 @@
 <div class="container my-5">
     <div class="d-flex justify-content-between align-items-center">
         <h2 class="fw-bold"><i class="fas fa-balance-scale"></i> Estación de Pesaje y Medición</h2>
-        <!-- <a href="/atletas/crear" class="btn btn-dark shadow-sm"><i class="fas fa-user-plus"></i> Afiliación Asistida</a> -->
     </div>
-    
+    <% if (eventoActual) { %>
+        <p class="text-muted mb-0">Evento: <strong><%= eventoActual.nombre %></strong></p>
+    <% } else { %>
+        <div class="alert alert-warning mt-2">
+            <i class="fas fa-exclamation-triangle me-1"></i> No se especificó un evento en la URL (<code>?evento=ID</code>) — no se podrá guardar ningún pesaje sin saber para cuál evento es.
+        </div>
+    <% } %>
+
     <!-- Buscador Rápido -->
     <div class="row my-4">
         <div class="col-md-6">
@@ -18,20 +24,20 @@
         <table class="table table-hover bg-white align-middle" id="tablaAtletas">
             <thead class="table-dark">
                 <tr>
-                    <th class="h-20" style="width: 12%;">ID-FDFF</th>
-                    <th class="h-20" style="width: 30%;">Nombre</th>
-                    <th class="h-20" style="width: 18%;">Cédula</th>
-                    <th class="text-center h-20" style="width: 25%;">Afiliación (ON/OFF)</th>
-                    <th class="h-20" style="width: 15%;">Acción</th>
+                    <th class="h-20" style="width: 10%;">ID-FDFF</th>
+                    <th class="h-20" style="width: 25%;">Nombre</th>
+                    <th class="h-20" style="width: 15%;">Cédula</th>
+                    <th class="text-center h-20" style="width: 15%;">Afiliación</th>
+                    <th class="text-center h-20" style="width: 15%;">Peso / Estatura</th>
+                    <th class="h-20" style="width: 20%;">Acción</th>
                 </tr>
             </thead>
-  <!-- En la tabla de pesaje.ejs -->
-<tbody>
-    <% atletas.forEach(atleta => { 
-        // Lógica de resaltado: Solo si el estatus es 'deshabilitado' o 'pendiente'
+            <tbody>
+    <% atletas.forEach(atleta => {
         const esInactivo = (atleta.estatus_afiliacion === 'deshabilitado' || atleta.estatus_afiliacion === 'pendiente');
+        const yaPesado = !!(eventoActual && atleta.pesaje_evento_id === eventoActual.id);
     %>
-    <tr class="<%= esInactivo ? 'table-danger' : '' %>">
+    <tr class="<%= esInactivo ? 'table-danger' : '' %>" data-atleta-id="<%= atleta.id %>">
         <td><strong><%= atleta.idfdff || '---' %></strong></td>
         <td>
             <%= atleta.nombre %>
@@ -43,24 +49,36 @@
                 <%= atleta.estatus_afiliacion.toUpperCase() %>
             </span>
         </td>
+        <td class="text-center small">
+            <% if (yaPesado) { %>
+                <span class="fw-bold"><%= atleta.peso %> kg</span> / <span class="fw-bold"><%= atleta.estatura %> cm</span>
+                <br><span class="badge bg-info-subtle text-info-emphasis">Pesado para este evento</span>
+            <% } else { %>
+                <span class="text-muted">Sin confirmar</span>
+            <% } %>
+        </td>
         <td>
             <div class="btn-group">
-                <!-- Botón de Pesar: Bloqueado si no está habilitado -->
-                <button class="btn btn-primary btn-sm fw-bold" 
-                        onclick="abrirModalPesaje('<%= atleta.id %>', '<%= atleta.nombre %>')"
-                        <%= esInactivo ? 'disabled' : '' %>>
+                <!-- PESAR: solo si aun no se ha confirmado peso/estatura para ESTE evento -->
+                <button class="btn btn-primary btn-sm fw-bold"
+                        onclick="abrirModalPesaje('<%= atleta.id %>', '<%= atleta.nombre %>', null, null)"
+                        <%= (esInactivo || yaPesado || !eventoActual) ? 'disabled' : '' %>>
                     PESAR
                 </button>
-                <!-- NUEVO: Botón para ir al detalle a habilitarlo -->
+                <!-- EDITAR: solo si ya se peso para este evento (permite corregir un error) -->
+                <button class="btn btn-outline-primary btn-sm fw-bold"
+                        onclick="abrirModalPesaje('<%= atleta.id %>', '<%= atleta.nombre %>', <%= atleta.peso || 'null' %>, <%= atleta.estatura || 'null' %>)"
+                        <%= (esInactivo || !yaPesado || !eventoActual) ? 'disabled' : '' %>>
+                    <i class="fas fa-edit"></i> EDITAR
+                </button>
                 <a href="/inscripcion/<%= atleta.id %>" class="btn btn-warning btn-sm">
-                    <i class="fas fa-edit"></i>
+                    <i class="fas fa-user-cog"></i>
                 </a>
             </div>
         </td>
     </tr>
     <% }) %>
-</tbody>
-
+            </tbody>
         </table>
     </div>
 </div>
@@ -76,8 +94,8 @@
            <form id="formGuardarPesaje">
                 <div class="modal-body p-4">
                     <input type="hidden" id="atletaIdInput">
-                    <input type="hidden" id="juezIdLogueado" value="<%= juezLogueado ? juezLogueado.id : '' %>">
-        
+                    <input type="hidden" id="eventoIdInput" value="<%= eventoActual ? eventoActual.id : '' %>">
+
                     <div class="text-center mb-3">
                         <span class="badge bg-secondary">Juez de Turno: <%= juezLogueado ? juezLogueado.nombre : 'No identificado' %></span>
                     </div>
@@ -95,7 +113,7 @@
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success fw-bold">GUARDAR Y OFICIALIZAR</button>
+                    <button type="submit" class="btn btn-success fw-bold">GUARDAR</button>
                 </div>
             </form>
         </div>
@@ -109,48 +127,45 @@
     const myModal = new bootstrap.Modal(modalElement);
 
     // --- FUNCIÓN DEL SWITCH (AFILIACIÓN) ---
-async function actualizarAfiliacion(atletaId, estaActivo) {
-    // Validación de seguridad
-    if (!atletaId || atletaId === "") {
-        console.error("Error: ID de atleta no detectado");
-        return;
-    }
+    async function actualizarAfiliacion(atletaId, estaActivo) {
+        if (!atletaId || atletaId === "") {
+            console.error("Error: ID de atleta no detectado");
+            return;
+        }
 
-    const nuevoEstatus = estaActivo ? 'habilitado' : 'deshabilitado';
-    // Para PostgreSQL, la fecha debe ir en formato YYYY-MM-DD o ser null
-    const fechaHoy = estaActivo ? new Date().toISOString().split('T')[0] : null;
+        const nuevoEstatus = estaActivo ? 'habilitado' : 'deshabilitado';
+        const fechaHoy = estaActivo ? new Date().toISOString().split('T')[0] : null;
 
-    // 1. Actualizamos SOLO los campos de estatus en la tabla 'atletas'
-    const { error: errAtleta } = await _supabase
-        .from('atletas')
-        .update({ 
-            estatus_afiliacion: nuevoEstatus,
-            fecha_ultima_renovacion: fechaHoy 
-        })
-        .eq('id', atletaId); // Verifica si en tu tabla es 'id' o 'atleta_id'
-
-    if (errAtleta) {
-        alert("Error al actualizar estatus: " + errAtleta.message);
-        console.log("Detalles del error:", errAtleta);
-        return;
-    }
-
-    // 2. Si activamos, subimos el nivel del usuario en 'profiles'
-    if (estaActivo) {
-        await _supabase
-            .from('profiles')
-            .update({ role: 'atleta' })
+        const { error: errAtleta } = await _supabase
+            .from('atletas')
+            .update({
+                estatus_afiliacion: nuevoEstatus,
+                fecha_ultima_renovacion: fechaHoy
+            })
             .eq('id', atletaId);
+
+        if (errAtleta) {
+            alert("Error al actualizar estatus: " + errAtleta.message);
+            console.log("Detalles del error:", errAtleta);
+            return;
+        }
+
+        if (estaActivo) {
+            await _supabase
+                .from('profiles')
+                .update({ role: 'atleta' })
+                .eq('id', atletaId);
+        }
+
+        alert("Atleta " + (estaActivo ? 'Habilitado' : 'Deshabilitado') + " correctamente.");
+        window.location.reload();
     }
 
-    alert("Atleta " + (estaActivo ? 'Habilitado' : 'Deshabilitado') + " correctamente.");
-    window.location.reload();
-}
-
-
-    function abrirModalPesaje(id, nombre) {
+    function abrirModalPesaje(id, nombre, pesoActual, estaturaActual) {
         document.getElementById('atletaIdInput').value = id;
         document.getElementById('nombreAtletaModal').innerText = nombre;
+        document.getElementById('pesoActual').value = pesoActual != null ? pesoActual : '';
+        document.getElementById('estaturaActual').value = estaturaActual != null ? estaturaActual : '';
         myModal.show();
     }
 
@@ -164,22 +179,32 @@ async function actualizarAfiliacion(atletaId, estaActivo) {
 
     document.getElementById('formGuardarPesaje').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const updates = {
-            
-            id: document.getElementById('atletaIdInput').value,
-            peso_confirmado: parseFloat(document.getElementById('pesoActual').value),
-            estatura_confirmada: parseFloat(document.getElementById('estaturaActual').value),
-            juez_id: document.getElementById('juezIdLogueado').value || "<%= locals.user ? user.id : '' %>",
-            estatus_pesaje: 'aprobado'
+        const eventoId = document.getElementById('eventoIdInput').value;
+        if (!eventoId) {
+            return alert('No hay un evento seleccionado (falta ?evento=ID en la URL). No se puede guardar.');
+        }
+
+        const payload = {
+            atletaId: document.getElementById('atletaIdInput').value,
+            eventoId,
+            peso: parseFloat(document.getElementById('pesoActual').value),
+            estatura: parseFloat(document.getElementById('estaturaActual').value)
         };
 
-        const { error } = await _supabase.from('inscripciones').upsert(updates);
-
-        if (error) {
-            alert("Error al oficializar: " + error.message);
-        } else {
-            alert("Atleta Pesado y Oficializado.");
-            window.location.reload();
+        try {
+            const resp = await fetch('/inscripcion/pesaje/guardar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const resultado = await resp.json();
+            if (resultado.estado) {
+                window.location.reload();
+            } else {
+                alert('Error al guardar: ' + resultado.mensaje);
+            }
+        } catch (err) {
+            alert('Error de conexión con el servidor.');
         }
     });
 </script>

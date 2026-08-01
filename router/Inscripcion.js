@@ -24,6 +24,7 @@ router.get('/listado-posiciones/:eventoId', checkPermiso('pesaje', 'ver'), inscr
 router.post('/publicar-listado', checkPermiso('noticias', 'crear'), inscripcionController.publicarListado);
 router.put('/:id', inscripcionController.crearCompetidor);
 router.get('/pesaje', checkPermiso('pesaje', 'ver'), inscripcionController.pesajePage);
+router.post('/pesaje/guardar', checkPermiso('pesaje', 'editar'), inscripcionController.guardarPesajeEstacion);
 router.get('/:id', inscripcionController.detalleInscripcion);
 
 module.exports = router;
