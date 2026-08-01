@@ -206,6 +206,13 @@ const actualizarAtleta = async (req, res) => {
     delete datosRecibidos.role;
     delete datosRecibidos.id;
 
+    // Un campo de fecha/numero vacio llega como "" desde el form — Postgres
+    // rechaza "" para columnas DATE/numericas (solo acepta NULL o un valor
+    // valido), así que se normaliza aqui antes de mandarlo a Supabase.
+    for (const campo in datosRecibidos) {
+        if (datosRecibidos[campo] === '') datosRecibidos[campo] = null;
+    }
+
     try {
         // Si llega un email real, actualizar también el usuario en Supabase Auth
         // para que el atleta pueda loguarse con ese correo desde ese momento
@@ -240,9 +247,14 @@ const solicitarAfiliacion = async (req, res) => {
 
         const idfdff = atletaExistente?.idfdff || await siguienteIdfdff();
 
+        const datosAfiliacion = { ...req.body, id: usuarioId, idfdff };
+        for (const campo in datosAfiliacion) {
+            if (datosAfiliacion[campo] === '') datosAfiliacion[campo] = null;
+        }
+
         const { error } = await supabaseAdmin
             .from('atletas')
-            .upsert({ ...req.body, id: usuarioId, idfdff });
+            .upsert(datosAfiliacion);
 
         if (error) throw error;
 
