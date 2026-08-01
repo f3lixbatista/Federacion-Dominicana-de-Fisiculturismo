@@ -844,9 +844,13 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
             if (resultado.estado) {
                 myModal.hide();
                 const atletaId = document.getElementById('atletaIdIns').value;
-                // Abrir descargo en nueva ventana para imprimir de inmediato
+                // Abrir descargo en nueva ventana para imprimir de inmediato.
+                // OJO: recargar esta ventana en el mismo tick que window.open()
+                // puede interrumpir la carga de la ventana emergente (carrera
+                // de navegación en Chrome/Edge) y dejarla con campos vacíos —
+                // por eso el reload se retrasa hasta que el popup ya arrancó.
                 imprimirDescargoFisico(atletaId, configEl.id);
-                window.location.reload();
+                setTimeout(() => window.location.reload(), 600);
             } else {
                 alert('❌ Error: ' + resultado.mensaje);
             }
