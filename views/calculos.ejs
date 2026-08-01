@@ -84,7 +84,13 @@
                 "dom": 'Bfrtip',
                 "responsive": false,
                 "language": { "url": "https://cdn.datatables.net/plug-ins/1.10.19/i18n/Spanish.json" },
-                "buttons": ['excel', 'pdf', 'print']
+                "buttons": ['excel', 'pdf', 'print'],
+                // Con "language.url" la tabla se inicializa de forma asincrona —
+                // llamar esto fuera de initComplete corre antes de que exista el
+                // buscador nativo (bug detectado y corregido 2026-07-31).
+                "initComplete": function () {
+                    aplicarBusquedaAcentoInsensibleFDFF('#mydatatable');
+                }
             });
         });
 

@@ -286,9 +286,9 @@
 
     // Buscador
     inputBuscar.addEventListener('keyup', function() {
-        let filtro = buscar.value.toLowerCase();
+        let filtro = normalizarBusquedaFDFF(buscar.value);
         filas.forEach((fila, i) => {
-            let texto = fila.querySelector('label b').innerText.toLowerCase(); // Busca el texto del nombre de la categoría
+            let texto = normalizarBusquedaFDFF(fila.querySelector('label b').innerText); // Busca el texto del nombre de la categoría
             fila.style.display = texto.includes(filtro) ? "flex" : "none";
         });
     });

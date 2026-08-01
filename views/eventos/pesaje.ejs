@@ -155,10 +155,10 @@ async function actualizarAfiliacion(atletaId, estaActivo) {
     }
 
     document.getElementById('buscarAtleta').addEventListener('keyup', function() {
-        let valor = this.value.toLowerCase();
+        let valor = normalizarBusquedaFDFF(this.value);
         let filas = document.querySelectorAll('#tablaAtletas tbody tr');
         filas.forEach(fila => {
-            fila.style.display = fila.innerText.toLowerCase().includes(valor) ? '' : 'none';
+            fila.style.display = normalizarBusquedaFDFF(fila.innerText).includes(valor) ? '' : 'none';
         });
     });
 

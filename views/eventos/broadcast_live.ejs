@@ -312,9 +312,9 @@ function renderizarAtletas(lista) {
 
 function filtrarAtletas(q) {
     if (!q.trim()) { renderizarAtletas(_atletasActuales); return; }
-    const r = q.toLowerCase();
+    const r = normalizarBusquedaFDFF(q);
     renderizarAtletas(_atletasActuales.filter(a =>
-        String(a.numero_atleta).includes(r) || (a.atletas?.nombre || '').toLowerCase().includes(r)
+        String(a.numero_atleta).includes(r) || normalizarBusquedaFDFF(a.atletas?.nombre).includes(r)
     ));
 }
 

@@ -72,15 +72,16 @@
                 "order": [[0, "asc"]],
                 "buttons": ['csv', 'excel', 'pdf', 'print']
             });
+            aplicarBusquedaAcentoInsensibleFDFF('#mydatatable');
 
-            // Lógica de filtrado por columna
+            // Logica de filtrado por columna — los inputs solo redibujan, el
+            // filtrado real (insensible a acentos) lo hace la funcion de abajo.
             table.columns().every(function () {
-                var that = this;
-                $('input', this.footer()).on('keyup change', function () {
-                    if (that.search() !== this.value) {
-                        that.search(this.value).draw();
-                    }
-                });
+                $('input', this.footer()).on('keyup change', function () { table.draw(); });
+            });
+            aplicarBusquedaPorColumnaAcentoInsensibleFDFF('#mydatatable', function (idx) {
+                var footer = table.column(idx).footer();
+                return footer ? $(footer).find('input').get(0) || null : null;
             });
         });
     </script>

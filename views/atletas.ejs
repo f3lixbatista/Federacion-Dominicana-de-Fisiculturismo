@@ -171,19 +171,23 @@
                 "order": [[0, "desc"]],
                 "orderCellsTop": true,  // solo la fila 0 del thead activa el sort
                 "initComplete": function () {
-                    var api = this.api();
                     var filterRow = $('#mydatatable thead tr.filter-row');
+                    var table = this.api();
 
-                    api.columns().every(function () {
-                        var col = this;
-                        var idx = col.index();
-                        $('input', filterRow.children('th, td').eq(idx))
-                            .on('keyup change', function () {
-                                if (col.search() !== this.value) {
-                                    col.search(this.value).draw();
-                                }
-                            });
+                    // Los inputs solo redibujan — el filtrado real (insensible a
+                    // acentos) lo hace aplicarBusquedaPorColumnaAcentoInsensibleFDFF.
+                    filterRow.find('input').on('keyup change', function () { table.draw(); });
+
+                    aplicarBusquedaPorColumnaAcentoInsensibleFDFF('#mydatatable', function (idx) {
+                        return filterRow.children('th, td').eq(idx).find('input').get(0) || null;
                     });
+
+                    // IMPORTANTE: con "language.url" DataTables se inicializa de
+                    // forma asincrona (espera el fetch del JSON de idioma antes
+                    // de construir el buscador nativo) — llamar esto FUERA de
+                    // initComplete corre demasiado temprano y no encuentra el
+                    // input todavia (bug detectado y corregido 2026-07-31).
+                    aplicarBusquedaAcentoInsensibleFDFF('#mydatatable');
                 },
                 "buttons": ['csv', 'excel', 'pdf', 'print']
             });

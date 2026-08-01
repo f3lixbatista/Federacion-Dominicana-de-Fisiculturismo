@@ -133,10 +133,10 @@
 
     // ── BUSCADOR ──────────────────────────────────────────
     document.getElementById('buscadorAtleta').addEventListener('input', function() {
-        const q = this.value.toLowerCase().trim();
+        const q = normalizarBusquedaFDFF(this.value).trim();
         document.querySelectorAll('#listaAtletas .atleta-row').forEach(row => {
-            const dorsal = (row.dataset.dorsal || '').toLowerCase();
-            const nombre = (row.dataset.nombre || '').toLowerCase();
+            const dorsal = normalizarBusquedaFDFF(row.dataset.dorsal);
+            const nombre = normalizarBusquedaFDFF(row.dataset.nombre);
             row.style.display = (!q || dorsal.includes(q) || nombre.includes(q)) ? '' : 'none';
         });
     });

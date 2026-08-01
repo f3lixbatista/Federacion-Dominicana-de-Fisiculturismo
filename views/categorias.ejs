@@ -54,9 +54,9 @@
 
     <script>
         document.getElementById("buscar").addEventListener('keyup', function() {
-            const texto = this.value.toLowerCase();
+            const texto = normalizarBusquedaFDFF(this.value);
             document.querySelectorAll(".fila-categoria").forEach(fila => {
-                const nombre = fila.querySelector(".nombre-cat").textContent.toLowerCase();
+                const nombre = normalizarBusquedaFDFF(fila.querySelector(".nombre-cat").textContent);
                 fila.style.display = nombre.includes(texto) ? "" : "none";
             });
         });

@@ -122,10 +122,10 @@
     const buscador = document.getElementById('buscadorFoto');
     if (buscador) {
         buscador.addEventListener('input', function () {
-            const q = this.value.toLowerCase().trim();
+            const q = normalizarBusquedaFDFF(this.value).trim();
             document.querySelectorAll('.comp-item').forEach(el => {
-                const nombre = el.dataset.nombre || '';
-                const dorsal = el.dataset.dorsal || '';
+                const nombre = normalizarBusquedaFDFF(el.dataset.nombre);
+                const dorsal = normalizarBusquedaFDFF(el.dataset.dorsal);
                 el.style.display = (!q || nombre.includes(q) || dorsal.includes(q)) ? '' : 'none';
             });
         });

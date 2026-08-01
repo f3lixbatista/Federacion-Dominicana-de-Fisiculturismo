@@ -532,15 +532,15 @@ function actualizarResumenRoles() {
 
 function filtrarUsuarios() {
     if (_usuarios === null) return;
-    const texto = (document.getElementById('filtro-usuario').value || '').toLowerCase().trim();
+    const texto = normalizarBusquedaFDFF(document.getElementById('filtro-usuario').value).trim();
     const rol   = document.getElementById('filtro-rol-usu').value;
 
     const lista = _usuarios.filter(u => {
         const matchTexto = !texto ||
-            (u.nombre  || '').toLowerCase().includes(texto) ||
-            (u.email   || '').toLowerCase().includes(texto) ||
-            (u.cedula  || '').toLowerCase().includes(texto) ||
-            String(u.id_fdff || '').toLowerCase().includes(texto);
+            normalizarBusquedaFDFF(u.nombre).includes(texto) ||
+            normalizarBusquedaFDFF(u.email).includes(texto) ||
+            normalizarBusquedaFDFF(u.cedula).includes(texto) ||
+            normalizarBusquedaFDFF(u.id_fdff).includes(texto);
         const matchRol = !rol || u.role === rol;
         return matchTexto && matchRol;
     });

@@ -1095,6 +1095,7 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
             dtOpts.buttons = ['excel'];
         }
         $('#mydatatable').DataTable(dtOpts);
+        aplicarBusquedaAcentoInsensibleFDFF('#mydatatable');
     });
 </script>
 <script src="https://unpkg.com/html5-qrcode"></script>

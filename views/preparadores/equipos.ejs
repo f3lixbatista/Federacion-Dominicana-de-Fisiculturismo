@@ -114,11 +114,11 @@
 
 <script>
 function filtrarEquipos(q) {
-    const termino = q.toLowerCase().trim();
+    const termino = normalizarBusquedaFDFF(q).trim();
     const items = document.querySelectorAll('.team-item');
     let visibles = 0;
     items.forEach(item => {
-        const nombre = (item.querySelector('.team-name')?.textContent || '').toLowerCase();
+        const nombre = normalizarBusquedaFDFF(item.querySelector('.team-name')?.textContent);
         const visible = !termino || nombre.includes(termino);
         item.style.display = visible ? '' : 'none';
         if (visible) visibles++;
