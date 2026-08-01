@@ -166,13 +166,9 @@
         myModal.show();
     }
 
-    document.getElementById('buscarAtleta').addEventListener('keyup', function() {
-        let valor = normalizarBusquedaFDFF(this.value);
-        let filas = document.querySelectorAll('#tablaAtletas tbody tr');
-        filas.forEach(fila => {
-            fila.style.display = normalizarBusquedaFDFF(fila.innerText).includes(valor) ? '' : 'none';
-        });
-    });
+    // Cacheado + debounced: con ~2000 atletas, normalizar innerText de cada
+    // fila en CADA tecla (sin cache) es lento — ver CLAUDE.md regla #10.
+    aplicarFiltroFilasCacheadoFDFF('#buscarAtleta', '#tablaAtletas tbody tr');
 
     document.getElementById('formGuardarPesaje').addEventListener('submit', async (e) => {
         e.preventDefault();

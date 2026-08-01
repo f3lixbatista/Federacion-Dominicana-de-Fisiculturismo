@@ -23,12 +23,64 @@
     }
 
     // Filtro manual (no-DataTables): oculta filas de un contenedor cuyo texto
-    // no incluya el termino buscado, ignorando acentos en ambos lados.
+    // no incluya el termino buscado, ignorando acentos en ambos lados. Sin
+    // cache — usar solo con pocas filas (decenas). Para listas largas (cientos/
+    // miles de filas) usar aplicarFiltroFilasCacheadoFDFF en su lugar.
     function filtrarFilasFDFF(inputEl, filaSelector) {
         var val = normalizarBusquedaFDFF(inputEl.value);
         document.querySelectorAll(filaSelector).forEach(function (fila) {
             fila.style.display = normalizarBusquedaFDFF(fila.innerText || fila.textContent).indexOf(val) !== -1 ? '' : 'none';
         });
+    }
+
+    // Version cacheada + debounced de filtrarFilasFDFF, para listas largas
+    // (cientos/miles de filas): el texto normalizado de cada fila se calcula
+    // UNA SOLA VEZ (no en cada tecla) y el filtrado usa textContent (no
+    // innerText, que fuerza layout/reflow del navegador — mucho mas caro con
+    // miles de filas). Se autoinstala en el input: no hace falta un
+    // addEventListener aparte.
+    function aplicarFiltroFilasCacheadoFDFF(inputSelector, filaSelector) {
+        var input = typeof inputSelector === 'string' ? document.querySelector(inputSelector) : inputSelector;
+        if (!input) return;
+        var cache = null;
+        function construirCache() {
+            cache = Array.prototype.map.call(document.querySelectorAll(filaSelector), function (fila) {
+                return { fila: fila, texto: normalizarBusquedaFDFF(fila.textContent) };
+            });
+        }
+        input.addEventListener('keyup', debounceFDFF(function () {
+            if (!cache) construirCache();
+            var val = normalizarBusquedaFDFF(input.value);
+            cache.forEach(function (item) {
+                item.fila.style.display = !val || item.texto.indexOf(val) !== -1 ? '' : 'none';
+            });
+        }, 150));
+    }
+
+    // Como aplicarBusquedaAcentoInsensibleFDFF, pero para un <input> PROPIO
+    // (no el buscador nativo "Search:" que genera DataTables) que controla el
+    // filtrado de la tabla — ej. una caja de busqueda personalizada tipo
+    // "Localizar Atleta". Mismo cacheo por fila + debounce de 150ms.
+    function aplicarBusquedaCustomAcentoInsensibleFDFF(tableSelector, inputSelector) {
+        var table = $(tableSelector).DataTable();
+        var nTable = table.table().node();
+        var input = typeof inputSelector === 'string' ? document.querySelector(inputSelector) : inputSelector;
+        var cacheFila = {};
+
+        $.fn.dataTable.ext.search.push(function (settings, dataFila, rowIdx) {
+            if (settings.nTable !== nTable) return true;
+            var val = normalizarBusquedaFDFF(input.value);
+            if (!val) return true;
+            var normalizado = cacheFila[rowIdx];
+            if (normalizado === undefined) {
+                normalizado = normalizarBusquedaFDFF(dataFila.join(' '));
+                cacheFila[rowIdx] = normalizado;
+            }
+            return normalizado.indexOf(val) !== -1;
+        });
+
+        input.addEventListener('keyup', debounceFDFF(function () { table.draw(); }, 150));
+        input.addEventListener('input', debounceFDFF(function () { table.draw(); }, 150));
     }
 
     // Hace que el buscador NATIVO de una DataTable ("Search:") ignore acentos.
@@ -118,6 +170,8 @@
     window.normalizarBusquedaFDFF = normalizarBusquedaFDFF;
     window.debounceFDFF = debounceFDFF;
     window.filtrarFilasFDFF = filtrarFilasFDFF;
+    window.aplicarFiltroFilasCacheadoFDFF = aplicarFiltroFilasCacheadoFDFF;
     window.aplicarBusquedaAcentoInsensibleFDFF = aplicarBusquedaAcentoInsensibleFDFF;
     window.aplicarBusquedaPorColumnaAcentoInsensibleFDFF = aplicarBusquedaPorColumnaAcentoInsensibleFDFF;
+    window.aplicarBusquedaCustomAcentoInsensibleFDFF = aplicarBusquedaCustomAcentoInsensibleFDFF;
 })();

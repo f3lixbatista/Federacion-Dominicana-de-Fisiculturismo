@@ -16,11 +16,24 @@ const inscripcionPage = async (req, res) => {
             evento = data;
         }
 
-        const { data: arrayAtletas } = await supabaseAdmin
-            .from('atletas')
-            .select('id, nombre, cedula, idfdff, sexo, fecha_nacimiento, estatura, peso, gimnasio, foto_url, preparador_id, celular, email')
-            .eq('estatus_afiliacion', 'habilitado')
-            .order('nombre', { ascending: true });
+        // Paginado via .range() — PostgREST limita cada respuesta a un maximo de
+        // filas (tipicamente 1000) sin importar el .limit() pedido (mismo bug ya
+        // corregido en listarAtletas/listarUsuariosConRol/pesajePage, ver CLAUDE.md regla #9).
+        const _PAGE_SIZE_ATLETAS = 1000;
+        let arrayAtletas = [];
+        let _desdeAtletas = 0;
+        while (true) {
+            const { data, error } = await supabaseAdmin
+                .from('atletas')
+                .select('id, nombre, cedula, idfdff, sexo, fecha_nacimiento, estatura, peso, gimnasio, foto_url, preparador_id, celular, email')
+                .eq('estatus_afiliacion', 'habilitado')
+                .order('nombre', { ascending: true })
+                .range(_desdeAtletas, _desdeAtletas + _PAGE_SIZE_ATLETAS - 1);
+            if (error) throw error;
+            arrayAtletas = arrayAtletas.concat(data || []);
+            if (!data || data.length < _PAGE_SIZE_ATLETAS) break;
+            _desdeAtletas += _PAGE_SIZE_ATLETAS;
+        }
 
         const { data: arrayPreparadores } = await supabaseAdmin
             .from('preparadores')
