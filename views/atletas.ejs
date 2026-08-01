@@ -176,7 +176,7 @@
 
                     // Los inputs solo redibujan — el filtrado real (insensible a
                     // acentos) lo hace aplicarBusquedaPorColumnaAcentoInsensibleFDFF.
-                    filterRow.find('input').on('keyup change', function () { table.draw(); });
+                    filterRow.find('input').on('keyup change', debounceFDFF(function () { table.draw(); }, 150));
 
                     aplicarBusquedaPorColumnaAcentoInsensibleFDFF('#mydatatable', function (idx) {
                         return filterRow.children('th, td').eq(idx).find('input').get(0) || null;

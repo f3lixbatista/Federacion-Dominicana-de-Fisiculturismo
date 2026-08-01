@@ -247,11 +247,23 @@ const pesajePage = async (req, res) => {
             eventoActual = data || null;
         }
 
-        const { data: atletas, error } = await supabaseAdmin
-            .from('atletas')
-            .select('id, nombre, cedula, idfdff, estatus_afiliacion, peso, estatura, pesaje_evento_id, pesaje_fecha')
-            .order('nombre', { ascending: true });
-        if (error) throw error;
+        // Paginado via .range() — PostgREST limita cada respuesta a un maximo de
+        // filas (tipicamente 1000) sin importar el .limit() pedido (mismo bug ya
+        // corregido en listarAtletas/listarUsuariosConRol, ver CLAUDE.md regla #9).
+        const PAGE_SIZE = 1000;
+        let atletas = [];
+        let desde = 0;
+        while (true) {
+            const { data, error } = await supabaseAdmin
+                .from('atletas')
+                .select('id, nombre, cedula, idfdff, estatus_afiliacion, peso, estatura, pesaje_evento_id, pesaje_fecha')
+                .order('nombre', { ascending: true })
+                .range(desde, desde + PAGE_SIZE - 1);
+            if (error) throw error;
+            atletas = atletas.concat(data || []);
+            if (!data || data.length < PAGE_SIZE) break;
+            desde += PAGE_SIZE;
+        }
 
         res.render('eventos/pesaje', {
             atletas: atletas || [],
