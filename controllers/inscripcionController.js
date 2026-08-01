@@ -353,18 +353,42 @@ const detalleInscripcion = async (req, res) => {
 // Disciplinas con formula propia de relacion talla-peso (peso maximo = estatura
 // - offset), verificadas contra las tablas oficiales FDFF:
 // - "Men's Physique Clásico": formula unica (sin clases), offset 105.
-// - Las demas: el offset varia POR CLASE (Class A..I) — cada clase tiene su
-//   propia tabla de imagen, no es un solo valor para toda la disciplina.
+// - Las demas: el offset varia POR BANDA de estatura (Class A..I de la tabla
+//   oficial), pero esas bandas NO son categorias/podios separados — son solo
+//   un filtro de elegibilidad de peso. Las categorias reales a disputar son
+//   unica y exclusivamente las que aparecen en los afiches (ver CLAUDE.md
+//   "Elegibilidad física"): p.ej. "Fisiculturismo Clásico" (Men's Classic
+//   Bodybuilding) es UNA sola categoria Open pese a que la tabla tiene 7
+//   bandas; "Classic Physique" son 2 categorias (Hasta/Sobre 172cm) pese a
+//   que la tabla tiene 7 bandas propias. Por eso el offset se resuelve
+//   SIEMPRE por la estatura real del atleta, nunca por la categoria elegida.
 // Las disciplinas con parametro 'peso'/'estatura'/'ambos' que NO estan aquí ya
 // tienen su rango exacto guardado en la propia categoria (peso_min/max, estatura_min/max).
-const _OFFSET_RELACION_TALLA_PESO = {
+const _OFFSET_UNICO = {
     "men's physique clasico": 105,
-    "men's physique clasico principiante": 105,
-    "men's classic physique": { "class a": 96, "class b": 94, "class c": 92, "class d": 89, "class e": 87, "class f": 85, "class g": 83 },
-    "men's classic physique principiante": { "class a": 96, "class b": 94, "class c": 92, "class d": 89, "class e": 87, "class f": 85, "class g": 83 },
-    "men's classic bodybuilding": { "class a": 100, "class b": 98, "class c": 96, "class d": 93, "class e": 91, "class f": 89, "class g": 87 },
-    "men's classic bodybuilding principiante": { "class a": 100, "class b": 98, "class c": 96, "class d": 93, "class e": 91, "class f": 89, "class g": 87 },
-    "men's games classic": { "class a": 102, "class b": 101, "class c": 100, "class d": 99, "class e": 98, "class f": 96, "class g": 95, "class h": 94, "class i": 93 }
+    "men's physique clasico principiante": 105
+};
+const _BANDAS_TALLA_PESO = {
+    "men's classic physique": [
+        { max: 168, offset: 96 }, { max: 171, offset: 94 }, { max: 175, offset: 92 },
+        { max: 180, offset: 89 }, { max: 188, offset: 87 }, { max: 196, offset: 85 }, { max: Infinity, offset: 83 }
+    ],
+    "men's classic physique principiante": [
+        { max: 168, offset: 96 }, { max: 171, offset: 94 }, { max: 175, offset: 92 },
+        { max: 180, offset: 89 }, { max: 188, offset: 87 }, { max: 196, offset: 85 }, { max: Infinity, offset: 83 }
+    ],
+    "men's classic bodybuilding": [
+        { max: 168, offset: 100 }, { max: 171, offset: 98 }, { max: 175, offset: 96 },
+        { max: 180, offset: 93 }, { max: 188, offset: 91 }, { max: 196, offset: 89 }, { max: Infinity, offset: 87 }
+    ],
+    "men's classic bodybuilding principiante": [
+        { max: 168, offset: 100 }, { max: 171, offset: 98 }, { max: 175, offset: 96 },
+        { max: 180, offset: 93 }, { max: 188, offset: 91 }, { max: 196, offset: 89 }, { max: Infinity, offset: 87 }
+    ],
+    "men's games classic": [
+        { max: 162, offset: 102 }, { max: 165, offset: 101 }, { max: 168, offset: 100 }, { max: 171, offset: 99 },
+        { max: 175, offset: 98 }, { max: 180, offset: 96 }, { max: 188, offset: 95 }, { max: 196, offset: 94 }, { max: Infinity, offset: 93 }
+    ]
 };
 
 function _normDiscValidacion(s) {
@@ -375,12 +399,12 @@ function _normDiscValidacion(s) {
         .normalize('NFD').replace(reDiacriticos, '').trim();
 }
 
-function _offsetRelacion(disc, division) {
-    var entry = _OFFSET_RELACION_TALLA_PESO[disc];
-    if (entry == null) return null;
-    if (typeof entry === 'number') return entry;
-    var key = _normDiscValidacion(division || '');
-    return entry[key] != null ? entry[key] : null;
+function _offsetRelacion(disc, estatura) {
+    if (_OFFSET_UNICO[disc] != null) return _OFFSET_UNICO[disc];
+    var bandas = _BANDAS_TALLA_PESO[disc];
+    if (!bandas || estatura == null) return null;
+    var banda = bandas.find(function(b) { return estatura <= b.max; });
+    return (banda || bandas[bandas.length - 1]).offset;
 }
 
 // Bloqueo real: el atleta debe caer estrictamente dentro del peso/estatura de la
@@ -411,7 +435,7 @@ async function _validarElegibilidadFisica(atleta, eventoCatIds) {
         }
 
         const disc = _normDiscValidacion(cat.disciplina);
-        const offset = _offsetRelacion(disc, cat.division);
+        const offset = _offsetRelacion(disc, atleta.estatura);
         if (offset != null) {
             if (atleta.estatura && atleta.peso) {
                 const pesoMax = atleta.estatura - offset;
