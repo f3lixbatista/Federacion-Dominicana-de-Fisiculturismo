@@ -815,12 +815,16 @@ async function _datosResultadosPublicos(id, marca) {
     if (partesFusion && marca === 'superior') nombreMostrado = partesFusion[0];
     if (partesFusion && marca === 'principiante') nombreMostrado = partesFusion[1];
 
+    // "Mostrar ciudad en vez de team" es un ajuste puntual pedido solo para
+    // este evento (sus 2 marcas) — no es un comportamiento general.
+    const mostrarCiudad = id === 'b3395125-7e44-4e73-b7e9-3d4fb11491eb';
+
     const { data: relaciones } = await supabaseAdmin
         .from('eventos_categorias')
         .select(`
             id,
-            categorias ( nombre ),
-            competidores ( numero_atleta, posicion_final, atletas ( nombre, gimnasio ) )
+            categorias ( nombre, disciplina, modalidad ),
+            competidores ( numero_atleta, posicion_final, es_ganador_absoluto, atletas ( nombre, gimnasio, municipio ) )
         `)
         .eq('evento_id', id)
         .order('orden_secuencia_categoria', { ascending: true });
@@ -836,18 +840,46 @@ async function _datosResultadosPublicos(id, marca) {
 
     const evento_cat_ids_marca = new Set(relacionesFiltradas.map(r => r.id));
 
-    const categorias = relacionesFiltradas.map(rel => ({
-        nombre_categoria: rel.categorias?.nombre,
-        atletas: (rel.competidores || [])
-            .filter(c => c.posicion_final)
-            .sort((a, b) => a.posicion_final - b.posicion_final)
-            .map(a => ({
-                posicion: a.posicion_final,
-                nombre: a.atletas?.nombre,
-                dorsal: a.numero_atleta,
-                team: a.atletas?.gimnasio || 'Independiente'
-            }))
-    }));
+    const categorias = relacionesFiltradas
+        .map(rel => ({
+            nombre_categoria: rel.categorias?.nombre,
+            atletas: (rel.competidores || [])
+                .filter(c => c.posicion_final)
+                .sort((a, b) => a.posicion_final - b.posicion_final)
+                .map(a => ({
+                    posicion: a.posicion_final,
+                    nombre: a.atletas?.nombre,
+                    dorsal: a.numero_atleta,
+                    team: mostrarCiudad ? (a.atletas?.municipio || '—') : (a.atletas?.gimnasio || 'Independiente')
+                }))
+        }))
+        // No tiene sentido publicar una categoria sin nadie que la disputara.
+        .filter(cat => cat.atletas.length > 0);
+
+    // Absolutos de esta marca: mismo criterio que imprimirResultadosAbsolutos
+    // (campeones de categoria agrupados por disciplina+modalidad; solo hay
+    // absoluto real si 2+ divisiones distintas produjeron cada una su propio
+    // campeón). El ganador del absoluto es quien tenga es_ganador_absoluto.
+    const gruposAbsolutos = {};
+    relacionesFiltradas.forEach(rel => {
+        const cat = rel.categorias || {};
+        (rel.competidores || []).forEach(c => {
+            if (c.posicion_final !== 1) return;
+            const key = `${cat.disciplina || 'Otras'}|||${(cat.modalidad || 'Senior').toLowerCase()}`;
+            if (!gruposAbsolutos[key]) gruposAbsolutos[key] = { disciplina: cat.disciplina, modalidad: cat.modalidad, campeones: [] };
+            // evento_cat_id identifica la division real — una categoria tipo
+            // "Fit Pairs" puede tener 2 co-campeones (los 2 de la pareja) en
+            // la MISMA division, y eso no es un absoluto real (hace falta
+            // que 2+ divisiones DISTINTAS hayan producido cada una su campeón).
+            gruposAbsolutos[key].campeones.push({ nombre: c.atletas?.nombre, esGanador: !!c.es_ganador_absoluto, division: rel.id });
+        });
+    });
+    const absolutos = Object.values(gruposAbsolutos)
+        .filter(g => new Set(g.campeones.map(c => c.division)).size >= 2)
+        .map(g => ({
+            nombre: g.disciplina,
+            ganador: g.campeones.find(c => c.esGanador)?.nombre || null
+        }));
 
     // Lógica de Ranking de Equipos (basada en verReporteOficial)
     const { data: participaciones } = await supabaseAdmin
@@ -873,7 +905,7 @@ async function _datosResultadosPublicos(id, marca) {
         .map(([nombre, puntos]) => ({ nombre, puntos }))
         .sort((a, b) => b.puntos - a.puntos);
 
-    return { evento: { ...evento, nombre: nombreMostrado }, categorias, rankingTeams };
+    return { evento: { ...evento, nombre: nombreMostrado }, categorias, rankingTeams, absolutos, mostrarCiudad };
 }
 
 const verResultadosPublicos = async (req, res) => {
@@ -898,16 +930,19 @@ const exportarResultadosExcel = async (req, res) => {
         if (!datos) return res.redirect('/eventos');
 
         const filas = [];
+        const colTeam = datos.mostrarCiudad ? 'Ciudad' : 'Team';
         datos.categorias.forEach(cat => {
             filas.push([cat.nombre_categoria]);
-            filas.push(['Pos.', 'Atleta', 'Dorsal', 'Team']);
-            if (cat.atletas.length === 0) {
-                filas.push(['Sin resultado registrado']);
-            } else {
-                cat.atletas.forEach(a => filas.push([a.posicion, a.nombre, a.dorsal, a.team]));
-            }
+            filas.push(['Pos.', 'Atleta', 'Dorsal', colTeam]);
+            cat.atletas.forEach(a => filas.push([a.posicion, a.nombre, a.dorsal, a.team]));
             filas.push([]);
         });
+
+        if (datos.absolutos.length > 0) {
+            filas.push(['ABSOLUTOS']);
+            datos.absolutos.forEach(ab => filas.push([ab.nombre, ab.ganador || 'Sin definir']));
+            filas.push([]);
+        }
 
         const hoja = XLSX.utils.aoa_to_sheet(filas);
         hoja['!cols'] = [{ wch: 8 }, { wch: 32 }, { wch: 10 }, { wch: 28 }];

@@ -7,7 +7,7 @@
         .cat-resultado { break-inside: avoid; }
     }
     .cat-resultado .fila-1 { background: #fff8e1; }
-    .cat-resultado .pos-badge { min-width: 2.4em; display: inline-block; text-align: center; }
+    .medalla-icono { margin-left: 6px; }
 </style>
 
 <div class="container my-5">
@@ -38,6 +38,18 @@
         </div>
     </div>
 
+    <%
+    // Trofeo dorado/plateado/bronce para 1-2-3, medalla azul (color que no
+    // se confunde con oro/plata/bronce) para el resto — siempre al FINAL
+    // del nombre del atleta, nunca reemplazando el número de posición.
+    function iconoPosicion(pos) {
+        if (pos === 1) return '<i class="fas fa-trophy medalla-icono" style="color:#FFD700" title="Oro"></i>';
+        if (pos === 2) return '<i class="fas fa-trophy medalla-icono" style="color:#C0C0C0" title="Plata"></i>';
+        if (pos === 3) return '<i class="fas fa-trophy medalla-icono" style="color:#CD7F32" title="Bronce"></i>';
+        return '<i class="fas fa-medal medalla-icono" style="color:#0d6efd" title="Posición ' + pos + '"></i>';
+    }
+    %>
+
     <!-- RESULTADOS POR CATEGORIA — siempre visibles, sin desplegar -->
     <% categorias.forEach((cat) => { %>
         <div class="card shadow-sm mb-3 cat-resultado">
@@ -49,19 +61,14 @@
                             <th style="width: 80px;">Pos.</th>
                             <th>Atleta</th>
                             <th>Dorsal</th>
-                            <th>Team</th>
+                            <th><%= mostrarCiudad ? 'Ciudad' : 'Team' %></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <% if (cat.atletas.length === 0) { %>
-                            <tr><td colspan="4" class="text-muted small py-3 text-center">Sin resultado registrado.</td></tr>
-                        <% } %>
                         <% cat.atletas.forEach(atl => { %>
                             <tr class="<%= atl.posicion === 1 ? 'fila-1' : '' %>">
-                                <td class="fw-bold <%= atl.posicion <= 3 ? 'text-primary' : '' %>">
-                                    <span class="pos-badge"><%= atl.posicion === 1 ? '🏆' : atl.posicion + '°' %></span>
-                                </td>
-                                <td class="<%= atl.posicion === 1 ? 'fw-bold' : '' %>"><%= atl.nombre %></td>
+                                <td class="fw-bold <%= atl.posicion <= 3 ? 'text-primary' : '' %>"><%= atl.posicion %>°</td>
+                                <td class="<%= atl.posicion === 1 ? 'fw-bold' : '' %>"><%= atl.nombre %><%- iconoPosicion(atl.posicion) %></td>
                                 <td><span class="badge bg-light text-dark border"><%= atl.dorsal %></span></td>
                                 <td class="small"><%= atl.team %></td>
                             </tr>
@@ -71,6 +78,29 @@
             </div>
         </div>
     <% }) %>
+
+    <!-- ABSOLUTOS — al final -->
+    <% if (absolutos.length > 0) { %>
+        <div class="card shadow-sm mb-3 cat-resultado border-warning">
+            <div class="card-header bg-warning bg-opacity-25 fw-bold"><i class="fas fa-crown me-1"></i> Absolutos</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <% absolutos.forEach(ab => { %>
+                        <div class="col-md-4">
+                            <div class="small text-muted"><%= ab.nombre %></div>
+                            <div class="fw-bold">
+                                <% if (ab.ganador) { %>
+                                    <%= ab.ganador %><i class="fas fa-trophy medalla-icono" style="color:#FFD700"></i>
+                                <% } else { %>
+                                    <span class="text-muted fst-italic">Sin definir</span>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+        </div>
+    <% } %>
 </div>
 
 <%- include("../template/footer") %>
