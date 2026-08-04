@@ -8,6 +8,113 @@
     }
     .cat-resultado .fila-1 { background: #fff8e1; }
     .medalla-icono { margin-left: 6px; }
+
+    /* ── ABSOLUTOS: campeones generales del evento ─────────────────────────
+       Tarjeta = placa de campeón sobre tarima oscura. El halo superior es la
+       luz de tarima cayendo sobre el ganador; el oro marca el título. */
+    .abs-seccion { margin-top: 3rem; }
+
+    .abs-head { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    .abs-logo-marca { height: 56px; width: auto; max-width: 180px; object-fit: contain; flex: 0 0 auto; }
+    .abs-eyebrow {
+        font-size: 10px; font-weight: 700; letter-spacing: .16em;
+        text-transform: uppercase; color: var(--fdff-cyan-d); margin-bottom: 3px;
+    }
+    .abs-title {
+        font-size: clamp(22px, 3vw, 30px); font-weight: 800;
+        letter-spacing: -.015em; color: var(--fdff-navy); margin: 0; line-height: 1.1;
+    }
+    .abs-rule {
+        flex: 1 1 auto; height: 2px; border-radius: 2px; min-width: 30px;
+        background: linear-gradient(90deg, #d4af37, rgba(212, 175, 55, 0));
+    }
+
+    .abs-card {
+        position: relative; overflow: hidden; height: 100%;
+        padding: 30px 20px 24px; border-radius: 14px; text-align: center; color: #fff;
+        background: linear-gradient(160deg, #262b3f 0%, var(--fdff-navy) 55%, #12141f 100%);
+        border: 1px solid rgba(212, 175, 55, .45);
+        box-shadow: 0 10px 26px rgba(26, 29, 43, .26);
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+    /* luz de tarima */
+    .abs-card::after {
+        content: ''; position: absolute; top: -80px; left: 50%; transform: translateX(-50%);
+        width: 230px; height: 190px; border-radius: 50%; pointer-events: none;
+        background: radial-gradient(closest-side, rgba(0, 212, 200, .22), rgba(0, 212, 200, 0) 75%);
+    }
+    .abs-card > * { position: relative; z-index: 1; }
+    .abs-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(26, 29, 43, .34); }
+
+    .abs-emblema {
+        width: 54px; height: 54px; border-radius: 50%; margin: 0 auto 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; color: #f5d76e;
+        background: rgba(212, 175, 55, .12); border: 1.5px solid rgba(212, 175, 55, .55);
+    }
+    .abs-disciplina {
+        font-size: 11px; font-weight: 700; letter-spacing: .14em;
+        text-transform: uppercase; color: var(--fdff-cyan); margin-bottom: 10px;
+    }
+    .abs-ganador {
+        font-size: clamp(19px, 2.3vw, 24px); font-weight: 800; line-height: 1.15;
+        letter-spacing: -.02em; color: #fff; margin-bottom: 14px; text-wrap: balance;
+    }
+    .abs-sello {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 9.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
+        color: #14161f; padding: 5px 13px; border-radius: 999px;
+        background: linear-gradient(180deg, #f5d76e, #d4af37);
+    }
+
+    /* absoluto aún no definido — misma silueta, sin oro ni luz */
+    .abs-card--pendiente {
+        background: #f8f9fa; border: 1px dashed #c4c9d4; box-shadow: none; color: #6c757d;
+    }
+    .abs-card--pendiente::after { display: none; }
+    .abs-card--pendiente .abs-emblema { color: #adb5bd; background: #fff; border-color: #dee2e6; }
+    .abs-card--pendiente .abs-disciplina { color: #6c757d; }
+    .abs-card--pendiente .abs-ganador { color: #949cab; font-weight: 600; font-size: 18px; font-style: italic; }
+    .abs-card--pendiente .abs-sello { background: none; color: #adb5bd; border: 1px solid #dee2e6; }
+
+    @media (max-width: 575.98px) {
+        .abs-card { padding: 22px 16px 18px; }
+        .abs-emblema { width: 46px; height: 46px; font-size: 19px; margin-bottom: 10px; }
+        .abs-head { flex-wrap: wrap; }
+        .abs-logo-marca { height: 42px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .abs-card, .abs-card:hover { transition: none; transform: none; }
+    }
+
+    /* Impresión: se invierte a tinta sobre papel — el fondo navy desaparece si
+       el usuario no imprime gráficos de fondo, y dejaría texto blanco invisible. */
+    @media print {
+        .abs-seccion { margin-top: 26px; break-inside: avoid; }
+        .abs-grid > * { flex: 0 0 50%; max-width: 50%; }
+        .abs-card {
+            break-inside: avoid; padding: 16px 14px;
+            background: #fff !important; color: var(--fdff-navy) !important;
+            border: 1.5px solid var(--fdff-navy) !important; box-shadow: none !important;
+            transform: none !important;
+        }
+        .abs-card::after { display: none !important; }
+        .abs-emblema {
+            width: 40px; height: 40px; font-size: 17px; margin-bottom: 8px;
+            background: none !important; color: var(--fdff-navy) !important;
+            border-color: var(--fdff-navy) !important;
+        }
+        .abs-disciplina { color: var(--fdff-navy) !important; margin-bottom: 6px; }
+        .abs-ganador { color: #000 !important; font-size: 17px; margin-bottom: 8px; }
+        .abs-sello {
+            background: none !important; color: var(--fdff-navy) !important;
+            border: 1px solid var(--fdff-navy); padding: 3px 10px;
+        }
+        .abs-title { font-size: 20px; }
+        .abs-rule { background: var(--fdff-navy) !important; height: 1px; }
+        .abs-logo-marca { height: 40px; }
+    }
 </style>
 
 <div class="container my-5">
@@ -81,25 +188,36 @@
 
     <!-- ABSOLUTOS — al final -->
     <% if (absolutos.length > 0) { %>
-        <div class="card shadow-sm mb-3 cat-resultado border-warning">
-            <div class="card-header bg-warning bg-opacity-25 fw-bold"><i class="fas fa-crown me-1"></i> Absolutos</div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <% absolutos.forEach(ab => { %>
-                        <div class="col-md-4">
-                            <div class="small text-muted"><%= ab.nombre %></div>
-                            <div class="fw-bold">
-                                <% if (ab.ganador) { %>
-                                    <%= ab.ganador %><i class="fas fa-trophy medalla-icono" style="color:#FFD700"></i>
-                                <% } else { %>
-                                    <span class="text-muted fst-italic">Sin definir</span>
-                                <% } %>
-                            </div>
-                        </div>
-                    <% }) %>
+        <section class="abs-seccion">
+            <div class="abs-head">
+                <% if (logoMarca) { %>
+                    <img src="<%= logoMarca %>" alt="" class="abs-logo-marca" aria-hidden="true">
+                <% } %>
+                <div>
+                    <div class="abs-eyebrow">Campeones generales del evento</div>
+                    <h3 class="abs-title">Absolutos</h3>
                 </div>
+                <span class="abs-rule"></span>
             </div>
-        </div>
+
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 abs-grid">
+                <% absolutos.forEach(ab => { %>
+                    <div class="col">
+                        <div class="abs-card <%= ab.ganador ? '' : 'abs-card--pendiente' %>">
+                            <div class="abs-emblema">
+                                <i class="fas <%= ab.ganador ? 'fa-crown' : 'fa-hourglass-half' %>" aria-hidden="true"></i>
+                            </div>
+                            <div class="abs-disciplina"><%= ab.nombre %></div>
+                            <div class="abs-ganador"><%= ab.ganador || 'Sin definir' %></div>
+                            <span class="abs-sello">
+                                <i class="fas <%= ab.ganador ? 'fa-trophy' : 'fa-clock' %>" aria-hidden="true"></i>
+                                <%= ab.ganador ? 'Título Absoluto' : 'Por definir' %>
+                            </span>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        </section>
     <% } %>
 </div>
 

@@ -819,6 +819,14 @@ async function _datosResultadosPublicos(id, marca) {
     // este evento (sus 2 marcas) — no es un comportamiento general.
     const mostrarCiudad = id === 'b3395125-7e44-4e73-b7e9-3d4fb11491eb';
 
+    // Logo recortado del afiche oficial (sin fondo) por marca — igual que
+    // mostrarCiudad, es exclusivo de este evento, no un campo de `eventos`.
+    let logoMarca = null;
+    if (id === 'b3395125-7e44-4e73-b7e9-3d4fb11491eb') {
+        if (marca === 'superior') logoMarca = '/img/logos-eventos/mr-republica-2026-superior.png';
+        if (marca === 'principiante') logoMarca = '/img/logos-eventos/mr-republica-2026-principiante.png';
+    }
+
     const { data: relaciones } = await supabaseAdmin
         .from('eventos_categorias')
         .select(`
@@ -905,7 +913,7 @@ async function _datosResultadosPublicos(id, marca) {
         .map(([nombre, puntos]) => ({ nombre, puntos }))
         .sort((a, b) => b.puntos - a.puntos);
 
-    return { evento: { ...evento, nombre: nombreMostrado }, categorias, rankingTeams, absolutos, mostrarCiudad };
+    return { evento: { ...evento, nombre: nombreMostrado }, categorias, rankingTeams, absolutos, mostrarCiudad, logoMarca };
 }
 
 const verResultadosPublicos = async (req, res) => {
