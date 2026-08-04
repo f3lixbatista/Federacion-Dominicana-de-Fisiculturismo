@@ -30,7 +30,7 @@
                             <h4 class="fw-bold mb-3"><%= ev.nombre %></h4>
                             <p class="small text-muted mb-4"><i class="fas fa-calendar-alt me-1"></i> <%= new Date(ev.fecha_inicio).toLocaleDateString('es-DO') %></p>
                             <div class="d-grid gap-2">
-                                <a href="/eventos/<%= ev.id %>/resultados-publicos" class="btn btn-fdff fw-bold">
+                                <a href="/eventos/<%= ev.id %>/resultados-publicos<%= ev.marca ? '?marca=' + ev.marca : '' %>" class="btn btn-fdff fw-bold">
                                     <i class="fas fa-trophy me-2"></i> Ver Resultados
                                 </a>
                                 <a href="/social/muro?evento=<%= ev.id %>" class="btn btn-outline-secondary">

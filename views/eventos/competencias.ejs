@@ -2,8 +2,9 @@
 
 <%
 const hoyComp = new Date().toISOString().split('T')[0];
-const eventosAbiertos  = eventos.filter(ev => ev.estado !== 'cerrado' && !(ev.estado === 'inscripcion' && ev.fecha_inicio && ev.fecha_inicio.slice(0,10) < hoyComp));
-const eventosCerrados  = eventos.filter(ev => ev.estado === 'cerrado'  || (ev.estado === 'inscripcion' && ev.fecha_inicio && ev.fecha_inicio.slice(0,10) < hoyComp));
+const esRealizado = ev => ev.estado === 'cerrado' || ev.estado === 'finalizado' || (ev.estado === 'inscripcion' && ev.fecha_inicio && ev.fecha_inicio.slice(0,10) < hoyComp);
+const eventosAbiertos  = eventos.filter(ev => !esRealizado(ev));
+const eventosCerrados  = eventos.filter(esRealizado);
 %>
 
 <div class="container my-5">
@@ -86,7 +87,7 @@ const eventosCerrados  = eventos.filter(ev => ev.estado === 'cerrado'  || (ev.es
                                 <i class="fas fa-calendar"></i> <%= evento.fecha_inicio %>
                             </p>
                             <div class="d-grid gap-2">
-                                <a href="/eventos/historico" class="btn btn-outline-dark fw-bold">
+                                <a href="/eventos/<%= evento.id %>/resultados-publicos<%= evento.marca ? '?marca=' + evento.marca : '' %>" class="btn btn-outline-dark fw-bold">
                                     <i class="fas fa-list-ol me-1"></i> Ver Resultados
                                 </a>
                                 <a href="/preparadores/ranking-teams" class="btn btn-outline-secondary btn-sm fw-bold">

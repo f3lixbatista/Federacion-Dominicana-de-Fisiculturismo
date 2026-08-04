@@ -18,6 +18,7 @@ routerEventos.get('/', (req, res) => {
 // HISTÓRICO — cache 30 min (solo añade datos al cerrar eventos)
 routerEventos.get('/historico', cacheMiddleware(1800), eventosController.verHistorico);
 routerEventos.get('/:id/resultados-publicos', eventosController.verResultadosPublicos);
+routerEventos.get('/:id/resultados-publicos/exportar.xlsx', eventosController.exportarResultadosExcel);
 
 // DASHBOARD DEL EVENTO
 routerEventos.get('/:id', checkPermiso('eventos', 'ver'), eventosController.verDashboardEvento);

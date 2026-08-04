@@ -3,6 +3,7 @@ const QRCode = require('qrcode');
 const webpush = require('web-push'); // Import web-push
 const { z } = require('zod');
 const votingService = require('../services/votingService');
+const XLSX = require('xlsx');
 
 // Esquema para validar la creación de un evento
 const nuevoEventoSchema = z.object({
@@ -50,13 +51,28 @@ async function subirAStorage(file, bucketName, folderName) {
 
 const listarEventos = async (req, res) => {
     try {
-        const { data: eventos, error } = await supabaseAdmin
+        const { data: eventosDB, error } = await supabaseAdmin
             .from('eventos')
             .select('id, nombre, estado, fecha_inicio, lugar, url_afiche_evento, costo_primera_cat, costo_adicional, costo_oferta_primera, costo_oferta_adicional, fecha_limite_oferta')
             .order('fecha_inicio', { ascending: false })
             .limit(100);
 
         if (error) throw error;
+
+        // Un evento fusionado (nombre "{marca1} + {marca2}") se muestra como
+        // 2 tarjetas separadas — el usuario pidió poder ver/publicar cada
+        // marca de forma independiente aunque compartan una sola fila en BD.
+        const eventos = [];
+        (eventosDB || []).forEach(ev => {
+            const partes = _partesFusionado(ev.nombre);
+            if (partes) {
+                eventos.push({ ...ev, nombre: partes[0], marca: 'superior' });
+                eventos.push({ ...ev, nombre: partes[1], marca: 'principiante' });
+            } else {
+                eventos.push(ev);
+            }
+        });
+
         res.render('eventos/competencias', { eventos });
     } catch (error) {
         res.status(500).send('Error al cargar eventos: ' + error.message);
@@ -757,72 +773,156 @@ const verHistorico = async (req, res) => {
             .order('fecha_inicio', { ascending: false });
 
         if (error) throw error;
-        res.render('eventos/historico_lista', { eventos: eventosPasados || [] });
+
+        const eventos = [];
+        (eventosPasados || []).forEach(ev => {
+            const partes = _partesFusionado(ev.nombre);
+            if (partes) {
+                eventos.push({ ...ev, nombre: partes[0], marca: 'superior' });
+                eventos.push({ ...ev, nombre: partes[1], marca: 'principiante' });
+            } else {
+                eventos.push(ev);
+            }
+        });
+
+        res.render('eventos/historico_lista', { eventos });
     } catch (error) {
         console.error('🔥 Error en histórico:', error.message);
         res.redirect('/eventos/competencias');
     }
 };
 
-const verResultadosPublicos = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const { data: evento, error: errEv } = await supabaseAdmin.from('eventos').select('*').eq('id', id).single();
-        if (errEv || !evento) return res.redirect('/eventos');
+// Un "evento fusionado" junta 2 marcas (ej. Superior + Principiante) en una
+// sola fila de `eventos` — el nombre se arma como "{marca1} + {marca2}" al
+// crearlo (ver CLAUDE.md "Eventos fusionados"). Con eso alcanza para saber
+// si hay que ofrecer la vista separada por marca, sin una columna nueva.
+function _partesFusionado(nombreEvento) {
+    if (!nombreEvento || !nombreEvento.includes(' + ')) return null;
+    const partes = nombreEvento.split(' + ').map(s => s.trim());
+    if (partes.length !== 2) return null;
+    return partes;
+}
 
-        const { data: relaciones } = await supabaseAdmin
-            .from('eventos_categorias')
-            .select(`
-                id,
-                categorias ( nombre ),
-                competidores ( numero_atleta, posicion_final, atletas ( nombre, gimnasio ) )
-            `)
-            .eq('evento_id', id)
-            .order('orden_secuencia_categoria', { ascending: true });
+// Centraliza la carga de resultados (evento + categorias + ranking de
+// equipo) filtrada por marca — la usan tanto la vista HTML como el export
+// a Excel, para no mantener la misma lógica de filtrado en 2 lugares.
+async function _datosResultadosPublicos(id, marca) {
+    const { data: evento, error: errEv } = await supabaseAdmin.from('eventos').select('*').eq('id', id).single();
+    if (errEv || !evento) return null;
 
-        const categorias = (relaciones || []).map(rel => ({
-            nombre_categoria: rel.categorias?.nombre,
-            atletas: (rel.competidores || [])
-                .filter(c => c.posicion_final)
-                .sort((a, b) => a.posicion_final - b.posicion_final)
-                .map(a => ({
-                    posicion: a.posicion_final,
-                    nombre: a.atletas?.nombre,
-                    dorsal: a.numero_atleta,
-                    team: a.atletas?.gimnasio || 'Independiente'
-                }))
-        }));
+    const partesFusion = _partesFusionado(evento.nombre);
+    let nombreMostrado = evento.nombre;
+    if (partesFusion && marca === 'superior') nombreMostrado = partesFusion[0];
+    if (partesFusion && marca === 'principiante') nombreMostrado = partesFusion[1];
 
-        // Lógica de Ranking de Equipos (basada en verReporteOficial)
-        const { data: participaciones } = await supabaseAdmin
-            .from('competidores')
-            .select('posicion_final, es_ganador_absoluto, atletas(preparadores(nombre_completo))')
-            .eq('id_evento', id)
-            .not('posicion_final', 'is', null);
+    const { data: relaciones } = await supabaseAdmin
+        .from('eventos_categorias')
+        .select(`
+            id,
+            categorias ( nombre ),
+            competidores ( numero_atleta, posicion_final, atletas ( nombre, gimnasio ) )
+        `)
+        .eq('evento_id', id)
+        .order('orden_secuencia_categoria', { ascending: true });
 
-        const puntosMap = { 1: 7, 2: 5, 3: 4, 4: 3, 5: 2, 6: 1 };
-        const teamsRankingRaw = {};
+    // Si el evento es fusionado y se pidió una marca especifica, solo se
+    // muestran las categorias de esa marca — "Principiante" en el nombre
+    // de la categoria es la marca secundaria, todo lo demas es la principal.
+    const relacionesFiltradas = (relaciones || []).filter(rel => {
+        if (!partesFusion || !marca) return true;
+        const esPrincipiante = /principiante/i.test(rel.categorias?.nombre || '');
+        return marca === 'principiante' ? esPrincipiante : !esPrincipiante;
+    });
 
-        (participaciones || []).forEach(p => {
+    const evento_cat_ids_marca = new Set(relacionesFiltradas.map(r => r.id));
+
+    const categorias = relacionesFiltradas.map(rel => ({
+        nombre_categoria: rel.categorias?.nombre,
+        atletas: (rel.competidores || [])
+            .filter(c => c.posicion_final)
+            .sort((a, b) => a.posicion_final - b.posicion_final)
+            .map(a => ({
+                posicion: a.posicion_final,
+                nombre: a.atletas?.nombre,
+                dorsal: a.numero_atleta,
+                team: a.atletas?.gimnasio || 'Independiente'
+            }))
+    }));
+
+    // Lógica de Ranking de Equipos (basada en verReporteOficial)
+    const { data: participaciones } = await supabaseAdmin
+        .from('competidores')
+        .select('evento_cat_id, posicion_final, es_ganador_absoluto, atletas(preparadores(nombre_completo))')
+        .eq('id_evento', id)
+        .not('posicion_final', 'is', null);
+
+    const puntosMap = { 1: 7, 2: 5, 3: 4, 4: 3, 5: 2, 6: 1 };
+    const teamsRankingRaw = {};
+
+    (participaciones || [])
+        .filter(p => !partesFusion || !marca || evento_cat_ids_marca.has(p.evento_cat_id))
+        .forEach(p => {
             const teamName = p.atletas?.preparadores?.nombre_completo || 'Independientes';
             if (!teamsRankingRaw[teamName]) teamsRankingRaw[teamName] = 0;
-            
+
             if (puntosMap[p.posicion_final]) teamsRankingRaw[teamName] += puntosMap[p.posicion_final];
             if (p.es_ganador_absoluto) teamsRankingRaw[teamName] += 11;
         });
 
-        const rankingTeams = Object.entries(teamsRankingRaw)
-            .map(([nombre, puntos]) => ({ nombre, puntos }))
-            .sort((a, b) => b.puntos - a.puntos);
+    const rankingTeams = Object.entries(teamsRankingRaw)
+        .map(([nombre, puntos]) => ({ nombre, puntos }))
+        .sort((a, b) => b.puntos - a.puntos);
 
-        res.render('eventos/resultados_publicos', { 
-            evento, 
-            categorias, 
-            rankingTeams 
-        });
+    return { evento: { ...evento, nombre: nombreMostrado }, categorias, rankingTeams };
+}
+
+const verResultadosPublicos = async (req, res) => {
+    const { id } = req.params;
+    const marca = (req.query.marca || '').toLowerCase(); // 'superior' | 'principiante' | ''
+    try {
+        const datos = await _datosResultadosPublicos(id, marca);
+        if (!datos) return res.redirect('/eventos');
+
+        res.render('eventos/resultados_publicos', { ...datos, marca });
     } catch (error) {
         console.error('🔥 Error en resultados públicos:', error.message);
         res.redirect('/eventos/historico');
+    }
+};
+
+const exportarResultadosExcel = async (req, res) => {
+    const { id } = req.params;
+    const marca = (req.query.marca || '').toLowerCase();
+    try {
+        const datos = await _datosResultadosPublicos(id, marca);
+        if (!datos) return res.redirect('/eventos');
+
+        const filas = [];
+        datos.categorias.forEach(cat => {
+            filas.push([cat.nombre_categoria]);
+            filas.push(['Pos.', 'Atleta', 'Dorsal', 'Team']);
+            if (cat.atletas.length === 0) {
+                filas.push(['Sin resultado registrado']);
+            } else {
+                cat.atletas.forEach(a => filas.push([a.posicion, a.nombre, a.dorsal, a.team]));
+            }
+            filas.push([]);
+        });
+
+        const hoja = XLSX.utils.aoa_to_sheet(filas);
+        hoja['!cols'] = [{ wch: 8 }, { wch: 32 }, { wch: 10 }, { wch: 28 }];
+        const libro = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(libro, hoja, 'Resultados');
+
+        const buffer = XLSX.write(libro, { type: 'buffer', bookType: 'xlsx' });
+        const nombreArchivo = `resultados_${datos.evento.nombre}`.replace(/[^a-z0-9]+/gi, '_').toLowerCase() + '.xlsx';
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${nombreArchivo}"`);
+        res.send(buffer);
+    } catch (error) {
+        console.error('🔥 Error exportando resultados a Excel:', error.message);
+        res.redirect(`/eventos/${id}/resultados-publicos${marca ? '?marca=' + marca : ''}`);
     }
 };
 
@@ -1451,6 +1551,7 @@ module.exports = {
     validarLogroPublico,
     verHistorico,
     verResultadosPublicos,
+    exportarResultadosExcel,
     crearNuevoEvento,
     verEditarEvento,
     actualizarEvento,
