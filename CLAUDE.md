@@ -1,7 +1,7 @@
 # FDFF — Sistema de Gestión Federativo (FDFF Live)
 
 ## Descripción del proyecto
-Plataforma web integral para digitalizar el ciclo completo de una competencia de fisiculturismo y fitness IFBB/FDFF. Cubre: registro y afiliación de atletas, pesaje técnico, dorsaleo automático, votación de jueces en tiempo real (Mesa de Cómputo con algoritmo IFBB), monitor del MC, backstage, DJ Virtual (playlist por dorsal), muro social, salón de la fama y recaudación.
+Plataforma web integral para digitalizar el ciclo completo de una competencia de fisiculturismo y fitness IFBB/FDFF. Cubre: registro y afiliación de atletas, pesaje técnico, dorsaleo automático, votación de jueces en tiempo real (Mesa de Cómputo con algoritmo IFBB), monitor del MC, backstage, DJ Virtual (playlist por dorsal), muro social, sala de campeones y recaudación.
 
 El administrador del proyecto es Félix Batista (admin principal).
 
@@ -418,7 +418,7 @@ Dos documentos imprimibles generados desde el mismo dato (`eventos.cronograma_mc
 13. **Por absoluto**: `/estadisticas/:idEvento/imprimir-absolutos` (agregado 2026-07-31).
 14. **Por equipo**: `/preparadores/imprimir-ranking-teams/:idEvento` (agregado 2026-07-31) — puntos por posición (7/5/4/3/2/1 para 1°-6°) + 11 por absoluto, calculado en vivo, no hay tabla de ranking persistida.
 15. **Certificados**: individual en `/estadisticas/certificado-preview/:idCompetidor` (vista reconstruida 2026-07-31, estaba vacía), o masivo en `/estadisticas/imprimir-certificados/:eventoId`.
-16. **Cierre**: Resultados al Salón de la Fama.
+16. **Cierre**: Resultados a la Sala de Campeones.
 
 ---
 
@@ -461,7 +461,7 @@ Patrón usado por primera vez el 2026-07-31 para **"XXXVII Mr. República Domini
 | `/social/noticias` | todos | Comunicados oficiales |
 | `/social/noticias/crear` | admin/ejecutivo | Publicar nueva noticia |
 | `/fotografo/upload` | admin/fotografo | Subir fotos atléticas por evento |
-| `/eventos/historico` | público | Salón de la fama |
+| `/eventos/historico` | público | Sala de Campeones |
 | `/eventos/:id/broadcast-live` | admin/estadistico | Panel VMD (Director de Video y Multimedia) |
 | `/eventos/:id/lower-third` | público (OBS) | Overlay lower third para browser source |
 | `/eventos/:idEvento/entrada/:idAtleta` | admin/estadistico/mc | LED Wall pantalla completa |
