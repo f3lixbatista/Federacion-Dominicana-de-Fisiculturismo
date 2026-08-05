@@ -52,6 +52,9 @@ router.get('/:idEvento/absolutos', checkPermiso('computo', 'editar'), estadistic
 // IMPRESIÓN OFICIAL DE RESULTADOS DE ABSOLUTOS
 router.get('/:idEvento/imprimir-absolutos', checkPermiso('reportes', 'ver'), estadisticasController.imprimirResultadosAbsolutos);
 
+// MESA DE ESTADÍSTICAS — auditoría de votación por categoría/etapa (solo lectura)
+router.get('/:idEvento/mesa-estadisticas', checkPermiso('computo', 'ver'), estadisticasController.verMesaEstadisticas);
+
 // 9. GENERAR BOLETAS DE VOTACIÓN MASIVAS (PARA IMPRESIÓN FÍSICA)
 router.get('/:idEvento/imprimir-boletas', checkPermiso('pesaje', 'ver'), estadisticasController.imprimirBoletas);
 

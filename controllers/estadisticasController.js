@@ -190,6 +190,139 @@ const oficializarCategoria = async (req, res) => {
     }
 };
 
+const FASES_ORDEN = ['eliminatoria', 'semifinal', 'final_r1', 'final_r2'];
+const FASES_LABEL = {
+    eliminatoria: 'Eliminatoria',
+    semifinal: 'Semifinal',
+    final_r1: 'Final — Ronda 1',
+    final_r2: 'Final — Ronda 2'
+};
+
+/**
+ * Vista de solo lectura (auditoría/protestas/calidad de jueces): todas las
+ * categorías del evento como pestañas, y dentro de cada una un bloque de
+ * tabla por cada etapa que realmente tenga votos registrados. Reusa
+ * votingService.calcularPosicionesFinales — el mismo cálculo real que usa
+ * la Mesa de Cómputo operativa — para no reimplementar el algoritmo IFBB
+ * por tercera vez.
+ */
+const verMesaEstadisticas = async (req, res) => {
+    const { idEvento } = req.params;
+    try {
+        const { data: evento, error: errEvento } = await supabaseAdmin
+            .from('eventos')
+            .select('id, nombre')
+            .eq('id', idEvento)
+            .single();
+        if (errEvento) throw errEvento;
+
+        const { data: eventosCategorias, error: errCats } = await supabaseAdmin
+            .from('eventos_categorias')
+            .select('id, orden_secuencia_categoria, categorias(nombre)')
+            .eq('evento_id', idEvento)
+            .order('orden_secuencia_categoria', { ascending: true });
+        if (errCats) throw errCats;
+
+        const { data: sillasJueces } = await supabaseAdmin
+            .from('panel_sillas_jueces')
+            .select('numero_silla, profiles(id, nombre), paneles_jueces!inner(id_evento)')
+            .eq('paneles_jueces.id_evento', idEvento)
+            .order('numero_silla', { ascending: true });
+        const jueces = (sillasJueces || []).map(s => ({ id: s.profiles?.id, nombre: s.profiles?.nombre || '—' }));
+
+        const evCatIds = (eventosCategorias || []).map(c => c.id);
+
+        const { data: todosCompetidores } = evCatIds.length
+            ? await supabaseAdmin
+                .from('competidores')
+                .select('evento_cat_id, atleta_id, numero_atleta, posicion_final, atletas(nombre)')
+                .in('evento_cat_id', evCatIds)
+            : { data: [] };
+
+        const { data: todosVotos } = evCatIds.length
+            ? await supabaseAdmin
+                .from('votaciones_jueces')
+                .select('evento_cat_id, juez_id, atleta_id, posicion_asignada, fase_competencia')
+                .in('evento_cat_id', evCatIds)
+            : { data: [] };
+
+        const competidoresPorCat = {};
+        (todosCompetidores || []).forEach(c => {
+            (competidoresPorCat[c.evento_cat_id] = competidoresPorCat[c.evento_cat_id] || []).push(c);
+        });
+        const votosPorCat = {};
+        (todosVotos || []).forEach(v => {
+            (votosPorCat[v.evento_cat_id] = votosPorCat[v.evento_cat_id] || []).push(v);
+        });
+
+        const categorias = (eventosCategorias || []).map(ec => {
+            const competidores = (competidoresPorCat[ec.id] || [])
+                .sort((a, b) => (a.numero_atleta || 0) - (b.numero_atleta || 0));
+            const votos = votosPorCat[ec.id] || [];
+            const fasesPresentes = FASES_ORDEN.filter(f => votos.some(v => v.fase_competencia === f));
+
+            const fases = fasesPresentes.map(fase => {
+                const votosFase = votos.filter(v => v.fase_competencia === fase);
+
+                const votosPorAtleta = {};
+                votosFase.forEach(v => {
+                    (votosPorAtleta[v.atleta_id] = votosPorAtleta[v.atleta_id] || []).push(v.posicion_asignada);
+                });
+                const calculado = votingService.calcularPosicionesFinales(votosPorAtleta);
+                const calculadoPorAtleta = {};
+                calculado.forEach(r => { calculadoPorAtleta[r.atleta_id] = r; });
+
+                const votosPorAtletaJuez = {};
+                votosFase.forEach(v => {
+                    (votosPorAtletaJuez[v.atleta_id] = votosPorAtletaJuez[v.atleta_id] || {})[v.juez_id] = v.posicion_asignada;
+                });
+
+                const filas = competidores
+                    .filter(c => calculadoPorAtleta[c.atleta_id])
+                    .map(c => {
+                        const calc = calculadoPorAtleta[c.atleta_id];
+                        // Para marcar en la matriz cuál(es) voto(s) concreto(s) fueron el
+                        // extremo descartado, restamos el multiset limpio del original —
+                        // lo que sobra (0, 1 o 2 valores) son los votos recortados.
+                        const descartados = [...calc.votosOriginales];
+                        calc.votosLimpios.forEach(v => {
+                            const idx = descartados.indexOf(v);
+                            if (idx !== -1) descartados.splice(idx, 1);
+                        });
+
+                        const votosJuez = jueces.map(j => {
+                            const val = votosPorAtletaJuez[c.atleta_id]?.[j.id];
+                            let esDescartado = false;
+                            if (val !== undefined) {
+                                const idxD = descartados.indexOf(val);
+                                if (idxD !== -1) { esDescartado = true; descartados.splice(idxD, 1); }
+                            }
+                            return { valor: val, descartado: esDescartado };
+                        });
+
+                        return {
+                            atleta: c.atletas?.nombre || '—',
+                            dorsal: c.numero_atleta,
+                            votosJuez,
+                            total: calc.puntos,
+                            lugarSugerido: calc.lugarSugerido,
+                            empateDetectado: calc.empateDetectado
+                        };
+                    })
+                    .sort((a, b) => (a.lugarSugerido ?? 999) - (b.lugarSugerido ?? 999));
+
+                return { fase, faseLabel: FASES_LABEL[fase] || fase, filas };
+            });
+
+            return { id: ec.id, nombre: ec.categorias?.nombre || 'Sin nombre', fases };
+        });
+
+        res.render('estadisticas/mesa_estadisticas', { evento, categorias, jueces });
+    } catch (error) {
+        res.status(500).send('Error cargando Mesa de Estadísticas: ' + error.message);
+    }
+};
+
 // Lógica para determinar el orden de premiación (Inversa para MC)
 function prepararPremiacion(resultados) {
     // 1. Orden ascendente por dorsal para el "Line-up" inicial
@@ -691,6 +824,7 @@ module.exports = {
     verCalculosEvento,
     calcularPosiciones,
     verMesaComputo,
+    verMesaEstadisticas,
     oficializarCategoria,
     prepararPremiacion,
     verGestionAbsolutos,

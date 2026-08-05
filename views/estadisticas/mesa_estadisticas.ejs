@@ -1,0 +1,101 @@
+<%- include("../template/cabecera", {tituloWeb: "Mesa de Estadísticas: " + evento.nombre}) %>
+
+<style>
+    #nav-categorias { max-height: 78vh; overflow-y: auto; }
+    #nav-categorias .nav-link { text-align: left; font-size: .85rem; border-radius: 6px; margin-bottom: 2px; }
+    #nav-categorias .nav-link.active { font-weight: 700; }
+    .voto-descartado { background: #eef0f2; color: #adb5bd; text-decoration: line-through; }
+    .fila-lugar-1 td { background: #fff8e1; }
+    .etapa-card .card-header { font-weight: 600; }
+</style>
+
+<div class="p-3 divGeneral">
+
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div>
+            <h4 class="mb-0"><i class="fas fa-table me-2 text-primary"></i>Mesa de Estadísticas</h4>
+            <small class="text-muted"><%= evento.nombre %> — auditoría de votación por categoría y etapa (solo lectura)</small>
+        </div>
+    </div>
+
+    <% if (!categorias.length) { %>
+        <div class="alert alert-warning">Este evento no tiene categorías registradas.</div>
+    <% } else { %>
+    <div class="row">
+        <div class="col-12 col-md-3 mb-3">
+            <div class="nav flex-column nav-pills" id="nav-categorias" role="tablist" aria-orientation="vertical">
+                <% categorias.forEach((cat, i) => { %>
+                    <button class="nav-link <%= i === 0 ? 'active' : '' %>"
+                            data-bs-toggle="pill" data-bs-target="#tab-cat-<%= cat.id %>"
+                            type="button" role="tab">
+                        <%= cat.nombre %>
+                        <% if (!cat.fases.length) { %><span class="badge bg-light text-muted border ms-1" style="font-size:.65rem;">sin votos</span><% } %>
+                    </button>
+                <% }) %>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-9">
+            <div class="tab-content">
+                <% categorias.forEach((cat, i) => { %>
+                    <div class="tab-pane fade <%= i === 0 ? 'show active' : '' %>" id="tab-cat-<%= cat.id %>" role="tabpanel">
+                        <h5 class="fw-bold mb-3"><%= cat.nombre %></h5>
+
+                        <% if (!cat.fases.length) { %>
+                            <div class="text-muted fst-italic py-5 text-center">
+                                <i class="fas fa-inbox fa-2x mb-2 d-block opacity-25"></i>
+                                Sin votos registrados para esta categoría.
+                            </div>
+                        <% } %>
+
+                        <% cat.fases.forEach(f => { %>
+                            <div class="card shadow-sm mb-4 etapa-card">
+                                <div class="card-header bg-light"><%= f.faseLabel %></div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm mb-0 align-middle">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th style="width:70px;">Lugar</th>
+                                                    <th>Atleta</th>
+                                                    <th style="width:80px;">Dorsal</th>
+                                                    <% jueces.forEach(j => { %><th class="text-center"><%= j.nombre %></th><% }) %>
+                                                    <th class="text-center" style="width:70px;">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% f.filas.forEach(fila => { %>
+                                                    <tr class="<%= fila.lugarSugerido === 1 ? 'fila-lugar-1' : '' %>">
+                                                        <td class="fw-bold">
+                                                            <%= fila.lugarSugerido %>°
+                                                            <% if (fila.empateDetectado) { %>
+                                                                <i class="fas fa-equals text-warning" title="Empate en puntos — desempate por Relative Placement"></i>
+                                                            <% } %>
+                                                        </td>
+                                                        <td><%= fila.atleta %></td>
+                                                        <td><span class="badge bg-light text-dark border"><%= fila.dorsal %></span></td>
+                                                        <% fila.votosJuez.forEach(v => { %>
+                                                            <td class="text-center <%= v.descartado ? 'voto-descartado' : '' %>"
+                                                                <% if (v.descartado) { %>title="Voto descartado (extremo, regla de 5+ jueces)"<% } %>>
+                                                                <%= (v.valor !== undefined && v.valor !== null) ? v.valor : '—' %>
+                                                            </td>
+                                                        <% }) %>
+                                                        <td class="text-center fw-bold"><%= fila.total %></td>
+                                                    </tr>
+                                                <% }) %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+    </div>
+    <% } %>
+
+</div>
+
+<%- include("../template/footer") %>
