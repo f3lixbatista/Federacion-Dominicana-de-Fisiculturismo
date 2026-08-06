@@ -288,56 +288,29 @@ const verMesaEstadisticas = async (req, res) => {
                     }))
                 }];
             } else {
+                // El recorte de extremos y el desempate ya NO se calculan aquí —
+                // el estadístico los controla a mano en el cliente (botón de
+                // recorte manual + panel de desempate separado, ver mesa_estadisticas.ejs).
+                // El servidor solo entrega los votos crudos, alineados con `jueces`.
                 fases = fasesPresentes.map(fase => {
-                const votosFase = votos.filter(v => v.fase_competencia === fase);
+                    const votosFase = votos.filter(v => v.fase_competencia === fase);
 
-                const votosPorAtleta = {};
-                votosFase.forEach(v => {
-                    (votosPorAtleta[v.atleta_id] = votosPorAtleta[v.atleta_id] || []).push(v.posicion_asignada);
-                });
-                const calculado = votingService.calcularPosicionesFinales(votosPorAtleta);
-                const calculadoPorAtleta = {};
-                calculado.forEach(r => { calculadoPorAtleta[r.atleta_id] = r; });
+                    const votosPorAtletaJuez = {};
+                    votosFase.forEach(v => {
+                        (votosPorAtletaJuez[v.atleta_id] = votosPorAtletaJuez[v.atleta_id] || {})[v.juez_id] = v.posicion_asignada;
+                    });
 
-                const votosPorAtletaJuez = {};
-                votosFase.forEach(v => {
-                    (votosPorAtletaJuez[v.atleta_id] = votosPorAtletaJuez[v.atleta_id] || {})[v.juez_id] = v.posicion_asignada;
-                });
-
-                const filas = competidores
-                    .filter(c => calculadoPorAtleta[c.atleta_id])
-                    .map(c => {
-                        const calc = calculadoPorAtleta[c.atleta_id];
-                        // Para marcar en la matriz cuál(es) voto(s) concreto(s) fueron el
-                        // extremo descartado, restamos el multiset limpio del original —
-                        // lo que sobra (0, 1 o 2 valores) son los votos recortados.
-                        const descartados = [...calc.votosOriginales];
-                        calc.votosLimpios.forEach(v => {
-                            const idx = descartados.indexOf(v);
-                            if (idx !== -1) descartados.splice(idx, 1);
-                        });
-
-                        const votosJuez = jueces.map(j => {
-                            const val = votosPorAtletaJuez[c.atleta_id]?.[j.id];
-                            let esDescartado = false;
-                            if (val !== undefined) {
-                                const idxD = descartados.indexOf(val);
-                                if (idxD !== -1) { esDescartado = true; descartados.splice(idxD, 1); }
-                            }
-                            return { valor: val, descartado: esDescartado };
-                        });
-
-                        return {
+                    const filas = competidores
+                        .filter(c => votosPorAtletaJuez[c.atleta_id])
+                        .map(c => ({
                             atleta_id: c.atleta_id,
                             atleta: c.atletas?.nombre || '—',
                             dorsal: c.numero_atleta,
-                            votosJuez,
-                            total: calc.puntos,
-                            lugarSugerido: calc.lugarSugerido,
-                            empateDetectado: calc.empateDetectado
-                        };
-                    })
-                    .sort((a, b) => (a.lugarSugerido ?? 999) - (b.lugarSugerido ?? 999));
+                            votos: jueces.map(j => {
+                                const val = votosPorAtletaJuez[c.atleta_id]?.[j.id];
+                                return (val === undefined) ? null : val;
+                            })
+                        }));
 
                     return { fase, faseLabel: FASES_LABEL[fase] || fase, conVotos: true, filas };
                 });

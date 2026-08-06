@@ -64,14 +64,21 @@
                         <% cat.fases.forEach(f => { %>
                             <%
                                 const esFinal = f.fase === 'final_r1' || f.fase === 'final_r2';
-                                const limiteClasificacion = f.fase === 'eliminatoria' ? 15 : 6;
                                 const tablaId = 'tabla-' + cat.id + '-' + f.fase;
                             %>
                             <div class="card shadow-sm mb-4 etapa-card">
                                 <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                    <span><%= f.faseLabel %></span>
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span><%= f.faseLabel %></span>
+                                        <% if (f.conVotos) { %>
+                                            <span class="badge bg-secondary" id="<%= tablaId %>-rondas">Recortes: 0</span>
+                                            <button type="button" class="btn btn-sm btn-outline-dark" onclick="recortarExtremos('<%= tablaId %>')">
+                                                <i class="fas fa-cut me-1"></i> Recortar extremos (1 alta / 1 baja)
+                                            </button>
+                                        <% } %>
+                                    </div>
                                     <% if (f.conVotos && puedeGestionarCola) { %>
-                                        <div class="d-flex gap-2">
+                                        <div class="d-flex gap-2" id="<%= tablaId %>-acciones">
                                             <% if (esFinal) { %>
                                                 <% if (cat.enCola) { %>
                                                     <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
@@ -115,36 +122,24 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <% f.filas.forEach(fila => { %>
-                                                    <tr class="<%= fila.lugarSugerido === 1 ? 'fila-lugar-1' : '' %>"
-                                                        data-atleta="<%= fila.atleta_id %>"
-                                                        data-lugar="<%= fila.lugarSugerido || '' %>">
-                                                        <% if (f.conVotos && !esFinal) { %>
-                                                            <td>
-                                                                <input type="checkbox" class="form-check-input chk-clasif" value="<%= fila.atleta_id %>"
-                                                                       <%= (fila.lugarSugerido && fila.lugarSugerido <= limiteClasificacion) ? 'checked' : '' %>>
-                                                            </td>
-                                                        <% } %>
-                                                        <td class="fw-bold">
-                                                            <% if (fila.lugarSugerido) { %><%= fila.lugarSugerido %>°<% } else { %>—<% } %>
-                                                            <% if (fila.empateDetectado) { %>
-                                                                <i class="fas fa-equals text-warning" title="Empate en puntos — desempate por Relative Placement"></i>
-                                                            <% } %>
-                                                        </td>
-                                                        <td><%= fila.atleta %></td>
-                                                        <td><span class="badge bg-light text-dark border"><%= fila.dorsal %></span></td>
-                                                        <% fila.votosJuez.forEach(v => { %>
-                                                            <td class="text-center <%= v.descartado ? 'voto-descartado' : '' %>"
-                                                                <% if (v.descartado) { %>title="Voto descartado (extremo, regla de 5+ jueces)"<% } %>>
-                                                                <%= (v.valor !== undefined && v.valor !== null) ? v.valor : '—' %>
-                                                            </td>
-                                                        <% }) %>
-                                                        <td class="text-center fw-bold"><%= (fila.total !== null && fila.total !== undefined) ? fila.total : '—' %></td>
-                                                    </tr>
-                                                <% }) %>
+                                                <% if (!f.conVotos) { %>
+                                                    <% f.filas.forEach(fila => { %>
+                                                        <tr>
+                                                            <td class="fw-bold">—</td>
+                                                            <td><%= fila.atleta %></td>
+                                                            <td><span class="badge bg-light text-dark border"><%= fila.dorsal %></span></td>
+                                                            <% jueces.forEach(() => { %><td class="text-center">—</td><% }) %>
+                                                            <td class="text-center fw-bold">—</td>
+                                                        </tr>
+                                                    <% }) %>
+                                                <% } %>
+                                                <%# Bloques con votos: el <tbody> lo pinta el JS de abajo (recorte manual + desempate) %>
                                             </tbody>
                                         </table>
                                     </div>
+                                    <% if (f.conVotos) { %>
+                                        <div id="<%= tablaId %>-empates"></div>
+                                    <% } %>
                                 </div>
                             </div>
                         <% }) %>
@@ -156,6 +151,302 @@
     <% } %>
 
 </div>
+
+<script>
+const _JUECES = <%- JSON.stringify(jueces) %>;
+const _BLOQUES = <%- JSON.stringify(
+    categorias.flatMap(cat => cat.fases.filter(f => f.conVotos).map(f => ({
+        tablaId: 'tabla-' + cat.id + '-' + f.fase,
+        catId: cat.id,
+        catNombre: cat.nombre,
+        fase: f.fase,
+        esFinal: f.fase === 'final_r1' || f.fase === 'final_r2',
+        limiteClasificacion: f.fase === 'eliminatoria' ? 15 : 6,
+        atletas: f.filas
+    })))
+) %>;
+
+function escHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ESTADO Y CÁLCULO — el recorte de extremos ya NO es automático: cada click
+// de "Recortar extremos" quita UN voto más alto y UN voto más bajo (por
+// atleta) de la ronda actual. El estadístico decide cuántas veces lo
+// acciona según la cantidad de jueces del panel.
+// ══════════════════════════════════════════════════════════════════════════
+const _estadoBloques = {};
+
+function iniciarBloque(b) {
+    _estadoBloques[b.tablaId] = {
+        rondas: 0,
+        resueltos: {}, // atleta_id -> orden manual asignado al resolver un empate
+        recortesEmpate: {},
+        atletas: b.atletas.map(a => ({
+            atleta_id: a.atleta_id,
+            nombre: a.atleta,
+            dorsal: a.dorsal,
+            votos: a.votos, // originales, nunca se mutan
+            eliminado: a.votos.map(() => false)
+        }))
+    };
+    renderBloque(b.tablaId);
+}
+
+function votosActivos(atleta) {
+    return atleta.votos
+        .map((v, i) => ({ v, i }))
+        .filter(x => x.v !== null && x.v !== undefined && !atleta.eliminado[x.i]);
+}
+
+function calcularTotal(atleta) {
+    const activos = votosActivos(atleta);
+    if (!activos.length) return null;
+    return activos.reduce((s, x) => s + x.v, 0);
+}
+
+// Quita, de CADA atleta del bloque, una instancia del voto más bajo y una del
+// más alto entre sus votos aún activos (no vuelve a tocar los ya recortados).
+// Dejar al menos 1 voto activo por atleta.
+function recortarExtremos(tablaId) {
+    const est = _estadoBloques[tablaId];
+    est.atletas.forEach(atleta => {
+        const activos = votosActivos(atleta);
+        if (activos.length <= 1) return;
+        const valores = activos.map(x => x.v);
+        const minV = Math.min(...valores), maxV = Math.max(...valores);
+        const idxMin = activos.find(x => x.v === minV).i;
+        const idxMax = [...activos].reverse().find(x => x.v === maxV).i;
+        atleta.eliminado[idxMin] = true;
+        if (idxMax !== idxMin) atleta.eliminado[idxMax] = true;
+    });
+    est.rondas++;
+    renderBloque(tablaId);
+}
+
+function calcularFilasOrdenadas(tablaId) {
+    const est = _estadoBloques[tablaId];
+    const filas = est.atletas.map(a => ({ a, total: calcularTotal(a) }));
+    filas.sort((x, y) => {
+        if (x.total === null) return 1;
+        if (y.total === null) return -1;
+        if (x.total !== y.total) return x.total - y.total;
+        const rx = est.resueltos[x.a.atleta_id] ?? 0;
+        const ry = est.resueltos[y.a.atleta_id] ?? 0;
+        return rx - ry;
+    });
+    filas.forEach((f, idx) => {
+        if (f.total === null) { f.lugar = null; return; }
+        const anterior = filas[idx - 1];
+        const mismoTotal = anterior && anterior.total === f.total;
+        const yaResueltosEntreSi = mismoTotal && est.resueltos[anterior.a.atleta_id] !== undefined && est.resueltos[f.a.atleta_id] !== undefined;
+        if (mismoTotal && !yaResueltosEntreSi) f.lugar = anterior.lugar;
+        else f.lugar = idx + 1;
+    });
+    return filas;
+}
+
+function gruposEmpate(filas) {
+    const porLugar = {};
+    filas.forEach(f => {
+        if (f.lugar === null) return;
+        (porLugar[f.lugar] = porLugar[f.lugar] || []).push(f);
+    });
+    return Object.values(porLugar).filter(g => g.length > 1);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// DESEMPATE — método de Relative Placement: compara, valor por valor (1°,
+// 2°, 3°...), cuántos jueces le dieron esa posición a cada atleta empatado.
+// El primer valor donde alguien tenga MÁS votos que el resto lo separa, SIN
+// eliminar ningún voto. Si dos+ siguen empatados en todos los valores,
+// quedan pendientes para el recorte exclusivo de ese grupo.
+// ══════════════════════════════════════════════════════════════════════════
+function resolverRelativePlacement(atletas) {
+    function recursivo(grupo, valores, detalle) {
+        if (grupo.length <= 1) return { orden: grupo.map(a => a.atleta_id), resuelto: true, detalle };
+        if (!valores.length) return { orden: grupo.map(a => a.atleta_id), resuelto: false, detalle };
+
+        const v = valores[0];
+        const resto = valores.slice(1);
+        const counts = grupo.map(a => a.votos.filter(x => x === v).length);
+        const maxC = Math.max(...counts);
+        detalle.push({ valor: v, conteos: grupo.map((a, i) => ({ nombre: a.nombre, count: counts[i] })) });
+
+        if (counts.every(c => c === maxC)) return recursivo(grupo, resto, detalle);
+
+        const lideres = grupo.filter((a, i) => counts[i] === maxC);
+        const rezagados = grupo.filter((a, i) => counts[i] !== maxC);
+        const subLideres = recursivo(lideres, resto, detalle);
+        const subRezagados = recursivo(rezagados, resto, detalle);
+        return {
+            orden: [...subLideres.orden, ...subRezagados.orden],
+            resuelto: subLideres.resuelto && subRezagados.resuelto,
+            detalle
+        };
+    }
+    const valoresPosibles = [...new Set(atletas.flatMap(a => a.votos))].sort((x, y) => x - y);
+    return recursivo(atletas, valoresPosibles, []);
+}
+
+function recortarEmpate(tablaId, key) {
+    const est = _estadoBloques[tablaId];
+    const grupo = est.recortesEmpate[key];
+    grupo.atletas.forEach(atleta => {
+        const activos = atleta.votos.map((v, i) => ({ v, i })).filter(x => !atleta.eliminado[x.i]);
+        if (activos.length <= 1) return;
+        const valores = activos.map(x => x.v);
+        const minV = Math.min(...valores), maxV = Math.max(...valores);
+        const idxMin = activos.find(x => x.v === minV).i;
+        const idxMax = [...activos].reverse().find(x => x.v === maxV).i;
+        atleta.eliminado[idxMin] = true;
+        if (idxMax !== idxMin) atleta.eliminado[idxMax] = true;
+    });
+    grupo.rondas++;
+    renderBloque(tablaId);
+}
+
+// Fija el orden resuelto (aplicado desde el panel de empate) en el listado
+// general — no toca los votos del listado general, solo el orden relativo
+// entre estos atletas para cuando compartan el mismo total.
+function aplicarDesempate(tablaId, ordenIds) {
+    const est = _estadoBloques[tablaId];
+    ordenIds.forEach((atleta_id, i) => { est.resueltos[atleta_id] = i; });
+    renderBloque(tablaId);
+}
+
+function crearPanelEmpate(tablaId, grupo, indice) {
+    const est = _estadoBloques[tablaId];
+    const nombresGrupo = grupo.map(f => f.a.nombre).join(' vs. ');
+
+    const atletasRP = grupo.map(f => ({ atleta_id: f.a.atleta_id, nombre: f.a.nombre, votos: f.a.votos.filter(v => v !== null && v !== undefined) }));
+    const rp = resolverRelativePlacement(atletasRP);
+    const valoresPosibles = [...new Set(atletasRP.flatMap(a => a.votos))].sort((x, y) => x - y);
+
+    let html = `<div class="card border-warning mb-3">
+        <div class="card-header bg-warning bg-opacity-25 fw-bold">
+            <i class="fas fa-exclamation-triangle text-warning me-1"></i> Empate en el lugar ${grupo[0].lugar}° — ${escHtml(nombresGrupo)}
+        </div>
+        <div class="card-body">
+            <p class="small text-muted mb-2">Método de comparación (Relative Placement) — votos ORIGINALES de cada juez, sin ningún recorte:</p>
+            <div class="table-responsive mb-2">
+                <table class="table table-sm table-bordered mb-0 text-center">
+                    <thead class="table-light"><tr><th>Posición dada por el juez</th>${grupo.map(f => `<th>${escHtml(f.a.nombre)}</th>`).join('')}</tr></thead>
+                    <tbody>
+                        ${valoresPosibles.map(v => `<tr><td class="fw-bold">${v}°</td>${atletasRP.map(a => `<td>${a.votos.filter(x => x === v).length}</td>`).join('')}</tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+
+    if (rp.resuelto) {
+        const nombresOrden = rp.orden.map(id => grupo.find(f => f.a.atleta_id === id).a.nombre);
+        html += `<div class="alert alert-success py-2 mb-2">
+            <i class="fas fa-check-circle me-1"></i> Se puede desempatar solo mirando los votos (sin eliminar ninguno) — un atleta tiene más votos bajos que el otro. Orden: <strong>${nombresOrden.map(escHtml).join(' → ')}</strong>.
+        </div>
+        <button type="button" class="btn btn-sm btn-success" onclick='aplicarDesempate(${JSON.stringify(tablaId)}, ${JSON.stringify(rp.orden)})'>
+            <i class="fas fa-check me-1"></i> Aplicar este orden al listado general
+        </button>`;
+    } else {
+        const key = 'empate_' + grupo.map(f => f.a.atleta_id).sort().join('_');
+        if (!est.recortesEmpate[key]) {
+            est.recortesEmpate[key] = {
+                rondas: 0,
+                atletas: grupo.map(f => ({ atleta_id: f.a.atleta_id, nombre: f.a.nombre, votos: [...f.a.votos], eliminado: f.a.votos.map(() => false) }))
+            };
+        }
+        const estGrupo = est.recortesEmpate[key];
+        const totalesGrupo = estGrupo.atletas.map(a => {
+            const activos = a.votos.map((v, i) => ({ v, i })).filter(x => x.v !== null && x.v !== undefined && !a.eliminado[x.i]);
+            return { atleta_id: a.atleta_id, nombre: a.nombre, total: activos.length ? activos.reduce((s, x) => s + x.v, 0) : null };
+        });
+        const distintos = new Set(totalesGrupo.map(t => t.total)).size > 1;
+
+        html += `<div class="alert alert-warning py-2 mb-2">
+            <i class="fas fa-info-circle me-1"></i> Los votos originales no alcanzan para desempatar — misma cantidad de votos en cada posición. Use el recorte exclusivo de este grupo (no afecta el listado general ni sus propios votos originales).
+        </div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-secondary">Recortes de este grupo: ${estGrupo.rondas}</span>
+            <button type="button" class="btn btn-sm btn-outline-dark" onclick='recortarEmpate(${JSON.stringify(tablaId)}, ${JSON.stringify(key)})'>
+                <i class="fas fa-cut me-1"></i> Recortar extremos (solo este grupo)
+            </button>
+        </div>
+        <div class="table-responsive mb-2">
+            <table class="table table-sm table-bordered mb-0 text-center">
+                <thead class="table-light"><tr><th>Atleta</th>${_JUECES.map(j => `<th>${escHtml(j.nombre)}</th>`).join('')}<th>Total</th></tr></thead>
+                <tbody>
+                    ${estGrupo.atletas.map(a => `<tr><td>${escHtml(a.nombre)}</td>${a.votos.map((v, i) => `<td class="${a.eliminado[i] ? 'voto-descartado' : ''}">${(v === null || v === undefined) ? '—' : v}</td>`).join('')}<td class="fw-bold">${totalesGrupo.find(t => t.atleta_id === a.atleta_id).total ?? '—'}</td></tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+
+        if (distintos) {
+            const ordenActual = [...totalesGrupo].sort((a, b) => (a.total ?? 1e9) - (b.total ?? 1e9));
+            html += `<div class="alert alert-success py-2 mb-2"><i class="fas fa-check-circle me-1"></i> El recorte separó los totales — orden: <strong>${ordenActual.map(o => escHtml(o.nombre)).join(' → ')}</strong>.</div>
+            <button type="button" class="btn btn-sm btn-success" onclick='aplicarDesempate(${JSON.stringify(tablaId)}, ${JSON.stringify(ordenActual.map(o => o.atleta_id))})'>
+                <i class="fas fa-check me-1"></i> Aplicar este orden al listado general
+            </button>`;
+        }
+    }
+
+    html += `</div></div>`;
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.firstElementChild;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════════════════════
+function renderBloque(tablaId) {
+    const b = _BLOQUES.find(x => x.tablaId === tablaId);
+    const est = _estadoBloques[tablaId];
+    const filas = calcularFilasOrdenadas(tablaId);
+    const grupos = gruposEmpate(filas);
+    const enEmpate = new Set(grupos.flatMap(g => g.map(f => f.a.atleta_id)));
+
+    const badgeRondas = document.getElementById(tablaId + '-rondas');
+    if (badgeRondas) badgeRondas.textContent = 'Recortes: ' + est.rondas;
+
+    const tabla = document.getElementById(tablaId);
+    const tbody = tabla.querySelector('tbody');
+    tbody.innerHTML = filas.map(f => {
+        const atleta = f.a;
+        const empatado = enEmpate.has(atleta.atleta_id);
+        const celdas = _JUECES.map((j, i) => {
+            const v = atleta.votos[i];
+            const eliminado = atleta.eliminado[i];
+            return `<td class="text-center ${eliminado ? 'voto-descartado' : ''}" ${eliminado ? 'title="Voto recortado manualmente"' : ''}>${(v === null || v === undefined) ? '—' : v}</td>`;
+        }).join('');
+        const chk = !b.esFinal
+            ? `<td><input type="checkbox" class="form-check-input chk-clasif" value="${atleta.atleta_id}" ${(f.lugar && f.lugar <= b.limiteClasificacion) ? 'checked' : ''}></td>`
+            : '';
+        return `<tr class="${f.lugar === 1 ? 'fila-lugar-1' : ''}" data-atleta="${atleta.atleta_id}" data-lugar="${f.lugar ?? ''}">
+            ${chk}
+            <td class="fw-bold">${f.lugar ? f.lugar + '°' : '—'} ${empatado ? '<span class="badge bg-warning text-dark ms-1"><i class="fas fa-exclamation-triangle"></i> Empate</span>' : ''}</td>
+            <td>${escHtml(atleta.nombre)}</td>
+            <td><span class="badge bg-light text-dark border">${atleta.dorsal}</span></td>
+            ${celdas}
+            <td class="text-center fw-bold">${f.total === null ? '—' : f.total}</td>
+        </tr>`;
+    }).join('');
+
+    const contEmpates = document.getElementById(tablaId + '-empates');
+    contEmpates.innerHTML = '';
+    grupos.forEach((g, gi) => contEmpates.appendChild(crearPanelEmpate(tablaId, g, gi)));
+
+    const acciones = document.getElementById(tablaId + '-acciones');
+    if (acciones) {
+        acciones.querySelectorAll('button:not(.btn-outline-secondary)').forEach(btn => {
+            btn.disabled = grupos.length > 0;
+            btn.title = grupos.length > 0 ? 'Resuelva el/los empate(s) antes de enviar' : '';
+        });
+    }
+}
+
+_BLOQUES.forEach(iniciarBloque);
+</script>
 
 <script>
 // Envía la cola de esta etapa: clasificados (dorsal, sin posición) para
