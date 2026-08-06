@@ -2,6 +2,7 @@
   "name": "federacion-dominicana-fisiculturismo",
   "version": "1.0.0",
   "main": "app.js",
+  "packageManager": "pnpm@11.20.0",
   "engines": {
     "node": ">=20.0.0"
   },
