@@ -8,6 +8,8 @@
 
 **Visión:** una plataforma SaaS que sirva a toda la estructura mundial de la IFBB, donde cada organización (desde IFBB hasta una asociación local) opera de forma independiente pero conectada a la jerarquía real de la federación.
 
+**Validación real con stakeholders (2026-08-06):** esto no es una idea especulativa sin tracción — el usuario ya conversa casi semanalmente con el presidente de la Confederación Centroamericana y del Caribe de Fisiculturismo (CAC), que es a la vez presidente de FDFF, y también ha conversado con el presidente de la IFBB, quien está a la espera de que el usuario termine de probar el sistema y lo ponga en producción en un evento local para evaluar el resultado antes de considerar algo mayor. Esto refuerza el orden de las etapas (§6): probar con FDFF-RD primero, escalar después — es literalmente lo que los stakeholders reales están esperando ver.
+
 ## 2. Estructura organizacional real (jerarquía piramidal)
 
 ```
@@ -15,22 +17,25 @@ IFBB (mundial — amateur + profesional)
  └─ Confederaciones continentales        (ej. Confederación Panamericana de Físico-Culturismo)
      └─ Confederaciones regionales       (ej. Confederación Centroamericana y del Caribe)
          └─ Federaciones nacionales      (ej. FDFF-RD, México, Venezuela, Colombia, Puerto Rico, Curazao...)
-             └─ Federaciones locales/distritales   (ej. dentro de México: Guerrero, Monterrey, Nogales, Durango, Coahuila...)
+             └─ Asociaciones locales/distritales   (ej. dentro de México: Guerrero, Monterrey, Nogales, Durango, Coahuila...)
 ```
 
 Reglas de negocio confirmadas por el usuario:
 
 - **Cada nivel opera como entidad independiente** — su propia membresía (atletas), sus propios jueces, su propio staff, sus propios eventos, su propia directiva. No es una jerarquía puramente administrativa, cada nodo es "como una empresa aparte".
 - **La membresía de atletas se propaga automáticamente hacia arriba.** Un atleta afiliado a una asociación local en México es, por ese solo hecho, miembro de la Federación Mexicana, que a su vez es miembro de la Confederación Centroamericana y del Caribe, hasta llegar a IFBB. No se re-registra en cada nivel — la pertenencia se hereda por la cadena.
-- **Multi-pertenencia real, no es un árbol estricto de un solo padre.** Un mismo país puede pertenecer a más de una confederación regional en paralelo — ejemplo dado: México pertenece tanto a la Confederación Centroamericana y del Caribe como a la Confederación Norteamericana.
+- **Multi-pertenencia real, pero acotada a elegibilidad de eventos — NO es membresía duplicada.** Aclarado por el usuario (2026-08-06): países como México (Norteamérica + Centroamérica), Venezuela y Colombia (Sudamérica + Caribe) pertenecen a dos confederaciones — esto **solo** significa que sus atletas están aptos para competir en eventos internacionales de ambas regiones, **siempre que sea la federación nacional quien los inscriba** (no una asociación local directamente). No implica que la membresía se duplique ni se propague por dos caminos distintos.
+- **Elegibilidad por nivel de evento, con restricción estricta hacia abajo.** Hay eventos panamericanos, centroamericanos, nacionales y de asociación, cada uno con su propia regla de restricción. Regla confirmada: un atleta miembro de República Dominicana **no puede** competir en un evento nacional o de nivel inferior de otro país (ej. Venezuela) — esos eventos están cerrados a los miembros de esa federación nacional específica (y sus asociaciones locales). Los eventos de nivel regional/continental sí están abiertos a las federaciones nacionales elegibles dentro de esa confederación (incluyendo las de doble afiliación, vía inscripción de su federación nacional).
 - **Visibilidad hacia abajo:** las organizaciones de rango superior pueden VER actividad (eventos, atletas, jueces) de las organizaciones de rango inferior en su cadena. Alcance exacto (¿solo lectura o también algo administrativo?) — pendiente de confirmar.
 
 ## 3. Requisitos técnicos ya confirmados
 
 ### 3.1 PWA offline-first (requisito duro, no "nice to have")
-Motivo real: en eventos en vivo el internet puede fallar, y la computadora de la mesa de estadísticas/jueces debe seguir funcionando sin conexión (capturar votos/puntuaciones localmente) y sincronizar con la base de datos automáticamente al recuperar conectividad.
+Motivo real: en eventos en vivo el internet puede fallar, y la computadora de la mesa de estadísticas debe seguir funcionando sin conexión, sincronizando con la base de datos automáticamente al recuperar conectividad.
 
-**Ya existe un patrón validado y en producción para esto** — el usuario ya lo construyó en su otro proyecto, GlobalXpert/ERP Xpert: frontend React + Vite con Dexie (wrapper de IndexedDB) para almacenamiento local y repositorios de sincronización dedicados (`frontend/src/lib/db.ts`, `cobradorOfflineRepository.ts`, `ncfOfflineRepository.ts`), usado hoy para cobradores de campo sin conectividad. Reusar ese mismo patrón para el motor de votación/puntuación de FDFF, en vez de diseñar uno nuevo desde cero.
+**Alcance aclarado por el usuario (2026-08-06) — más simple de lo que se asumió inicialmente:** si cae el internet, la votación pasa a ser **manual/en papel** (los jueces llenan boletas físicas, igual que hoy) — **solo la computadora de la mesa de estadísticas** necesita seguir funcionando offline para digitar esas boletas físicas y sincronizar después. No es un escenario de múltiples dispositivos (jueces + estadística) offline a la vez necesitando resolver conflictos de sincronización entre ellos — es un solo dispositivo, un solo escritor, mismo patrón que ya usa la "digitación asistida" actual de la Mesa de Cómputo (ver `CLAUDE.md` del proyecto, sección "Fases de competencia"). Esto reduce bastante el riesgo técnico frente a lo que se asumió al principio (ver §5, sub-proyecto 2).
+
+**Ya existe un patrón validado y en producción para esto** — el usuario ya lo construyó en su otro proyecto, GlobalXpert/ERP Xpert: frontend React + Vite con Dexie (wrapper de IndexedDB) para almacenamiento local y repositorios de sincronización dedicados (`frontend/src/lib/db.ts`, `cobradorOfflineRepository.ts`, `ncfOfflineRepository.ts`), usado hoy para cobradores de campo sin conectividad. Reusar ese mismo patrón para el motor offline de la mesa de estadísticas, en vez de diseñar uno nuevo desde cero.
 
 ### 3.2 Migración de framework
 Razón que dio el usuario inicialmente ("los frameworks cargan más rápido y cometen menos errores") es una generalización imprecisa — EJS/MPA puede ser igual de rápido para la mayoría de las pantallas actuales de FDFF. **La razón real y sólida es otra:** un patrón offline-first con UI optimista + permisos jerárquicos complejos (ver §2) es mucho más difícil de construir bien sobre un MPA de recarga completa que sobre una SPA con estado en cliente + service worker. Esa es la justificación técnica real para migrar, no la velocidad de carga en sí.
@@ -48,18 +53,18 @@ Implicación importante: hoy FDFF confía en `supabaseAdmin` dentro de los contr
 
 Estas preguntas cambian el diseño del modelo de datos de raíz — deben resolverse **antes** de diseñar tablas o RLS, no durante:
 
-1. **¿Jerarquía como árbol estricto o grafo real?** ¿Modelamos un solo padre por nodo (con México como caso especial a resolver aparte), o el modelo de datos necesita soportar multi-padre nativamente desde el día 1 (una organización puede reportar a 2+ organizaciones superiores en paralelo)?
-2. **Alcance de la visibilidad hacia abajo:** ¿solo lectura (ver eventos/atletas/jueces), o también algún tipo de capacidad administrativa/override sobre niveles inferiores?
-3. **Modelo de negocio / billing:** ¿quién paga la suscripción en cada nivel? ¿IFBB paga por toda la estructura, o cada federación nacional/local paga la suya de forma independiente?
-4. **Alcance de la migración:** ¿se migra TODO FDFF de una sola vez al nuevo stack, o se construye el SaaS multi-tenant desde cero y FDFF-RD pasa a ser simplemente el primer tenant migrado (permitiendo validar con datos reales antes de escalar)?
-5. **Idioma:** el alcance es internacional (ej. Curazao es de habla neerlandesa/papiamento) — ¿hace falta soporte multi-idioma desde el diseño inicial, o se lanza en español y se agrega después?
+1. ~~¿Jerarquía como árbol estricto o grafo real?~~ **Resuelto (2026-08-06):** árbol estricto de un solo padre administrativo por nodo (determina membresía en cascada y reporte). La doble pertenencia tipo México/Venezuela/Colombia **no** es multi-padre en el árbol — es una relación aparte, de "afiliación adicional" con propósito único: elegibilidad para inscribir atletas (vía su federación nacional) en eventos de una segunda confederación. Recomendación técnica: modelar como tabla muchos-a-muchos `federacion_confederacion_afiliada` separada del árbol jerárquico principal, más una regla de elegibilidad por `eventos.nivel` (nacional/asociación = cerrado a la federación dueña del evento; regional/continental = abierto a las federaciones nacionales elegibles, incluidas las de doble afiliación).
+2. **Alcance de la visibilidad hacia abajo:** ¿solo lectura (ver eventos/atletas/jueces), o también algún tipo de capacidad administrativa/override sobre niveles inferiores? — sigue abierta.
+3. **Modelo de negocio / billing:** ¿quién paga la suscripción en cada nivel? ¿IFBB paga por toda la estructura, o cada federación nacional/local paga la suya de forma independiente? — sigue abierta.
+4. **Alcance de la migración:** ¿se migra TODO FDFF de una sola vez al nuevo stack, o se construye el SaaS multi-tenant desde cero y FDFF-RD pasa a ser simplemente el primer tenant migrado (permitiendo validar con datos reales antes de escalar)? — sigue abierta, aunque el contexto de §1 (IFBB esperando ver primero un evento local en producción) apunta a la segunda opción.
+5. **Idioma:** el alcance es internacional (ej. Curazao es de habla neerlandesa/papiamento) — ¿hace falta soporte multi-idioma desde el diseño inicial, o se lanza en español y se agrega después? — sigue abierta.
 
 ## 5. Sub-proyectos identificados
 
 Esto no es un solo proyecto — es una plataforma. Cuando llegue el momento, cada uno de estos debe pasar por su propio ciclo de diseño (spec) → plan → implementación, no intentarse de una sola pasada:
 
 1. **Modelo de datos jerárquico + autenticación multi-tenant** (la base de todo lo demás — depende de las decisiones §4.1 y §4.2)
-2. **Motor offline-first de votación/puntuación** (el requisito más crítico y más riesgoso técnicamente — candidato a prototipar primero y de forma aislada)
+2. **Motor offline-first de la mesa de estadísticas** (un solo dispositivo/escritor, sin conflictos de sincronización entre múltiples equipos — ver §3.1. Menos riesgoso de lo que se asumió al principio, pero sigue siendo el requisito más nuevo para FDFF; candidato a prototipar primero y de forma aislada)
 3. **Migración de las features existentes de FDFF** al nuevo stack (depende de la decisión §4.4)
 4. **Billing/suscripciones** (depende de la decisión §4.3)
 
