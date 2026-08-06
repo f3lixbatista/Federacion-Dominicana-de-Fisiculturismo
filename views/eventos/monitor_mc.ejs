@@ -115,6 +115,7 @@
 <script>
     const _supabase = supabase.createClient("<%= SUPABASE_URL %>", "<%= SUPABASE_ANON_KEY %>");
     const idEvento = "<%= evento.id %>";
+    let _ultimoResEnVivo = null; // última resultados_en_vivo sincronizada — usada por "Siguiente resultado"
 
     function marcarProgresoMc(idElemento, completado) {
         const fila = document.getElementById(idElemento);
@@ -142,6 +143,7 @@
         if (data && data.resultados_en_vivo && Object.keys(data.resultados_en_vivo).length > 0) {
             document.getElementById('txtEsperando').classList.add('d-none');
             const res = data.resultados_en_vivo;
+            _ultimoResEnVivo = res;
             const contenedorPantalla = document.getElementById('pantallaResultadosMC');
             
             // ESCENARIO A: El Estadístico inyectó la presentación de Jueces en caliente
@@ -218,7 +220,52 @@
                 htmlTop5 += `</div></div>`;
                 contenedorPantalla.innerHTML = htmlTop5;
 
-            // ESCENARIO D: Resultados de competencia (formato anterior)
+            // ESCENARIO D: Cola de resultados finales (por tandas, enviada desde
+            // Mesa de Estadísticas) — se muestra UN resultado a la vez; el botón
+            // "Siguiente" avanza el índice compartido guardado en resultados_en_vivo.
+            } else if (res.tipo_alerta === 'cola_resultados') {
+                const total = (res.cola || []).length;
+                const idx = res.indice || 0;
+
+                if (idx >= total) {
+                    contenedorPantalla.innerHTML = `
+                        <div class="card bg-success bg-opacity-25 border-success p-3 mb-3 text-center">
+                            <i class="fas fa-check-double fa-2x text-success mb-2"></i>
+                            <p class="mb-0 fw-bold">Todos los resultados de esta tanda (${total}) ya fueron anunciados.</p>
+                        </div>`;
+                } else {
+                    const item = res.cola[idx];
+                    let htmlCola = `
+                        <div class="card bg-secondary bg-opacity-25 border-warning p-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                                <h5 class="fw-bold text-success mb-0"><i class="fas fa-trophy"></i> ${item.categoria_nombre}</h5>
+                                <span class="badge bg-warning text-dark">Resultado ${idx + 1} de ${total}</span>
+                            </div>
+                            <h6 class="text-uppercase text-warning fw-bold mb-3">${item.fase_competencia || ''}</h6>`;
+
+                    if (item.atletas_posicion && item.atletas_posicion.length > 0) {
+                        htmlCola += `<ol reversed class="fs-5 fw-bold text-white mb-3">`;
+                        item.atletas_posicion.forEach(a => {
+                            htmlCola += `<li class="mb-1">Dorsal [${a.dorsal}] — ${a.nombre}</li>`;
+                        });
+                        htmlCola += `</ol>`;
+                    } else {
+                        htmlCola += `<div class="d-flex flex-wrap gap-2 mb-3">`;
+                        (item.atletas || []).forEach(a => {
+                            htmlCola += `<span class="badge bg-dark border border-warning text-white fs-5 px-3 py-2">#${a.dorsal} <span class="fw-normal opacity-75">${a.nombre}</span></span>`;
+                        });
+                        htmlCola += `</div>`;
+                    }
+
+                    htmlCola += `
+                            <button class="btn btn-warning fw-bold w-100" onclick="siguienteResultadoCola()">
+                                <i class="fas fa-arrow-right me-1"></i> Siguiente resultado
+                            </button>
+                        </div>`;
+                    contenedorPantalla.innerHTML = htmlCola;
+                }
+
+            // ESCENARIO E: Resultados de competencia (formato anterior)
             } else if (res.categoria_nombre && res.atletas) {
                 let htmlResultados = `
                     <div class="card bg-secondary bg-opacity-25 border-success p-3 mb-3">
@@ -238,6 +285,22 @@
             // Sonido de alerta en tiempo real (Bing notification)
             const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-notification-bing-615.mp3');
             audio.play().catch(() => {});
+        }
+    }
+
+    // Avanza el índice de la cola de resultados (ver ESCENARIO D). Va por un
+    // endpoint del servidor (supabaseAdmin) porque las políticas RLS de eventos
+    // solo permiten UPDATE a admin/ejecutivo — el rol 'mc' que aprieta este botón
+    // no pasaría el filtro con el cliente anon. El realtime de abajo refresca sola
+    // la pantalla en cuanto el servidor confirma el cambio.
+    async function siguienteResultadoCola() {
+        if (!_ultimoResEnVivo || _ultimoResEnVivo.tipo_alerta !== 'cola_resultados') return;
+        try {
+            const res = await fetch(`/eventos/${idEvento}/mc-siguiente-resultado`, { method: 'POST' });
+            const data = await res.json();
+            if (!data.estado) alert('Error: ' + data.mensaje);
+        } catch (e) {
+            alert('Error de red: ' + e.message);
         }
     }
 

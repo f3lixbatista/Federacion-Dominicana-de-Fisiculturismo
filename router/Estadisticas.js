@@ -32,6 +32,10 @@ router.post('/guardar-top5', checkPermiso('computo', 'crear'), estadisticasContr
 // 15. ENVIAR CLASIFICADOS AL MC Y BACKSTAGE
 router.post('/enviar-clasificados-mc', checkPermiso('computo', 'editar'), estadisticasController.enviarClasificadosMC);
 
+// COLA DE RESULTADOS FINALES (Mesa de Estadísticas → Monitor MC, por tandas)
+router.post('/agregar-cola-resultados', checkPermiso('computo', 'editar'), estadisticasController.agregarColaResultados);
+router.post('/enviar-cola-resultados', checkPermiso('computo', 'editar'), estadisticasController.enviarColaResultados);
+
 // 11. IMPRESIÓN MASIVA DE CERTIFICADOS
 router.get('/imprimir-certificados/:eventoId', checkPermiso('reportes', 'ver'), estadisticasController.imprimirCertificadosMasivos);
 

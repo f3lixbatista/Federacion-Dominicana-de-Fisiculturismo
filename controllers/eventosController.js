@@ -450,6 +450,39 @@ const inyectarJuecesMC = async (req, res) => {
     }
 };
 
+// Avanza el índice de la cola de resultados finales (tipo_alerta 'cola_resultados',
+// ver estadisticasController.enviarColaResultados) para que el MC anuncie el
+// siguiente. Vía supabaseAdmin porque las políticas RLS de eventos solo permiten
+// UPDATE a admin/ejecutivo — el rol 'mc' (el que realmente aprieta este botón)
+// no pasaría el filtro con el cliente anon.
+const avanzarColaResultadosMC = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data: evento, error: errEvento } = await supabaseAdmin
+            .from('eventos')
+            .select('resultados_en_vivo')
+            .eq('id', id)
+            .single();
+        if (errEvento) throw errEvento;
+
+        const actual = evento.resultados_en_vivo || {};
+        if (actual.tipo_alerta !== 'cola_resultados') {
+            return res.status(400).json({ estado: false, mensaje: 'No hay una cola de resultados activa.' });
+        }
+
+        const nuevoIndice = (actual.indice || 0) + 1;
+        const { error: errUpdate } = await supabaseAdmin
+            .from('eventos')
+            .update({ resultados_en_vivo: { ...actual, indice: nuevoIndice } })
+            .eq('id', id);
+        if (errUpdate) throw errUpdate;
+
+        res.json({ estado: true, indice: nuevoIndice });
+    } catch (error) {
+        res.status(500).json({ estado: false, mensaje: error.message });
+    }
+};
+
 const verBoletaJuez = async (req, res) => {
     const { id: eventoId } = req.params;
     const juezId = res.locals.user?.id;
@@ -1584,6 +1617,7 @@ module.exports = {
     oficializarPreparacion,
     verMonitorMC,
     inyectarJuecesMC,
+    avanzarColaResultadosMC,
     verBoletaJuez,
     verReporteOficial,
     verDashboardEvento,

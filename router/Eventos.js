@@ -44,6 +44,7 @@ routerEventos.get('/preparacion-evento/:id', checkPermiso('preparacion', 'editar
 
 // MONITOR MC
 routerEventos.get('/:id/monitor-mc', checkPermiso('monitor_mc', 'ver'), eventosController.verMonitorMC);
+routerEventos.post('/:id/mc-siguiente-resultado', checkPermiso('monitor_mc', 'ver'), eventosController.avanzarColaResultadosMC);
 
 routerEventos.get('/:id/preparacion', checkPermiso('preparacion', 'editar'), eventosController.prepararEventoPage);
 routerEventos.post('/preparacion/oficializar', checkPermiso('preparacion', 'editar'), eventosController.oficializarPreparacion);

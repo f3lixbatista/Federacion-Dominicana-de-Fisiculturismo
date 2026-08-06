@@ -20,8 +20,15 @@
     <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
         <div>
             <h4 class="mb-0"><i class="fas fa-table me-2 text-primary"></i>Mesa de Estadísticas</h4>
-            <small class="text-muted"><%= evento.nombre %> — auditoría de votación por categoría y etapa (solo lectura)</small>
+            <small class="text-muted"><%= evento.nombre %> — auditoría de votación por categoría y etapa</small>
         </div>
+        <% if (puedeGestionarCola) { %>
+            <button type="button" id="btnEnviarColaGlobal" class="btn btn-warning fw-bold <%= colaPendienteCount ? '' : 'disabled' %>"
+                    onclick="enviarColaGlobal()" data-evento-id="<%= evento.id %>">
+                <i class="fas fa-paper-plane me-1"></i> ENVIAR COLA DE RESULTADOS
+                <span class="badge bg-dark ms-1" id="badgeColaPendiente"><%= colaPendienteCount %></span>
+            </button>
+        <% } %>
     </div>
 
     <% if (!categorias.length) { %>
@@ -63,16 +70,35 @@
                             <div class="card shadow-sm mb-4 etapa-card">
                                 <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <span><%= f.faseLabel %></span>
-                                    <% if (f.conVotos) { %>
-                                        <button type="button" class="btn btn-sm btn-success"
-                                                data-cat-id="<%= cat.id %>"
-                                                data-cat-nombre="<%= cat.nombre %>"
-                                                data-fase="<%= f.fase %>"
-                                                data-tabla="<%= tablaId %>"
-                                                onclick="enviarColaFase(this)">
-                                            <i class="fas fa-paper-plane me-1"></i>
-                                            <%= esFinal ? 'Enviar resultados al MC' : 'Enviar clasificados a Backstage y MC' %>
-                                        </button>
+                                    <% if (f.conVotos && puedeGestionarCola) { %>
+                                        <div class="d-flex gap-2">
+                                            <% if (esFinal) { %>
+                                                <% if (cat.enCola) { %>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
+                                                        <i class="fas fa-check me-1"></i> En cola
+                                                    </button>
+                                                <% } else { %>
+                                                    <button type="button" class="btn btn-sm btn-warning"
+                                                            data-cat-id="<%= cat.id %>"
+                                                            data-evento-id="<%= evento.id %>"
+                                                            data-cat-nombre="<%= cat.nombre %>"
+                                                            data-fase="<%= f.fase %>"
+                                                            data-tabla="<%= tablaId %>"
+                                                            onclick="agregarColaFase(this)">
+                                                        <i class="fas fa-inbox me-1"></i> Agregar a la cola
+                                                    </button>
+                                                <% } %>
+                                            <% } %>
+                                            <button type="button" class="btn btn-sm btn-success"
+                                                    data-cat-id="<%= cat.id %>"
+                                                    data-cat-nombre="<%= cat.nombre %>"
+                                                    data-fase="<%= f.fase %>"
+                                                    data-tabla="<%= tablaId %>"
+                                                    onclick="enviarColaFase(this)">
+                                                <i class="fas fa-paper-plane me-1"></i>
+                                                <%= esFinal ? 'Enviar resultados al MC' : 'Enviar clasificados a Backstage y MC' %>
+                                            </button>
+                                        </div>
                                     <% } %>
                                 </div>
                                 <div class="card-body p-0">
@@ -176,6 +202,74 @@ async function enviarColaFase(btn) {
         alert('Error de red: ' + e.message);
     } finally {
         btn.disabled = false;
+    }
+}
+
+// Agrega el resultado de un bloque final a la cola pendiente del evento —
+// queda invisible para el MC hasta que se presione "ENVIAR COLA DE RESULTADOS".
+async function agregarColaFase(btn) {
+    const { catId, eventoId, catNombre, fase, tabla } = btn.dataset;
+    const tablaEl = document.getElementById(tabla);
+
+    const atletaIds = [];
+    const resultados = [];
+    tablaEl.querySelectorAll('tbody tr[data-atleta]').forEach(tr => {
+        atletaIds.push(tr.dataset.atleta);
+        if (tr.dataset.lugar) resultados.push({ atleta_id: tr.dataset.atleta, posicion: parseInt(tr.dataset.lugar, 10) });
+    });
+    if (!atletaIds.length) { alert('No hay atletas para agregar a la cola.'); return; }
+
+    btn.disabled = true;
+    try {
+        const res = await fetch('/estadisticas/agregar-cola-resultados', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                eventoId, eventoCatId: catId, categoriaNombre: catNombre, fase,
+                atletasIdsClasificados: atletaIds, resultados
+            })
+        });
+        const data = await res.json();
+        if (!data.ok) { alert('Error: ' + data.mensaje); btn.disabled = false; return; }
+
+        btn.outerHTML = '<button type="button" class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-check me-1"></i> En cola</button>';
+        const badge = document.getElementById('badgeColaPendiente');
+        if (badge) badge.textContent = data.pendientes;
+        const btnGlobal = document.getElementById('btnEnviarColaGlobal');
+        if (btnGlobal) btnGlobal.classList.remove('disabled');
+    } catch (e) {
+        alert('Error de red: ' + e.message);
+        btn.disabled = false;
+    }
+}
+
+// Vacía toda la cola pendiente del evento hacia el Monitor MC de una sola vez
+// (el MC la recorre luego una por una con el botón "Siguiente resultado").
+async function enviarColaGlobal() {
+    const btn = document.getElementById('btnEnviarColaGlobal');
+    const { eventoId } = btn.dataset;
+    const pendientes = document.getElementById('badgeColaPendiente').textContent;
+    if (pendientes === '0') return;
+    if (!confirm(`¿Enviar ${pendientes} resultado(s) pendiente(s) al Monitor MC?`)) return;
+
+    btn.classList.add('disabled');
+    try {
+        const res = await fetch('/estadisticas/enviar-cola-resultados', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventoId })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            alert(`Cola enviada al Monitor MC (${data.enviados} resultado(s)).`);
+            location.reload();
+        } else {
+            alert('Error: ' + data.mensaje);
+            btn.classList.remove('disabled');
+        }
+    } catch (e) {
+        alert('Error de red: ' + e.message);
+        btn.classList.remove('disabled');
     }
 }
 </script>

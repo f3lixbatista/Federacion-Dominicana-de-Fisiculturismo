@@ -1,6 +1,7 @@
 const { supabase, supabaseAdmin } = require('../config/supabase');
 const QRCode = require('qrcode');
 const votingService = require('../services/votingService');
+const { tienePermiso } = require('../services/permisosService');
 
 const listarEstadisticas = async (req, res) => {
     // Redirigimos a eventos ya que la gestión ahora es por evento individual
@@ -211,10 +212,14 @@ const verMesaEstadisticas = async (req, res) => {
     try {
         const { data: evento, error: errEvento } = await supabaseAdmin
             .from('eventos')
-            .select('id, nombre')
+            .select('id, nombre, cola_estadisticas_pendiente')
             .eq('id', idEvento)
             .single();
         if (errEvento) throw errEvento;
+
+        const colaPendiente = evento.cola_estadisticas_pendiente || [];
+        const evCatIdsEnCola = new Set(colaPendiente.map(c => c.evento_cat_id));
+        const puedeGestionarCola = tienePermiso(res.locals.user?.role, 'computo', 'editar');
 
         const { data: eventosCategorias, error: errCats } = await supabaseAdmin
             .from('eventos_categorias')
@@ -338,10 +343,20 @@ const verMesaEstadisticas = async (req, res) => {
                 });
             }
 
-            return { id: ec.id, nombre: ec.categorias?.nombre || 'Sin nombre', fases, tieneAtletas: competidores.length > 0 };
+            return {
+                id: ec.id,
+                nombre: ec.categorias?.nombre || 'Sin nombre',
+                fases,
+                tieneAtletas: competidores.length > 0,
+                enCola: evCatIdsEnCola.has(ec.id)
+            };
         });
 
-        res.render('estadisticas/mesa_estadisticas', { evento, categorias, jueces });
+        res.render('estadisticas/mesa_estadisticas', {
+            evento, categorias, jueces,
+            puedeGestionarCola,
+            colaPendienteCount: colaPendiente.length
+        });
     } catch (error) {
         res.status(500).send('Error cargando Mesa de Estadísticas: ' + error.message);
     }
@@ -668,6 +683,36 @@ const guardarTop5 = async (req, res) => {
     }
 };
 
+// Resuelve, para una categoría + lista de atletas clasificados, el listado en
+// orden de dorsal (llamada a escena) y en orden de posición descendente (para
+// anuncio de podio) — prioriza posiciones ya calculadas por el llamador (ej.
+// Mesa de Estadísticas, que las computa desde los votos aunque la categoría
+// aún no se haya oficializado en competidores.posicion_final).
+const _resolverListasClasificados = async (eventoCatId, atletasIdsClasificados, resultados) => {
+    const { data: clasificados } = await supabaseAdmin
+        .from('competidores')
+        .select('atleta_id, numero_atleta, posicion_final, atletas(nombre)')
+        .eq('evento_cat_id', eventoCatId)
+        .in('atleta_id', atletasIdsClasificados || [])
+        .order('numero_atleta', { ascending: true });
+
+    const posicionesManual = {};
+    (resultados || []).forEach(r => { posicionesManual[r.atleta_id] = r.posicion; });
+
+    const enOrdenDorsal = (clasificados || []).map(c => ({
+        dorsal: c.numero_atleta,
+        nombre: c.atletas?.nombre
+    }));
+
+    const enOrdenPosicion = [...(clasificados || [])]
+        .map(c => ({ ...c, _pos: posicionesManual[c.atleta_id] ?? c.posicion_final }))
+        .filter(c => c._pos)
+        .sort((a, b) => (b._pos || 99) - (a._pos || 99))
+        .map(c => ({ dorsal: c.numero_atleta, nombre: c.atletas?.nombre, posicion: c._pos }));
+
+    return { enOrdenDorsal, enOrdenPosicion };
+};
+
 // Enviar lista de clasificados/resultados al MC (y a Backstage, salvo en fases finales)
 const enviarClasificadosMC = async (req, res) => {
     const { eventoCatId, categoriaNombre, fase, atletasIdsClasificados, resultados } = req.body;
@@ -678,32 +723,7 @@ const enviarClasificadosMC = async (req, res) => {
             .eq('id', eventoCatId)
             .single();
 
-        // Obtener datos de los clasificados en orden de dorsal
-        const { data: clasificados } = await supabaseAdmin
-            .from('competidores')
-            .select('atleta_id, numero_atleta, posicion_final, atletas(nombre)')
-            .eq('evento_cat_id', eventoCatId)
-            .in('atleta_id', atletasIdsClasificados || [])
-            .order('numero_atleta', { ascending: true });
-
-        // Mapa opcional de posiciones ya calculadas por el llamador (ej. Mesa de
-        // Estadísticas, que computa el resultado en vivo desde los votos aunque
-        // la categoría todavía no se haya oficializado en competidores.posicion_final).
-        const posicionesManual = {};
-        (resultados || []).forEach(r => { posicionesManual[r.atleta_id] = r.posicion; });
-
-        const enOrdenDorsal = (clasificados || []).map(c => ({
-            dorsal: c.numero_atleta,
-            nombre: c.atletas?.nombre
-        }));
-
-        // Orden descendente de posición (para anuncio de premiación) — prioriza la
-        // posición ya calculada enviada por el llamador sobre posicion_final en BD.
-        const enOrdenPosicion = [...(clasificados || [])]
-            .map(c => ({ ...c, _pos: posicionesManual[c.atleta_id] ?? c.posicion_final }))
-            .filter(c => c._pos)
-            .sort((a, b) => (b._pos || 99) - (a._pos || 99))
-            .map(c => ({ dorsal: c.numero_atleta, nombre: c.atletas?.nombre, posicion: c._pos }));
+        const { enOrdenDorsal, enOrdenPosicion } = await _resolverListasClasificados(eventoCatId, atletasIdsClasificados, resultados);
 
         await supabaseAdmin
             .from('eventos')
@@ -730,6 +750,76 @@ const enviarClasificadosMC = async (req, res) => {
         }
 
         res.json({ ok: true });
+    } catch (e) {
+        res.status(500).json({ ok: false, mensaje: e.message });
+    }
+};
+
+// Agrega el resultado final de UNA categoría a la cola pendiente del evento
+// (eventos.cola_estadisticas_pendiente) — todavía invisible para el MC, solo
+// queda "staged" hasta que se presione "Enviar cola de resultados". Reemplaza
+// cualquier entrada previa de la misma categoría (idempotente si se agrega 2 veces).
+const agregarColaResultados = async (req, res) => {
+    const { eventoId, eventoCatId, categoriaNombre, fase, atletasIdsClasificados, resultados } = req.body;
+    try {
+        const { enOrdenDorsal, enOrdenPosicion } = await _resolverListasClasificados(eventoCatId, atletasIdsClasificados, resultados);
+
+        const { data: eventoRow, error: errEvento } = await supabaseAdmin
+            .from('eventos')
+            .select('cola_estadisticas_pendiente')
+            .eq('id', eventoId)
+            .single();
+        if (errEvento) throw errEvento;
+
+        const colaActual = (eventoRow.cola_estadisticas_pendiente || []).filter(c => c.evento_cat_id !== eventoCatId);
+        colaActual.push({
+            evento_cat_id: eventoCatId,
+            categoria_nombre: categoriaNombre,
+            fase_competencia: fase,
+            atletas: enOrdenDorsal,
+            atletas_posicion: enOrdenPosicion,
+            timestamp: Date.now()
+        });
+
+        const { error: errUpdate } = await supabaseAdmin
+            .from('eventos')
+            .update({ cola_estadisticas_pendiente: colaActual })
+            .eq('id', eventoId);
+        if (errUpdate) throw errUpdate;
+
+        res.json({ ok: true, pendientes: colaActual.length });
+    } catch (e) {
+        res.status(500).json({ ok: false, mensaje: e.message });
+    }
+};
+
+// Vacía la cola pendiente del evento hacia eventos.resultados_en_vivo (el canal
+// que Monitor MC sí consume en tiempo real), para que el MC los vaya anunciando
+// uno por uno con el botón "Siguiente resultado". No toca Backstage — estos son
+// siempre resultados de fase final.
+const enviarColaResultados = async (req, res) => {
+    const { eventoId } = req.body;
+    try {
+        const { data: eventoRow, error: errEvento } = await supabaseAdmin
+            .from('eventos')
+            .select('cola_estadisticas_pendiente')
+            .eq('id', eventoId)
+            .single();
+        if (errEvento) throw errEvento;
+
+        const cola = eventoRow.cola_estadisticas_pendiente || [];
+        if (!cola.length) return res.status(400).json({ ok: false, mensaje: 'No hay resultados pendientes en la cola.' });
+
+        const { error: errUpdate } = await supabaseAdmin
+            .from('eventos')
+            .update({
+                resultados_en_vivo: { tipo_alerta: 'cola_resultados', cola, indice: 0, timestamp: Date.now() },
+                cola_estadisticas_pendiente: []
+            })
+            .eq('id', eventoId);
+        if (errUpdate) throw errUpdate;
+
+        res.json({ ok: true, enviados: cola.length });
     } catch (e) {
         res.status(500).json({ ok: false, mensaje: e.message });
     }
@@ -872,6 +962,8 @@ module.exports = {
     verComparacionJuez,
     guardarTop5,
     enviarClasificadosMC,
+    agregarColaResultados,
+    enviarColaResultados,
     imprimirCertificadosMasivos,
     verCertificadoPreview,
     verMesaComputoActual,
