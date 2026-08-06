@@ -261,7 +261,29 @@ const verMesaEstadisticas = async (req, res) => {
             const votos = votosPorCat[ec.id] || [];
             const fasesPresentes = FASES_ORDEN.filter(f => votos.some(v => v.fase_competencia === f));
 
-            const fases = fasesPresentes.map(fase => {
+            let fases;
+            if (fasesPresentes.length === 0 && competidores.length > 0) {
+                // Aún no se ha votado nada en esta categoría — igual se muestra la
+                // tabla de la fase que le corresponde (misma auto-detección que el
+                // resto del sistema) con los atletas ya inscritos; lo único que
+                // falta son los votos/total/lugar, que quedan en blanco.
+                const faseEsperada = votingService.resolverFaseAutomatica(competidores.length);
+                fases = [{
+                    fase: faseEsperada,
+                    faseLabel: FASES_LABEL[faseEsperada] || faseEsperada,
+                    conVotos: false,
+                    filas: competidores.map(c => ({
+                        atleta_id: c.atleta_id,
+                        atleta: c.atletas?.nombre || '—',
+                        dorsal: c.numero_atleta,
+                        votosJuez: jueces.map(() => ({ valor: undefined, descartado: false })),
+                        total: null,
+                        lugarSugerido: null,
+                        empateDetectado: false
+                    }))
+                }];
+            } else {
+                fases = fasesPresentes.map(fase => {
                 const votosFase = votos.filter(v => v.fase_competencia === fase);
 
                 const votosPorAtleta = {};
@@ -301,6 +323,7 @@ const verMesaEstadisticas = async (req, res) => {
                         });
 
                         return {
+                            atleta_id: c.atleta_id,
                             atleta: c.atletas?.nombre || '—',
                             dorsal: c.numero_atleta,
                             votosJuez,
@@ -311,10 +334,11 @@ const verMesaEstadisticas = async (req, res) => {
                     })
                     .sort((a, b) => (a.lugarSugerido ?? 999) - (b.lugarSugerido ?? 999));
 
-                return { fase, faseLabel: FASES_LABEL[fase] || fase, filas };
-            });
+                    return { fase, faseLabel: FASES_LABEL[fase] || fase, conVotos: true, filas };
+                });
+            }
 
-            return { id: ec.id, nombre: ec.categorias?.nombre || 'Sin nombre', fases };
+            return { id: ec.id, nombre: ec.categorias?.nombre || 'Sin nombre', fases, tieneAtletas: competidores.length > 0 };
         });
 
         res.render('estadisticas/mesa_estadisticas', { evento, categorias, jueces });
@@ -644,9 +668,9 @@ const guardarTop5 = async (req, res) => {
     }
 };
 
-// Enviar lista de clasificados al MC y Backstage
+// Enviar lista de clasificados/resultados al MC (y a Backstage, salvo en fases finales)
 const enviarClasificadosMC = async (req, res) => {
-    const { eventoCatId, categoriaNombre, fase, atletasIdsClasificados } = req.body;
+    const { eventoCatId, categoriaNombre, fase, atletasIdsClasificados, resultados } = req.body;
     try {
         const { data: catRel } = await supabaseAdmin
             .from('eventos_categorias')
@@ -657,21 +681,29 @@ const enviarClasificadosMC = async (req, res) => {
         // Obtener datos de los clasificados en orden de dorsal
         const { data: clasificados } = await supabaseAdmin
             .from('competidores')
-            .select('numero_atleta, posicion_final, atletas(nombre)')
+            .select('atleta_id, numero_atleta, posicion_final, atletas(nombre)')
             .eq('evento_cat_id', eventoCatId)
             .in('atleta_id', atletasIdsClasificados || [])
             .order('numero_atleta', { ascending: true });
+
+        // Mapa opcional de posiciones ya calculadas por el llamador (ej. Mesa de
+        // Estadísticas, que computa el resultado en vivo desde los votos aunque
+        // la categoría todavía no se haya oficializado en competidores.posicion_final).
+        const posicionesManual = {};
+        (resultados || []).forEach(r => { posicionesManual[r.atleta_id] = r.posicion; });
 
         const enOrdenDorsal = (clasificados || []).map(c => ({
             dorsal: c.numero_atleta,
             nombre: c.atletas?.nombre
         }));
 
-        // Orden descendente de posición (para anuncio de premiación)
+        // Orden descendente de posición (para anuncio de premiación) — prioriza la
+        // posición ya calculada enviada por el llamador sobre posicion_final en BD.
         const enOrdenPosicion = [...(clasificados || [])]
-            .filter(c => c.posicion_final)
-            .sort((a, b) => (b.posicion_final || 99) - (a.posicion_final || 99))
-            .map(c => ({ dorsal: c.numero_atleta, nombre: c.atletas?.nombre, posicion: c.posicion_final }));
+            .map(c => ({ ...c, _pos: posicionesManual[c.atleta_id] ?? c.posicion_final }))
+            .filter(c => c._pos)
+            .sort((a, b) => (b._pos || 99) - (a._pos || 99))
+            .map(c => ({ dorsal: c.numero_atleta, nombre: c.atletas?.nombre, posicion: c._pos }));
 
         await supabaseAdmin
             .from('eventos')
@@ -687,11 +719,15 @@ const enviarClasificadosMC = async (req, res) => {
             })
             .eq('id', catRel.evento_id);
 
-        // También actualizar backstage
-        await supabaseAdmin
-            .from('eventos')
-            .update({ orden_backstage: { fase: (fase || '').toUpperCase(), atletas: enOrdenDorsal } })
-            .eq('id', catRel.evento_id);
+        // Backstage solo necesita saber quién sigue en juego para llamarlo a
+        // escena en la SIGUIENTE ronda — en una final ya no hay próxima ronda
+        // que anunciar por Backstage, solo el MC anuncia el podio.
+        if (!['final_r1', 'final_r2'].includes(fase)) {
+            await supabaseAdmin
+                .from('eventos')
+                .update({ orden_backstage: { fase: (fase || '').toUpperCase(), atletas: enOrdenDorsal } })
+                .eq('id', catRel.evento_id);
+        }
 
         res.json({ ok: true });
     } catch (e) {

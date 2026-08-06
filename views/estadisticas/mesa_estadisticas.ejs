@@ -2,8 +2,14 @@
 
 <style>
     #nav-categorias { max-height: 78vh; overflow-y: auto; }
-    #nav-categorias .nav-link { text-align: left; font-size: .85rem; border-radius: 6px; margin-bottom: 2px; }
-    #nav-categorias .nav-link.active { font-weight: 700; }
+    #nav-categorias .nav-link {
+        text-align: left; font-size: .85rem; border-radius: 6px; margin-bottom: 4px;
+        border: 1px solid #dee2e6; background: #f8f9fa; color: #333; padding: .55rem .75rem;
+    }
+    #nav-categorias .nav-link:hover { background: #e9ecef; }
+    #nav-categorias .nav-link.active {
+        background: var(--bs-primary, #0d6efd); color: #fff; border-color: var(--bs-primary, #0d6efd); font-weight: 700;
+    }
     .voto-descartado { background: #eef0f2; color: #adb5bd; text-decoration: line-through; }
     .fila-lugar-1 td { background: #fff8e1; }
     .etapa-card .card-header { font-weight: 600; }
@@ -29,7 +35,7 @@
                             data-bs-toggle="pill" data-bs-target="#tab-cat-<%= cat.id %>"
                             type="button" role="tab">
                         <%= cat.nombre %>
-                        <% if (!cat.fases.length) { %><span class="badge bg-light text-muted border ms-1" style="font-size:.65rem;">sin votos</span><% } %>
+                        <% if (!cat.tieneAtletas) { %><span class="badge bg-light text-muted border ms-1" style="font-size:.65rem;">sin atletas</span><% } %>
                     </button>
                 <% }) %>
             </div>
@@ -44,18 +50,37 @@
                         <% if (!cat.fases.length) { %>
                             <div class="text-muted fst-italic py-5 text-center">
                                 <i class="fas fa-inbox fa-2x mb-2 d-block opacity-25"></i>
-                                Sin votos registrados para esta categoría.
+                                Sin atletas inscritos en esta categoría.
                             </div>
                         <% } %>
 
                         <% cat.fases.forEach(f => { %>
+                            <%
+                                const esFinal = f.fase === 'final_r1' || f.fase === 'final_r2';
+                                const limiteClasificacion = f.fase === 'eliminatoria' ? 15 : 6;
+                                const tablaId = 'tabla-' + cat.id + '-' + f.fase;
+                            %>
                             <div class="card shadow-sm mb-4 etapa-card">
-                                <div class="card-header bg-light"><%= f.faseLabel %></div>
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <span><%= f.faseLabel %></span>
+                                    <% if (f.conVotos) { %>
+                                        <button type="button" class="btn btn-sm btn-success"
+                                                data-cat-id="<%= cat.id %>"
+                                                data-cat-nombre="<%= cat.nombre %>"
+                                                data-fase="<%= f.fase %>"
+                                                data-tabla="<%= tablaId %>"
+                                                onclick="enviarColaFase(this)">
+                                            <i class="fas fa-paper-plane me-1"></i>
+                                            <%= esFinal ? 'Enviar resultados al MC' : 'Enviar clasificados a Backstage y MC' %>
+                                        </button>
+                                    <% } %>
+                                </div>
                                 <div class="card-body p-0">
                                     <div class="table-responsive">
-                                        <table class="table table-bordered table-sm mb-0 align-middle">
+                                        <table class="table table-bordered table-sm mb-0 align-middle" id="<%= tablaId %>">
                                             <thead class="table-dark">
                                                 <tr>
+                                                    <% if (f.conVotos && !esFinal) { %><th style="width:70px;">Clasifica</th><% } %>
                                                     <th style="width:70px;">Lugar</th>
                                                     <th>Atleta</th>
                                                     <th style="width:80px;">Dorsal</th>
@@ -65,9 +90,17 @@
                                             </thead>
                                             <tbody>
                                                 <% f.filas.forEach(fila => { %>
-                                                    <tr class="<%= fila.lugarSugerido === 1 ? 'fila-lugar-1' : '' %>">
+                                                    <tr class="<%= fila.lugarSugerido === 1 ? 'fila-lugar-1' : '' %>"
+                                                        data-atleta="<%= fila.atleta_id %>"
+                                                        data-lugar="<%= fila.lugarSugerido || '' %>">
+                                                        <% if (f.conVotos && !esFinal) { %>
+                                                            <td>
+                                                                <input type="checkbox" class="form-check-input chk-clasif" value="<%= fila.atleta_id %>"
+                                                                       <%= (fila.lugarSugerido && fila.lugarSugerido <= limiteClasificacion) ? 'checked' : '' %>>
+                                                            </td>
+                                                        <% } %>
                                                         <td class="fw-bold">
-                                                            <%= fila.lugarSugerido %>°
+                                                            <% if (fila.lugarSugerido) { %><%= fila.lugarSugerido %>°<% } else { %>—<% } %>
                                                             <% if (fila.empateDetectado) { %>
                                                                 <i class="fas fa-equals text-warning" title="Empate en puntos — desempate por Relative Placement"></i>
                                                             <% } %>
@@ -80,7 +113,7 @@
                                                                 <%= (v.valor !== undefined && v.valor !== null) ? v.valor : '—' %>
                                                             </td>
                                                         <% }) %>
-                                                        <td class="text-center fw-bold"><%= fila.total %></td>
+                                                        <td class="text-center fw-bold"><%= (fila.total !== null && fila.total !== undefined) ? fila.total : '—' %></td>
                                                     </tr>
                                                 <% }) %>
                                             </tbody>
@@ -97,5 +130,54 @@
     <% } %>
 
 </div>
+
+<script>
+// Envía la cola de esta etapa: clasificados (dorsal, sin posición) para
+// eliminatoria/semifinal → Backstage + MC, o resultados (con posición) de
+// una final → solo MC. El servidor decide el destino según la fase.
+async function enviarColaFase(btn) {
+    const { catId, catNombre, fase, tabla } = btn.dataset;
+    const esFinal = fase === 'final_r1' || fase === 'final_r2';
+    const tablaEl = document.getElementById(tabla);
+
+    const atletaIds = [];
+    const resultados = [];
+
+    if (esFinal) {
+        tablaEl.querySelectorAll('tbody tr[data-atleta]').forEach(tr => {
+            atletaIds.push(tr.dataset.atleta);
+            if (tr.dataset.lugar) resultados.push({ atleta_id: tr.dataset.atleta, posicion: parseInt(tr.dataset.lugar, 10) });
+        });
+    } else {
+        tablaEl.querySelectorAll('.chk-clasif:checked').forEach(chk => atletaIds.push(chk.value));
+    }
+
+    if (!atletaIds.length) { alert('No hay atletas para enviar.'); return; }
+
+    const destino = esFinal ? 'al MC' : 'a Backstage y MC';
+    if (!confirm(`¿Enviar ${atletaIds.length} atleta(s) ${destino}?`)) return;
+
+    btn.disabled = true;
+    try {
+        const res = await fetch('/estadisticas/enviar-clasificados-mc', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                eventoCatId: catId,
+                categoriaNombre: catNombre,
+                fase,
+                atletasIdsClasificados: atletaIds,
+                resultados: esFinal ? resultados : undefined
+            })
+        });
+        const data = await res.json();
+        alert(data.ok ? `Enviado ${destino} correctamente (${atletaIds.length} atletas).` : 'Error: ' + data.mensaje);
+    } catch (e) {
+        alert('Error de red: ' + e.message);
+    } finally {
+        btn.disabled = false;
+    }
+}
+</script>
 
 <%- include("../template/footer") %>
