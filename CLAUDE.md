@@ -120,6 +120,23 @@ public/
 ### Colores de roles (badge)
 `admin→danger` | `ejecutivo→warning` | `juez→info` | `estadistico→primary` | `atleta→success` | `preparador/general→secondary`
 
+### Variables de marca (colores globales)
+Definidas en `:root` de `public/css/fdff-design.css` (única fuente — no redefinir en otro CSS/vista):
+```css
+--fdff-cyan:   #00d4c8;
+--fdff-cyan-d: #00a89f;
+--fdff-navy:   #1a1d2b;
+```
+
+### Patrón visual: tarjeta de campeón / podio (Absolutos)
+Diseñado 2026-08-04 con un agente de diseño para la sección "Absolutos" de `resultados_publicos.ejs` (`.abs-card` en el `<style>` de esa vista) — reusar este lenguaje visual si se pide otra tarjeta de "logro/campeón destacado" en vez de inventar uno nuevo:
+- **Fondo:** gradiente navy de esquina a esquina (`linear-gradient(160deg, #262b3f 0%, var(--fdff-navy) 55%, #12141f 100%)`), nunca un navy plano.
+- **Borde:** dorado translúcido (`rgba(212, 175, 55, .45)`) — el dorado es el color de "título/logro", no se usa en ningún otro contexto de la app.
+- **"Luz de tarima":** un `::after` con `radial-gradient` cian translúcido (`rgba(0, 212, 200, .22)`) posicionado arriba del centro, simulando luz de escenario cayendo sobre el ganador.
+- **Sello:** pill dorado (`linear-gradient(180deg, #f5d76e, #d4af37)`) con texto oscuro, mayúsculas, letter-spacing amplio — para el rótulo tipo "Título Absoluto".
+- **Estado pendiente** (sin ganador aún): variante gris clara (`#f8f9fa`), borde punteado, sin el glow ni el sello dorado — nunca mostrar la tarjeta vacía con el mismo peso visual que una ganada.
+- **Impresión:** el fondo navy se invierte a blanco con texto navy (`@media print`) — un fondo oscuro sin imprimir gráficos de fondo deja texto blanco invisible en papel; replicar este override en cualquier tarjeta nueva con fondo oscuro.
+
 ---
 
 ## Convenciones críticas de código
