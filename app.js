@@ -48,18 +48,22 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.use(cookieParser());
-
-// Inyección global de variables para el cliente (EJS)
+// Inyección global de variables para el cliente (EJS). Va ANTES de los parsers del cuerpo: si uno de
+// ellos falla (cuerpo demasiado grande, JSON roto), la página de error también necesita estas
+// variables para renderizarse.
 app.use((req, res, next) => {
     res.locals.SUPABASE_URL = process.env.SUPABASE_URL;
     res.locals.SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
     res.locals.VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
     res.locals.KIOSKO_PIN = process.env.KIOSKO_PIN || '20241234';
+    res.locals.user = null;
+    res.locals.ACCESS_TOKEN = '';
     next();
 });
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(cookieParser());
 
 app.use(attachUser);
 
