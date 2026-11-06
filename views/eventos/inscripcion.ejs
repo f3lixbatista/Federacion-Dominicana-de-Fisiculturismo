@@ -37,12 +37,16 @@
                                placeholder=" Escriba Nombre, Cédula o escanee con lector de mano...">
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4 d-grid gap-2">
                     <button class="btn btn-dark btn-lg w-100 fw-bold" onclick="iniciarEscaneoCamara()">
                         <i class="fas fa-camera me-2"></i> USAR CÁMARA
                     </button>
+                    <button type="button" id="btnLeerCedula" class="btn btn-outline-dark w-100 fw-bold">
+                        <i class="fas fa-id-card me-2"></i> LEER CÉDULA (CÁMARA)
+                    </button>
                 </div>
             </div>
+            <div id="avisoLector"></div>
             <div id="reader" class="mt-3 mx-auto" style="width: 300px; display: none;"></div>
         </div>
     </div>
@@ -1108,5 +1112,29 @@ async function abrirModalInscripcion(id, nombre, sexo, fechaNac, estatura, peso,
     });
 </script>
 <script src="https://unpkg.com/html5-qrcode"></script>
+
+<script type="module">
+    import { conectarLectorDocumento, soloDigitos } from '/js/lector-fdff.js';
+
+    // Lee la cédula del atleta y abre su ficha de inscripción. Se compara solo por dígitos para no
+    // depender de si la cédula quedó guardada con o sin guiones.
+    conectarLectorDocumento({
+        boton: '#btnLeerCedula', avisoEn: '#avisoLector', tipo: 'cedula', titulo: 'Cédula del atleta',
+        alLeer: ({ datos }) => {
+            const buscada = soloDigitos(datos.cedula);
+            if (!buscada) return { mensaje: 'No se pudo leer el número de cédula: búscalo a mano.', nivel: 'warning' };
+
+            const atleta = listaAtletasGlobal.find((a) => soloDigitos(a.cedula) === buscada);
+            if (atleta) {
+                seleccionarAtleta(atleta.id);
+                return { mensaje: `Atleta encontrado: ${atleta.nombre}.`, nivel: 'success' };
+            }
+            const buscador = document.getElementById('busquedaAtleta');
+            buscador.value = datos.cedula;
+            buscador.dispatchEvent(new Event('input', { bubbles: true }));
+            return { mensaje: `No hay un atleta habilitado con la cédula ${datos.cedula}. Si es nuevo, debe afiliarse primero.`, nivel: 'warning' };
+        },
+    });
+</script>
 
 <%- include("../template/footer") %>

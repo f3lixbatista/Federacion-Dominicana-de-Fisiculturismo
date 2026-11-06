@@ -93,6 +93,7 @@ app.use('/preparadores', require('./router/Preparadores'));
 app.use('/dj', require('./router/DJ'));
 app.use('/fotografo', require('./router/Fotografo'));
 app.use('/atletas', require('./router/Atletas'));
+app.use('/documentos', require('./router/Documentos'));
 app.use('/', require('./router/rutasBat'));
 
 app.use(notFound);

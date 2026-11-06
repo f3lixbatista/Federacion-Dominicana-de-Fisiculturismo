@@ -7,6 +7,18 @@
         <form id="formMembresia" class="row g-3 needs-validation was-validated">
 
             <h6 class="position-relative mt-5 opacity-25 fw-bold">DATOS DEL ATLETA</h6>
+
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" id="btnLeerCedula" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-camera me-1"></i> Llenar con la cédula (cámara)
+                    </button>
+                    <button type="button" id="btnLeerPasaporte" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-passport me-1"></i> Llenar con el pasaporte (cámara)
+                    </button>
+                </div>
+                <div id="avisoLector"></div>
+            </div>
             
             <div class="col-md-3">
                 <label class="form-label small">ID-FDFF (Asignado en Pesaje)</label>
@@ -368,6 +380,31 @@
             }
         });
     }
+</script>
+
+<script type="module">
+    import { conectarLectorDocumento } from '/js/lector-fdff.js';
+
+    const campo = (nombre) => `#formMembresia [name="${nombre}"]`;
+    conectarLectorDocumento({
+        boton: '#btnLeerCedula', avisoEn: '#avisoLector', tipo: 'cedula', titulo: 'Cédula del atleta',
+        mapa: {
+            nombre_completo: campo('nombre'),
+            cedula: campo('cedula'),
+            fecha_nacimiento: campo('nacimiento'),
+            sexo: campo('sexo'),
+        },
+    });
+    conectarLectorDocumento({
+        boton: '#btnLeerPasaporte', avisoEn: '#avisoLector', tipo: 'pasaporte', titulo: 'Pasaporte del atleta',
+        mapa: {
+            nombre_completo: campo('nombre'),
+            numero_pasaporte: campo('pasaporte'),
+            nacionalidad: campo('nacionalidad'),
+            fecha_nacimiento: campo('nacimiento'),
+            sexo: campo('sexo'),
+        },
+    });
 </script>
 
 <%- include("template/footer") %>

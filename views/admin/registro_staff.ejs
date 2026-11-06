@@ -8,6 +8,12 @@
                 <h5 class="fw-bold mb-3"><i class="fas fa-user-plus text-primary"></i> Registrar Personal</h5>
                 <form action="/admin/registro_staff/guardar" method="POST">
                     <div class="mb-3">
+                        <button type="button" id="btnLeerCedula" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-camera me-1"></i> Tomar el nombre de la cédula (cámara)
+                        </button>
+                        <div id="avisoLector"></div>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label small">Correo del Usuario (Ya registrado)</label>
                         <input type="email" name="email" class="form-control" placeholder="ejemplo@gmail.com" required>
                     </div>
@@ -102,6 +108,15 @@
         if(data.ok) location.reload();
         else alert("Error al eliminar: " + data.error);
     }
+</script>
+
+<script type="module">
+    import { conectarLectorDocumento } from '/js/lector-fdff.js';
+
+    conectarLectorDocumento({
+        boton: '#btnLeerCedula', avisoEn: '#avisoLector', tipo: 'cedula', titulo: 'Cédula del juez o staff',
+        mapa: { nombre_completo: 'form[action="/admin/registro_staff/guardar"] [name="nombre"]' },
+    });
 </script>
 
 <%- include("../template/footer") %>

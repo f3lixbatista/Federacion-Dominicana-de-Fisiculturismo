@@ -16,6 +16,12 @@
 
                     <form method="POST" action="/afiliacion/nuevo-preparador">
                         <div class="mb-3">
+                            <button type="button" id="btnLeerCedula" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-camera me-1"></i> Llenar con la cédula (cámara)
+                            </button>
+                            <div id="avisoLector"></div>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label fw-bold text-primary">ID Coach FDFF</label>
                             <input name="ID_Coach_FDFF" value="<%= locals.ID_Coach_FDFF || '00045' %>" type="text" class="form-control bg-light" readonly>
                         </div>
@@ -51,4 +57,12 @@
         </div>
     </div>
 </main>
+<script type="module">
+    import { conectarLectorDocumento } from '/js/lector-fdff.js';
+
+    conectarLectorDocumento({
+        boton: '#btnLeerCedula', avisoEn: '#avisoLector', tipo: 'cedula', titulo: 'Cédula del preparador',
+        mapa: { nombre_completo: '[name="nombre_completo"]', cedula: '[name="cedula"]' },
+    });
+</script>
 <%- include('template/footer') %>

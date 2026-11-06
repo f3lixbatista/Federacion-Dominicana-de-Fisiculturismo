@@ -7,6 +7,18 @@
         <form id="fomMembresia" action="/atletas/crear" method="POST" class="row g-3 needs-validation was-validated">
 
             <h6 class="position-relative mt-5 opacity-25">Del Atleta</h6>
+
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" id="btnLeerCedula" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-camera me-1"></i> Llenar con la cédula (cámara)
+                    </button>
+                    <button type="button" id="btnLeerPasaporte" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-passport me-1"></i> Llenar con el pasaporte (cámara)
+                    </button>
+                </div>
+                <div id="avisoLector"></div>
+            </div>
             
             <div class="col-md-3 py-0 pt-0 m-0">
                 <label for="idfdff" class="form-label">ID-FDFF</label>
@@ -230,6 +242,30 @@
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-print me-2"></i> IMPRIMIR Y GUARDAR';
         }
+    });
+</script>
+<script type="module">
+    import { conectarLectorDocumento, soloDigitos } from '/js/lector-fdff.js';
+
+    conectarLectorDocumento({
+        boton: '#btnLeerCedula', avisoEn: '#avisoLector', tipo: 'cedula', titulo: 'Cédula del atleta',
+        mapa: {
+            nombre_completo: '#nombre',
+            // El campo de cédula es numérico: no admite guiones.
+            cedula: { selector: '#cedula', formato: soloDigitos },
+            fecha_nacimiento: '#fecha_nacimiento',
+            sexo: '#sexo',
+        },
+    });
+    conectarLectorDocumento({
+        boton: '#btnLeerPasaporte', avisoEn: '#avisoLector', tipo: 'pasaporte', titulo: 'Pasaporte del atleta',
+        mapa: {
+            nombre_completo: '#nombre',
+            numero_pasaporte: '#pasaporte',
+            nacionalidad: '#nacionalidad',
+            fecha_nacimiento: '#fecha_nacimiento',
+            sexo: '#sexo',
+        },
     });
 </script>
 <%- include("template/footer") %>
